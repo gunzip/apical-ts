@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { sanitizeIdentifier } from "../src/schema-generator/utils.js";
 
 describe("sanitizeIdentifier", () => {
   test("converts kebab-case to camelCase", () => {
