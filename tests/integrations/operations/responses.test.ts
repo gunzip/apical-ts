@@ -26,7 +26,7 @@ describe("Response Operations", () => {
   describe("testMultipleSuccess operation", () => {
     it("should handle 200 response with Message data", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testMultipleSuccess({});
