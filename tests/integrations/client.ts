@@ -18,7 +18,6 @@ export function createTestClient(config: TestClientConfig) {
     baseURL: config.baseURL,
     fetch: fetch,
     headers: {
-      "Content-Type": "application/json",
       ...config.customHeaders,
       ...config.authHeaders,
     },
