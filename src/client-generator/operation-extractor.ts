@@ -2,9 +2,10 @@ import type {
   OpenAPIObject,
   OperationObject,
   ParameterObject,
-  PathItemObject,
   ReferenceObject,
 } from "openapi3-ts/oas31";
+
+import assert from "assert";
 
 /**
  * Metadata for an OpenAPI operation
@@ -44,7 +45,8 @@ export function extractAllOperations(doc: OpenAPIObject): OperationMetadata[] {
       for (const { method, operation } of httpMethods) {
         if (operation) {
           // operationId should now always exist after applyGeneratedOperationIds
-          const operationId = operation.operationId!;
+          assert(operation.operationId, "Operation ID is required");
+          const operationId = operation.operationId;
 
           // Skip operations that result in empty sanitized IDs
           operations.push({

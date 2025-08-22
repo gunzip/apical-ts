@@ -14,14 +14,7 @@ import {
   type OperationMetadata,
 } from "./operation-extractor.js";
 import { generateOperationFunction } from "./operation-function-generator.js";
-import { extractAuthHeaders, type SecurityHeader } from "./security.js";
-
-// Legacy function for backwards compatibility - now generates operations instead
-export async function generateClient(doc: OpenAPIObject): Promise<string> {
-  // This is now a dummy function that would need the output directory
-  // The actual generation happens in generateOperations
-  throw new Error("Use generateOperations instead of generateClient");
-}
+import { extractAuthHeaders } from "./security.js";
 
 /**
  * Generates individual operation files and configuration

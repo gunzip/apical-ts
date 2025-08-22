@@ -1,5 +1,3 @@
-import type { ParameterObject } from "openapi3-ts/oas31";
-
 import {
   generateHeaderParamHandling,
   generateQueryParamHandling,

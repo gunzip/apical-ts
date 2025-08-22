@@ -6,6 +6,8 @@ import type {
   RequestBodyObject,
 } from "openapi3-ts/oas31";
 
+import assert from "assert";
+
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateFunctionBody } from "./code-generation.js";
 import { extractParameterGroups } from "./parameters.js";
@@ -38,9 +40,10 @@ export function generateOperationFunction(
   method: string,
   operation: OperationObject,
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
-  doc: OpenAPIObject
+  doc: OpenAPIObject,
 ): GeneratedFunction {
-  const functionName: string = sanitizeIdentifier(operation.operationId!);
+  assert(operation.operationId, "Operation ID is required");
+  const functionName: string = sanitizeIdentifier(operation.operationId);
 
   const summary = operation.summary ? `/** ${operation.summary} */\n` : "";
   const typeImports = new Set<string>();
@@ -49,7 +52,7 @@ export function generateOperationFunction(
   const parameterGroups = extractParameterGroups(
     operation,
     pathLevelParameters,
-    doc
+    doc,
   );
   const hasBody = !!operation.requestBody;
 
@@ -72,7 +75,7 @@ export function generateOperationFunction(
     parameterGroups,
     hasBody,
     bodyTypeInfo,
-    operationSecurityHeaders
+    operationSecurityHeaders,
   );
 
   // Build destructured parameters for function signature
@@ -80,13 +83,13 @@ export function generateOperationFunction(
     parameterGroups,
     hasBody,
     bodyTypeInfo,
-    operationSecurityHeaders
+    operationSecurityHeaders,
   );
 
   // Generate response handlers and return type
   const { responseHandlers, returnType } = generateResponseHandlers(
     operation,
-    typeImports
+    typeImports,
   );
 
   // Check if operation overrides security (empty or specific schemes)
@@ -103,7 +106,7 @@ export function generateOperationFunction(
     requestContentType,
     operationSecurityHeaders,
     overridesSecurity,
-    authHeaders
+    authHeaders,
   );
 
   // Handle empty parameters case - use simple destructuring with default

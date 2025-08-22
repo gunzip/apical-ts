@@ -15,6 +15,7 @@ export function generateConfigFileContent(
 /**
  * Generate configuration types
  */
+// eslint-disable-next-line max-lines-per-function
 export function generateConfigTypes(
   authHeaders: string[],
   serverUrls: string[] = [],
