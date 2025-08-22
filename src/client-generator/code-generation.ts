@@ -31,6 +31,7 @@ export function generateFunctionBody(
   contentTypeMaps: ContentTypeMaps,
   shouldGenerateRequestMap: boolean,
   shouldGenerateResponseMap: boolean,
+  requestContentTypes?: string[],
 ): string {
   const { headerParams, pathParams, queryParams } = parameterGroups;
 
@@ -56,7 +57,9 @@ export function generateFunctionBody(
     contentTypeLogic += `  const finalRequestContentType = contentType?.request || "${defaultReq}";\n`;
 
     if (hasBody) {
-      bodyContentCode = generateDynamicBodyContentCode();
+      bodyContentCode = generateDynamicBodyContentCode(
+        requestContentTypes || [],
+      );
     }
   } else {
     // Use static content type handling (backward compatibility)
@@ -122,21 +125,21 @@ ${responseHandlers.join("\n")}
 /**
  * Generates dynamic body content handling code for multiple content types
  */
-function generateDynamicBodyContentCode(): string {
-  return `  let bodyContent = "";
-  let contentTypeHeader = {};
-  
-  switch (finalRequestContentType) {
-    case "application/json":
-      bodyContent = body ? JSON.stringify(body) : undefined;
-      contentTypeHeader = { "Content-Type": "application/json" };
-      break;
-    case "application/x-www-form-urlencoded":
-      bodyContent = body ? new URLSearchParams(body as Record<string, string>).toString() : undefined;
-      contentTypeHeader = { "Content-Type": "application/x-www-form-urlencoded" };
-      break;
-    case "multipart/form-data":
-      if (body) {
+/**
+ * Generates dynamic body content handling code for multiple content types
+ */
+function generateDynamicBodyContentCode(requestContentTypes: string[]): string {
+  // Map of content type to handler function
+  const contentTypeHandlers: Record<string, string> = {
+    "application/json": `      bodyContent = body ? JSON.stringify(body) : undefined;
+      contentTypeHeader = { "Content-Type": "application/json" };`,
+    "application/octet-stream": `      bodyContent = body;
+      contentTypeHeader = { "Content-Type": "application/octet-stream" };`,
+    "application/x-www-form-urlencoded": `      bodyContent = body ? new URLSearchParams(body as Record<string, string>).toString() : undefined;
+      contentTypeHeader = { "Content-Type": "application/x-www-form-urlencoded" };`,
+    "application/xml": `      bodyContent = typeof body === 'string' ? body : String(body);
+      contentTypeHeader = { "Content-Type": "application/xml" };`,
+    "multipart/form-data": `      if (body) {
         const formData = new FormData();
         Object.entries(body).forEach(([key, value]) => {
           if (value !== undefined) {
@@ -145,23 +148,40 @@ function generateDynamicBodyContentCode(): string {
         });
         bodyContent = formData;
       }
-      contentTypeHeader = {}; // Don't set Content-Type for multipart/form-data
-      break;
-    case "text/plain":
-      bodyContent = typeof body === 'string' ? body : String(body);
-      contentTypeHeader = { "Content-Type": "text/plain" };
-      break;
-    case "application/xml":
-      bodyContent = typeof body === 'string' ? body : String(body);
-      contentTypeHeader = { "Content-Type": "application/xml" };
-      break;
-    case "application/octet-stream":
-      bodyContent = body;
-      contentTypeHeader = { "Content-Type": "application/octet-stream" };
-      break;
-    default:
+      contentTypeHeader = {}; // Don't set Content-Type for multipart/form-data`,
+    "text/plain": `      bodyContent = typeof body === 'string' ? body : String(body);
+      contentTypeHeader = { "Content-Type": "text/plain" };`,
+  };
+
+  // Generate switch cases only for the defined content types
+  const switchCases = requestContentTypes
+    .map((contentType) => {
+      const handler = contentTypeHandlers[contentType];
+      if (handler) {
+        return `    case "${contentType}":
+${handler}
+      break;`;
+      } else {
+        // For content types we don't have specific handlers for, use generic approach
+        return `    case "${contentType}":
       bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
-      contentTypeHeader = { "Content-Type": finalRequestContentType };
+      contentTypeHeader = { "Content-Type": "${contentType}" };
+      break;`;
+      }
+    })
+    .join("\n");
+
+  // Add default case for any content type not explicitly handled
+  const defaultCase = `    default:
+      bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
+      contentTypeHeader = { "Content-Type": finalRequestContentType };`;
+
+  return `  let bodyContent: string | FormData | undefined = "";
+  let contentTypeHeader = {};
+  
+  switch (finalRequestContentType) {
+${switchCases}
+${defaultCase}
   }`;
 }
 

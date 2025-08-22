@@ -46,8 +46,8 @@ export function buildDestructuredParameters(
   hasBody: boolean,
   bodyTypeInfo?: RequestBodyTypeInfo,
   operationSecurityHeaders?: SecurityHeader[],
-  hasRequestMap?: boolean,
-  hasResponseMap?: boolean,
+  hasRequestMap = false,
+  hasResponseMap = false,
 ): string {
   const processed = processParameterGroups(
     parameterGroups,
