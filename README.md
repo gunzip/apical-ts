@@ -32,7 +32,7 @@ See [supported features](#features) for more information.
     - [Multiple Content Types](#multiple-content-types)
     - [Missing Response Headers Validation](#missing-response-headers-validation)
     - [String Constraints on Query and Path Parameters](#string-constraints-on-query-and-path-parameters)
-  - [Comparison: openapi-client-ts vs openapi-zod-client vs openapi-codegen-ts](#comparison-openapi-client-ts-vs-openapi-zod-client-vs-openapi-codegen-ts)
+  - [Comparison with alternative libraries](#comparison-with-alternative-libraries)
 
 ## Installation
 
@@ -315,7 +315,11 @@ The generated operation will only handle the `application/json` content type in 
 
 - String constraints (e.g., minLength, maxLength, pattern) on query and path parameters are not validated. Should we generate their schemas with Zod as well?
 
-## Comparison: openapi-client-ts vs openapi-zod-client vs openapi-codegen-ts
+## Comparison with alternative libraries
+
+After [evaluating several libraries](https://github.com/gunzip/openapi-generator-benchmark), we found that each has its [strengths and weaknesses](https://pagopa.github.io/dx/blog/typescript-openapi-generators-0.1-alpha), but ultimately, we chose to build this project to address specific needs and use cases.
+
+Here is a comparison of the key features and limitations of each library.
 
 | Feature / Limitation           | typescript-openapi-generator (this project) |                      openapi-codegen-ts                       |   openapi-zod-client   |
 | ------------------------------ | :-----------------------------------------: | :-----------------------------------------------------------: | :--------------------: |
