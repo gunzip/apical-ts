@@ -244,7 +244,7 @@ if (!result.success) {
 
 ## Features
 
-- 🚀 **Multi-version support**: Accepts OpenAPI 2.0 (Swagger), 3.0.x, and 3.1.x specifications, automatically converting to 3.1.0 for generation
+- 🚀 **Multi-version support**: Accepts OpenAPI 2.0 (Swagger), 3.0.x, and 3.1.x specifications
 - 🛠️ **Operation-based client generation**: Generates one function per operation, with strong typing and per-operation configuration—no need for blacklisting operations you don't need!
 - 🛡️ **Zod v4 runtime validation**: Validates all response payloads at runtime
 - 📦 **Small footprint**: Generates each operation and schema/type in its own file for maximum tree-shaking and modularity
