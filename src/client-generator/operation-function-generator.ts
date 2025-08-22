@@ -16,7 +16,10 @@ import {
   buildParameterInterface,
 } from "./parameters.js";
 import { resolveRequestBodyType } from "./request-body.js";
-import { generateResponseHandlers, generateContentTypeMaps } from "./responses.js";
+import {
+  generateContentTypeMaps,
+  generateResponseHandlers,
+} from "./responses.js";
 import {
   extractAuthHeaders,
   getOperationSecuritySchemes,
@@ -44,7 +47,8 @@ export function generateOperationFunction(
 ): GeneratedFunction {
   assert(operation.operationId, "Operation ID is required");
   const functionName: string = sanitizeIdentifier(operation.operationId);
-  const operationName = functionName.charAt(0).toUpperCase() + functionName.slice(1);
+  const operationName =
+    functionName.charAt(0).toUpperCase() + functionName.slice(1);
 
   const summary = operation.summary ? `/** ${operation.summary} */\n` : "";
   const typeImports = new Set<string>();
@@ -80,11 +84,13 @@ export function generateOperationFunction(
   contentTypeMaps.typeImports.forEach((imp) => typeImports.add(imp));
 
   // Always generate type maps if we have request body or responses
-  const shouldGenerateRequestMap = hasBody && contentTypeMaps.requestContentTypeCount > 0;
-  const shouldGenerateResponseMap = contentTypeMaps.responseContentTypeCount > 0;
+  const shouldGenerateRequestMap =
+    hasBody && contentTypeMaps.requestContentTypeCount > 0;
+  const shouldGenerateResponseMap =
+    contentTypeMaps.responseContentTypeCount > 0;
 
   // Build parameter interface
-  let paramsInterface = buildParameterInterface(
+  const paramsInterface = buildParameterInterface(
     parameterGroups,
     hasBody,
     bodyTypeInfo,
@@ -145,20 +151,26 @@ export function generateOperationFunction(
 
   if (shouldGenerateRequestMap || shouldGenerateResponseMap) {
     const genericParts: string[] = [];
-    
+
     if (shouldGenerateRequestMap) {
-      const defaultReq = contentTypeMaps.defaultRequestContentType || "application/json";
-      genericParts.push(`TRequestContentType extends keyof ${requestMapTypeName} = "${defaultReq}"`);
+      const defaultReq =
+        contentTypeMaps.defaultRequestContentType || "application/json";
+      genericParts.push(
+        `TRequestContentType extends keyof ${requestMapTypeName} = "${defaultReq}"`,
+      );
     }
-    
+
     if (shouldGenerateResponseMap) {
-      const defaultResp = contentTypeMaps.defaultResponseContentType || "application/json";
-      genericParts.push(`TResponseContentType extends keyof ${responseMapTypeName} = "${defaultResp}"`);
+      const defaultResp =
+        contentTypeMaps.defaultResponseContentType || "application/json";
+      genericParts.push(
+        `TResponseContentType extends keyof ${responseMapTypeName} = "${defaultResp}"`,
+      );
     }
-    
+
     if (genericParts.length > 0) {
       genericParams = `<${genericParts.join(", ")}>`;
-      
+
       // Update return type to use generic
       if (shouldGenerateResponseMap) {
         updatedReturnType = `${responseMapTypeName}[TResponseContentType]`;

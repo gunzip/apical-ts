@@ -360,10 +360,16 @@ describe("client-generator operation-extractor", () => {
             schema: { $ref: "#/components/schemas/User" },
           },
           "application/x-www-form-urlencoded": {
-            schema: { type: "object", properties: { name: { type: "string" } } },
+            schema: {
+              type: "object",
+              properties: { name: { type: "string" } },
+            },
           },
           "multipart/form-data": {
-            schema: { type: "object", properties: { file: { type: "string", format: "binary" } } },
+            schema: {
+              type: "object",
+              properties: { file: { type: "string", format: "binary" } },
+            },
           },
         },
       };
@@ -373,8 +379,12 @@ describe("client-generator operation-extractor", () => {
       expect(result.isRequired).toBe(true);
       expect(result.contentTypes).toHaveLength(3);
       expect(result.contentTypes[0].contentType).toBe("application/json");
-      expect(result.contentTypes[0].schema).toEqual({ $ref: "#/components/schemas/User" });
-      expect(result.contentTypes[1].contentType).toBe("application/x-www-form-urlencoded");
+      expect(result.contentTypes[0].schema).toEqual({
+        $ref: "#/components/schemas/User",
+      });
+      expect(result.contentTypes[1].contentType).toBe(
+        "application/x-www-form-urlencoded",
+      );
       expect(result.contentTypes[2].contentType).toBe("multipart/form-data");
     });
 
@@ -440,13 +450,13 @@ describe("client-generator operation-extractor", () => {
       const result = extractResponseContentTypes(operation);
 
       expect(result).toHaveLength(2);
-      
+
       // Check 200 response
       expect(result[0].statusCode).toBe("200");
       expect(result[0].contentTypes).toHaveLength(2);
       expect(result[0].contentTypes[0].contentType).toBe("application/json");
       expect(result[0].contentTypes[1].contentType).toBe("application/xml");
-      
+
       // Check 404 response
       expect(result[1].statusCode).toBe("404");
       expect(result[1].contentTypes).toHaveLength(2);
@@ -466,7 +476,7 @@ describe("client-generator operation-extractor", () => {
               },
             },
           },
-          "default": {
+          default: {
             description: "Error",
             content: {
               "application/json": {

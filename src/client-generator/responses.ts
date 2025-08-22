@@ -1,16 +1,31 @@
-import type { OperationObject, ResponseObject, RequestBodyObject } from "openapi3-ts/oas31";
+import type {
+  OperationObject,
+  RequestBodyObject,
+  ResponseObject,
+} from "openapi3-ts/oas31";
 
 import assert from "assert";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { getResponseContentType } from "./utils.js";
 import {
+  type ContentTypeMapping,
   extractRequestContentTypes,
   extractResponseContentTypes,
-  type ContentTypeMapping,
-  type RequestContentTypes,
-  type ResponseContentTypes,
 } from "./operation-extractor.js";
+import { getResponseContentType } from "./utils.js";
+
+/**
+ * Result of generating content type maps
+ */
+export type ContentTypeMaps = {
+  defaultRequestContentType: null | string;
+  defaultResponseContentType: null | string;
+  requestContentTypeCount: number;
+  requestMapType: string;
+  responseContentTypeCount: number;
+  responseMapType: string;
+  typeImports: Set<string>;
+};
 
 /**
  * Result of response handler generation
@@ -30,17 +45,106 @@ export type ResponseTypeInfo = {
 };
 
 /**
- * Result of generating content type maps
+ * Generates TypeScript type maps for request and response content types
  */
-export type ContentTypeMaps = {
-  requestMapType: string;
-  responseMapType: string;
-  defaultRequestContentType: string | null;
-  defaultResponseContentType: string | null;
-  typeImports: Set<string>;
-  requestContentTypeCount: number;
-  responseContentTypeCount: number;
-};
+export function generateContentTypeMaps(
+  operation: OperationObject,
+): ContentTypeMaps {
+  assert(operation.operationId, "Operation ID is required");
+  const operationId = operation.operationId;
+  const typeImports = new Set<string>();
+
+  // Generate request map type
+  let requestMapType = "{}";
+  let defaultRequestContentType: null | string = null;
+  let requestContentTypeCount = 0;
+
+  if (operation.requestBody) {
+    const requestBody = operation.requestBody as RequestBodyObject;
+    const requestContentTypes = extractRequestContentTypes(requestBody);
+
+    requestContentTypeCount = requestContentTypes.contentTypes.length;
+    if (requestContentTypes.contentTypes.length > 0) {
+      defaultRequestContentType =
+        requestContentTypes.contentTypes[0].contentType;
+
+      const requestMappings = requestContentTypes.contentTypes.map(
+        (mapping) => {
+          const typeName = resolveSchemaTypeName(
+            mapping.schema,
+            operationId,
+            "Request",
+            typeImports,
+          );
+          return `  "${mapping.contentType}": ${typeName};`;
+        },
+      );
+
+      requestMapType = `{\n${requestMappings.join("\n")}\n}`;
+    }
+  }
+
+  // Generate response map type
+  let responseMapType = "{}";
+  let defaultResponseContentType: null | string = null;
+  let responseContentTypeCount = 0;
+
+  const responseContentTypes = extractResponseContentTypes(operation);
+  if (responseContentTypes.length > 0) {
+    const responseMappings: string[] = [];
+    const seenContentTypes = new Set<string>();
+
+    for (const responseGroup of responseContentTypes) {
+      if (responseGroup.contentTypes.length > 0) {
+        for (const mapping of responseGroup.contentTypes) {
+          // Use a unique key that combines content type and status code
+          const uniqueKey = `${mapping.contentType}_${responseGroup.statusCode}`;
+
+          if (!defaultResponseContentType) {
+            defaultResponseContentType = mapping.contentType;
+          }
+
+          // Only add if we haven't seen this content type + status combination
+          if (!seenContentTypes.has(uniqueKey)) {
+            seenContentTypes.add(uniqueKey);
+            const typeName = resolveSchemaTypeName(
+              mapping.schema,
+              operationId,
+              `${responseGroup.statusCode}Response`,
+              typeImports,
+            );
+            // For the map, we'll use just the content type as the key
+            // but ensure we don't have duplicates by preferring the first status code
+            if (
+              !responseMappings.some((m) =>
+                m.includes(`"${mapping.contentType}":`),
+              )
+            ) {
+              responseMappings.push(
+                `  "${mapping.contentType}": ApiResponse<${responseGroup.statusCode}, ${typeName}>;`,
+              );
+            }
+          }
+        }
+      }
+    }
+
+    responseContentTypeCount = responseMappings.length;
+    if (responseMappings.length > 0) {
+      responseMapType = `{\n${responseMappings.join("\n")}\n}`;
+    }
+  }
+
+  return {
+    defaultRequestContentType,
+    defaultResponseContentType,
+    requestContentTypeCount,
+    requestMapType,
+    responseContentTypeCount,
+    responseMapType,
+    typeImports,
+  };
+}
 
 /**
  * Generates response handling code and determines return type using discriminated unions
@@ -151,100 +255,4 @@ function resolveSchemaTypeName(
     typeImports.add(typeName);
     return typeName;
   }
-}
-
-/**
- * Generates TypeScript type maps for request and response content types
- */
-export function generateContentTypeMaps(
-  operation: OperationObject,
-): ContentTypeMaps {
-  assert(operation.operationId, "Operation ID is required");
-  const operationId = operation.operationId;
-  const typeImports = new Set<string>();
-  
-  const sanitizedOperationId = sanitizeIdentifier(operationId);
-  const operationName = sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1);
-
-  // Generate request map type
-  let requestMapType = "{}";
-  let defaultRequestContentType: string | null = null;
-  let requestContentTypeCount = 0;
-
-  if (operation.requestBody) {
-    const requestBody = operation.requestBody as RequestBodyObject;
-    const requestContentTypes = extractRequestContentTypes(requestBody);
-    
-    requestContentTypeCount = requestContentTypes.contentTypes.length;
-    if (requestContentTypes.contentTypes.length > 0) {
-      defaultRequestContentType = requestContentTypes.contentTypes[0].contentType;
-      
-      const requestMappings = requestContentTypes.contentTypes.map((mapping) => {
-        const typeName = resolveSchemaTypeName(
-          mapping.schema,
-          operationId,
-          "Request",
-          typeImports
-        );
-        return `  "${mapping.contentType}": ${typeName};`;
-      });
-      
-      requestMapType = `{\n${requestMappings.join("\n")}\n}`;
-    }
-  }
-
-  // Generate response map type
-  let responseMapType = "{}";
-  let defaultResponseContentType: string | null = null;
-  let responseContentTypeCount = 0;
-
-  const responseContentTypes = extractResponseContentTypes(operation);
-  if (responseContentTypes.length > 0) {
-    const responseMappings: string[] = [];
-    const seenContentTypes = new Set<string>();
-    
-    for (const responseGroup of responseContentTypes) {
-      if (responseGroup.contentTypes.length > 0) {
-        for (const mapping of responseGroup.contentTypes) {
-          // Use a unique key that combines content type and status code
-          const uniqueKey = `${mapping.contentType}_${responseGroup.statusCode}`;
-          
-          if (!defaultResponseContentType) {
-            defaultResponseContentType = mapping.contentType;
-          }
-          
-          // Only add if we haven't seen this content type + status combination
-          if (!seenContentTypes.has(uniqueKey)) {
-            seenContentTypes.add(uniqueKey);
-            const typeName = resolveSchemaTypeName(
-              mapping.schema,
-              operationId,
-              `${responseGroup.statusCode}Response`,
-              typeImports
-            );
-            // For the map, we'll use just the content type as the key
-            // but ensure we don't have duplicates by preferring the first status code
-            if (!responseMappings.some(m => m.includes(`"${mapping.contentType}":`))) {
-              responseMappings.push(`  "${mapping.contentType}": ApiResponse<${responseGroup.statusCode}, ${typeName}>;`);
-            }
-          }
-        }
-      }
-    }
-    
-    responseContentTypeCount = responseMappings.length;
-    if (responseMappings.length > 0) {
-      responseMapType = `{\n${responseMappings.join("\n")}\n}`;
-    }
-  }
-
-  return {
-    requestMapType,
-    responseMapType,
-    defaultRequestContentType,
-    defaultResponseContentType,
-    typeImports,
-    requestContentTypeCount,
-    responseContentTypeCount,
-  };
 }

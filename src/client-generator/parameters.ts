@@ -198,27 +198,27 @@ export function buildParameterInterface(
   if (hasBody && bodyTypeInfo) {
     const requiredMarker = bodyTypeInfo.isRequired ? "" : "?";
     let typeName = bodyTypeInfo.typeName || "any";
-    
+
     // Use generic type if we have a request map
     if (requestMapTypeName) {
       typeName = `${requestMapTypeName}[TRequestContentType]`;
     }
-    
+
     sections.push(`body${requiredMarker}: ${typeName}`);
   }
 
   // Add contentType parameter if we have request or response maps
   if (requestMapTypeName || responseMapTypeName) {
     const contentTypeParts: string[] = [];
-    
+
     if (requestMapTypeName) {
       contentTypeParts.push("request?: TRequestContentType");
     }
-    
+
     if (responseMapTypeName) {
       contentTypeParts.push("response?: TResponseContentType");
     }
-    
+
     sections.push(`contentType?: { ${contentTypeParts.join("; ")} }`);
   }
 

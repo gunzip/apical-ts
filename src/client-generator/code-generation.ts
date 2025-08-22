@@ -1,3 +1,5 @@
+import type { ContentTypeMaps } from "./responses.js";
+
 import {
   generateHeaderParamHandling,
   generateQueryParamHandling,
@@ -9,7 +11,6 @@ import {
   type SecurityHeader,
 } from "./security.js";
 import { generatePathInterpolation } from "./utils.js";
-import type { ContentTypeMaps } from "./responses.js";
 
 /**
  * Generates the function body for an operation with support for dynamic content types
@@ -41,9 +42,7 @@ export function generateFunctionBody(
       ? generateSecurityHeaderHandling(operationSecurityHeaders)
       : "";
 
-  // Determine if we need dynamic content type handling
-  const hasMultipleRequestTypes = shouldGenerateRequestMap && contentTypeMaps.requestContentTypeCount > 1;
-  const hasMultipleResponseTypes = shouldGenerateResponseMap && contentTypeMaps.responseContentTypeCount > 1;
+  // These variables are no longer needed as we always generate type maps
 
   // Generate content type determination logic
   let contentTypeLogic = "";
@@ -52,12 +51,79 @@ export function generateFunctionBody(
   let contentTypeHeaderCode = "";
 
   if (shouldGenerateRequestMap) {
-    const defaultReq = contentTypeMaps.defaultRequestContentType || "application/json";
+    const defaultReq =
+      contentTypeMaps.defaultRequestContentType || "application/json";
     contentTypeLogic += `  const finalRequestContentType = contentType?.request || "${defaultReq}";\n`;
-    
+
     if (hasBody) {
-      // Generate switch statement for different body content types
-      bodyContentCode = `  let bodyContent = "";
+      bodyContentCode = generateDynamicBodyContentCode();
+    }
+  } else {
+    // Use static content type handling (backward compatibility)
+    if (hasBody) {
+      const { bodyContent, contentTypeHeader } = generateRequestBodyHandling(
+        hasBody,
+        requestContentType,
+      );
+      bodyContentCode = `  // Static body content
+  const bodyContent = ${bodyContent || "undefined"};`;
+      if (contentTypeHeader) {
+        contentTypeHeaderCode = contentTypeHeader;
+      }
+    }
+  }
+
+  if (shouldGenerateResponseMap) {
+    const defaultResp =
+      contentTypeMaps.defaultResponseContentType || "application/json";
+    acceptHeaderLogic = `    "Accept": contentType?.response || "${defaultResp}",`;
+  }
+
+  // Build the headers object
+  const headersContent = generateHeadersContent(
+    shouldGenerateRequestMap,
+    overridesSecurity,
+    authHeaders,
+    shouldGenerateResponseMap,
+    acceptHeaderLogic,
+    contentTypeHeaderCode,
+  );
+
+  return `${contentTypeLogic}${bodyContentCode}
+
+  const finalHeaders = {
+${headersContent}
+  };
+  ${headerParamLines ? `  ${headerParamLines}` : ""}${securityHeaderLines ? `  ${securityHeaderLines}` : ""}
+
+  const url = new URL(\`${finalPath}\`, config.baseURL);
+  ${queryParamLines ? `  ${queryParamLines}` : ""}
+
+  const response = await config.fetch(url.toString(), {
+    method: "${method.toUpperCase()}",
+    headers: finalHeaders,${
+      hasBody
+        ? `
+    body: bodyContent,`
+        : ""
+    }
+  });
+
+  switch (response.status) {
+${responseHandlers.join("\n")}
+    default: {
+      // Throw UnexpectedResponseError for undefined status codes
+      const data = await parseResponseBody(response);
+      throw new UnexpectedResponseError(response.status, data, response);
+    }
+  }`;
+}
+
+/**
+ * Generates dynamic body content handling code for multiple content types
+ */
+function generateDynamicBodyContentCode(): string {
+  return `  let bodyContent = "";
   let contentTypeHeader = {};
   
   switch (finalRequestContentType) {
@@ -97,31 +163,21 @@ export function generateFunctionBody(
       bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
       contentTypeHeader = { "Content-Type": finalRequestContentType };
   }`;
-    }
-  } else {
-    // Use static content type handling (backward compatibility)
-    if (hasBody) {
-      const { bodyContent, contentTypeHeader } = generateRequestBodyHandling(
-        hasBody,
-        requestContentType,
-      );
-      bodyContentCode = `  // Static body content
-  const bodyContent = ${bodyContent || "undefined"};`;
-      if (contentTypeHeader) {
-        contentTypeHeaderCode = contentTypeHeader;
-      }
-    }
-  }
+}
 
-  if (shouldGenerateResponseMap) {
-    const defaultResp = contentTypeMaps.defaultResponseContentType || "application/json";
-    acceptHeaderLogic = `    "Accept": contentType?.response || "${defaultResp}",`;
-  }
-
-  // Build the headers object
-  let headersContent = "";
+/**
+ * Generates the headers content for the request
+ */
+function generateHeadersContent(
+  shouldGenerateRequestMap: boolean,
+  overridesSecurity: boolean | undefined,
+  authHeaders: string[] | undefined,
+  shouldGenerateResponseMap: boolean,
+  acceptHeaderLogic: string,
+  contentTypeHeaderCode: string,
+): string {
   if (shouldGenerateRequestMap) {
-    headersContent = `    ${
+    return `    ${
       overridesSecurity && authHeaders && authHeaders.length > 0
         ? `...Object.fromEntries(
       Object.entries(config.headers).filter(([key]) => 
@@ -129,48 +185,27 @@ export function generateFunctionBody(
       )
     ),`
         : "...config.headers,"
-    }${shouldGenerateResponseMap ? `
-${acceptHeaderLogic}` : ""}
-    ...contentTypeHeader,`;
-  } else {
-    headersContent = `    ${
-      overridesSecurity && authHeaders && authHeaders.length > 0
-        ? `...Object.fromEntries(
-      Object.entries(config.headers).filter(([key]) => 
-        !['${authHeaders.join("', '")}'].includes(key)
-      )
-    ),`
-        : "...config.headers,"
-    }${shouldGenerateResponseMap ? `
-${acceptHeaderLogic}` : ""}${contentTypeHeaderCode}`;
-  }
-
-  return `${contentTypeLogic}${bodyContentCode}
-
-  const finalHeaders = {
-${headersContent}
-  };
-  ${headerParamLines ? `  ${headerParamLines}` : ""}${securityHeaderLines ? `  ${securityHeaderLines}` : ""}
-
-  const url = new URL(\`${finalPath}\`, config.baseURL);
-  ${queryParamLines ? `  ${queryParamLines}` : ""}
-
-  const response = await config.fetch(url.toString(), {
-    method: "${method.toUpperCase()}",
-    headers: finalHeaders,${
-      hasBody
+    }${
+      shouldGenerateResponseMap
         ? `
-    body: bodyContent,`
+${acceptHeaderLogic}`
         : ""
     }
-  });
-
-  switch (response.status) {
-${responseHandlers.join("\n")}
-    default: {
-      // Throw UnexpectedResponseError for undefined status codes
-      const data = await parseResponseBody(response);
-      throw new UnexpectedResponseError(response.status, data, response);
-    }
-  }`;
+    ...contentTypeHeader,`;
+  } else {
+    return `    ${
+      overridesSecurity && authHeaders && authHeaders.length > 0
+        ? `...Object.fromEntries(
+      Object.entries(config.headers).filter(([key]) => 
+        !['${authHeaders.join("', '")}'].includes(key)
+      )
+    ),`
+        : "...config.headers,"
+    }${
+      shouldGenerateResponseMap
+        ? `
+${acceptHeaderLogic}`
+        : ""
+    }${contentTypeHeaderCode}`;
+  }
 }

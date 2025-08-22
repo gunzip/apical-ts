@@ -332,12 +332,12 @@ describe("client-generator responses", () => {
               schema: { $ref: "#/components/schemas/Pet" },
             },
             "application/x-www-form-urlencoded": {
-              schema: { 
+              schema: {
                 type: "object",
-                properties: { 
+                properties: {
                   name: { type: "string" },
-                  status: { type: "string" }
-                }
+                  status: { type: "string" },
+                },
               },
             },
           },
@@ -347,9 +347,9 @@ describe("client-generator responses", () => {
             description: "Success",
             content: {
               "application/json": {
-                schema: { 
+                schema: {
                   type: "array",
-                  items: { $ref: "#/components/schemas/Pet" }
+                  items: { $ref: "#/components/schemas/Pet" },
                 },
               },
               "application/xml": {
@@ -372,20 +372,28 @@ describe("client-generator responses", () => {
 
       expect(result.defaultRequestContentType).toBe("application/json");
       expect(result.defaultResponseContentType).toBe("application/json");
-      
+
       // Check request map
       expect(result.requestMapType).toContain('"application/json": Pet;');
-      expect(result.requestMapType).toContain('"application/x-www-form-urlencoded": PetFindByStatusRequest;');
-      
-      // Check response map 
-      expect(result.responseMapType).toContain('"application/json": ApiResponse<200, PetFindByStatus200Response>;');
-      expect(result.responseMapType).toContain('"application/xml": ApiResponse<200, PetFindByStatus200Response>;');
-      expect(result.responseMapType).toContain('"text/plain": ApiResponse<404, PetFindByStatus404Response>;');
-      
+      expect(result.requestMapType).toContain(
+        '"application/x-www-form-urlencoded": PetFindByStatusRequest;',
+      );
+
+      // Check response map
+      expect(result.responseMapType).toContain(
+        '"application/json": ApiResponse<200, PetFindByStatus200Response>;',
+      );
+      expect(result.responseMapType).toContain(
+        '"application/xml": ApiResponse<200, PetFindByStatus200Response>;',
+      );
+      expect(result.responseMapType).toContain(
+        '"text/plain": ApiResponse<404, PetFindByStatus404Response>;',
+      );
+
       // Check counts
       expect(result.requestContentTypeCount).toBe(2);
       expect(result.responseContentTypeCount).toBe(3);
-      
+
       // Check type imports
       expect(result.typeImports.has("Pet")).toBe(true);
       expect(result.typeImports.has("PetFindByStatusRequest")).toBe(true);
@@ -415,7 +423,9 @@ describe("client-generator responses", () => {
       expect(result.requestMapType).toBe("{}");
       expect(result.requestContentTypeCount).toBe(0);
       expect(result.responseContentTypeCount).toBe(1);
-      expect(result.responseMapType).toContain('"application/json": ApiResponse<200, User>;');
+      expect(result.responseMapType).toContain(
+        '"application/json": ApiResponse<200, User>;',
+      );
     });
 
     it("should handle operation with no responses", () => {
