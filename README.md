@@ -4,7 +4,7 @@
 
 🤖 Need a client? Instantly generate a type-safe, operation-based REST API client alongside your schemas.
 
-Why choose this generator against alternatives? See [comparison](#comparison-openapi-client-ts-vs-openapi-zod-client-vs-openapi-codegen-ts) for more details.
+Why choose this generator against alternatives? See [comparison](#comparison-with-alternative-libraries) for more details.
 
 See [supported features](#features) for more information.
 
