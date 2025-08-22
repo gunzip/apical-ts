@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { MockServer, getRandomPort } from "../setup.js";
-import { createUnauthenticatedClient } from "../client.js";
+import { createAuthenticatedClient } from "../client.js";
 import { testHelpers } from "../fixtures/test-helpers.js";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -29,7 +29,7 @@ describe("File Upload Operations", () => {
   describe("testFileUpload operation", () => {
     it("should upload a text file successfully", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const testFile = testHelpers.createTestFile(
         "Sample file content for testing upload",
         "test-upload.txt",
@@ -49,7 +49,7 @@ describe("File Upload Operations", () => {
 
     it("should upload file from fixtures", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const filePath = join(process.cwd(), "tests/integrations/fixtures/sample-file.txt");
       const fileContent = readFileSync(filePath, "utf-8");
       const testFile = testHelpers.createTestFile(fileContent, "sample-file.txt", "text/plain");
@@ -67,7 +67,7 @@ describe("File Upload Operations", () => {
 
     it("should handle file upload with different MIME types", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const testFile = testHelpers.createTestFile(
         '{"test": "json content"}',
         "test.json",
@@ -88,7 +88,7 @@ describe("File Upload Operations", () => {
   describe("testBinaryFileUpload operation", () => {
     it("should upload binary file successfully", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       
       // Create a simple binary file (simulate image data)
       const binaryData = new Uint8Array([
@@ -113,7 +113,7 @@ describe("File Upload Operations", () => {
 
     it("should handle large file upload", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       
       // Create a larger binary file (1KB)
       const largeData = new Uint8Array(1024).fill(65); // Fill with 'A' character
@@ -134,7 +134,7 @@ describe("File Upload Operations", () => {
   describe("testBinaryFileDownload operation", () => {
     it("should download binary file successfully", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testBinaryFileDownload({});
@@ -156,7 +156,7 @@ describe("File Upload Operations", () => {
 
     it("should handle large binary file download", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testBinaryFileDownload({});
@@ -173,7 +173,7 @@ describe("File Upload Operations", () => {
 
     it("should preserve binary data integrity", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testBinaryFileDownload({});

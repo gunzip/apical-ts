@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { MockServer, getRandomPort } from "../setup.js";
-import { createUnauthenticatedClient } from "../client.js";
+import { createAuthenticatedClient } from "../client.js";
 
 describe("Additional Operations", () => {
   let mockServer: MockServer;
@@ -26,7 +26,7 @@ describe("Additional Operations", () => {
   describe("testSimplePatch operation", () => {
     it("should handle PATCH method successfully", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testSimplePatch({});
@@ -38,7 +38,7 @@ describe("Additional Operations", () => {
 
     it("should handle PATCH method error responses", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testSimplePatch({});
@@ -49,7 +49,7 @@ describe("Additional Operations", () => {
 
     it("should support PATCH as an HTTP method", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testSimplePatch({});
@@ -64,7 +64,7 @@ describe("Additional Operations", () => {
   describe("HTTP Methods Support", () => {
     it("should support GET methods", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testMultipleSuccess({});
@@ -76,7 +76,7 @@ describe("Additional Operations", () => {
 
     it("should support POST methods", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const requestBody = {
         name: "Test Name",
         age: 25,
@@ -94,7 +94,7 @@ describe("Additional Operations", () => {
 
     it("should support PUT methods", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const requestBody = {
         id: "test-id",
         name: "Test Model",
@@ -112,7 +112,7 @@ describe("Additional Operations", () => {
 
     it("should support PATCH methods", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testSimplePatch({});
@@ -126,7 +126,7 @@ describe("Additional Operations", () => {
   describe("Edge Case Operations", () => {
     it("should handle operations with minimal configuration", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testSimplePatch({});
@@ -139,7 +139,7 @@ describe("Additional Operations", () => {
 
     it("should handle operations with empty parameters", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testWithEmptyResponse({});
@@ -151,12 +151,14 @@ describe("Additional Operations", () => {
 
     it("should handle operations with mixed parameter types", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testParametersAtPathLevel({
-        requestId: "test-request-123",
-        cursor: "test-cursor-value",
+        query: {
+          requestId: "test-request-123",
+          cursor: "test-cursor-value",
+        },
       });
 
       // Assert
@@ -167,7 +169,7 @@ describe("Additional Operations", () => {
   describe("Client Configuration Validation", () => {
     it("should work with custom base URLs", async () => {
       // Arrange
-      const customClient = createUnauthenticatedClient(baseURL);
+      const customClient = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await customClient.testSimplePatch({});
@@ -178,7 +180,7 @@ describe("Additional Operations", () => {
 
     it("should preserve custom headers", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act - The client should include default headers like Content-Type
       const response = await client.testSimplePatch({});
@@ -190,7 +192,7 @@ describe("Additional Operations", () => {
 
     it("should handle fetch configuration", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act - Test that the client uses the fetch API correctly
       const response = await client.testSimplePatch({});
@@ -205,14 +207,14 @@ describe("Additional Operations", () => {
   describe("Response Format Validation", () => {
     it("should return consistent response structure", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testSimplePatch({});
 
       // Assert
       expect(response).toHaveProperty("status");
-      expect(response).toHaveProperty("headers");
+      expect(response).toHaveProperty("response");
       expect(response).toHaveProperty("data");
       
       expect(typeof response.status).toBe("number");
@@ -221,7 +223,7 @@ describe("Additional Operations", () => {
 
     it("should handle different content types appropriately", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testMultipleSuccess({});
@@ -237,7 +239,7 @@ describe("Additional Operations", () => {
 
     it("should preserve response metadata", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testResponseHeader({});
