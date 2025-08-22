@@ -3,6 +3,7 @@ import type { OperationObject } from "openapi3-ts/oas31";
 import { describe, expect, it } from "vitest";
 
 import { generateOperationFunction } from "../../src/client-generator/operation-function-generator.js";
+import { generateContentTypeMaps } from "../../src/client-generator/responses.js";
 
 describe("Multi-content-type operation function generation", () => {
   it("should generate function with generic content type support", () => {
@@ -181,9 +182,6 @@ describe("Multi-content-type operation function generation", () => {
       [],
       doc,
     );
-
-    console.log("Generated function code:");
-    console.log(result.functionCode);
 
     // Should NOT generate type maps for single content type
     expect(result.functionCode).not.toContain("export type GetUserByIdRequestMap");

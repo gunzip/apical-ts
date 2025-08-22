@@ -40,8 +40,8 @@ export function generateFunctionBody(
       : "";
 
   // Determine if we need dynamic content type handling
-  const hasMultipleRequestTypes = contentTypeMaps.requestMapType !== "{}";
-  const hasMultipleResponseTypes = contentTypeMaps.responseMapType !== "{}";
+  const hasMultipleRequestTypes = contentTypeMaps.requestContentTypeCount > 1;
+  const hasMultipleResponseTypes = contentTypeMaps.responseContentTypeCount > 1;
 
   // Generate content type determination logic
   let contentTypeLogic = "";
