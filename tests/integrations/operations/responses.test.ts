@@ -177,7 +177,7 @@ describe("Response Operations", () => {
 
     it("should return appropriate headers for empty response", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testWithEmptyResponse({});
