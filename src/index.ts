@@ -7,11 +7,9 @@ import { generate } from "./core-generator/index.js";
 const program = new Command();
 
 program
-  .name("openapi-ts-client-generator")
-  .description(
-    "Generate a TypeScript client from an OpenAPI 3.1.0 specification."
-  )
-  .version("1.0.0");
+  .name("typescript-openapi-generator")
+  .description("Generate a TypeScript client from an OpenAPI specification.")
+  .version("0.0.1");
 
 program
   .command("generate")
