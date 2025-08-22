@@ -38,7 +38,7 @@ export function generateOperationFunction(
   method: string,
   operation: OperationObject,
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
-  doc: OpenAPIObject,
+  doc: OpenAPIObject
 ): GeneratedFunction {
   const functionName: string = sanitizeIdentifier(operation.operationId!);
 
@@ -49,7 +49,7 @@ export function generateOperationFunction(
   const parameterGroups = extractParameterGroups(
     operation,
     pathLevelParameters,
-    doc,
+    doc
   );
   const hasBody = !!operation.requestBody;
 
@@ -62,7 +62,7 @@ export function generateOperationFunction(
 
   if (hasBody) {
     const requestBody = operation.requestBody as RequestBodyObject;
-    bodyTypeInfo = resolveRequestBodyType(requestBody, functionName, doc);
+    bodyTypeInfo = resolveRequestBodyType(requestBody, functionName);
     requestContentType = bodyTypeInfo.contentType;
     bodyTypeInfo.typeImports.forEach((imp) => typeImports.add(imp));
   }
@@ -72,7 +72,7 @@ export function generateOperationFunction(
     parameterGroups,
     hasBody,
     bodyTypeInfo,
-    operationSecurityHeaders,
+    operationSecurityHeaders
   );
 
   // Build destructured parameters for function signature
@@ -80,13 +80,13 @@ export function generateOperationFunction(
     parameterGroups,
     hasBody,
     bodyTypeInfo,
-    operationSecurityHeaders,
+    operationSecurityHeaders
   );
 
   // Generate response handlers and return type
   const { responseHandlers, returnType } = generateResponseHandlers(
     operation,
-    typeImports,
+    typeImports
   );
 
   // Check if operation overrides security (empty or specific schemes)
@@ -103,7 +103,7 @@ export function generateOperationFunction(
     requestContentType,
     operationSecurityHeaders,
     overridesSecurity,
-    authHeaders,
+    authHeaders
   );
 
   // Handle empty parameters case - use simple destructuring with default
