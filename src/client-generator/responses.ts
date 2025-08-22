@@ -35,7 +35,7 @@ export function generateResponseHandlers(
     const responseCodes = Object.keys(operation.responses).filter(
       (code) => code !== "default",
     );
-    responseCodes.sort((a, b) => parseInt(a) - parseInt(b));
+    responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 
     for (const code of responseCodes) {
       const response = operation.responses[code] as ResponseObject;

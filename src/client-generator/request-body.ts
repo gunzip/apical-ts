@@ -1,4 +1,4 @@
-import type { OpenAPIObject, RequestBodyObject } from "openapi3-ts/oas31";
+import type { RequestBodyObject } from "openapi3-ts/oas31";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 
@@ -120,7 +120,6 @@ export function getRequestBodyContentType(
 export function resolveRequestBodyType(
   requestBody: RequestBodyObject,
   operationId: string,
-  doc: OpenAPIObject,
 ): RequestBodyTypeInfo {
   // Check if request body is required (default is false)
   const isRequired = requestBody.required === true;

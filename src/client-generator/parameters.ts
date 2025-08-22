@@ -5,6 +5,7 @@ import type {
   ReferenceObject,
 } from "openapi3-ts/oas31";
 
+import { assert } from "console";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
 import type { RequestBodyTypeInfo } from "./request-body.js";
@@ -290,9 +291,13 @@ export function resolveParameterReference(
 ): ParameterObject {
   if (isReferenceObject(param)) {
     const refPath = param.$ref.replace("#/", "").split("/");
-    let resolved = doc as any;
+    let resolved = doc as unknown;
     for (const segment of refPath) {
-      resolved = resolved[segment];
+      assert(
+        typeof resolved === "object" && resolved !== null,
+        `Missing reference: ${segment}`,
+      );
+      resolved = (resolved as Record<string, unknown>)[segment];
     }
     return resolved as ParameterObject;
   }
