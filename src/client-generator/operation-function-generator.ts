@@ -106,21 +106,21 @@ export function generateOperationFunction(
 
   // Function internal body code
   // Assemble the inner imperative body (headers, fetch call, switch over request content-type, parsing)
-  const functionBodyCode = generateFunctionBody(
-    pathKey,
-    method,
-    parameterGroups,
+  const functionBodyCode = generateFunctionBody({
+    authHeaders,
+    contentTypeMaps: bodyInfo.contentTypeMaps,
     hasBody,
-    responseHandlers,
-    bodyInfo.requestContentType,
+    method,
     operationSecurityHeaders,
     overridesSecurity,
-    authHeaders,
-    bodyInfo.contentTypeMaps,
-    bodyInfo.shouldGenerateRequestMap,
-    bodyInfo.shouldGenerateResponseMap,
-    bodyInfo.requestContentTypes,
-  );
+    parameterGroups,
+    pathKey,
+    requestContentType: bodyInfo.requestContentType,
+    requestContentTypes: bodyInfo.requestContentTypes,
+    responseHandlers,
+    shouldGenerateRequestMap: bodyInfo.shouldGenerateRequestMap,
+    shouldGenerateResponseMap: bodyInfo.shouldGenerateResponseMap,
+  });
 
   const parameterDeclaration = buildParameterDeclaration(
     destructuredParams,

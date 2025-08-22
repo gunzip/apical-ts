@@ -13,26 +13,45 @@ import {
 import { generatePathInterpolation } from "./utils.js";
 
 /**
- * Generates the function body for an operation with support for dynamic content types
- *
- * NOTE: This function now supports multiple content types per request/response.
- * The content types can be dynamically selected at runtime through the contentType parameter.
+ * Options accepted by generateFunctionBody (collapsed from the previous long positional argument list).
  */
-export function generateFunctionBody(
-  pathKey: string,
-  method: string,
-  parameterGroups: ParameterGroups,
-  hasBody: boolean,
-  responseHandlers: string[],
-  requestContentType: string | undefined,
-  operationSecurityHeaders: SecurityHeader[] | undefined,
-  overridesSecurity: boolean | undefined,
-  authHeaders: string[] | undefined,
-  contentTypeMaps: ContentTypeMaps,
-  shouldGenerateRequestMap: boolean,
-  shouldGenerateResponseMap: boolean,
-  requestContentTypes?: string[],
-): string {
+export type GenerateFunctionBodyOptions = {
+  authHeaders?: string[];
+  contentTypeMaps: ContentTypeMaps;
+  hasBody: boolean;
+  method: string;
+  operationSecurityHeaders?: SecurityHeader[];
+  overridesSecurity?: boolean;
+  parameterGroups: ParameterGroups;
+  pathKey: string;
+  requestContentType?: string;
+  requestContentTypes?: string[];
+  responseHandlers: string[];
+  shouldGenerateRequestMap: boolean;
+  shouldGenerateResponseMap: boolean;
+};
+
+/**
+ * Generates the function body for an operation with support for dynamic content types.
+ *
+ * NOTE: Supports multiple content types per request/response. The content types can be
+ * dynamically selected at runtime through the contentType parameter.
+ */
+export function generateFunctionBody({
+  authHeaders,
+  contentTypeMaps,
+  hasBody,
+  method,
+  operationSecurityHeaders,
+  overridesSecurity,
+  parameterGroups,
+  pathKey,
+  requestContentType,
+  requestContentTypes,
+  responseHandlers,
+  shouldGenerateRequestMap,
+  shouldGenerateResponseMap,
+}: GenerateFunctionBodyOptions): string {
   const { headerParams, pathParams, queryParams } = parameterGroups;
 
   const finalPath = generatePathInterpolation(pathKey, pathParams);
