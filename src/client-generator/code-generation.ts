@@ -15,7 +15,7 @@ import type { ContentTypeMaps } from "./responses.js";
  * Generates the function body for an operation with support for dynamic content types
  *
  * NOTE: This function now supports multiple content types per request/response.
- * The content types can be dynamically selected at runtime through the options parameter.
+ * The content types can be dynamically selected at runtime through the contentType parameter.
  */
 export function generateFunctionBody(
   pathKey: string,
@@ -28,6 +28,8 @@ export function generateFunctionBody(
   overridesSecurity: boolean | undefined,
   authHeaders: string[] | undefined,
   contentTypeMaps: ContentTypeMaps,
+  shouldGenerateRequestMap: boolean,
+  shouldGenerateResponseMap: boolean,
 ): string {
   const { headerParams, pathParams, queryParams } = parameterGroups;
 
@@ -40,8 +42,8 @@ export function generateFunctionBody(
       : "";
 
   // Determine if we need dynamic content type handling
-  const hasMultipleRequestTypes = contentTypeMaps.requestContentTypeCount > 1;
-  const hasMultipleResponseTypes = contentTypeMaps.responseContentTypeCount > 1;
+  const hasMultipleRequestTypes = shouldGenerateRequestMap && contentTypeMaps.requestContentTypeCount > 1;
+  const hasMultipleResponseTypes = shouldGenerateResponseMap && contentTypeMaps.responseContentTypeCount > 1;
 
   // Generate content type determination logic
   let contentTypeLogic = "";
@@ -49,9 +51,9 @@ export function generateFunctionBody(
   let acceptHeaderLogic = "";
   let contentTypeHeaderCode = "";
 
-  if (hasMultipleRequestTypes) {
+  if (shouldGenerateRequestMap) {
     const defaultReq = contentTypeMaps.defaultRequestContentType || "application/json";
-    contentTypeLogic += `  const finalRequestContentType = options?.requestContentType || "${defaultReq}";\n`;
+    contentTypeLogic += `  const finalRequestContentType = contentType?.request || "${defaultReq}";\n`;
     
     if (hasBody) {
       // Generate switch statement for different body content types
@@ -111,14 +113,14 @@ export function generateFunctionBody(
     }
   }
 
-  if (hasMultipleResponseTypes) {
+  if (shouldGenerateResponseMap) {
     const defaultResp = contentTypeMaps.defaultResponseContentType || "application/json";
-    acceptHeaderLogic = `    "Accept": options?.responseContentType || "${defaultResp}",`;
+    acceptHeaderLogic = `    "Accept": contentType?.response || "${defaultResp}",`;
   }
 
   // Build the headers object
   let headersContent = "";
-  if (hasMultipleRequestTypes) {
+  if (shouldGenerateRequestMap) {
     headersContent = `    ${
       overridesSecurity && authHeaders && authHeaders.length > 0
         ? `...Object.fromEntries(
@@ -127,7 +129,7 @@ export function generateFunctionBody(
       )
     ),`
         : "...config.headers,"
-    }${hasMultipleResponseTypes ? `
+    }${shouldGenerateResponseMap ? `
 ${acceptHeaderLogic}` : ""}
     ...contentTypeHeader,`;
   } else {
@@ -139,7 +141,7 @@ ${acceptHeaderLogic}` : ""}
       )
     ),`
         : "...config.headers,"
-    }${hasMultipleResponseTypes ? `
+    }${shouldGenerateResponseMap ? `
 ${acceptHeaderLogic}` : ""}${contentTypeHeaderCode}`;
   }
 

@@ -6,7 +6,7 @@ import { generateOperationFunction } from "../../src/client-generator/operation-
 import { generateContentTypeMaps } from "../../src/client-generator/responses.js";
 
 describe("Multi-content-type operation function generation", () => {
-  it("should generate function with generic content type support", () => {
+  it("should always generate function with type maps and contentType in first parameter", () => {
     const operation: OperationObject = {
       operationId: "petFindByStatus",
       summary: "Find pets by status",
@@ -67,7 +67,7 @@ describe("Multi-content-type operation function generation", () => {
       doc,
     );
 
-    // Check that type maps are generated
+    // Check that type maps are always generated
     expect(result.functionCode).toContain("export type PetFindByStatusRequestMap = {");
     expect(result.functionCode).toContain('"application/json": Pet;');
     expect(result.functionCode).toContain('"application/x-www-form-urlencoded": PetFindByStatusRequest;');
@@ -82,19 +82,20 @@ describe("Multi-content-type operation function generation", () => {
     expect(result.functionCode).toContain("TRequestContentType extends keyof PetFindByStatusRequestMap = \"application/json\"");
     expect(result.functionCode).toContain("TResponseContentType extends keyof PetFindByStatusResponseMap = \"application/json\"");
     
-    // Check parameter type uses generic
+    // Check parameter type uses generic and includes contentType in first parameter
     expect(result.functionCode).toContain("body: PetFindByStatusRequestMap[TRequestContentType];");
+    expect(result.functionCode).toContain("contentType?: { request?: TRequestContentType; response?: TResponseContentType }");
     
-    // Check options parameter
-    expect(result.functionCode).toContain("options?: { requestContentType?: TRequestContentType; responseContentType?: TResponseContentType }");
+    // Check NO options parameter (contentType should be in first parameter now)
+    expect(result.functionCode).not.toContain("options?: {");
     
     // Check return type uses generic
     expect(result.functionCode).toContain("Promise<PetFindByStatusResponseMap[TResponseContentType]>");
     
-    // Check dynamic content type handling
-    expect(result.functionCode).toContain("const finalRequestContentType = options?.requestContentType || \"application/json\";");
+    // Check dynamic content type handling looks for contentType in first parameter
+    expect(result.functionCode).toContain("const finalRequestContentType = contentType?.request || \"application/json\";");
     expect(result.functionCode).toContain("switch (finalRequestContentType)");
-    expect(result.functionCode).toContain("\"Accept\": options?.responseContentType || \"application/json\",");
+    expect(result.functionCode).toContain("\"Accept\": contentType?.response || \"application/json\",");
     
     // Check type imports
     expect(result.typeImports.has("Pet")).toBe(true);
@@ -103,7 +104,7 @@ describe("Multi-content-type operation function generation", () => {
     expect(result.typeImports.has("PetFindByStatus404Response")).toBe(true);
   });
 
-  it("should generate regular function for single content type operations", () => {
+  it("should generate function with type maps even for single content type operations", () => {
     const operation: OperationObject = {
       operationId: "getUser",
       requestBody: {
@@ -140,18 +141,15 @@ describe("Multi-content-type operation function generation", () => {
       doc,
     );
 
-    // Should NOT generate type maps for single content type
-    expect(result.functionCode).not.toContain("export type GetUserRequestMap");
-    expect(result.functionCode).not.toContain("export type GetUserResponseMap");
+    // Should now ALWAYS generate type maps
+    expect(result.functionCode).toContain("export type GetUserRequestMap");
+    expect(result.functionCode).toContain("export type GetUserResponseMap");
     
-    // Should NOT have generic parameters
-    expect(result.functionCode).not.toContain("export async function getUser<");
+    // Should have generic parameters
+    expect(result.functionCode).toContain("export async function getUser<");
     
-    // Should have normal function signature
-    expect(result.functionCode).toContain("export async function getUser(");
-    
-    // Should NOT have options parameter for content types
-    expect(result.functionCode).not.toContain("requestContentType?: TRequestContentType");
+    // Should include contentType parameter in first parameter
+    expect(result.functionCode).toContain("contentType?: { request?: TRequestContentType; response?: TResponseContentType }");
   });
 
   it("should generate regular function for GET operations with no request body", () => {
@@ -183,20 +181,22 @@ describe("Multi-content-type operation function generation", () => {
       doc,
     );
 
-    // Should NOT generate type maps for single content type
+    // Should generate response map for GET operations with responses
+    expect(result.functionCode).toContain("export type GetUserByIdResponseMap");
+    
+    // Should NOT generate request map for GET operations with no request body
     expect(result.functionCode).not.toContain("export type GetUserByIdRequestMap");
-    expect(result.functionCode).not.toContain("export type GetUserByIdResponseMap");
     
-    // Should NOT have generic parameters
-    expect(result.functionCode).not.toContain("export async function getUserById<");
+    // Should have generic parameters for response but not request
+    expect(result.functionCode).toContain("export async function getUserById<");
+    expect(result.functionCode).toContain("TResponseContentType extends keyof GetUserByIdResponseMap");
+    expect(result.functionCode).not.toContain("TRequestContentType");
     
-    // Should have normal function signature
-    expect(result.functionCode).toContain("export async function getUserById(");
+    // Should include contentType parameter only for response
+    expect(result.functionCode).toContain("contentType?: { response?: TResponseContentType }");
+    expect(result.functionCode).not.toContain("request?: TRequestContentType");
     
-    // Should NOT have options parameter for content types
-    expect(result.functionCode).not.toContain("options?.responseContentType");
-    
-    // Should have normal headers without options references
-    expect(result.functionCode).not.toContain("Accept: options?.responseContentType");
+    // Should have proper headers with contentType reference
+    expect(result.functionCode).toContain("contentType?.response");
   });
 });

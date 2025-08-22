@@ -75,12 +75,22 @@ export function generateOperationFunction(
   const requestMapTypeName = `${operationName}RequestMap`;
   const responseMapTypeName = `${operationName}ResponseMap`;
 
-  // Build parameter interface for types (will be updated later if needed)
+  // Generate content type maps for multi-content-type support
+  const contentTypeMaps = generateContentTypeMaps(operation);
+  contentTypeMaps.typeImports.forEach((imp) => typeImports.add(imp));
+
+  // Always generate type maps if we have request body or responses
+  const shouldGenerateRequestMap = hasBody && contentTypeMaps.requestContentTypeCount > 0;
+  const shouldGenerateResponseMap = contentTypeMaps.responseContentTypeCount > 0;
+
+  // Build parameter interface
   let paramsInterface = buildParameterInterface(
     parameterGroups,
     hasBody,
     bodyTypeInfo,
     operationSecurityHeaders,
+    shouldGenerateRequestMap ? requestMapTypeName : undefined,
+    shouldGenerateResponseMap ? responseMapTypeName : undefined,
   );
 
   // Build destructured parameters for function signature
@@ -89,6 +99,8 @@ export function generateOperationFunction(
     hasBody,
     bodyTypeInfo,
     operationSecurityHeaders,
+    shouldGenerateRequestMap,
+    shouldGenerateResponseMap,
   );
 
   // Generate response handlers and return type
@@ -96,21 +108,6 @@ export function generateOperationFunction(
     operation,
     typeImports,
   );
-
-  // Generate content type maps for multi-content-type support
-  const contentTypeMaps = generateContentTypeMaps(operation);
-  contentTypeMaps.typeImports.forEach((imp) => typeImports.add(imp));
-
-  // Check if we have multiple content types to generate generic signatures
-  const hasMultipleRequestTypes = contentTypeMaps.requestContentTypeCount > 1;
-  const hasMultipleResponseTypes = contentTypeMaps.responseContentTypeCount > 1;
-
-  // Update parameter interface to use generic body type if multiple request types exist
-  if (hasMultipleRequestTypes && hasBody && bodyTypeInfo?.typeName) {
-    // Replace the specific body type with the generic type
-    const bodyTypePattern = new RegExp(`body(\\??): ${bodyTypeInfo.typeName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
-    paramsInterface = paramsInterface.replace(bodyTypePattern, `body$1: ${requestMapTypeName}[TRequestContentType]`);
-  }
 
   // Check if operation overrides security (empty or specific schemes)
   const overridesSecurity = hasSecurityOverride(operation);
@@ -128,6 +125,8 @@ export function generateOperationFunction(
     overridesSecurity,
     authHeaders,
     contentTypeMaps,
+    shouldGenerateRequestMap,
+    shouldGenerateResponseMap,
   );
 
   // Handle empty parameters case - use simple destructuring with default
@@ -142,18 +141,17 @@ export function generateOperationFunction(
 
   // Generate generic type parameters and defaults
   let genericParams = "";
-  let optionsParam = "";
   let updatedReturnType = returnType;
 
-  if (hasMultipleRequestTypes || hasMultipleResponseTypes) {
+  if (shouldGenerateRequestMap || shouldGenerateResponseMap) {
     const genericParts: string[] = [];
     
-    if (hasMultipleRequestTypes) {
+    if (shouldGenerateRequestMap) {
       const defaultReq = contentTypeMaps.defaultRequestContentType || "application/json";
       genericParts.push(`TRequestContentType extends keyof ${requestMapTypeName} = "${defaultReq}"`);
     }
     
-    if (hasMultipleResponseTypes) {
+    if (shouldGenerateResponseMap) {
       const defaultResp = contentTypeMaps.defaultResponseContentType || "application/json";
       genericParts.push(`TResponseContentType extends keyof ${responseMapTypeName} = "${defaultResp}"`);
     }
@@ -161,41 +159,24 @@ export function generateOperationFunction(
     if (genericParts.length > 0) {
       genericParams = `<${genericParts.join(", ")}>`;
       
-      // Add options parameter for content types
-      const optionsParts: string[] = [];
-      if (hasMultipleRequestTypes) {
-        optionsParts.push("requestContentType?: TRequestContentType");
-      }
-      if (hasMultipleResponseTypes) {
-        optionsParts.push("responseContentType?: TResponseContentType");
-      }
-      
-      optionsParam = `,\n  options?: { ${optionsParts.join("; ")} }`;
-      
       // Update return type to use generic
-      if (hasMultipleResponseTypes) {
+      if (shouldGenerateResponseMap) {
         updatedReturnType = `${responseMapTypeName}[TResponseContentType]`;
-      }
-      
-      // Update parameter interface for request body if needed
-      if (hasMultipleRequestTypes && hasBody) {
-        // We'll need to modify the params interface to use the generic type
-        // For now, keep the existing approach but note this needs enhancement
       }
     }
   }
 
-  // Generate type aliases
+  // Generate type aliases - always generate them if we have content types
   let typeAliases = "";
-  if (hasMultipleRequestTypes) {
+  if (shouldGenerateRequestMap) {
     typeAliases += `export type ${requestMapTypeName} = ${contentTypeMaps.requestMapType};\n\n`;
   }
-  if (hasMultipleResponseTypes) {
+  if (shouldGenerateResponseMap) {
     typeAliases += `export type ${responseMapTypeName} = ${contentTypeMaps.responseMapType};\n\n`;
   }
 
   const functionStr = `${typeAliases}${summary}export async function ${functionName}${genericParams}(
-  ${parameterDeclaration}${optionsParam},
+  ${parameterDeclaration},
   config: GlobalConfig = globalConfig
 ): Promise<${updatedReturnType}> {
   ${functionBodyCode}
