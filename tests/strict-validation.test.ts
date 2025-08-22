@@ -24,7 +24,7 @@ describe("Strict Validation Feature", () => {
 
       const result = zodSchemaToCode(schema);
       expect(result.code).toContain("z.looseObject");
-      expect(result.code).not.toContain("z.object(");
+      expect(result.code).not.toContain("z.strictObject");
 
       const zodSchema = evalZod(result.code);
 
@@ -70,7 +70,7 @@ describe("Strict Validation Feature", () => {
   });
 
   describe("strict validation (opt-in behavior)", () => {
-    it("should use z.object() when strictValidation is true", () => {
+    it("should use z.strictObject() when strictValidation is true", () => {
       const schema = {
         type: "object" as const,
         properties: {
@@ -81,7 +81,7 @@ describe("Strict Validation Feature", () => {
       };
 
       const result = zodSchemaToCode(schema, { strictValidation: true });
-      expect(result.code).toContain("z.object(");
+      expect(result.code).toContain("z.strictObject");
       expect(result.code).not.toContain("z.looseObject");
 
       const zodSchema = evalZod(result.code);
@@ -99,7 +99,7 @@ describe("Strict Validation Feature", () => {
       expect(zodSchema.safeParse({ name: 123 }).success).toBe(false);
     });
 
-    it("should use z.object() for nested objects when strictValidation is true", () => {
+    it("should use z.strictObject() for nested objects when strictValidation is true", () => {
       const schema = {
         type: "object" as const,
         properties: {
@@ -113,7 +113,7 @@ describe("Strict Validation Feature", () => {
       };
 
       const result = zodSchemaToCode(schema, { strictValidation: true });
-      expect(result.code).toContain("z.object(");
+      expect(result.code).toContain("z.strictObject");
       expect(result.code).not.toContain("z.looseObject");
 
       const zodSchema = evalZod(result.code);
@@ -169,11 +169,11 @@ describe("Strict Validation Feature", () => {
       // Test loose validation (default)
       const looseResult = zodSchemaToCode(schema);
       expect(looseResult.code).toContain("z.looseObject");
-      expect(looseResult.code).not.toContain("z.object(");
+      expect(looseResult.code).not.toContain("z.strictObject");
 
       // Test strict validation
       const strictResult = zodSchemaToCode(schema, { strictValidation: true });
-      expect(strictResult.code).toContain("z.object(");
+      expect(strictResult.code).toContain("z.strictObject");
       expect(strictResult.code).not.toContain("z.looseObject");
     });
 
@@ -194,7 +194,7 @@ describe("Strict Validation Feature", () => {
 
       // Test strict validation
       const strictResult = zodSchemaToCode(schema, { strictValidation: true });
-      expect(strictResult.code).toContain("z.object(");
+      expect(strictResult.code).toContain("z.strictObject");
       expect(strictResult.code).not.toContain("z.looseObject");
     });
   });
