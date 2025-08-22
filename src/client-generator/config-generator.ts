@@ -172,14 +172,6 @@ export async function parseResponseBody(response: Response): Promise<unknown | B
     return response.text().catch(() => null);
   }
   
-  // For very large responses or streaming, you might want to return the response itself
-  // to let the caller decide how to handle it
-  if (contentType.includes('application/octet-stream') && 
-      parseInt(response.headers.get('content-length') || '0') > 10 * 1024 * 1024) {
-    // For files larger than 10MB, return the response to allow streaming
-    return response;
-  }
-  
   // Default to text for unknown content types
   return response.text().catch(() => null);
 }
