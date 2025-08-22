@@ -92,8 +92,7 @@ export class UnexpectedResponseError extends Error {
  */
 export function isStatus<
   TResponse extends ApiResponse<number, any>,
-  S extends TResponse['status'],
-  T extends Extract<TResponse, { status: S }>['data']
+  S extends TResponse['status']
 >(
   result: TResponse,
   status: S,

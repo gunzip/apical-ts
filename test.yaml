@@ -5,6 +5,7 @@ info:
   version: 1.0.0
 servers:
   - url: https://localhost/api/v1
+  - url: https://localhost/api/v2
 security:
   - customToken: []
 paths:
