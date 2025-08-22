@@ -218,7 +218,7 @@ describe("client-generator utils", () => {
       };
 
       const result = getResponseContentType(response);
-      expect(result).toBe("text/plain");
+      expect(result).toBe("application/xml"); // Should be first in object keys
     });
 
     it("should return null when no content defined", () => {

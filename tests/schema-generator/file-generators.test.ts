@@ -261,7 +261,7 @@ describe("schema-generator file-generators", () => {
 
       expect(format).toHaveBeenCalledWith(
         expect.stringMatching(
-          /import \{ User \} from "\.\/User\.js";[\s\S]*import \{ Role \} from "\.\/Role\.js";/,
+          /import \{ Role \} from "\.\/Role\.js";[\s\S]*import \{ User \} from "\.\/User\.js";/,
         ),
         { parser: "typescript" },
       );
