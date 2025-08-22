@@ -1,21 +1,23 @@
-import { describe, it, expect } from "vitest";
-import {
-  extractServerUrls,
-  extractAllOperations,
-} from "../../src/client-generator/operation-extractor.js";
 import type {
   OpenAPIObject,
-  PathItemObject,
   OperationObject,
   ParameterObject,
+  PathItemObject,
 } from "openapi3-ts/oas31";
+
+import { describe, expect, it } from "vitest";
+
+import {
+  extractAllOperations,
+  extractServerUrls,
+} from "../../src/client-generator/operation-extractor.js";
 
 describe("client-generator operation-extractor", () => {
   describe("extractServerUrls", () => {
     it("should extract all server URLs", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         servers: [
           { url: "https://api.example.com/v1" },
           { url: "https://backup.example.com/v1" },
@@ -33,8 +35,8 @@ describe("client-generator operation-extractor", () => {
 
     it("should return empty array when no servers", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
       };
 
       const result = extractServerUrls(doc);
@@ -43,8 +45,8 @@ describe("client-generator operation-extractor", () => {
 
     it("should return empty array when servers array is empty", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         servers: [],
       };
 
@@ -54,11 +56,11 @@ describe("client-generator operation-extractor", () => {
 
     it("should filter out servers with undefined URLs", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         servers: [
           { url: "https://api.example.com/v1" },
-          { url: undefined as any, description: "Server without URL" },
+          { description: "Server without URL", url: undefined as any },
           { url: "https://backup.example.com/v1" },
         ],
       };
@@ -72,8 +74,8 @@ describe("client-generator operation-extractor", () => {
 
     it("should filter out servers with empty URLs", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         servers: [
           { url: "https://api.example.com/v1" },
           { url: "" },
@@ -90,8 +92,8 @@ describe("client-generator operation-extractor", () => {
 
     it("should handle single server", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         servers: [{ url: "https://api.example.com/v1" }],
       };
 
@@ -103,8 +105,8 @@ describe("client-generator operation-extractor", () => {
   describe("extractAllOperations", () => {
     it("should extract single operation", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {
           "/users": {
             get: {
@@ -119,20 +121,20 @@ describe("client-generator operation-extractor", () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
-        pathKey: "/users",
         method: "get",
         operation: expect.objectContaining({
           operationId: "getUsers",
         }),
-        pathLevelParameters: [],
         operationId: "getUsers",
+        pathKey: "/users",
+        pathLevelParameters: [],
       });
     });
 
     it("should extract multiple operations from same path", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {
           "/users": {
             get: {
@@ -158,18 +160,18 @@ describe("client-generator operation-extractor", () => {
 
     it("should extract operations from multiple paths", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {
-          "/users": {
-            get: {
-              operationId: "getUsers",
-              responses: { "200": { description: "Success" } },
-            },
-          },
           "/posts": {
             get: {
               operationId: "getPosts",
+              responses: { "200": { description: "Success" } },
+            },
+          },
+          "/users": {
+            get: {
+              operationId: "getUsers",
               responses: { "200": { description: "Success" } },
             },
           },
@@ -185,15 +187,15 @@ describe("client-generator operation-extractor", () => {
 
     it("should handle all HTTP methods", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {
           "/users": {
+            delete: { operationId: "deleteUser", responses: {} },
             get: { operationId: "getUsers", responses: {} },
+            patch: { operationId: "patchUser", responses: {} },
             post: { operationId: "createUser", responses: {} },
             put: { operationId: "updateUser", responses: {} },
-            delete: { operationId: "deleteUser", responses: {} },
-            patch: { operationId: "patchUser", responses: {} },
           },
         },
       };
@@ -207,22 +209,22 @@ describe("client-generator operation-extractor", () => {
 
     it("should include path-level parameters", () => {
       const pathLevelParam: ParameterObject = {
-        name: "version",
         in: "header",
+        name: "version",
         required: true,
         schema: { type: "string" },
       };
 
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {
           "/users": {
-            parameters: [pathLevelParam],
             get: {
               operationId: "getUsers",
               responses: { "200": { description: "Success" } },
             },
+            parameters: [pathLevelParam],
           },
         },
       };
@@ -235,12 +237,12 @@ describe("client-generator operation-extractor", () => {
 
     it("should handle paths without operations", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {
           "/users": {
-            summary: "User operations",
             description: "Operations for managing users",
+            summary: "User operations",
           },
         },
       };
@@ -251,8 +253,8 @@ describe("client-generator operation-extractor", () => {
 
     it("should handle document without paths", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
       };
 
       const result = extractAllOperations(doc);
@@ -261,8 +263,8 @@ describe("client-generator operation-extractor", () => {
 
     it("should handle empty paths object", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {},
       };
 
@@ -272,8 +274,8 @@ describe("client-generator operation-extractor", () => {
 
     it("should handle path with no path-level parameters", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {
           "/users": {
             get: {
@@ -292,8 +294,8 @@ describe("client-generator operation-extractor", () => {
 
     it("should handle mixed operations - some with missing operationId", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {
           "/users": {
             get: {
@@ -320,13 +322,13 @@ describe("client-generator operation-extractor", () => {
 
     it("should preserve operation order based on HTTP method order", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {
           "/users": {
-            patch: { operationId: "patchUser", responses: {} },
-            get: { operationId: "getUsers", responses: {} },
             delete: { operationId: "deleteUser", responses: {} },
+            get: { operationId: "getUsers", responses: {} },
+            patch: { operationId: "patchUser", responses: {} },
             post: { operationId: "createUser", responses: {} },
             put: { operationId: "updateUser", responses: {} },
           },

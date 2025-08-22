@@ -1,11 +1,13 @@
-import { describe, it, expect } from "vitest";
+import type { ParameterObject, ResponseObject } from "openapi3-ts/oas31";
+
+import { describe, expect, it } from "vitest";
+
 import {
-  toCamelCase,
-  toValidVariableName,
   generatePathInterpolation,
   getResponseContentType,
+  toCamelCase,
+  toValidVariableName,
 } from "../../src/client-generator/utils.js";
-import type { ParameterObject, ResponseObject } from "openapi3-ts/oas31";
 
 describe("client-generator utils", () => {
   describe("toCamelCase", () => {
@@ -61,7 +63,7 @@ describe("client-generator utils", () => {
     it("should handle spaces", () => {
       expect(toValidVariableName("hello world")).toBe("helloWorld");
       expect(toValidVariableName("test  multiple   spaces")).toBe(
-        "testMultipleSpaces"
+        "testMultipleSpaces",
       );
     });
 
@@ -72,7 +74,7 @@ describe("client-generator utils", () => {
 
     it("should handle mixed characters", () => {
       expect(toValidVariableName("test-name_123@domain.com")).toBe(
-        "testName_123DomainCom"
+        "testName_123DomainCom",
       );
     });
 
@@ -100,7 +102,7 @@ describe("client-generator utils", () => {
   describe("generatePathInterpolation", () => {
     it("should interpolate single path parameter", () => {
       const pathParams: ParameterObject[] = [
-        { name: "userId", in: "path", required: true },
+        { in: "path", name: "userId", required: true },
       ];
 
       const result = generatePathInterpolation("/users/{userId}", pathParams);
@@ -109,26 +111,26 @@ describe("client-generator utils", () => {
 
     it("should interpolate multiple path parameters", () => {
       const pathParams: ParameterObject[] = [
-        { name: "userId", in: "path", required: true },
-        { name: "postId", in: "path", required: true },
+        { in: "path", name: "userId", required: true },
+        { in: "path", name: "postId", required: true },
       ];
 
       const result = generatePathInterpolation(
         "/users/{userId}/posts/{postId}",
-        pathParams
+        pathParams,
       );
       expect(result).toBe("/users/${userId}/posts/${postId}");
     });
 
     it("should convert kebab-case parameter names to camelCase", () => {
       const pathParams: ParameterObject[] = [
-        { name: "user-id", in: "path", required: true },
-        { name: "post-id", in: "path", required: true },
+        { in: "path", name: "user-id", required: true },
+        { in: "path", name: "post-id", required: true },
       ];
 
       const result = generatePathInterpolation(
         "/users/{user-id}/posts/{post-id}",
-        pathParams
+        pathParams,
       );
       expect(result).toBe("/users/${userId}/posts/${postId}");
     });
@@ -145,7 +147,7 @@ describe("client-generator utils", () => {
 
     it("should handle parameters not in path", () => {
       const pathParams: ParameterObject[] = [
-        { name: "nonExistent", in: "path", required: true },
+        { in: "path", name: "nonExistent", required: true },
       ];
 
       const result = generatePathInterpolation("/users/{userId}", pathParams);
@@ -154,13 +156,13 @@ describe("client-generator utils", () => {
 
     it("should handle complex parameter names", () => {
       const pathParams: ParameterObject[] = [
-        { name: "user_id", in: "path", required: true },
-        { name: "complex-param-name", in: "path", required: true },
+        { in: "path", name: "user_id", required: true },
+        { in: "path", name: "complex-param-name", required: true },
       ];
 
       const result = generatePathInterpolation(
         "/users/{user_id}/data/{complex-param-name}",
-        pathParams
+        pathParams,
       );
       expect(result).toBe("/users/${userId}/data/${complexParamName}"); // Only complex-param-name gets converted
     });
@@ -169,11 +171,11 @@ describe("client-generator utils", () => {
   describe("getResponseContentType", () => {
     it("should return application/json when available", () => {
       const response: ResponseObject = {
-        description: "Success",
         content: {
           "application/json": { schema: { type: "object" } },
           "text/plain": { schema: { type: "string" } },
         },
+        description: "Success",
       };
 
       const result = getResponseContentType(response);
@@ -182,11 +184,11 @@ describe("client-generator utils", () => {
 
     it("should return application/problem+json when application/json not available", () => {
       const response: ResponseObject = {
-        description: "Error",
         content: {
           "application/problem+json": { schema: { type: "object" } },
           "text/plain": { schema: { type: "string" } },
         },
+        description: "Error",
       };
 
       const result = getResponseContentType(response);
@@ -195,11 +197,11 @@ describe("client-generator utils", () => {
 
     it("should return other +json content types", () => {
       const response: ResponseObject = {
-        description: "Success",
         content: {
           "application/vnd.api+json": { schema: { type: "object" } },
           "text/plain": { schema: { type: "string" } },
         },
+        description: "Success",
       };
 
       const result = getResponseContentType(response);
@@ -208,11 +210,11 @@ describe("client-generator utils", () => {
 
     it("should return first content type when no JSON types available", () => {
       const response: ResponseObject = {
-        description: "Success",
         content: {
-          "text/plain": { schema: { type: "string" } },
           "application/xml": { schema: { type: "object" } },
+          "text/plain": { schema: { type: "string" } },
         },
+        description: "Success",
       };
 
       const result = getResponseContentType(response);
@@ -230,8 +232,8 @@ describe("client-generator utils", () => {
 
     it("should return null when content is empty object", () => {
       const response: ResponseObject = {
-        description: "Empty content",
         content: {},
+        description: "Empty content",
       };
 
       const result = getResponseContentType(response);
@@ -240,11 +242,11 @@ describe("client-generator utils", () => {
 
     it("should prefer application/json over application/problem+json", () => {
       const response: ResponseObject = {
-        description: "Success",
         content: {
-          "application/problem+json": { schema: { type: "object" } },
           "application/json": { schema: { type: "object" } },
+          "application/problem+json": { schema: { type: "object" } },
         },
+        description: "Success",
       };
 
       const result = getResponseContentType(response);
@@ -253,11 +255,11 @@ describe("client-generator utils", () => {
 
     it("should handle custom JSON content types", () => {
       const response: ResponseObject = {
-        description: "Success",
         content: {
           "application/vnd.custom+json": { schema: { type: "object" } },
           "text/plain": { schema: { type: "string" } },
         },
+        description: "Success",
       };
 
       const result = getResponseContentType(response);

@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { ApiError } from "../../src/core-generator/error.js";
 
 describe("ApiError", () => {
@@ -6,9 +7,9 @@ describe("ApiError", () => {
     const statusCode = 404;
     const responseBody = { error: "Not found" };
     const headers = new Headers({ "Content-Type": "application/json" });
-    
+
     const error = new ApiError(statusCode, responseBody, headers);
-    
+
     expect(error).toBeInstanceOf(Error);
     expect(error).toBeInstanceOf(ApiError);
     expect(error.message).toBe("API Error: 404");
@@ -30,7 +31,7 @@ describe("ApiError", () => {
 
   it("should handle null response body", () => {
     const error = new ApiError(204, null, new Headers());
-    
+
     expect(error.responseBody).toBeNull();
     expect(error.statusCode).toBe(204);
   });
@@ -38,28 +39,28 @@ describe("ApiError", () => {
   it("should handle empty headers", () => {
     const headers = new Headers();
     const error = new ApiError(400, "Bad request", headers);
-    
+
     expect(error.headers).toBe(headers);
     expect(error.headers.get("Content-Type")).toBeNull();
   });
 
   it("should handle complex response body objects", () => {
     const complexBody = {
-      error: "Validation failed",
       details: [
         { field: "email", message: "Invalid format" },
-        { field: "password", message: "Too short" }
-      ]
+        { field: "password", message: "Too short" },
+      ],
+      error: "Validation failed",
     };
-    
+
     const error = new ApiError(422, complexBody, new Headers());
-    
+
     expect(error.responseBody).toEqual(complexBody);
   });
 
   it("should have proper stack trace", () => {
     const error = new ApiError(500, "Server error", new Headers());
-    
+
     expect(error.stack).toBeDefined();
     expect(error.stack).toContain("ApiError");
   });

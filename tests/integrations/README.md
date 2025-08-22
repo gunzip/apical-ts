@@ -5,6 +5,7 @@ This directory contains comprehensive integration tests for the TypeScript OpenA
 ## Overview
 
 The integration tests validate that:
+
 - The generated TypeScript client works correctly against a real HTTP server
 - All operations defined in the OpenAPI spec are properly implemented
 - Authentication schemes function as expected
@@ -21,8 +22,9 @@ pnpm exec vitest tests/integrations/simple.test.ts --run
 ```
 
 This test demonstrates:
+
 - ✅ Operations without authentication requirements
-- ✅ Operations with custom token authentication  
+- ✅ Operations with custom token authentication
 - ✅ POST operations with request bodies
 - ✅ File upload operations
 - ✅ File download operations
@@ -58,11 +60,13 @@ tests/integrations/
 ### Prerequisites
 
 1. Install dependencies:
+
    ```bash
    pnpm install
    ```
 
 2. Build the project:
+
    ```bash
    pnpm run build
    ```
@@ -97,8 +101,9 @@ pnpm exec vitest tests/integrations/operations/authentication.test.ts
 ### 1. Mock Server Management
 
 The tests automatically:
+
 - Start a Prism mock server before tests run
-- Use random ports to avoid conflicts  
+- Use random ports to avoid conflicts
 - Stop the server after tests complete
 - Generate realistic responses based on the OpenAPI spec
 
@@ -131,6 +136,7 @@ All operations return a consistent `ApiResponse<Status, Data>` structure:
 ### 4. Error Handling
 
 Failed requests throw `UnexpectedResponseError` with:
+
 - `status`: HTTP status code
 - `data`: Response body
 - `response`: Raw Response object
@@ -138,6 +144,7 @@ Failed requests throw `UnexpectedResponseError` with:
 ### 5. Type Safety
 
 All operations are fully typed based on the OpenAPI specification:
+
 - Request parameters are validated at compile time
 - Response types are inferred from the spec
 - Authentication requirements are enforced
@@ -146,13 +153,13 @@ All operations are fully typed based on the OpenAPI specification:
 
 The working demo covers these operation types:
 
-| Operation | Description | Auth Required | Status |
-|-----------|-------------|---------------|---------|
-| `testOverriddenSecurityNoAuth` | No authentication | None | ✅ Working |
-| `testCustomTokenHeader` | Custom token auth | Parameter-based | ✅ Working |
-| `testInlineBodySchema` | POST with body | Global auth | ✅ Error handling |
-| `testFileUpload` | File upload | Global auth | ✅ Error handling |
-| `testBinaryFileDownload` | File download | Global auth | ✅ Error handling |
+| Operation                      | Description       | Auth Required   | Status            |
+| ------------------------------ | ----------------- | --------------- | ----------------- |
+| `testOverriddenSecurityNoAuth` | No authentication | None            | ✅ Working        |
+| `testCustomTokenHeader`        | Custom token auth | Parameter-based | ✅ Working        |
+| `testInlineBodySchema`         | POST with body    | Global auth     | ✅ Error handling |
+| `testFileUpload`               | File upload       | Global auth     | ✅ Error handling |
+| `testBinaryFileDownload`       | File download     | Global auth     | ✅ Error handling |
 
 ## Authentication Schemes
 
@@ -172,12 +179,12 @@ The generated operations expect parameters in specific structures:
 await client.operationWithParams({
   path: { "path-param": "value" },
   query: { qr: "required", qo: "optional" },
-  headers: { "custom-header": "value" }
+  headers: { "custom-header": "value" },
 });
 
 // Request body
 await client.operationWithBody({
-  body: { name: "test", age: 25 }
+  body: { name: "test", age: 25 },
 });
 ```
 

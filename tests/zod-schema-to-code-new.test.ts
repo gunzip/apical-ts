@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { zodSchemaToCode } from "../src/schema-generator";
 import { SchemaObject } from "openapi3-ts/oas31";
+import { describe, expect, it } from "vitest";
+
+import { zodSchemaToCode } from "../src/schema-generator";
 
 // Helper to eval generated code
 function evalZod(code: string) {
-  // eslint-disable-next-line no-new-func
   return new Function("z", `return ${code}`)(require("zod"));
 }
 
@@ -30,10 +30,10 @@ describe("zodSchemaToCode", () => {
       allOf: [
         { $ref: "#/components/schemas/Profile" },
         {
-          type: "object",
           properties: {
             status: { type: "string" },
           },
+          type: "object",
         },
       ],
     };

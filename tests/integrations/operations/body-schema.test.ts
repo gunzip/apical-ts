@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { MockServer, getRandomPort } from "../setup.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { createAuthenticatedClient } from "../client.js";
 import { sampleData } from "../fixtures/test-helpers.js";
+import { getRandomPort, MockServer } from "../setup.js";
 
 describe("Body and Schema Operations", () => {
   let mockServer: MockServer;
@@ -27,7 +28,7 @@ describe("Body and Schema Operations", () => {
   describe("testInlineBodySchema operation", () => {
     it("should handle inline body schema successfully", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = sampleData.inlineBody;
 
       // Act
@@ -42,7 +43,7 @@ describe("Body and Schema Operations", () => {
 
     it("should validate required fields in inline schema", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = {
         // Missing required 'name' field
         age: 25,
@@ -64,18 +65,18 @@ describe("Body and Schema Operations", () => {
           expect(error.response).toBeInstanceOf(Response);
         } else {
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
 
     it("should handle additional properties in inline schema", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = {
-        name: "Test Name",
         age: 25,
         extraProperty: "should be ignored or handled gracefully",
+        name: "Test Name",
       };
 
       // Act
@@ -89,10 +90,10 @@ describe("Body and Schema Operations", () => {
 
     it("should handle different data types in inline schema", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = {
-        name: "Test Name",
         age: 30.5, // Number instead of integer
+        name: "Test Name",
       };
 
       // Act
@@ -108,7 +109,7 @@ describe("Body and Schema Operations", () => {
   describe("testParameterWithBodyReference operation", () => {
     it("should handle body with schema reference", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = sampleData.newModel;
 
       // Act
@@ -123,7 +124,7 @@ describe("Body and Schema Operations", () => {
 
     it("should validate referenced schema properties", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = {
         id: "test-id-123",
         name: "Test Model Name",
@@ -140,7 +141,7 @@ describe("Body and Schema Operations", () => {
 
     it("should reject invalid referenced schema", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = {
         // Missing required 'id' and 'name' fields for NewModel
         invalidField: "test",
@@ -162,14 +163,14 @@ describe("Body and Schema Operations", () => {
           expect(error.response).toBeInstanceOf(Response);
         } else {
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
 
     it("should handle empty body when not required", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act - Body is not marked as required in the spec
       const response = await client.testParameterWithBodyReference({});
@@ -182,7 +183,7 @@ describe("Body and Schema Operations", () => {
   describe("putTestParameterWithBodyReference operation", () => {
     it("should handle PUT operation with body reference", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = sampleData.newModel;
 
       // Act
@@ -197,7 +198,7 @@ describe("Body and Schema Operations", () => {
 
     it("should differentiate PUT from POST behavior", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = sampleData.newModel;
 
       // Act - Test both PUT and POST with same body
@@ -217,7 +218,7 @@ describe("Body and Schema Operations", () => {
 
     it("should handle idempotency of PUT requests", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = {
         id: "idempotent-test-id",
         name: "Idempotent Test Model",
@@ -240,7 +241,7 @@ describe("Body and Schema Operations", () => {
   describe("Body content type handling", () => {
     it("should handle JSON content type", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const requestBody = sampleData.inlineBody;
 
       // Act
@@ -256,18 +257,18 @@ describe("Body and Schema Operations", () => {
 
     it("should serialize complex objects correctly", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const complexBody = {
-        name: "Complex Object",
         age: 30,
+        items: [1, 2, 3, 4, 5],
         metadata: {
-          tags: ["tag1", "tag2"],
           settings: {
             enabled: true,
             level: 5,
           },
+          tags: ["tag1", "tag2"],
         },
-        items: [1, 2, 3, 4, 5],
+        name: "Complex Object",
       };
 
       // Act
@@ -281,10 +282,10 @@ describe("Body and Schema Operations", () => {
 
     it("should handle special characters in body", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const bodyWithSpecialChars = {
-        name: "Test with special chars: áéíóú, ñ, ç, 中文, 🌟",
         age: 25,
+        name: "Test with special chars: áéíóú, ñ, ç, 中文, 🌟",
       };
 
       // Act
@@ -300,10 +301,10 @@ describe("Body and Schema Operations", () => {
   describe("Schema validation edge cases", () => {
     it("should handle null values appropriately", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const bodyWithNull = {
-        name: "Test Name",
         age: null, // Null age
+        name: "Test Name",
       };
 
       // Act & Assert
@@ -322,17 +323,17 @@ describe("Body and Schema Operations", () => {
           expect(error.response).toBeInstanceOf(Response);
         } else {
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
 
     it("should handle undefined values appropriately", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
       const bodyWithUndefined = {
-        name: "Test Name",
         age: undefined, // Undefined age
+        name: "Test Name",
       };
 
       // Act & Assert
@@ -350,14 +351,14 @@ describe("Body and Schema Operations", () => {
           expect(error.response).toBeInstanceOf(Response);
         } else {
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
 
     it("should handle empty object bodies", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act & Assert
       try {
@@ -374,7 +375,7 @@ describe("Body and Schema Operations", () => {
           expect(error.response).toBeInstanceOf(Response);
         } else {
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });

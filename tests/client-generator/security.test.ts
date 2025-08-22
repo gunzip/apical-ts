@@ -1,33 +1,35 @@
-import { describe, it, expect } from "vitest";
-import {
-  extractAuthHeaders,
-  hasSecurityOverride,
-  getOperationSecuritySchemes,
-  generateSecurityHeaderHandling,
-  type SecurityHeader,
-} from "../../src/client-generator/security.js";
 import type {
   OpenAPIObject,
   OperationObject,
   SecuritySchemeObject,
 } from "openapi3-ts/oas31";
 
+import { describe, expect, it } from "vitest";
+
+import {
+  extractAuthHeaders,
+  generateSecurityHeaderHandling,
+  getOperationSecuritySchemes,
+  hasSecurityOverride,
+  type SecurityHeader,
+} from "../../src/client-generator/security.js";
+
 describe("client-generator security", () => {
   describe("extractAuthHeaders", () => {
     it("should extract API key headers from global security", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
-        info: { title: "Test", version: "1.0.0" },
-        security: [{ apiKey: [] }],
         components: {
           securitySchemes: {
             apiKey: {
-              type: "apiKey",
               in: "header",
               name: "X-API-Key",
+              type: "apiKey",
             },
           },
         },
+        info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
+        security: [{ apiKey: [] }],
       };
 
       const result = extractAuthHeaders(doc);
@@ -36,17 +38,17 @@ describe("client-generator security", () => {
 
     it("should extract Authorization header for bearer tokens", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
-        info: { title: "Test", version: "1.0.0" },
-        security: [{ bearerAuth: [] }],
         components: {
           securitySchemes: {
             bearerAuth: {
-              type: "http",
               scheme: "bearer",
+              type: "http",
             },
           },
         },
+        info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
+        security: [{ bearerAuth: [] }],
       };
 
       const result = extractAuthHeaders(doc);
@@ -55,22 +57,22 @@ describe("client-generator security", () => {
 
     it("should extract multiple headers from different security schemes", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
-        info: { title: "Test", version: "1.0.0" },
-        security: [{ apiKey: [], bearerAuth: [] }],
         components: {
           securitySchemes: {
             apiKey: {
-              type: "apiKey",
               in: "header",
               name: "X-API-Key",
+              type: "apiKey",
             },
             bearerAuth: {
-              type: "http",
               scheme: "bearer",
+              type: "http",
             },
           },
         },
+        info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
+        security: [{ apiKey: [], bearerAuth: [] }],
       };
 
       const result = extractAuthHeaders(doc);
@@ -79,18 +81,18 @@ describe("client-generator security", () => {
 
     it("should ignore non-header API keys", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
-        info: { title: "Test", version: "1.0.0" },
-        security: [{ queryApiKey: [] }],
         components: {
           securitySchemes: {
             queryApiKey: {
-              type: "apiKey",
               in: "query",
               name: "api_key",
+              type: "apiKey",
             },
           },
         },
+        info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
+        security: [{ queryApiKey: [] }],
       };
 
       const result = extractAuthHeaders(doc);
@@ -99,17 +101,17 @@ describe("client-generator security", () => {
 
     it("should ignore non-bearer HTTP schemes", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
-        info: { title: "Test", version: "1.0.0" },
-        security: [{ basicAuth: [] }],
         components: {
           securitySchemes: {
             basicAuth: {
-              type: "http",
               scheme: "basic",
+              type: "http",
             },
           },
         },
+        info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
+        security: [{ basicAuth: [] }],
       };
 
       const result = extractAuthHeaders(doc);
@@ -118,8 +120,8 @@ describe("client-generator security", () => {
 
     it("should return empty array when no security defined", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
       };
 
       const result = extractAuthHeaders(doc);
@@ -128,8 +130,8 @@ describe("client-generator security", () => {
 
     it("should return empty array when no security schemes defined", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
         security: [{ apiKey: [] }],
       };
 
@@ -139,23 +141,23 @@ describe("client-generator security", () => {
 
     it("should ignore security schemes not used globally", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
-        info: { title: "Test", version: "1.0.0" },
-        security: [{ usedGlobally: [] }],
         components: {
           securitySchemes: {
-            usedGlobally: {
-              type: "apiKey",
-              in: "header",
-              name: "X-Global-Key",
-            },
             notUsedGlobally: {
-              type: "apiKey",
               in: "header",
               name: "X-Local-Key",
+              type: "apiKey",
+            },
+            usedGlobally: {
+              in: "header",
+              name: "X-Global-Key",
+              type: "apiKey",
             },
           },
         },
+        info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
+        security: [{ usedGlobally: [] }],
       };
 
       const result = extractAuthHeaders(doc);
@@ -164,21 +166,21 @@ describe("client-generator security", () => {
 
     it("should remove duplicate headers", () => {
       const doc: OpenAPIObject = {
-        openapi: "3.1.0",
-        info: { title: "Test", version: "1.0.0" },
-        security: [{ bearer1: [] }, { bearer2: [] }],
         components: {
           securitySchemes: {
             bearer1: {
-              type: "http",
               scheme: "bearer",
+              type: "http",
             },
             bearer2: {
-              type: "http",
               scheme: "bearer",
+              type: "http",
             },
           },
         },
+        info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
+        security: [{ bearer1: [] }, { bearer2: [] }],
       };
 
       const result = extractAuthHeaders(doc);
@@ -219,26 +221,26 @@ describe("client-generator security", () => {
 
   describe("getOperationSecuritySchemes", () => {
     const doc: OpenAPIObject = {
-      openapi: "3.1.0",
-      info: { title: "Test", version: "1.0.0" },
       components: {
         securitySchemes: {
           apiKey: {
-            type: "apiKey",
             in: "header",
             name: "X-API-Key",
+            type: "apiKey",
           },
           bearerAuth: {
-            type: "http",
             scheme: "bearer",
+            type: "http",
           },
           queryKey: {
-            type: "apiKey",
             in: "query",
             name: "api_key",
+            type: "apiKey",
           },
         },
       },
+      info: { title: "Test", version: "1.0.0" },
+      openapi: "3.1.0",
     };
 
     it("should extract API key header security schemes", () => {
@@ -248,12 +250,12 @@ describe("client-generator security", () => {
       };
 
       const result = getOperationSecuritySchemes(operation, doc);
-      
+
       expect(result).toEqual([
         {
-          schemeName: "apiKey",
           headerName: "X-API-Key",
           isRequired: true,
+          schemeName: "apiKey",
         },
       ]);
     });
@@ -265,12 +267,12 @@ describe("client-generator security", () => {
       };
 
       const result = getOperationSecuritySchemes(operation, doc);
-      
+
       expect(result).toEqual([
         {
-          schemeName: "bearerAuth",
           headerName: "Authorization",
           isRequired: true,
+          schemeName: "bearerAuth",
         },
       ]);
     });
@@ -282,17 +284,17 @@ describe("client-generator security", () => {
       };
 
       const result = getOperationSecuritySchemes(operation, doc);
-      
+
       expect(result).toEqual([
         {
-          schemeName: "apiKey",
           headerName: "X-API-Key",
           isRequired: true,
+          schemeName: "apiKey",
         },
         {
-          schemeName: "bearerAuth",
           headerName: "Authorization",
           isRequired: true,
+          schemeName: "bearerAuth",
         },
       ]);
     });
@@ -323,8 +325,8 @@ describe("client-generator security", () => {
       };
 
       const docWithoutSchemes: OpenAPIObject = {
-        openapi: "3.1.0",
         info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
       };
 
       const result = getOperationSecuritySchemes(operation, docWithoutSchemes);
@@ -346,9 +348,9 @@ describe("client-generator security", () => {
     it("should generate required header assignment", () => {
       const headers: SecurityHeader[] = [
         {
-          schemeName: "apiKey",
           headerName: "X-API-Key",
           isRequired: true,
+          schemeName: "apiKey",
         },
       ];
 
@@ -359,48 +361,52 @@ describe("client-generator security", () => {
     it("should generate optional header assignment", () => {
       const headers: SecurityHeader[] = [
         {
-          schemeName: "apiKey",
           headerName: "X-API-Key",
           isRequired: false,
+          schemeName: "apiKey",
         },
       ];
 
       const result = generateSecurityHeaderHandling(headers);
-      expect(result).toBe("if (XAPIKey !== undefined) finalHeaders['X-API-Key'] = XAPIKey;");
+      expect(result).toBe(
+        "if (XAPIKey !== undefined) finalHeaders['X-API-Key'] = XAPIKey;",
+      );
     });
 
     it("should generate multiple header assignments", () => {
       const headers: SecurityHeader[] = [
         {
-          schemeName: "apiKey",
           headerName: "X-API-Key",
           isRequired: true,
+          schemeName: "apiKey",
         },
         {
-          schemeName: "bearerAuth",
           headerName: "Authorization",
           isRequired: false,
+          schemeName: "bearerAuth",
         },
       ];
 
       const result = generateSecurityHeaderHandling(headers);
       expect(result).toBe(
         "finalHeaders['X-API-Key'] = XAPIKey;\n" +
-        "    if (Authorization !== undefined) finalHeaders['Authorization'] = Authorization;"
+          "    if (Authorization !== undefined) finalHeaders['Authorization'] = Authorization;",
       );
     });
 
     it("should handle complex header names", () => {
       const headers: SecurityHeader[] = [
         {
-          schemeName: "customAuth",
           headerName: "X-Custom-Auth-Token",
           isRequired: true,
+          schemeName: "customAuth",
         },
       ];
 
       const result = generateSecurityHeaderHandling(headers);
-      expect(result).toBe("finalHeaders['X-Custom-Auth-Token'] = XCustomAuthToken;");
+      expect(result).toBe(
+        "finalHeaders['X-Custom-Auth-Token'] = XCustomAuthToken;",
+      );
     });
 
     it("should return empty string for empty headers array", () => {
@@ -411,9 +417,9 @@ describe("client-generator security", () => {
     it("should handle special characters in header names", () => {
       const headers: SecurityHeader[] = [
         {
-          schemeName: "special",
           headerName: "X-Special@Header",
           isRequired: true,
+          schemeName: "special",
         },
       ];
 

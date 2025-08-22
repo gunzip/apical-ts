@@ -1,6 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { MockServer, getRandomPort } from "../setup.js";
-import { createAuthenticatedClient, createUnauthenticatedClient } from "../client.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import {
+  createAuthenticatedClient,
+  createUnauthenticatedClient,
+} from "../client.js";
+import { getRandomPort, MockServer } from "../setup.js";
 
 describe("Security Operations", () => {
   let mockServer: MockServer;
@@ -51,7 +55,9 @@ describe("Security Operations", () => {
             Authorization: "Bearer wrong-token",
           },
         });
-        expect.fail("Expected operation to throw error due to wrong auth scheme");
+        expect.fail(
+          "Expected operation to throw error due to wrong auth scheme",
+        );
       } catch (error) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
@@ -63,7 +69,7 @@ describe("Security Operations", () => {
         } else {
           // For network errors or other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
@@ -79,7 +85,9 @@ describe("Security Operations", () => {
             Authorization: "Bearer invalid-token",
           },
         });
-        expect.fail("Expected operation to throw error due to missing authentication");
+        expect.fail(
+          "Expected operation to throw error due to missing authentication",
+        );
       } catch (error) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
@@ -91,7 +99,7 @@ describe("Security Operations", () => {
         } else {
           // For network errors or other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
@@ -160,7 +168,9 @@ describe("Security Operations", () => {
             "custom-token": "wrong-type-of-token",
           },
         });
-        expect.fail("Expected operation to throw error due to wrong auth scheme");
+        expect.fail(
+          "Expected operation to throw error due to wrong auth scheme",
+        );
       } catch (error) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
@@ -172,15 +182,21 @@ describe("Security Operations", () => {
         } else {
           // For network errors or other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
 
     it("should allow operation-specific security to override global", async () => {
       // Arrange
-      const bearerTokenClient = createAuthenticatedClient(baseURL, "bearerToken");
-      const customTokenClient = createAuthenticatedClient(baseURL, "customToken");
+      const bearerTokenClient = createAuthenticatedClient(
+        baseURL,
+        "bearerToken",
+      );
+      const customTokenClient = createAuthenticatedClient(
+        baseURL,
+        "customToken",
+      );
 
       // Act - testOverriddenSecurity uses bearerToken (overrides global customToken)
       const bearerResponse = await bearerTokenClient.testOverriddenSecurity({
@@ -188,7 +204,7 @@ describe("Security Operations", () => {
           Authorization: "Bearer test-bearer-token-123",
         },
       });
-      
+
       // testCustomTokenHeader uses global customToken
       const customResponse = await customTokenClient.testCustomTokenHeader({
         headers: {
@@ -214,7 +230,9 @@ describe("Security Operations", () => {
             Authorization: "X-Functions-Key test-simple-token-789", // Wrong format
           },
         });
-        expect.fail("Expected operation to throw error due to wrong token format");
+        expect.fail(
+          "Expected operation to throw error due to wrong token format",
+        );
       } catch (error) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
@@ -226,25 +244,31 @@ describe("Security Operations", () => {
         } else {
           // For network errors or other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
 
     it("should validate custom header names", async () => {
       // Arrange - testSimpleToken requires X-Functions-Key header
-      const simpleTokenClient = createAuthenticatedClient(baseURL, "simpleToken");
-      const bearerTokenClient = createAuthenticatedClient(baseURL, "bearerToken");
+      const simpleTokenClient = createAuthenticatedClient(
+        baseURL,
+        "simpleToken",
+      );
+      const bearerTokenClient = createAuthenticatedClient(
+        baseURL,
+        "bearerToken",
+      );
 
       // Act
       const simpleResponse = await simpleTokenClient.testSimpleToken({
-        query: {
-          qr: "required-param",
-          qo: "optional-param",
-          cursor: "test-cursor",
-        },
         headers: {
           "X-Functions-Key": "test-simple-token-789",
+        },
+        query: {
+          cursor: "test-cursor",
+          qo: "optional-param",
+          qr: "required-param",
         },
       });
 
@@ -254,16 +278,18 @@ describe("Security Operations", () => {
       // Act & Assert - bearerToken should fail for simpleToken operation
       try {
         await bearerTokenClient.testSimpleToken({
-          query: {
-            qr: "required-param",
-            qo: "optional-param",
-            cursor: "test-cursor",
-          },
           headers: {
             "X-Functions-Key": "bearer-token-instead-of-simple",
           },
+          query: {
+            cursor: "test-cursor",
+            qo: "optional-param",
+            qr: "required-param",
+          },
         });
-        expect.fail("Expected operation to throw error due to wrong token type");
+        expect.fail(
+          "Expected operation to throw error due to wrong token type",
+        );
       } catch (error) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
@@ -275,7 +301,7 @@ describe("Security Operations", () => {
         } else {
           // For network errors or other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
@@ -306,7 +332,7 @@ describe("Security Operations", () => {
         } else {
           // For other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
@@ -335,14 +361,17 @@ describe("Security Operations", () => {
         } else {
           // For other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
 
     it("should handle network errors gracefully", async () => {
       // Arrange - Create client with invalid URL to test error handling
-      const invalidClient = createAuthenticatedClient("http://localhost:99999", "bearerToken");
+      const invalidClient = createAuthenticatedClient(
+        "http://localhost:99999",
+        "bearerToken",
+      );
 
       // Act & Assert
       try {
@@ -362,8 +391,10 @@ describe("Security Operations", () => {
         } else {
           // Should be a network error, not a security error
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
-          expect(error.message || error.toString()).toMatch(/fetch|network|connection|ECONNREFUSED|Invalid URL/i);
+          expect(typeof error.message).toBe("string");
+          expect(error.message || error.toString()).toMatch(
+            /fetch|network|connection|ECONNREFUSED|Invalid URL/i,
+          );
         }
       }
     });

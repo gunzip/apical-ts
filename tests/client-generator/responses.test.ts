@@ -1,10 +1,12 @@
-import { describe, it, expect } from "vitest";
+import type { OperationObject, ResponseObject } from "openapi3-ts/oas31";
+
+import { describe, expect, it } from "vitest";
+
 import {
   generateResponseHandlers,
-  type ResponseTypeInfo,
   type ResponseHandlerResult,
+  type ResponseTypeInfo,
 } from "../../src/client-generator/responses.js";
-import type { OperationObject, ResponseObject } from "openapi3-ts/oas31";
 
 describe("client-generator responses", () => {
   describe("generateResponseHandlers", () => {
@@ -13,7 +15,6 @@ describe("client-generator responses", () => {
         operationId: "getUser",
         responses: {
           "200": {
-            description: "Success",
             content: {
               "application/json": {
                 schema: {
@@ -21,6 +22,7 @@ describe("client-generator responses", () => {
                 },
               },
             },
+            description: "Success",
           },
         },
       };
@@ -31,7 +33,9 @@ describe("client-generator responses", () => {
       expect(result.returnType).toBe("ApiResponse<200, User>");
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 200:");
-      expect(result.responseHandlers[0]).toContain("User.parse(await parseResponseBody(response))");
+      expect(result.responseHandlers[0]).toContain(
+        "User.parse(await parseResponseBody(response))",
+      );
       expect(typeImports.has("User")).toBe(true);
     });
 
@@ -40,17 +44,17 @@ describe("client-generator responses", () => {
         operationId: "createUser",
         responses: {
           "201": {
-            description: "Created",
             content: {
               "application/json": {
                 schema: {
-                  type: "object",
                   properties: {
                     id: { type: "string" },
                   },
+                  type: "object",
                 },
               },
             },
+            description: "Created",
           },
         },
       };
@@ -61,7 +65,9 @@ describe("client-generator responses", () => {
       expect(result.returnType).toBe("ApiResponse<201, CreateUser201Response>");
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 201:");
-      expect(result.responseHandlers[0]).toContain("CreateUser201Response.parse(await parseResponseBody(response))");
+      expect(result.responseHandlers[0]).toContain(
+        "CreateUser201Response.parse(await parseResponseBody(response))",
+      );
       expect(typeImports.has("CreateUser201Response")).toBe(true);
     });
 
@@ -70,20 +76,20 @@ describe("client-generator responses", () => {
         operationId: "getUser",
         responses: {
           "200": {
-            description: "Success",
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/User" },
               },
             },
+            description: "Success",
           },
           "404": {
-            description: "Not found",
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/Error" },
               },
             },
+            description: "Not found",
           },
         },
       };
@@ -91,7 +97,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, User> | ApiResponse<404, Error>");
+      expect(result.returnType).toBe(
+        "ApiResponse<200, User> | ApiResponse<404, Error>",
+      );
       expect(result.responseHandlers).toHaveLength(2);
       expect(result.responseHandlers[0]).toContain("case 200:");
       expect(result.responseHandlers[1]).toContain("case 404:");
@@ -123,12 +131,12 @@ describe("client-generator responses", () => {
         operationId: "downloadFile",
         responses: {
           "200": {
-            description: "File content",
             content: {
               "text/plain": {
                 schema: { $ref: "#/components/schemas/FileContent" },
               },
             },
+            description: "File content",
           },
         },
       };
@@ -138,7 +146,9 @@ describe("client-generator responses", () => {
 
       expect(result.returnType).toBe("ApiResponse<200, FileContent>");
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("await parseResponseBody(response) as FileContent");
+      expect(result.responseHandlers[0]).toContain(
+        "await parseResponseBody(response) as FileContent",
+      );
       expect(typeImports.has("FileContent")).toBe(true);
     });
 
@@ -147,10 +157,10 @@ describe("client-generator responses", () => {
         operationId: "getData",
         responses: {
           "200": {
-            description: "Success",
             content: {
               "application/octet-stream": {},
             },
+            description: "Success",
           },
         },
       };
@@ -168,16 +178,18 @@ describe("client-generator responses", () => {
       const operation: OperationObject = {
         operationId: "testOperation",
         responses: {
-          "500": { description: "Server error" },
           "200": { description: "Success" },
           "404": { description: "Not found" },
+          "500": { description: "Server error" },
         },
       };
 
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, void> | ApiResponse<404, void> | ApiResponse<500, void>");
+      expect(result.returnType).toBe(
+        "ApiResponse<200, void> | ApiResponse<404, void> | ApiResponse<500, void>",
+      );
       // Check that handlers are sorted by status code
       expect(result.responseHandlers[0]).toContain("case 200:");
       expect(result.responseHandlers[1]).toContain("case 404:");
@@ -231,15 +243,15 @@ describe("client-generator responses", () => {
         operationId: "user-profile-data",
         responses: {
           "200": {
-            description: "Success",
             content: {
               "application/json": {
                 schema: {
-                  type: "object",
                   properties: { name: { type: "string" } },
+                  type: "object",
                 },
               },
             },
+            description: "Success",
           },
         },
       };
@@ -247,7 +259,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, UserProfileData200Response>");
+      expect(result.returnType).toBe(
+        "ApiResponse<200, UserProfileData200Response>",
+      );
       expect(typeImports.has("UserProfileData200Response")).toBe(true);
     });
 
@@ -256,12 +270,12 @@ describe("client-generator responses", () => {
         operationId: "testOperation",
         responses: {
           "200": {
-            description: "Success",
             content: {
               "application/vnd.api+json": {
                 schema: { $ref: "#/components/schemas/ApiData" },
               },
             },
+            description: "Success",
           },
         },
       };
@@ -270,7 +284,9 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe("ApiResponse<200, ApiData>");
-      expect(result.responseHandlers[0]).toContain("ApiData.parse(await parseResponseBody(response))");
+      expect(result.responseHandlers[0]).toContain(
+        "ApiData.parse(await parseResponseBody(response))",
+      );
       expect(typeImports.has("ApiData")).toBe(true);
     });
 
@@ -279,7 +295,6 @@ describe("client-generator responses", () => {
         operationId: "testOperation",
         responses: {
           "200": {
-            description: "Success",
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/Data" },
@@ -288,6 +303,7 @@ describe("client-generator responses", () => {
                 schema: { type: "string" },
               },
             },
+            description: "Success",
           },
         },
       };
@@ -297,7 +313,9 @@ describe("client-generator responses", () => {
 
       // Should prefer JSON content type (getResponseContentType logic)
       expect(result.returnType).toBe("ApiResponse<200, Data>");
-      expect(result.responseHandlers[0]).toContain("Data.parse(await parseResponseBody(response))");
+      expect(result.responseHandlers[0]).toContain(
+        "Data.parse(await parseResponseBody(response))",
+      );
       expect(typeImports.has("Data")).toBe(true);
     });
   });

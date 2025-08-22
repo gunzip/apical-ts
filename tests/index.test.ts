@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("CLI index.ts", () => {
   it("should be importable as a module", () => {

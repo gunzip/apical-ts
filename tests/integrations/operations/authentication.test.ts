@@ -1,7 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { MockServer, getRandomPort } from "../setup.js";
-import { createAuthenticatedClient, createUnauthenticatedClient } from "../client.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import {
+  createAuthenticatedClient,
+  createUnauthenticatedClient,
+} from "../client.js";
 import { sampleData } from "../fixtures/test-helpers.js";
+import { getRandomPort, MockServer } from "../setup.js";
 
 describe("Authentication Operations", () => {
   let mockServer: MockServer;
@@ -29,20 +33,20 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "bearerToken");
       const params = {
-        query: {
-          qr: sampleData.queryParams.qr,
-          qo: sampleData.queryParams.qo,
-          cursor: sampleData.queryParams.cursor,
-        },
         headers: {
           Authorization: "Bearer test-bearer-token-123",
+        },
+        query: {
+          cursor: sampleData.queryParams.cursor,
+          qo: sampleData.queryParams.qo,
+          qr: sampleData.queryParams.qr,
         },
       };
 
       // Act & Assert
       try {
         const response = await client.testAuthBearer(params);
-        
+
         // Assert - If successful, validate response structure
         expect(response.status).toBe(200);
         expect(response.data).toBeDefined();
@@ -50,7 +54,7 @@ describe("Authentication Operations", () => {
       } catch (error) {
         // If Zod validation fails due to mock data, that's acceptable for this test
         // What we're testing is that authentication works and the client structure is correct
-        if (error.name === 'ZodError') {
+        if (error.name === "ZodError") {
           expect(error.issues).toBeDefined();
           expect(error.issues.length).toBeGreaterThan(0);
         } else {
@@ -64,13 +68,13 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createUnauthenticatedClient(baseURL);
       const params = {
-        query: {
-          qr: sampleData.queryParams.qr,
-          qo: sampleData.queryParams.qo,
-          cursor: sampleData.queryParams.cursor,
-        },
         headers: {
           Authorization: "Bearer invalid-token",
+        },
+        query: {
+          cursor: sampleData.queryParams.cursor,
+          qo: sampleData.queryParams.qo,
+          qr: sampleData.queryParams.qr,
         },
       };
 
@@ -89,7 +93,7 @@ describe("Authentication Operations", () => {
         } else {
           // For network errors or other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
@@ -98,20 +102,22 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "bearerToken");
       const params = {
-        query: {
-          // Missing required 'qr' parameter
-          qo: sampleData.queryParams.qo,
-          cursor: sampleData.queryParams.cursor,
-        },
         headers: {
           Authorization: "Bearer test-bearer-token-123",
+        },
+        query: {
+          cursor: sampleData.queryParams.cursor,
+          // Missing required 'qr' parameter
+          qo: sampleData.queryParams.qo,
         },
       } as any;
 
       // Act & Assert
       try {
         await client.testAuthBearer(params);
-        expect.fail("Expected operation to throw error due to missing required parameter");
+        expect.fail(
+          "Expected operation to throw error due to missing required parameter",
+        );
       } catch (error) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
@@ -122,7 +128,7 @@ describe("Authentication Operations", () => {
         } else {
           // For network errors or other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
@@ -133,13 +139,13 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "bearerTokenHttp");
       const params = {
-        query: {
-          qr: sampleData.queryParams.qr,
-          qo: sampleData.queryParams.qo,
-          cursor: sampleData.queryParams.cursor,
-        },
         headers: {
           Authorization: "Bearer test-bearer-http-token-456",
+        },
+        query: {
+          cursor: sampleData.queryParams.cursor,
+          qo: sampleData.queryParams.qo,
+          qr: sampleData.queryParams.qr,
         },
       };
 
@@ -155,13 +161,13 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "bearerTokenHttp");
       const params = {
-        query: {
-          qr: sampleData.queryParams.qr,
-          qo: sampleData.queryParams.qo,
-          cursor: sampleData.queryParams.cursor,
-        },
         headers: {
           Authorization: "Bearer test-bearer-http-token-456",
+        },
+        query: {
+          cursor: sampleData.queryParams.cursor,
+          qo: sampleData.queryParams.qo,
+          qr: sampleData.queryParams.qr,
         },
       };
 
@@ -179,20 +185,22 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createUnauthenticatedClient(baseURL);
       const params = {
-        query: {
-          qr: sampleData.queryParams.qr,
-          qo: sampleData.queryParams.qo,
-          cursor: sampleData.queryParams.cursor,
-        },
         headers: {
           Authorization: "Bearer invalid-token",
+        },
+        query: {
+          cursor: sampleData.queryParams.cursor,
+          qo: sampleData.queryParams.qo,
+          qr: sampleData.queryParams.qr,
         },
       };
 
       // Act & Assert
       try {
         await client.testAuthBearerHttp(params);
-        expect.fail("Expected operation to throw error due to unauthorized request");
+        expect.fail(
+          "Expected operation to throw error due to unauthorized request",
+        );
       } catch (error) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
@@ -204,7 +212,7 @@ describe("Authentication Operations", () => {
         } else {
           // For network errors or other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
@@ -215,13 +223,13 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "simpleToken");
       const params = {
-        query: {
-          qr: sampleData.queryParams.qr,
-          qo: sampleData.queryParams.qo,
-          cursor: sampleData.queryParams.cursor,
-        },
         headers: {
           "X-Functions-Key": "test-simple-token-789",
+        },
+        query: {
+          cursor: sampleData.queryParams.cursor,
+          qo: sampleData.queryParams.qo,
+          qr: sampleData.queryParams.qr,
         },
       };
 
@@ -237,20 +245,22 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createUnauthenticatedClient(baseURL);
       const params = {
-        query: {
-          qr: sampleData.queryParams.qr,
-          qo: sampleData.queryParams.qo,
-          cursor: sampleData.queryParams.cursor,
-        },
         headers: {
           "X-Functions-Key": "",
+        },
+        query: {
+          cursor: sampleData.queryParams.cursor,
+          qo: sampleData.queryParams.qo,
+          qr: sampleData.queryParams.qr,
         },
       };
 
       // Act & Assert
       try {
         await client.testSimpleToken(params);
-        expect.fail("Expected operation to throw error due to missing simple token");
+        expect.fail(
+          "Expected operation to throw error due to missing simple token",
+        );
       } catch (error) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
@@ -262,7 +272,7 @@ describe("Authentication Operations", () => {
         } else {
           // For network errors or other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });
@@ -296,7 +306,9 @@ describe("Authentication Operations", () => {
             "custom-token": "",
           },
         });
-        expect.fail("Expected operation to throw error due to missing custom token");
+        expect.fail(
+          "Expected operation to throw error due to missing custom token",
+        );
       } catch (error) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
@@ -308,7 +320,7 @@ describe("Authentication Operations", () => {
         } else {
           // For network errors or other error types, validate basic error properties
           expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe('string');
+          expect(typeof error.message).toBe("string");
         }
       }
     });

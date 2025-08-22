@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
   convertOpenAPI20to30,
   convertOpenAPI30to31,
@@ -12,8 +13,8 @@ describe("OpenAPI Converter", () => {
   describe("Version detection", () => {
     it("should detect OpenAPI 2.0 (Swagger) specifications", () => {
       const swagger20 = {
-        swagger: "2.0",
         info: { title: "Test", version: "1.0.0" },
+        swagger: "2.0",
       };
       expect(isOpenAPI20(swagger20)).toBe(true);
       expect(isOpenAPI30(swagger20)).toBe(false);
@@ -22,8 +23,8 @@ describe("OpenAPI Converter", () => {
 
     it("should detect OpenAPI 3.0 specifications", () => {
       const openapi30 = {
-        openapi: "3.0.1",
         info: { title: "Test", version: "1.0.0" },
+        openapi: "3.0.1",
       };
       expect(isOpenAPI20(openapi30)).toBe(false);
       expect(isOpenAPI30(openapi30)).toBe(true);
@@ -32,8 +33,8 @@ describe("OpenAPI Converter", () => {
 
     it("should detect OpenAPI 3.1 specifications", () => {
       const openapi31 = {
-        openapi: "3.1.0",
         info: { title: "Test", version: "1.0.0" },
+        openapi: "3.1.0",
       };
       expect(isOpenAPI20(openapi31)).toBe(false);
       expect(isOpenAPI30(openapi31)).toBe(false);
@@ -44,20 +45,20 @@ describe("OpenAPI Converter", () => {
   describe("OpenAPI 3.0 to 3.1 conversion", () => {
     it("should convert nullable properties to type arrays", () => {
       const openapi30 = {
-        openapi: "3.0.1",
-        info: { title: "Test", version: "1.0.0" },
-        paths: {},
         components: {
           schemas: {
             User: {
-              type: "object",
               properties: {
-                name: { type: "string", nullable: true },
-                age: { type: "integer", nullable: false },
+                age: { nullable: false, type: "integer" },
+                name: { nullable: true, type: "string" },
               },
+              type: "object",
             },
           },
         },
+        info: { title: "Test", version: "1.0.0" },
+        openapi: "3.0.1",
+        paths: {},
       };
 
       const result = convertOpenAPI30to31(openapi30 as any);
@@ -71,20 +72,20 @@ describe("OpenAPI Converter", () => {
 
     it("should convert exclusiveMinimum/Maximum from boolean to numeric", () => {
       const openapi30 = {
-        openapi: "3.0.1",
-        info: { title: "Test", version: "1.0.0" },
-        paths: {},
         components: {
           schemas: {
             NumberTest: {
-              type: "number",
-              minimum: 0,
+              exclusiveMaximum: true,
               exclusiveMinimum: true,
               maximum: 100,
-              exclusiveMaximum: true,
+              minimum: 0,
+              type: "number",
             },
           },
         },
+        info: { title: "Test", version: "1.0.0" },
+        openapi: "3.0.1",
+        paths: {},
       };
 
       const result = convertOpenAPI30to31(openapi30 as any);
@@ -98,17 +99,17 @@ describe("OpenAPI Converter", () => {
 
     it("should convert example to examples array", () => {
       const openapi30 = {
-        openapi: "3.0.1",
-        info: { title: "Test", version: "1.0.0" },
-        paths: {},
         components: {
           schemas: {
             StringTest: {
-              type: "string",
               example: "test value",
+              type: "string",
             },
           },
         },
+        info: { title: "Test", version: "1.0.0" },
+        openapi: "3.0.1",
+        paths: {},
       };
 
       const result = convertOpenAPI30to31(openapi30 as any);
@@ -122,24 +123,24 @@ describe("OpenAPI Converter", () => {
   describe("Swagger 2.0 to OpenAPI 3.0 conversion", () => {
     it("should convert Swagger 2.0 to OpenAPI 3.0", async () => {
       const swagger20 = {
-        swagger: "2.0",
-        info: { title: "Test API", version: "1.0.0" },
-        host: "api.example.com",
         basePath: "/v1",
-        schemes: ["https"],
+        host: "api.example.com",
+        info: { title: "Test API", version: "1.0.0" },
         paths: {
           "/users": {
             get: {
-              summary: "Get users",
               responses: {
                 "200": {
                   description: "Success",
-                  schema: { type: "array", items: { type: "string" } },
+                  schema: { items: { type: "string" }, type: "array" },
                 },
               },
+              summary: "Get users",
             },
           },
         },
+        schemes: ["https"],
+        swagger: "2.0",
       };
 
       const result = await convertOpenAPI20to30(swagger20);
@@ -148,7 +149,7 @@ describe("OpenAPI Converter", () => {
       expect(result.servers).toBeDefined();
       expect(result.servers?.[0]?.url).toBe("https://api.example.com/v1");
       expect(
-        (result.paths as any)["/users"].get.responses["200"].content
+        (result.paths as any)["/users"].get.responses["200"].content,
       ).toBeDefined();
     });
   });
@@ -156,21 +157,21 @@ describe("OpenAPI Converter", () => {
   describe("Universal conversion", () => {
     it("should convert OpenAPI 2.0 to 3.1 through convertToOpenAPI31", async () => {
       const swagger20 = {
-        swagger: "2.0",
-        info: { title: "Test API", version: "1.0.0" },
         host: "api.example.com",
+        info: { title: "Test API", version: "1.0.0" },
         paths: {
           "/test": {
             get: {
               responses: {
                 "200": {
                   description: "Success",
-                  schema: { type: "string", nullable: true },
+                  schema: { nullable: true, type: "string" },
                 },
               },
             },
           },
         },
+        swagger: "2.0",
       };
 
       const result = await convertToOpenAPI31(swagger20);
@@ -186,8 +187,8 @@ describe("OpenAPI Converter", () => {
 
     it("should pass through OpenAPI 3.1 unchanged", async () => {
       const openapi31 = {
-        openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "3.1.0",
         paths: {},
       };
 
@@ -198,12 +199,12 @@ describe("OpenAPI Converter", () => {
 
     it("should throw error for unsupported versions", async () => {
       const unsupported = {
-        openapi: "4.0.0",
         info: { title: "Test API", version: "1.0.0" },
+        openapi: "4.0.0",
       };
 
       await expect(convertToOpenAPI31(unsupported)).rejects.toThrow(
-        "Unsupported OpenAPI version: 4.0.0"
+        "Unsupported OpenAPI version: 4.0.0",
       );
     });
   });

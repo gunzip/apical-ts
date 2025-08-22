@@ -1,6 +1,5 @@
-import { MockServer, getRandomPort } from "../setup.js";
-
 import { createAuthenticatedClient } from "../client.js";
+import { getRandomPort, MockServer } from "../setup.js";
 
 describe("Response Operations", () => {
   let mockServer: MockServer;
@@ -69,7 +68,7 @@ describe("Response Operations", () => {
 
         // Assert
         expect.fail(
-          "Expected operation to throw error due to missing auth scheme"
+          "Expected operation to throw error due to missing auth scheme",
         );
       } catch (error) {
         expect(error).toBeDefined();

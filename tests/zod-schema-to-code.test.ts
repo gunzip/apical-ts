@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { zodSchemaToCode } from "../src/schema-generator";
 import { SchemaObject } from "openapi3-ts/oas31";
+import { describe, expect, it } from "vitest";
+
+import { zodSchemaToCode } from "../src/schema-generator";
 
 // Helper to eval generated code
 function evalZod(code: string) {
-  // eslint-disable-next-line no-new-func
   return new Function("z", `return ${code}`)(require("zod"));
 }
 
@@ -19,7 +19,7 @@ describe("zodSchemaToCode", () => {
   });
 
   it("should generate code for a string with a pattern", () => {
-    const schema: SchemaObject = { type: "string", pattern: "^[a-z]+$" };
+    const schema: SchemaObject = { pattern: "^[a-z]+$", type: "string" };
     const result = zodSchemaToCode(schema);
     expect(result.code).toContain("regex");
     const zodSchema = evalZod(result.code);
@@ -28,7 +28,7 @@ describe("zodSchemaToCode", () => {
   });
 
   it("should generate code for an email", () => {
-    const schema: SchemaObject = { type: "string", format: "email" };
+    const schema: SchemaObject = { format: "email", type: "string" };
     const result = zodSchemaToCode(schema);
     expect(result.code).toContain("email");
     const zodSchema = evalZod(result.code);
@@ -46,7 +46,7 @@ describe("zodSchemaToCode", () => {
   });
 
   it("should generate code for a number with min and max", () => {
-    const schema: SchemaObject = { type: "number", minimum: 10, maximum: 20 };
+    const schema: SchemaObject = { maximum: 20, minimum: 10, type: "number" };
     const result = zodSchemaToCode(schema);
     expect(result.code).toContain("min");
     expect(result.code).toContain("max");
@@ -67,7 +67,7 @@ describe("zodSchemaToCode", () => {
   });
 
   it("should generate code for a simple array", () => {
-    const schema: SchemaObject = { type: "array", items: { type: "string" } };
+    const schema: SchemaObject = { items: { type: "string" }, type: "array" };
     const result = zodSchemaToCode(schema);
     expect(result.code).toContain("array");
     const zodSchema = evalZod(result.code);
@@ -77,18 +77,18 @@ describe("zodSchemaToCode", () => {
 
   it("should generate code for a simple object", () => {
     const schema: SchemaObject = {
-      type: "object",
       properties: {
-        name: { type: "string" },
         age: { type: "number" },
+        name: { type: "string" },
       },
+      type: "object",
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toContain("object");
     const zodSchema = evalZod(result.code);
-    expect(zodSchema.safeParse({ name: "John", age: 30 }).success).toBe(true);
-    expect(zodSchema.safeParse({ name: "John", age: "30" }).success).toBe(
-      false
+    expect(zodSchema.safeParse({ age: 30, name: "John" }).success).toBe(true);
+    expect(zodSchema.safeParse({ age: "30", name: "John" }).success).toBe(
+      false,
     );
   });
 
@@ -114,10 +114,10 @@ describe("zodSchemaToCode", () => {
       allOf: [
         { $ref: "#/components/schemas/Profile" },
         {
-          type: "object",
           properties: {
             status: { type: "string" },
           },
+          type: "object",
         },
       ],
     };
@@ -129,8 +129,8 @@ describe("zodSchemaToCode", () => {
 
   it("should handle default values for boolean schemas", () => {
     const schema: SchemaObject = {
-      type: "boolean",
       default: false,
+      type: "boolean",
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe("z.boolean().default(false)");
@@ -142,8 +142,8 @@ describe("zodSchemaToCode", () => {
 
   it("should handle default values for string schemas", () => {
     const schema: SchemaObject = {
-      type: "string",
       default: "hello world",
+      type: "string",
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe('z.string().default("hello world")');
@@ -154,8 +154,8 @@ describe("zodSchemaToCode", () => {
 
   it("should handle default values for number schemas", () => {
     const schema: SchemaObject = {
-      type: "number",
       default: 42,
+      type: "number",
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe("z.number().default(42)");
@@ -166,8 +166,8 @@ describe("zodSchemaToCode", () => {
 
   it("should handle default values for integer schemas", () => {
     const schema: SchemaObject = {
-      type: "integer",
       default: 10,
+      type: "integer",
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe("z.number().int().default(10)");
@@ -178,13 +178,13 @@ describe("zodSchemaToCode", () => {
 
   it("should handle default values for array schemas", () => {
     const schema: SchemaObject = {
-      type: "array",
-      items: { type: "string" },
       default: ["default", "values"],
+      items: { type: "string" },
+      type: "array",
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe(
-      'z.array(z.string()).default(["default","values"])'
+      'z.array(z.string()).default(["default","values"])',
     );
     const zodSchema = evalZod(result.code);
     expect(zodSchema.parse(["test"])).toEqual(["test"]);
@@ -193,15 +193,15 @@ describe("zodSchemaToCode", () => {
 
   it("should handle default values for object schemas", () => {
     const schema: SchemaObject = {
-      type: "object",
+      default: { name: "default name" },
       properties: {
         name: { type: "string" },
       },
-      default: { name: "default name" },
+      type: "object",
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe(
-      'z.object({"name": z.string().optional()}).default({"name":"default name"})'
+      'z.object({"name": z.string().optional()}).default({"name":"default name"})',
     );
     const zodSchema = evalZod(result.code);
     expect(zodSchema.parse({ name: "test" })).toEqual({ name: "test" });
@@ -210,10 +210,10 @@ describe("zodSchemaToCode", () => {
 
   it("should handle default values with other constraints", () => {
     const schema: SchemaObject = {
-      type: "string",
-      minLength: 5,
-      maxLength: 20,
       default: "hello",
+      maxLength: 20,
+      minLength: 5,
+      type: "string",
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe('z.string().min(5).max(20).default("hello")');
@@ -224,16 +224,16 @@ describe("zodSchemaToCode", () => {
 
   it("should handle complex default values", () => {
     const schema: SchemaObject = {
-      type: "object",
       additionalProperties: {
-        type: "array",
         items: { type: "number" },
+        type: "array",
       },
       default: { test: [1000] },
+      type: "object",
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe(
-      'z.object({}).catchall(z.array(z.number())).default({"test":[1000]})'
+      'z.object({}).catchall(z.array(z.number())).default({"test":[1000]})',
     );
     const zodSchema = evalZod(result.code);
     expect(zodSchema.parse({ other: [1, 2, 3] })).toEqual({ other: [1, 2, 3] });
@@ -247,20 +247,20 @@ describe("zodSchemaToCode", () => {
       },
       oneOf: [
         {
-          type: "object",
           properties: {
-            type: { type: "string", enum: ["circle"] },
             radius: { type: "number" },
+            type: { enum: ["circle"], type: "string" },
           },
           required: ["type", "radius"],
+          type: "object",
         },
         {
-          type: "object",
           properties: {
-            type: { type: "string", enum: ["square"] },
             size: { type: "number" },
+            type: { enum: ["square"], type: "string" },
           },
           required: ["type", "size"],
+          type: "object",
         },
       ],
     };
@@ -268,52 +268,52 @@ describe("zodSchemaToCode", () => {
     expect(result.code).toContain('z.discriminatedUnion("type"');
     expect(result.code).toContain("z.object");
     const zodSchema = evalZod(result.code);
-    expect(zodSchema.safeParse({ type: "circle", radius: 5 }).success).toBe(
-      true
+    expect(zodSchema.safeParse({ radius: 5, type: "circle" }).success).toBe(
+      true,
     );
-    expect(zodSchema.safeParse({ type: "square", size: 10 }).success).toBe(
-      true
+    expect(zodSchema.safeParse({ size: 10, type: "square" }).success).toBe(
+      true,
     );
-    expect(zodSchema.safeParse({ type: "triangle", height: 5 }).success).toBe(
-      false
+    expect(zodSchema.safeParse({ height: 5, type: "triangle" }).success).toBe(
+      false,
     );
   });
 
   it("should handle discriminated unions with anyOf", () => {
     const schema: SchemaObject = {
-      discriminator: {
-        propertyName: "kind",
-      },
       anyOf: [
         {
-          type: "object",
           properties: {
-            kind: { type: "string", enum: ["user"] },
+            kind: { enum: ["user"], type: "string" },
             name: { type: "string" },
           },
           required: ["kind", "name"],
+          type: "object",
         },
         {
-          type: "object",
           properties: {
-            kind: { type: "string", enum: ["admin"] },
-            permissions: { type: "array", items: { type: "string" } },
+            kind: { enum: ["admin"], type: "string" },
+            permissions: { items: { type: "string" }, type: "array" },
           },
           required: ["kind", "permissions"],
+          type: "object",
         },
       ],
+      discriminator: {
+        propertyName: "kind",
+      },
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toContain('z.discriminatedUnion("kind"');
     const zodSchema = evalZod(result.code);
     expect(zodSchema.safeParse({ kind: "user", name: "john" }).success).toBe(
-      true
+      true,
     );
     expect(
       zodSchema.safeParse({ kind: "admin", permissions: ["read", "write"] })
-        .success
+        .success,
     ).toBe(true);
-    expect(zodSchema.safeParse({ kind: "guest", id: 123 }).success).toBe(false);
+    expect(zodSchema.safeParse({ id: 123, kind: "guest" }).success).toBe(false);
   });
 
   it("should handle discriminated unions with $ref schemas", () => {
@@ -347,23 +347,23 @@ describe("zodSchemaToCode", () => {
   it("should handle anyOf vs oneOf differently for overlapping schemas", () => {
     // Schema for NormalUser (subset of AdminUser)
     const normalUserSchema = {
-      type: "object" as const,
       properties: {
         id: { type: "integer" as const },
         name: { type: "string" as const },
       },
       required: ["id", "name"],
+      type: "object" as const,
     };
 
     // Schema for AdminUser (superset of NormalUser)
     const adminUserSchema = {
-      type: "object" as const,
       properties: {
         id: { type: "integer" as const },
         name: { type: "string" as const },
         secret: { type: "string" as const },
       },
       required: ["id", "name", "secret"],
+      type: "object" as const,
     };
 
     // Test anyOf: should accept values that match any schema
@@ -389,7 +389,7 @@ describe("zodSchemaToCode", () => {
     } as any; // Cast to any to allow x-extensible-enum extension
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe(
-      'z.enum(["value1", "value2", "value3"]).or(z.string())'
+      'z.enum(["value1", "value2", "value3"]).or(z.string())',
     );
     const zodSchema = evalZod(result.code);
 
@@ -427,13 +427,13 @@ describe("zodSchemaToCode", () => {
 
   it("should handle x-extensible-enum with default value", () => {
     const schema: SchemaObject = {
+      default: "en_US",
       type: "string",
       "x-extensible-enum": ["en_US", "es_ES", "fr_FR"],
-      default: "en_US",
     } as any;
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe(
-      'z.enum(["en_US", "es_ES", "fr_FR"]).or(z.string()).default("en_US")'
+      'z.enum(["en_US", "es_ES", "fr_FR"]).or(z.string()).default("en_US")',
     );
     const zodSchema = evalZod(result.code);
 
@@ -444,14 +444,14 @@ describe("zodSchemaToCode", () => {
 
   it("should prioritize x-extensible-enum over regular enum", () => {
     const schema: SchemaObject = {
-      type: "string",
       enum: ["regularEnum1", "regularEnum2"],
+      type: "string",
       "x-extensible-enum": ["extensibleValue1", "extensibleValue2"],
     } as any;
     const result = zodSchemaToCode(schema);
     // Should use x-extensible-enum and generate extensible schema
     expect(result.code).toBe(
-      'z.enum(["extensibleValue1", "extensibleValue2"]).or(z.string())'
+      'z.enum(["extensibleValue1", "extensibleValue2"]).or(z.string())',
     );
     expect(result.code).not.toContain("regularEnum1");
   });

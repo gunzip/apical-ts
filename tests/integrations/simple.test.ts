@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { MockServer, getRandomPort } from "./setup.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { createUnauthenticatedClient } from "./client.js";
+import { getRandomPort, MockServer } from "./setup.js";
 
 describe("Working Integration Test Demo", () => {
   let mockServer: MockServer;
@@ -61,8 +62,8 @@ describe("Working Integration Test Demo", () => {
     try {
       const response = await client.testInlineBodySchema({
         body: {
-          name: "Test Name",
           age: 25,
+          name: "Test Name",
         },
       });
       // If it succeeds, verify response
@@ -80,8 +81,12 @@ describe("Working Integration Test Demo", () => {
     // Act - testFileUpload also requires global auth, so will fail with 401
     try {
       const formData = new FormData();
-      formData.append('file', new Blob(['test content'], { type: 'text/plain' }), 'test.txt');
-      
+      formData.append(
+        "file",
+        new Blob(["test content"], { type: "text/plain" }),
+        "test.txt",
+      );
+
       const response = await client.testFileUpload({
         body: formData,
       });
@@ -100,7 +105,9 @@ describe("Working Integration Test Demo", () => {
     try {
       const response = await client.testBinaryFileDownload({});
       expect(response.status).toBe(200);
-      expect(response.response.headers.get("content-type")).toContain("application/octet-stream");
+      expect(response.response.headers.get("content-type")).toContain(
+        "application/octet-stream",
+      );
     } catch (error) {
       // Expected to fail with auth (401) or validation (400) error
       expect(error.message).toMatch(/40[01]/);
@@ -118,11 +125,11 @@ describe("Working Integration Test Demo", () => {
     expect(response).toHaveProperty("status");
     expect(response).toHaveProperty("data");
     expect(response).toHaveProperty("response");
-    
+
     expect(typeof response.status).toBe("number");
     expect(response.response).toBeInstanceOf(Response);
     expect(response.response.headers).toBeInstanceOf(Headers);
-    
+
     // Verify the response has the correct type structure
     expect(response.status).toBe(200);
     expect(response.data).toBeUndefined(); // void response

@@ -1,4 +1,5 @@
-import { describe, test, expect } from "vitest";
+import { describe, expect, test } from "vitest";
+
 import { sanitizeIdentifier } from "../src/schema-generator/utils.js";
 
 describe("sanitizeIdentifier", () => {
@@ -32,10 +33,10 @@ describe("sanitizeIdentifier", () => {
 
   test("handles empty strings", () => {
     expect(() => sanitizeIdentifier("")).toThrow(
-      "Cannot sanitize empty string to identifier"
+      "Cannot sanitize empty string to identifier",
     );
     expect(() => sanitizeIdentifier("   ")).toThrow(
-      "Cannot sanitize whitespace-only string to identifier"
+      "Cannot sanitize whitespace-only string to identifier",
     );
   });
 

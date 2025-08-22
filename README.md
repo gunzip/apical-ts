@@ -114,7 +114,7 @@ const newPet = await createPet(
       status: "available",
     },
   },
-  apiConfig
+  apiConfig,
 );
 
 // Use default empty config (operations work without configuration)

@@ -1,11 +1,13 @@
-import { describe, it, expect } from "vitest";
-import {
-  generateOperationId,
-  getOrGenerateOperationId,
-  generateUniqueOperationIds,
-  applyGeneratedOperationIds,
-} from "../../src/operation-id-generator/index.js";
 import type { OpenAPIObject } from "openapi3-ts/oas31";
+
+import { describe, expect, it } from "vitest";
+
+import {
+  applyGeneratedOperationIds,
+  generateOperationId,
+  generateUniqueOperationIds,
+  getOrGenerateOperationId,
+} from "../../src/operation-id-generator/index.js";
 
 describe("generateOperationId", () => {
   it("should generate ID from method and simple path", () => {
@@ -88,12 +90,12 @@ describe("getOrGenerateOperationId", () => {
 describe("generateUniqueOperationIds", () => {
   it("should generate unique IDs for non-colliding operations", () => {
     const paths = {
+      "/posts": {
+        get: {},
+      },
       "/users": {
         get: {},
         post: {},
-      },
-      "/posts": {
-        get: {},
       },
     };
 
@@ -107,10 +109,10 @@ describe("generateUniqueOperationIds", () => {
   it("should handle collisions by adding numbers", () => {
     // Create paths that will generate the same operation ID
     const paths = {
-      "/user": {
+      "/profile": {
         get: { operationId: "getUsers" }, // Explicit same ID
       },
-      "/profile": {
+      "/user": {
         get: { operationId: "getUsers" }, // Explicit same ID
       },
     };
@@ -145,11 +147,11 @@ describe("generateUniqueOperationIds", () => {
   it("should process all object properties, not just HTTP methods", () => {
     const paths = {
       "/users": {
+        customObject: {}, // Objects are processed
+        deprecated: true, // Primitives are not objects so ignored
         get: {},
         parameters: [{ name: "test" }], // Arrays are objects so will be processed
         summary: "User endpoints", // Strings are not objects so ignored
-        deprecated: true, // Primitives are not objects so ignored
-        customObject: {}, // Objects are processed
       },
     };
 
@@ -164,8 +166,8 @@ describe("generateUniqueOperationIds", () => {
   it("should handle multiple collisions", () => {
     const paths = {
       "/user": { get: {} },
-      "/users": { get: {} },
       "/user_list": { get: {} }, // All these might generate similar IDs
+      "/users": { get: {} },
     };
 
     const result = generateUniqueOperationIds(paths);
@@ -181,15 +183,15 @@ describe("generateUniqueOperationIds", () => {
 describe("applyGeneratedOperationIds", () => {
   it("should add missing operationIds to OpenAPI document", () => {
     const openApiDoc: OpenAPIObject = {
-      openapi: "3.1.0",
       info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.1.0",
       paths: {
+        "/posts": {
+          get: {},
+        },
         "/users": {
           get: {},
           post: { operationId: "createUser" }, // Already has ID
-        },
-        "/posts": {
-          get: {},
         },
       },
     };
@@ -203,8 +205,8 @@ describe("applyGeneratedOperationIds", () => {
 
   it("should handle document without paths", () => {
     const openApiDoc: OpenAPIObject = {
-      openapi: "3.1.0",
       info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.1.0",
     };
 
     expect(() => applyGeneratedOperationIds(openApiDoc)).not.toThrow();
@@ -212,8 +214,8 @@ describe("applyGeneratedOperationIds", () => {
 
   it("should handle empty paths object", () => {
     const openApiDoc: OpenAPIObject = {
-      openapi: "3.1.0",
       info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.1.0",
       paths: {},
     };
 
@@ -222,15 +224,15 @@ describe("applyGeneratedOperationIds", () => {
 
   it("should handle all HTTP methods", () => {
     const openApiDoc: OpenAPIObject = {
-      openapi: "3.1.0",
       info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.1.0",
       paths: {
         "/users": {
+          delete: {},
           get: {},
+          patch: {},
           post: {},
           put: {},
-          delete: {},
-          patch: {},
         },
       },
     };
@@ -241,15 +243,15 @@ describe("applyGeneratedOperationIds", () => {
     expect(openApiDoc.paths!["/users"]!.post!.operationId).toBe("postUsers");
     expect(openApiDoc.paths!["/users"]!.put!.operationId).toBe("putUsers");
     expect(openApiDoc.paths!["/users"]!.delete!.operationId).toBe(
-      "deleteUsers"
+      "deleteUsers",
     );
     expect(openApiDoc.paths!["/users"]!.patch!.operationId).toBe("patchUsers");
   });
 
   it("should not overwrite existing operationIds", () => {
     const openApiDoc: OpenAPIObject = {
-      openapi: "3.1.0",
       info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.1.0",
       paths: {
         "/users": {
           get: { operationId: "listUsers" },
@@ -264,11 +266,11 @@ describe("applyGeneratedOperationIds", () => {
 
   it("should handle paths with only non-operation objects", () => {
     const openApiDoc: OpenAPIObject = {
-      openapi: "3.1.0",
       info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.1.0",
       paths: {
         "/users": {
-          parameters: [{ name: "test", in: "query" }],
+          parameters: [{ in: "query", name: "test" }],
         },
       },
     };

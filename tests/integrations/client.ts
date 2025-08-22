@@ -1,12 +1,15 @@
+import {
+  configureOperations,
+  type GlobalConfig,
+} from "./generated/operations/config.js";
 import * as operations from "./generated/operations/index.js";
-import { configureOperations, type GlobalConfig } from "./generated/operations/config.js";
 
 /**
  * Test client configuration
  */
 export interface TestClientConfig {
-  baseURL: string;
   authHeaders?: Record<string, string>;
+  baseURL: string;
   customHeaders?: Record<string, string>;
 }
 
@@ -34,17 +37,17 @@ export const createAuthHeaders = {
   bearerToken: (token: string) => ({
     Authorization: `Bearer ${token}`,
   }),
-  
+
   bearerTokenHttp: (token: string) => ({
     Authorization: `Bearer ${token}`,
   }),
-  
-  simpleToken: (token: string) => ({
-    "X-Functions-Key": token,
-  }),
-  
+
   customToken: (token: string) => ({
     "custom-token": token,
+  }),
+
+  simpleToken: (token: string) => ({
+    "X-Functions-Key": token,
   }),
 };
 
@@ -53,20 +56,25 @@ export const createAuthHeaders = {
  */
 export const defaultTestTokens = {
   bearerToken: "test-bearer-token-123",
-  bearerTokenHttp: "test-bearer-http-token-456", 
-  simpleToken: "test-simple-token-789",
+  bearerTokenHttp: "test-bearer-http-token-456",
   customToken: "test-custom-token-abc",
+  simpleToken: "test-simple-token-789",
 };
 
 /**
  * Helper to create client with specific auth scheme
  */
-export function createAuthenticatedClient(baseURL: string, authScheme: keyof typeof defaultTestTokens) {
-  const authHeaders = createAuthHeaders[authScheme](defaultTestTokens[authScheme]);
-  
+export function createAuthenticatedClient(
+  baseURL: string,
+  authScheme: keyof typeof defaultTestTokens,
+) {
+  const authHeaders = createAuthHeaders[authScheme](
+    defaultTestTokens[authScheme],
+  );
+
   return createTestClient({
-    baseURL,
     authHeaders,
+    baseURL,
   });
 }
 

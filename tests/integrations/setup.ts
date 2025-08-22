@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from "child_process";
+import { ChildProcess, spawn } from "child_process";
 import { promisify } from "util";
 
 const sleep = promisify(setTimeout);
@@ -7,23 +7,37 @@ const sleep = promisify(setTimeout);
  * Mock server configuration
  */
 export interface MockServerConfig {
+  host?: string;
   port: number;
   specPath: string;
-  host?: string;
 }
 
 /**
  * Mock server instance manager
  */
 export class MockServer {
-  private process: ChildProcess | null = null;
   private config: MockServerConfig;
+  private process: ChildProcess | null = null;
 
   constructor(config: MockServerConfig) {
     this.config = {
       host: "localhost",
       ...config,
     };
+  }
+
+  /**
+   * Get the base URL for the mock server
+   */
+  getBaseUrl(): string {
+    return `http://${this.config.host}:${this.config.port}`;
+  }
+
+  /**
+   * Check if the server is running
+   */
+  isRunning(): boolean {
+    return this.process !== null && !this.process.killed;
   }
 
   /**
@@ -45,8 +59,8 @@ export class MockServer {
       console.log(`Starting mock server: pnpm ${args.join(" ")}`);
 
       this.process = spawn("pnpm", args, {
-        stdio: ["pipe", "pipe", "pipe"],
         detached: false,
+        stdio: ["pipe", "pipe", "pipe"],
       });
 
       let started = false;
@@ -56,12 +70,17 @@ export class MockServer {
       this.process.stdout?.on("data", (data: Buffer) => {
         const text = data.toString();
         output += text;
-        
+
         // Look for indication that Prism is ready
-        if (text.includes("Prism is listening") || text.includes(`http://${this.config.host}:${this.config.port}`)) {
+        if (
+          text.includes("Prism is listening") ||
+          text.includes(`http://${this.config.host}:${this.config.port}`)
+        ) {
           if (!started) {
             started = true;
-            console.log(`Mock server started on http://${this.config.host}:${this.config.port}`);
+            console.log(
+              `Mock server started on http://${this.config.host}:${this.config.port}`,
+            );
             resolve();
           }
         }
@@ -77,7 +96,11 @@ export class MockServer {
       // Handle process exit
       this.process.on("exit", (code, signal) => {
         if (!started) {
-          reject(new Error(`Prism process exited with code ${code}, signal ${signal}. Output: ${output}`));
+          reject(
+            new Error(
+              `Prism process exited with code ${code}, signal ${signal}. Output: ${output}`,
+            ),
+          );
         }
       });
 
@@ -92,7 +115,9 @@ export class MockServer {
       setTimeout(() => {
         if (!started) {
           this.stop();
-          reject(new Error(`Timeout waiting for Prism to start. Output: ${output}`));
+          reject(
+            new Error(`Timeout waiting for Prism to start. Output: ${output}`),
+          );
         }
       }, 30000);
     });
@@ -104,32 +129,18 @@ export class MockServer {
   async stop(): Promise<void> {
     if (this.process) {
       this.process.kill("SIGTERM");
-      
+
       // Wait a bit for graceful shutdown
       await sleep(1000);
-      
+
       // Force kill if still running
       if (!this.process.killed) {
         this.process.kill("SIGKILL");
       }
-      
+
       this.process = null;
       console.log("Mock server stopped");
     }
-  }
-
-  /**
-   * Get the base URL for the mock server
-   */
-  getBaseUrl(): string {
-    return `http://${this.config.host}:${this.config.port}`;
-  }
-
-  /**
-   * Check if the server is running
-   */
-  isRunning(): boolean {
-    return this.process !== null && !this.process.killed;
   }
 }
 
@@ -143,16 +154,20 @@ export function getRandomPort(): number {
 /**
  * Wait for a port to be available by attempting HTTP requests
  */
-export async function waitForPort(host: string, port: number, timeout: number = 10000): Promise<boolean> {
+export async function waitForPort(
+  host: string,
+  port: number,
+  timeout = 10000,
+): Promise<boolean> {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeout) {
     try {
       const response = await fetch(`http://${host}:${port}`, {
         method: "GET",
         signal: AbortSignal.timeout(1000),
       });
-      
+
       // If we get any response (even an error), the port is open
       return true;
     } catch (error) {
@@ -160,6 +175,6 @@ export async function waitForPort(host: string, port: number, timeout: number = 
       await sleep(100);
     }
   }
-  
+
   return false;
 }

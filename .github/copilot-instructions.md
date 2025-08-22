@@ -13,10 +13,12 @@ This repository is an **OpenAPI TypeScript Client Generator** that converts Open
 ## Build and Validation Instructions
 
 ### Prerequisites
+
 - **Node.js**: Version 20.18.2 (specified in `.node-version`)
 - **Package Manager**: pnpm 10.14.0+ (ALWAYS use pnpm, not npm)
 
 ### Setup Commands
+
 ```bash
 # Install pnpm if not available
 npm install -g pnpm@10.14.0
@@ -26,21 +28,25 @@ pnpm install
 ```
 
 ### Build Process
+
 ```bash
 # Build the project (compiles TypeScript to dist/)
 pnpm run build
 # Build time: ~2 seconds
 ```
 
-**Preconditions**: 
+**Preconditions**:
+
 - Dependencies must be installed with `pnpm install`
 - No linting is required before build
 
-**Postconditions**: 
+**Postconditions**:
+
 - Creates `dist/` directory with compiled JavaScript
 - All TypeScript files compiled to ES2022 modules
 
 ### Testing
+
 ```bash
 # Run all tests
 pnpm test
@@ -50,6 +56,7 @@ pnpm test
 **Test Configuration**: Uses Vitest with Node.js environment, tests located in `src/tests/`
 
 ### CLI Usage
+
 ```bash
 # Generate schemas only
 pnpm start generate -i <openapi-spec> -o <output-dir>
@@ -64,6 +71,7 @@ pnpm start generate -i test.yaml -o ./generated --generate-client
 **Note**: Use single command format (`pnpm start generate`) not double-dash format (`pnpm start -- generate`)
 
 ### Programmatic Usage
+
 ```typescript
 import { generate } from "./src/core-generator/index.js";
 
@@ -75,12 +83,14 @@ await generate({
 ```
 
 ### Validation Steps
+
 1. **Always run `pnpm install` before any other command**
 2. **Build validation**: `pnpm run build` should complete without errors
 3. **Test validation**: `pnpm test` should pass all 58 tests
 4. **CLI validation**: Test generation with `test.yaml` or `definitions.yaml`
 
 ### Known Issues and Workarounds
+
 - **No linting configured**: There are no ESLint rules, rely on TypeScript compiler errors
 - **No format script**: Prettier is available as dependency but no npm script exists
 - **CLI parsing**: Use `pnpm start generate` (not `pnpm start -- generate`)
@@ -89,6 +99,7 @@ await generate({
 ## Project Layout and Architecture
 
 ### Root Directory Structure
+
 ```
 ├── .github/instructions/           # Copilot test guidelines
 ├── src/                           # Source code
@@ -106,16 +117,19 @@ await generate({
 ### Source Code Architecture (`src/`)
 
 **Main Entry Point**: `src/index.ts`
+
 - CLI interface using Commander.js
 - Exports `generate` function for programmatic usage
 
 **Core Generator** (`src/core-generator/`):
+
 - `index.ts`: Main orchestration and generation logic
 - `parser.ts`: OpenAPI specification parsing
 - `converter.ts`: OpenAPI version conversion
 - `file-writer.ts`: File writing utilities and formatting
 
 **Client Generator** (`src/client-generator/`):
+
 - `index.ts`: Operation client generation orchestration
 - `operation-function-generator.ts`: Individual operation function generation
 - `parameters.ts`: Parameter handling and validation
@@ -127,6 +141,7 @@ await generate({
 - Detailed module documentation in `src/client-generator/README.md`
 
 **Schema Generator** (`src/schema-generator/`):
+
 - `index.ts`: Main schema generation exports
 - `schema-converter.ts`: OpenAPI to Zod schema conversion
 - `union-types.ts`: Union and discriminated union handling
@@ -134,9 +149,11 @@ await generate({
 - Generates Zod v4 schemas for runtime validation
 
 **Operation ID Generator** (`src/operation-id-generator/`):
+
 - Generates operation IDs for OpenAPI specs that lack them
 
 **Tests** (`src/tests/`):
+
 - Unit tests for core functionality
 - Use Vitest with descriptive test names
 - Follow Arrange-Act-Assert pattern
@@ -144,16 +161,19 @@ await generate({
 ### Configuration Files
 
 **TypeScript Configuration** (`tsconfig.json`):
+
 - Target: ES2022, Module: ESNext
 - Output: `./dist`, Root: `./src`
 - Strict mode enabled
 
 **Test Configuration** (`vitest.config.ts`):
+
 - Node.js environment, globals enabled
 - Includes: `src/tests/**/*.test.ts`
 - Coverage: text, json, html reporters
 
 **Package Configuration** (`package.json`):
+
 - Type: "module" (ES modules)
 - Main scripts: build, start, test
 - Dependencies: Zod, OpenAPI3-TS, Commander, etc.
@@ -161,6 +181,7 @@ await generate({
 ### Dependencies Overview
 
 **Runtime Dependencies**:
+
 - `zod ^4.0.0`: Schema validation and type generation
 - `openapi3-ts ^4.3.0`: OpenAPI TypeScript types
 - `commander ^14.0.0`: CLI framework
@@ -169,6 +190,7 @@ await generate({
 - `p-limit`: Concurrency control
 
 **Development Dependencies**:
+
 - `typescript ^5.4.5`: TypeScript compiler
 - `vitest ^1.6.0`: Test framework
 - `prettier ^3.2.5`: Code formatting
@@ -183,6 +205,7 @@ await generate({
 5. **Error Resilience**: Graceful fallbacks for malformed inputs
 
 ### Generated Output Structure
+
 ```
 <output-dir>/
 ├── package.json              # Generated package metadata
@@ -196,6 +219,7 @@ await generate({
 ```
 
 ### Validation Pipeline
+
 1. **Input validation**: OpenAPI spec parsing and reference resolution
 2. **Schema generation**: Concurrent Zod schema creation with type safety
 3. **Client generation**: Operation function generation with proper imports
@@ -204,6 +228,7 @@ await generate({
 ### Common Development Workflows
 
 **Adding New Features**:
+
 1. Run `pnpm install` and `pnpm run build` to ensure clean state
 2. Add tests in `src/tests/` following existing patterns
 3. Implement functionality in appropriate module
@@ -211,6 +236,7 @@ await generate({
 5. Test CLI with sample files: `pnpm start generate -i test.yaml -o /tmp/test`
 
 **Debugging Issues**:
+
 1. Use sample files `test.yaml` and `definitions.yaml` for testing
 2. Check build output in `dist/` directory
 3. Verify generated output structure matches expected format
@@ -219,6 +245,7 @@ await generate({
 ## Trust These Instructions
 
 These instructions are comprehensive and tested. Only search for additional information if:
+
 - The provided build/test commands fail unexpectedly
 - You encounter dependency issues not covered here
 - The project structure has significantly changed from what's documented

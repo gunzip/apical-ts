@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { generateConfigTypes } from "../../src/client-generator/config-generator.js";
 
 describe("client-generator config-generator", () => {
@@ -14,7 +15,7 @@ describe("client-generator config-generator", () => {
       const result = generateConfigTypes(authHeaders, serverUrls);
 
       expect(result).toContain(
-        "baseURL: 'https://localhost/api/v1' | 'https://localhost/api/v2' | 'https://prod.example.com/api' | (string & {});"
+        "baseURL: 'https://localhost/api/v1' | 'https://localhost/api/v2' | 'https://prod.example.com/api' | (string & {});",
       );
     });
 
@@ -34,7 +35,7 @@ describe("client-generator config-generator", () => {
       const result = generateConfigTypes(authHeaders, serverUrls);
 
       expect(result).toContain(
-        "baseURL: 'https://api.example.com' | (string & {});"
+        "baseURL: 'https://api.example.com' | (string & {});",
       );
     });
 
@@ -53,7 +54,7 @@ describe("client-generator config-generator", () => {
       const result = generateConfigTypes(authHeaders, serverUrls);
 
       expect(result).toContain(
-        "export type AuthHeaders = 'authorization' | 'x-api-key';"
+        "export type AuthHeaders = 'authorization' | 'x-api-key';",
       );
       expect(result).toContain("[K in AuthHeaders]?: string;");
     });
@@ -79,7 +80,7 @@ describe("client-generator config-generator", () => {
       const result = generateConfigTypes(authHeaders, serverUrls);
 
       expect(result).toContain(
-        "baseURL: 'https://api.example.com/v1' | 'https://api-test.example.com/api' | 'https://localhost:3000/api' | (string & {});"
+        "baseURL: 'https://api.example.com/v1' | 'https://api-test.example.com/api' | 'https://localhost:3000/api' | (string & {});",
       );
     });
 
