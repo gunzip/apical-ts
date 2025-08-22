@@ -162,7 +162,7 @@ describe("Response Operations", () => {
   describe("testWithEmptyResponse operation", () => {
     it("should handle response with reference to NotFound", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testWithEmptyResponse({});
