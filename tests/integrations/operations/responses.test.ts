@@ -1,7 +1,6 @@
-
 import { MockServer, getRandomPort } from "../setup.js";
 
-import { createUnauthenticatedClient, createAuthenticatedClient } from "../client.js";
+import { createAuthenticatedClient } from "../client.js";
 
 describe("Response Operations", () => {
   let mockServer: MockServer;
@@ -62,7 +61,7 @@ describe("Response Operations", () => {
 
     it("should handle 401 unauthorized response with OneOfTest data", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       try {
