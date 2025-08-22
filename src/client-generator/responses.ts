@@ -83,55 +83,55 @@ export function generateContentTypeMaps(
       requestMapType = `{\n${requestMappings.join("\n")}\n}`;
     }
   }
-
-  // Generate response map type
+  // Generate response map type (only if all statuses have at least one content type)
   let responseMapType = "{}";
   let defaultResponseContentType: null | string = null;
   let responseContentTypeCount = 0;
 
   const responseContentTypes = extractResponseContentTypes(operation);
   if (responseContentTypes.length > 0) {
-    const responseMappings: string[] = [];
-    const seenContentTypes = new Set<string>();
+    const explicitStatuses = Object.keys(operation.responses || {}).filter(
+      (c) => c !== "default",
+    );
+    const contentTypeToResponses: Record<
+      string,
+      { status: string; typeName: string }[]
+    > = {};
+    const statusesWithContent = new Set<string>();
 
-    for (const responseGroup of responseContentTypes) {
-      if (responseGroup.contentTypes.length > 0) {
-        for (const mapping of responseGroup.contentTypes) {
-          // Use a unique key that combines content type and status code
-          const uniqueKey = `${mapping.contentType}_${responseGroup.statusCode}`;
-
-          if (!defaultResponseContentType) {
-            defaultResponseContentType = mapping.contentType;
-          }
-
-          // Only add if we haven't seen this content type + status combination
-          if (!seenContentTypes.has(uniqueKey)) {
-            seenContentTypes.add(uniqueKey);
-            const typeName = resolveSchemaTypeName(
-              mapping.schema,
-              operationId,
-              `${responseGroup.statusCode}Response`,
-              typeImports,
-            );
-            // For the map, we'll use just the content type as the key
-            // but ensure we don't have duplicates by preferring the first status code
-            if (
-              !responseMappings.some((m) =>
-                m.includes(`"${mapping.contentType}":`),
-              )
-            ) {
-              responseMappings.push(
-                `  "${mapping.contentType}": ApiResponse<${responseGroup.statusCode}, ${typeName}>;`,
-              );
-            }
-          }
-        }
+    for (const group of responseContentTypes) {
+      if (group.contentTypes.length === 0) continue;
+      for (const mapping of group.contentTypes) {
+        const ct = mapping.contentType;
+        if (!defaultResponseContentType) defaultResponseContentType = ct;
+        const typeName = resolveSchemaTypeName(
+          mapping.schema,
+          operationId,
+          `${group.statusCode}Response`,
+          typeImports,
+        );
+        if (!contentTypeToResponses[ct]) contentTypeToResponses[ct] = [];
+        contentTypeToResponses[ct].push({ status: group.statusCode, typeName });
+        statusesWithContent.add(group.statusCode);
       }
     }
 
-    responseContentTypeCount = responseMappings.length;
-    if (responseMappings.length > 0) {
-      responseMapType = `{\n${responseMappings.join("\n")}\n}`;
+    if (
+      statusesWithContent.size === explicitStatuses.length &&
+      explicitStatuses.length > 0
+    ) {
+      const mappings: string[] = Object.entries(contentTypeToResponses).map(
+        ([ct, entries]) => {
+          const union = entries
+            .map((e) => `ApiResponse<${e.status}, ${e.typeName}>`)
+            .join(" | ");
+          return `  "${ct}": ${union};`;
+        },
+      );
+      responseContentTypeCount = mappings.length;
+      if (mappings.length > 0) {
+        responseMapType = `{\n${mappings.join("\n")}\n}`;
+      }
     }
   }
 

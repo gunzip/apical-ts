@@ -113,7 +113,7 @@ export function generateFunctionBody({
 
   return `${contentTypeLogic}${bodyContentCode}
 
-  const finalHeaders = {
+  const finalHeaders: Record<string, string> = {
 ${headersContent}
   };
   ${headerParamLines ? `  ${headerParamLines}` : ""}${securityHeaderLines ? `  ${securityHeaderLines}` : ""}
