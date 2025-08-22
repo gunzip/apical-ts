@@ -1,9 +1,16 @@
-import type { OperationObject, ResponseObject } from "openapi3-ts/oas31";
+import type { OperationObject, ResponseObject, RequestBodyObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { getResponseContentType } from "./utils.js";
+import {
+  extractRequestContentTypes,
+  extractResponseContentTypes,
+  type ContentTypeMapping,
+  type RequestContentTypes,
+  type ResponseContentTypes,
+} from "./operation-extractor.js";
 
 /**
  * Result of response handler generation
@@ -20,6 +27,17 @@ export type ResponseTypeInfo = {
   responseHandlers: string[];
   typeImports: Set<string>;
   typeName: null | string;
+};
+
+/**
+ * Result of generating content type maps
+ */
+export type ContentTypeMaps = {
+  requestMapType: string;
+  responseMapType: string;
+  defaultRequestContentType: string | null;
+  defaultResponseContentType: string | null;
+  typeImports: Set<string>;
 };
 
 /**
@@ -106,4 +124,107 @@ export function generateResponseHandlers(
       : "ApiResponse<number, unknown>";
 
   return { responseHandlers, returnType };
+}
+
+/**
+ * Resolves a schema to a TypeScript type name
+ */
+function resolveSchemaTypeName(
+  schema: ContentTypeMapping["schema"],
+  operationId: string,
+  suffix: string,
+  typeImports: Set<string>,
+): string {
+  if ("$ref" in schema && schema.$ref) {
+    // Use referenced schema
+    const originalSchemaName = schema.$ref.split("/").pop();
+    assert(originalSchemaName, "Invalid $ref in schema");
+    const typeName = sanitizeIdentifier(originalSchemaName);
+    typeImports.add(typeName);
+    return typeName;
+  } else {
+    // Use generated schema for inline schemas
+    const sanitizedOperationId = sanitizeIdentifier(operationId);
+    const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${suffix}`;
+    typeImports.add(typeName);
+    return typeName;
+  }
+}
+
+/**
+ * Generates TypeScript type maps for request and response content types
+ */
+export function generateContentTypeMaps(
+  operation: OperationObject,
+): ContentTypeMaps {
+  assert(operation.operationId, "Operation ID is required");
+  const operationId = operation.operationId;
+  const typeImports = new Set<string>();
+  
+  const sanitizedOperationId = sanitizeIdentifier(operationId);
+  const operationName = sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1);
+
+  // Generate request map type
+  let requestMapType = "{}";
+  let defaultRequestContentType: string | null = null;
+
+  if (operation.requestBody) {
+    const requestBody = operation.requestBody as RequestBodyObject;
+    const requestContentTypes = extractRequestContentTypes(requestBody);
+    
+    if (requestContentTypes.contentTypes.length > 0) {
+      defaultRequestContentType = requestContentTypes.contentTypes[0].contentType;
+      
+      const requestMappings = requestContentTypes.contentTypes.map((mapping) => {
+        const typeName = resolveSchemaTypeName(
+          mapping.schema,
+          operationId,
+          "Request",
+          typeImports
+        );
+        return `  "${mapping.contentType}": ${typeName};`;
+      });
+      
+      requestMapType = `{\n${requestMappings.join("\n")}\n}`;
+    }
+  }
+
+  // Generate response map type
+  let responseMapType = "{}";
+  let defaultResponseContentType: string | null = null;
+
+  const responseContentTypes = extractResponseContentTypes(operation);
+  if (responseContentTypes.length > 0) {
+    const responseMappings: string[] = [];
+    
+    for (const responseGroup of responseContentTypes) {
+      if (responseGroup.contentTypes.length > 0) {
+        if (!defaultResponseContentType) {
+          defaultResponseContentType = responseGroup.contentTypes[0].contentType;
+        }
+        
+        for (const mapping of responseGroup.contentTypes) {
+          const typeName = resolveSchemaTypeName(
+            mapping.schema,
+            operationId,
+            `${responseGroup.statusCode}Response`,
+            typeImports
+          );
+          responseMappings.push(`  "${mapping.contentType}": ApiResponse<${responseGroup.statusCode}, ${typeName}>;`);
+        }
+      }
+    }
+    
+    if (responseMappings.length > 0) {
+      responseMapType = `{\n${responseMappings.join("\n")}\n}`;
+    }
+  }
+
+  return {
+    requestMapType,
+    responseMapType,
+    defaultRequestContentType,
+    defaultResponseContentType,
+    typeImports,
+  };
 }

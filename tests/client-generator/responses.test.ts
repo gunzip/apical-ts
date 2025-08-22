@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   generateResponseHandlers,
+  generateContentTypeMaps,
   type ResponseHandlerResult,
   type ResponseTypeInfo,
 } from "../../src/client-generator/responses.js";
@@ -317,6 +318,134 @@ describe("client-generator responses", () => {
         "Data.parse(await parseResponseBody(response))",
       );
       expect(typeImports.has("Data")).toBe(true);
+    });
+  });
+
+  describe("generateContentTypeMaps", () => {
+    it("should generate content type maps for operation with multiple request and response types", () => {
+      const operation: OperationObject = {
+        operationId: "petFindByStatus",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/Pet" },
+            },
+            "application/x-www-form-urlencoded": {
+              schema: { 
+                type: "object",
+                properties: { 
+                  name: { type: "string" },
+                  status: { type: "string" }
+                }
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Success",
+            content: {
+              "application/json": {
+                schema: { 
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Pet" }
+                },
+              },
+              "application/xml": {
+                schema: { type: "string" },
+              },
+            },
+          },
+          "404": {
+            description: "Not Found",
+            content: {
+              "text/plain": {
+                schema: { type: "string" },
+              },
+            },
+          },
+        },
+      };
+
+      const result = generateContentTypeMaps(operation);
+
+      expect(result.defaultRequestContentType).toBe("application/json");
+      expect(result.defaultResponseContentType).toBe("application/json");
+      
+      // Check request map
+      expect(result.requestMapType).toContain('"application/json": Pet;');
+      expect(result.requestMapType).toContain('"application/x-www-form-urlencoded": PetFindByStatusRequest;');
+      
+      // Check response map 
+      expect(result.responseMapType).toContain('"application/json": ApiResponse<200, PetFindByStatus200Response>;');
+      expect(result.responseMapType).toContain('"application/xml": ApiResponse<200, PetFindByStatus200Response>;');
+      expect(result.responseMapType).toContain('"text/plain": ApiResponse<404, PetFindByStatus404Response>;');
+      
+      // Check type imports
+      expect(result.typeImports.has("Pet")).toBe(true);
+      expect(result.typeImports.has("PetFindByStatusRequest")).toBe(true);
+      expect(result.typeImports.has("PetFindByStatus200Response")).toBe(true);
+      expect(result.typeImports.has("PetFindByStatus404Response")).toBe(true);
+    });
+
+    it("should handle operation with no request body", () => {
+      const operation: OperationObject = {
+        operationId: "getUsers",
+        responses: {
+          "200": {
+            description: "Success",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/User" },
+              },
+            },
+          },
+        },
+      };
+
+      const result = generateContentTypeMaps(operation);
+
+      expect(result.defaultRequestContentType).toBeNull();
+      expect(result.defaultResponseContentType).toBe("application/json");
+      expect(result.requestMapType).toBe("{}");
+      expect(result.responseMapType).toContain('"application/json": ApiResponse<200, User>;');
+    });
+
+    it("should handle operation with no responses", () => {
+      const operation: OperationObject = {
+        operationId: "deleteUser",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/User" },
+            },
+          },
+        },
+        responses: {},
+      };
+
+      const result = generateContentTypeMaps(operation);
+
+      expect(result.defaultRequestContentType).toBe("application/json");
+      expect(result.defaultResponseContentType).toBeNull();
+      expect(result.requestMapType).toContain('"application/json": User;');
+      expect(result.responseMapType).toBe("{}");
+    });
+
+    it("should handle empty operation", () => {
+      const operation: OperationObject = {
+        operationId: "emptyOp",
+        responses: {},
+      };
+
+      const result = generateContentTypeMaps(operation);
+
+      expect(result.defaultRequestContentType).toBeNull();
+      expect(result.defaultResponseContentType).toBeNull();
+      expect(result.requestMapType).toBe("{}");
+      expect(result.responseMapType).toBe("{}");
     });
   });
 });

@@ -11,6 +11,8 @@ import { applyGeneratedOperationIds } from "../../src/operation-id-generator/ind
 import {
   extractAllOperations,
   extractServerUrls,
+  extractRequestContentTypes,
+  extractResponseContentTypes,
 } from "../../src/client-generator/operation-extractor.js";
 
 describe("client-generator operation-extractor", () => {
@@ -346,6 +348,163 @@ describe("client-generator operation-extractor", () => {
       // Should be in the order defined in the httpMethods array
       const methods = result.map((r) => r.method);
       expect(methods).toEqual(["get", "post", "put", "delete", "patch"]);
+    });
+  });
+
+  describe("extractRequestContentTypes", () => {
+    it("should extract all request content types", () => {
+      const requestBody = {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/User" },
+          },
+          "application/x-www-form-urlencoded": {
+            schema: { type: "object", properties: { name: { type: "string" } } },
+          },
+          "multipart/form-data": {
+            schema: { type: "object", properties: { file: { type: "string", format: "binary" } } },
+          },
+        },
+      };
+
+      const result = extractRequestContentTypes(requestBody);
+
+      expect(result.isRequired).toBe(true);
+      expect(result.contentTypes).toHaveLength(3);
+      expect(result.contentTypes[0].contentType).toBe("application/json");
+      expect(result.contentTypes[0].schema).toEqual({ $ref: "#/components/schemas/User" });
+      expect(result.contentTypes[1].contentType).toBe("application/x-www-form-urlencoded");
+      expect(result.contentTypes[2].contentType).toBe("multipart/form-data");
+    });
+
+    it("should handle optional request body", () => {
+      const requestBody = {
+        required: false,
+        content: {
+          "application/json": {
+            schema: { type: "object" },
+          },
+        },
+      };
+
+      const result = extractRequestContentTypes(requestBody);
+
+      expect(result.isRequired).toBe(false);
+      expect(result.contentTypes).toHaveLength(1);
+    });
+
+    it("should handle empty content", () => {
+      const requestBody = {
+        required: true,
+        content: {},
+      };
+
+      const result = extractRequestContentTypes(requestBody);
+
+      expect(result.isRequired).toBe(true);
+      expect(result.contentTypes).toHaveLength(0);
+    });
+  });
+
+  describe("extractResponseContentTypes", () => {
+    it("should extract all response content types", () => {
+      const operation: OperationObject = {
+        operationId: "testOp",
+        responses: {
+          "200": {
+            description: "Success",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/User" },
+              },
+              "application/xml": {
+                schema: { type: "string" },
+              },
+            },
+          },
+          "404": {
+            description: "Not Found",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+              "text/plain": {
+                schema: { type: "string" },
+              },
+            },
+          },
+        },
+      };
+
+      const result = extractResponseContentTypes(operation);
+
+      expect(result).toHaveLength(2);
+      
+      // Check 200 response
+      expect(result[0].statusCode).toBe("200");
+      expect(result[0].contentTypes).toHaveLength(2);
+      expect(result[0].contentTypes[0].contentType).toBe("application/json");
+      expect(result[0].contentTypes[1].contentType).toBe("application/xml");
+      
+      // Check 404 response
+      expect(result[1].statusCode).toBe("404");
+      expect(result[1].contentTypes).toHaveLength(2);
+      expect(result[1].contentTypes[0].contentType).toBe("application/json");
+      expect(result[1].contentTypes[1].contentType).toBe("text/plain");
+    });
+
+    it("should ignore default responses", () => {
+      const operation: OperationObject = {
+        operationId: "testOp",
+        responses: {
+          "200": {
+            description: "Success",
+            content: {
+              "application/json": {
+                schema: { type: "object" },
+              },
+            },
+          },
+          "default": {
+            description: "Error",
+            content: {
+              "application/json": {
+                schema: { type: "object" },
+              },
+            },
+          },
+        },
+      };
+
+      const result = extractResponseContentTypes(operation);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].statusCode).toBe("200");
+    });
+
+    it("should handle responses without content", () => {
+      const operation: OperationObject = {
+        operationId: "testOp",
+        responses: {
+          "204": {
+            description: "No Content",
+          },
+          "200": {
+            description: "Success",
+            content: {
+              "application/json": {
+                schema: { type: "object" },
+              },
+            },
+          },
+        },
+      };
+
+      const result = extractResponseContentTypes(operation);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].statusCode).toBe("200");
     });
   });
 });

@@ -16,7 +16,7 @@ import {
   buildParameterInterface,
 } from "./parameters.js";
 import { resolveRequestBodyType } from "./request-body.js";
-import { generateResponseHandlers } from "./responses.js";
+import { generateResponseHandlers, generateContentTypeMaps } from "./responses.js";
 import {
   extractAuthHeaders,
   getOperationSecuritySchemes,
@@ -44,6 +44,7 @@ export function generateOperationFunction(
 ): GeneratedFunction {
   assert(operation.operationId, "Operation ID is required");
   const functionName: string = sanitizeIdentifier(operation.operationId);
+  const operationName = functionName.charAt(0).toUpperCase() + functionName.slice(1);
 
   const summary = operation.summary ? `/** ${operation.summary} */\n` : "";
   const typeImports = new Set<string>();
@@ -92,6 +93,10 @@ export function generateOperationFunction(
     typeImports,
   );
 
+  // Generate content type maps for multi-content-type support
+  const contentTypeMaps = generateContentTypeMaps(operation);
+  contentTypeMaps.typeImports.forEach((imp) => typeImports.add(imp));
+
   // Check if operation overrides security (empty or specific schemes)
   const overridesSecurity = hasSecurityOverride(operation);
   const authHeaders = extractAuthHeaders(doc);
@@ -107,6 +112,7 @@ export function generateOperationFunction(
     operationSecurityHeaders,
     overridesSecurity,
     authHeaders,
+    contentTypeMaps,
   );
 
   // Handle empty parameters case - use simple destructuring with default
@@ -119,10 +125,72 @@ export function generateOperationFunction(
     parameterDeclaration = `${destructuredParams}: ${paramsInterface}`;
   }
 
-  const functionStr = `${summary}export async function ${functionName}(
-  ${parameterDeclaration},
+  // Generate type aliases for content type maps
+  const requestMapTypeName = `${operationName}RequestMap`;
+  const responseMapTypeName = `${operationName}ResponseMap`;
+
+  // Generate generic type parameters and defaults
+  let genericParams = "";
+  let optionsParam = "";
+  let updatedReturnType = returnType;
+
+  // Check if we have multiple content types to generate generic signatures
+  const hasMultipleRequestTypes = contentTypeMaps.requestMapType !== "{}";
+  const hasMultipleResponseTypes = contentTypeMaps.responseMapType !== "{}";
+
+  if (hasMultipleRequestTypes || hasMultipleResponseTypes) {
+    const genericParts: string[] = [];
+    
+    if (hasMultipleRequestTypes) {
+      const defaultReq = contentTypeMaps.defaultRequestContentType || "application/json";
+      genericParts.push(`TRequestContentType extends keyof ${requestMapTypeName} = "${defaultReq}"`);
+    }
+    
+    if (hasMultipleResponseTypes) {
+      const defaultResp = contentTypeMaps.defaultResponseContentType || "application/json";
+      genericParts.push(`TResponseContentType extends keyof ${responseMapTypeName} = "${defaultResp}"`);
+    }
+    
+    if (genericParts.length > 0) {
+      genericParams = `<${genericParts.join(", ")}>`;
+      
+      // Add options parameter for content types
+      const optionsParts: string[] = [];
+      if (hasMultipleRequestTypes) {
+        optionsParts.push("requestContentType?: TRequestContentType");
+      }
+      if (hasMultipleResponseTypes) {
+        optionsParts.push("responseContentType?: TResponseContentType");
+      }
+      
+      optionsParam = `,\n  options?: { ${optionsParts.join("; ")} }`;
+      
+      // Update return type to use generic
+      if (hasMultipleResponseTypes) {
+        updatedReturnType = `${responseMapTypeName}[TResponseContentType]`;
+      }
+      
+      // Update parameter interface for request body if needed
+      if (hasMultipleRequestTypes && hasBody) {
+        // We'll need to modify the params interface to use the generic type
+        // For now, keep the existing approach but note this needs enhancement
+      }
+    }
+  }
+
+  // Generate type aliases
+  let typeAliases = "";
+  if (hasMultipleRequestTypes) {
+    typeAliases += `export type ${requestMapTypeName} = ${contentTypeMaps.requestMapType};\n\n`;
+  }
+  if (hasMultipleResponseTypes) {
+    typeAliases += `export type ${responseMapTypeName} = ${contentTypeMaps.responseMapType};\n\n`;
+  }
+
+  const functionStr = `${typeAliases}${summary}export async function ${functionName}${genericParams}(
+  ${parameterDeclaration}${optionsParam},
   config: GlobalConfig = globalConfig
-): Promise<${returnType}> {
+): Promise<${updatedReturnType}> {
   ${functionBodyCode}
 }`;
 

@@ -9,14 +9,13 @@ import {
   type SecurityHeader,
 } from "./security.js";
 import { generatePathInterpolation } from "./utils.js";
+import type { ContentTypeMaps } from "./responses.js";
 
 /**
- * Generates the function body for an operation with explicit exhaustive handling
+ * Generates the function body for an operation with support for dynamic content types
  *
- * NOTE: This function currently supports only a single content type per request.
- * Multiple content types in the same request body are not supported. The content
- * type is determined by the getRequestBodyContentType function which selects
- * one content type based on priority order.
+ * NOTE: This function now supports multiple content types per request/response.
+ * The content types can be dynamically selected at runtime through the options parameter.
  */
 export function generateFunctionBody(
   pathKey: string,
@@ -24,10 +23,11 @@ export function generateFunctionBody(
   parameterGroups: ParameterGroups,
   hasBody: boolean,
   responseHandlers: string[],
-  requestContentType?: string,
-  operationSecurityHeaders?: SecurityHeader[],
-  overridesSecurity?: boolean,
-  authHeaders?: string[],
+  requestContentType: string | undefined,
+  operationSecurityHeaders: SecurityHeader[] | undefined,
+  overridesSecurity: boolean | undefined,
+  authHeaders: string[] | undefined,
+  contentTypeMaps: ContentTypeMaps,
 ): string {
   const { headerParams, pathParams, queryParams } = parameterGroups;
 
@@ -39,13 +39,87 @@ export function generateFunctionBody(
       ? generateSecurityHeaderHandling(operationSecurityHeaders)
       : "";
 
-  const { bodyContent, contentTypeHeader } = generateRequestBodyHandling(
-    hasBody,
-    requestContentType,
-  );
+  // Determine if we need dynamic content type handling
+  const hasMultipleRequestTypes = contentTypeMaps.requestMapType !== "{}";
+  const hasMultipleResponseTypes = contentTypeMaps.responseMapType !== "{}";
 
-  return `  const finalHeaders = {
-    ${
+  // Generate content type determination logic
+  let contentTypeLogic = "";
+  let bodyContentCode = "";
+  let acceptHeaderLogic = "";
+  let contentTypeHeaderCode = "";
+
+  if (hasMultipleRequestTypes) {
+    const defaultReq = contentTypeMaps.defaultRequestContentType || "application/json";
+    contentTypeLogic += `  const finalRequestContentType = options?.requestContentType || "${defaultReq}";\n`;
+    
+    if (hasBody) {
+      // Generate switch statement for different body content types
+      bodyContentCode = `  let bodyContent = "";
+  let contentTypeHeader = {};
+  
+  switch (finalRequestContentType) {
+    case "application/json":
+      bodyContent = body ? JSON.stringify(body) : undefined;
+      contentTypeHeader = { "Content-Type": "application/json" };
+      break;
+    case "application/x-www-form-urlencoded":
+      bodyContent = body ? new URLSearchParams(body as Record<string, string>).toString() : undefined;
+      contentTypeHeader = { "Content-Type": "application/x-www-form-urlencoded" };
+      break;
+    case "multipart/form-data":
+      if (body) {
+        const formData = new FormData();
+        Object.entries(body).forEach(([key, value]) => {
+          if (value !== undefined) {
+            formData.append(key, value);
+          }
+        });
+        bodyContent = formData;
+      }
+      contentTypeHeader = {}; // Don't set Content-Type for multipart/form-data
+      break;
+    case "text/plain":
+      bodyContent = typeof body === 'string' ? body : String(body);
+      contentTypeHeader = { "Content-Type": "text/plain" };
+      break;
+    case "application/xml":
+      bodyContent = typeof body === 'string' ? body : String(body);
+      contentTypeHeader = { "Content-Type": "application/xml" };
+      break;
+    case "application/octet-stream":
+      bodyContent = body;
+      contentTypeHeader = { "Content-Type": "application/octet-stream" };
+      break;
+    default:
+      bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
+      contentTypeHeader = { "Content-Type": finalRequestContentType };
+  }`;
+    }
+  } else {
+    // Use static content type handling (backward compatibility)
+    if (hasBody) {
+      const { bodyContent, contentTypeHeader } = generateRequestBodyHandling(
+        hasBody,
+        requestContentType,
+      );
+      bodyContentCode = `  // Static body content
+  const bodyContent = ${bodyContent || "undefined"};`;
+      if (contentTypeHeader) {
+        contentTypeHeaderCode = contentTypeHeader;
+      }
+    }
+  }
+
+  if (hasMultipleResponseTypes) {
+    const defaultResp = contentTypeMaps.defaultResponseContentType || "application/json";
+    acceptHeaderLogic = `    "Accept": options?.responseContentType || "${defaultResp}",`;
+  }
+
+  // Build the headers object
+  let headersContent = "";
+  if (hasMultipleRequestTypes) {
+    headersContent = `    ${
       overridesSecurity && authHeaders && authHeaders.length > 0
         ? `...Object.fromEntries(
       Object.entries(config.headers).filter(([key]) => 
@@ -53,7 +127,24 @@ export function generateFunctionBody(
       )
     ),`
         : "...config.headers,"
-    }${contentTypeHeader}
+    }${acceptHeaderLogic}
+    ...contentTypeHeader,`;
+  } else {
+    headersContent = `    ${
+      overridesSecurity && authHeaders && authHeaders.length > 0
+        ? `...Object.fromEntries(
+      Object.entries(config.headers).filter(([key]) => 
+        !['${authHeaders.join("', '")}'].includes(key)
+      )
+    ),`
+        : "...config.headers,"
+    }${acceptHeaderLogic}${contentTypeHeaderCode}`;
+  }
+
+  return `${contentTypeLogic}${bodyContentCode}
+
+  const finalHeaders = {
+${headersContent}
   };
   ${headerParamLines ? `  ${headerParamLines}` : ""}${securityHeaderLines ? `  ${securityHeaderLines}` : ""}
 
@@ -63,9 +154,9 @@ export function generateFunctionBody(
   const response = await config.fetch(url.toString(), {
     method: "${method.toUpperCase()}",
     headers: finalHeaders,${
-      bodyContent
+      hasBody
         ? `
-${bodyContent}`
+    body: bodyContent,`
         : ""
     }
   });
