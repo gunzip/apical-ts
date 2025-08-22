@@ -78,7 +78,7 @@ describe("Response Operations", () => {
 
     it("should handle 404 not found response", async () => {
       // Arrange  
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testMultipleSuccess({});
