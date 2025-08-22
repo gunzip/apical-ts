@@ -197,7 +197,7 @@ describe("Response Operations", () => {
   describe("Response data validation", () => {
     it("should handle JSON response content types", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testMultipleSuccess({});
