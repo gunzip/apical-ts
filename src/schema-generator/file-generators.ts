@@ -69,7 +69,7 @@ export async function generateSchemaFile(
   // Handle extensible enum case
   if (schemaResult.extensibleEnumValues) {
     const enumValues = schemaResult.extensibleEnumValues
-      .map((e: any) => JSON.stringify(e))
+      .map((e: unknown) => JSON.stringify(e))
       .join(" | ");
     const typeContent = `export type ${name} = ${enumValues} | (string & {});`;
     const schemaContent = `${commentSection}export const ${name} = ${schemaResult.code};`;

@@ -1,4 +1,4 @@
-import type { SchemaObject } from "openapi3-ts/oas31";
+import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { handleExtensibleEnum, handleRegularEnum } from "./enum-handlers.js";
 import { addDefaultValue } from "./utils.js";
@@ -11,7 +11,7 @@ type ZodSchemaCodeOptions = {
 // Import from schema-converter to avoid circular dependencies
 type ZodSchemaResult = {
   code: string;
-  extensibleEnumValues?: any[];
+  extensibleEnumValues?: unknown[];
   imports: Set<string>;
 };
 
@@ -22,7 +22,7 @@ export function handleArrayType(
   schema: SchemaObject,
   result: ZodSchemaResult,
   zodSchemaToCode: (
-    schema: any,
+    schema: ReferenceObject | SchemaObject,
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
 ): ZodSchemaResult {

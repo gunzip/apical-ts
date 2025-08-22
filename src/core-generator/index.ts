@@ -1,13 +1,14 @@
+/* eslint-disable no-console */
 import type {
   OpenAPIObject,
   OperationObject,
-  PathItemObject,
   RequestBodyObject,
   ResponseObject,
   SchemaObject,
 } from "openapi3-ts/oas31";
 
 import $RefParser from "@apidevtools/json-schema-ref-parser";
+import assert from "assert";
 import { promises as fs } from "fs";
 import { isReferenceObject } from "openapi3-ts/oas31";
 import pLimit from "p-limit";
@@ -93,10 +94,8 @@ export async function generate(options: GenerationOptions): Promise<void> {
     const schemasDir = path.join(output, "schemas");
     await fs.mkdir(schemasDir, { recursive: true });
 
-    function isPlainSchemaObject(obj: any): obj is SchemaObject {
-      // Must be a plain object, not a Zod object, and not null
+    function isPlainSchemaObject(obj: unknown): obj is SchemaObject {
       if (!obj || typeof obj !== "object") return false;
-      if (typeof obj.safeParse === "function" || obj._def) return false; // Zod instance
       // Must have at least one OpenAPI schema property
       return (
         "type" in obj ||
@@ -236,11 +235,13 @@ function extractRequestSchemas(
       "application/x-www-form-urlencoded",
     ];
 
+    assert(operation.operationId, "Operation ID is missing");
+
     for (const contentType of supportedContentTypes) {
       const content = requestBody.content?.[contentType];
       if (content?.schema && !isReferenceObject(content.schema)) {
         // Only extract inline schemas, not $ref schemas
-        const requestTypeName = `${sanitizeIdentifier(operation.operationId!)}Request`;
+        const requestTypeName = `${sanitizeIdentifier(operation.operationId)}Request`;
         requestSchemas.set(requestTypeName, content.schema);
         break; // Only process the first matching content type
       }
@@ -289,7 +290,9 @@ function extractResponseSchemas(
   forEachOperation(openApiDoc, (operation) => {
     if (!operation.responses) return;
 
-    const operationId = operation.operationId!; // We know it exists from forEachOperation
+    const operationId = operation.operationId;
+
+    assert(operationId, "Operation ID is missing");
 
     for (const [statusCode, response] of Object.entries(operation.responses)) {
       if (statusCode === "default") continue;

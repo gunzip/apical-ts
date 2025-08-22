@@ -1,6 +1,5 @@
 import type { OpenAPIObject as OpenAPIV3Document } from "openapi3-ts/oas30";
 import type {
-  ComponentsObject as V3ComponentsObject,
   MediaTypeObject as V3MediaTypeObject,
   OperationObject as V3OperationObject,
   ParameterObject as V3ParameterObject,
@@ -29,6 +28,9 @@ import { convertObj } from "swagger2openapi";
  * Converts an OpenAPI 2.0 (Swagger) specification to OpenAPI 3.0 format
  */
 export async function convertOpenAPI20to30(
+  // We let Swagger 2.0 documents pass through without validation
+  // in order to avoid importing openapi-types to get the 2.x typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   swagger20: any,
 ): Promise<OpenAPIV3Document> {
   try {
@@ -89,7 +91,7 @@ export function convertOpenAPI30to31(
  * Converts an OpenAPI specification to 3.1 format, handling both 2.0 and 3.0 inputs
  */
 export async function convertToOpenAPI31(
-  openapi: any,
+  openapi: unknown,
 ): Promise<OpenAPIV3_1Document> {
   // If it's already 3.1, return as-is
   if (isOpenAPI31(openapi)) {
@@ -108,34 +110,51 @@ export async function convertToOpenAPI31(
   }
 
   throw new Error(
-    `Unsupported OpenAPI version: ${openapi.openapi || openapi.swagger || "unknown"}`,
+    `Unsupported OpenAPI version: ${
+      typeof openapi === "object" && openapi !== null
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (openapi as any).openapi || (openapi as any).swagger || "unknown"
+        : "unknown"
+    }`,
   );
 }
 
 /**
  * Checks if an OpenAPI document is version 2.0 (Swagger)
  */
-export function isOpenAPI20(openapi: any): boolean {
+export function isOpenAPI20(openapi: unknown): boolean {
   return (
-    typeof openapi.swagger === "string" && openapi.swagger.startsWith("2.0")
+    typeof openapi === "object" &&
+    openapi !== null &&
+    "swagger" in openapi &&
+    typeof openapi.swagger === "string" &&
+    openapi.swagger.startsWith("2.0")
   );
 }
 
 /**
  * Checks if an OpenAPI document is version 3.0.x
  */
-export function isOpenAPI30(openapi: any): boolean {
+export function isOpenAPI30(openapi: unknown): boolean {
   return (
-    typeof openapi.openapi === "string" && openapi.openapi.startsWith("3.0")
+    typeof openapi === "object" &&
+    openapi !== null &&
+    "openapi" in openapi &&
+    typeof openapi.openapi === "string" &&
+    openapi.openapi.startsWith("3.0")
   );
 }
 
 /**
  * Checks if an OpenAPI document is version 3.1.x
  */
-export function isOpenAPI31(openapi: any): boolean {
+export function isOpenAPI31(openapi: unknown): boolean {
   return (
-    typeof openapi.openapi === "string" && openapi.openapi.startsWith("3.1")
+    typeof openapi === "object" &&
+    openapi !== null &&
+    "openapi" in openapi &&
+    typeof openapi.openapi === "string" &&
+    openapi.openapi.startsWith("3.1")
   );
 }
 
@@ -240,7 +259,7 @@ function convertPathItem(pathItem: V3PathItemObject): V31PathItemObject {
 
   for (const method of methods) {
     if (pathItem[method]) {
-      converted[method] = convertOperation(pathItem[method]!);
+      converted[method] = convertOperation(pathItem[method]);
     }
   }
 
@@ -313,6 +332,7 @@ function convertResponse(
 /**
  * Recursively converts a schema object from 3.0 to 3.1 format
  */
+// eslint-disable-next-line complexity
 function convertSchema(
   schema: V3ReferenceObject | V3SchemaObject,
 ): V31ReferenceObject | V31SchemaObject {

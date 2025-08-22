@@ -26,7 +26,7 @@ export type ZodSchemaCodeOptions = {
  */
 export type ZodSchemaResult = {
   code: string;
-  extensibleEnumValues?: any[];
+  extensibleEnumValues?: unknown[];
   imports: Set<string>;
 };
 import { isSchemaObject } from "openapi3-ts/oas31";

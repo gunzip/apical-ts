@@ -5,7 +5,7 @@ import { sanitizeIdentifier } from "./utils.js";
 // Import from schema-converter to avoid circular dependencies
 type ZodSchemaResult = {
   code: string;
-  extensibleEnumValues?: any[];
+  extensibleEnumValues?: unknown[];
   imports: Set<string>;
 };
 

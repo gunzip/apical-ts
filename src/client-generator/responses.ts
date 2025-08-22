@@ -1,5 +1,7 @@
 import type { OperationObject, ResponseObject } from "openapi3-ts/oas31";
 
+import assert from "assert";
+
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { getResponseContentType } from "./utils.js";
 
@@ -49,7 +51,12 @@ export function generateResponseHandlers(
 
         if (schema["$ref"]) {
           // Use referenced schema
-          const originalSchemaName = schema["$ref"].split("/").pop()!;
+          assert(
+            schema["$ref"].startsWith("#/components/schemas/"),
+            `Unsupported schema reference: ${schema["$ref"]}`,
+          );
+          const originalSchemaName = schema["$ref"].split("/").pop();
+          assert(originalSchemaName, "Invalid $ref in response schema");
           typeName = sanitizeIdentifier(originalSchemaName);
           typeImports.add(typeName);
 
@@ -60,7 +67,8 @@ export function generateResponseHandlers(
           }
         } else {
           // Use generated response schema for inline schemas
-          const operationId = operation.operationId!;
+          const operationId = operation.operationId;
+          assert(operationId, "Invalid operationId");
           const sanitizedOperationId: string = sanitizeIdentifier(operationId);
           const responseTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${code}Response`;
           typeName = responseTypeName;

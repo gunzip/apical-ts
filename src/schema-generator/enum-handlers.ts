@@ -7,7 +7,7 @@ import { addDefaultValue } from "./utils.js";
  */
 export type ExtensibleEnumResult = {
   code: string;
-  enumValues: any[];
+  enumValues: unknown[];
 };
 
 /**
@@ -24,7 +24,7 @@ export function handleExtensibleEnum(
 
   // Always use inline array format
   const enumValues = extensibleEnum
-    .map((e: any) => JSON.stringify(e))
+    .map((e: unknown) => JSON.stringify(e))
     .join(", ");
   let code = `z.enum([${enumValues}]).or(z.string())`;
 
@@ -41,8 +41,8 @@ export function handleExtensibleEnum(
  * Handle regular enum values
  */
 export function handleRegularEnum(
-  enumValues: any[],
-  defaultValue?: any,
+  enumValues: unknown[],
+  defaultValue?: unknown,
 ): string {
   // Single enum value should be a literal
   if (enumValues.length === 1) {
