@@ -9,7 +9,7 @@ type ObjectTypeOptions = {
   strictValidation?: boolean;
 };
 
-type ZodSchemaCodeOptions = {
+type ZodSchemaCodeOptions = ObjectTypeOptions & {
   imports?: Set<string>;
   isTopLevel?: boolean;
 };
