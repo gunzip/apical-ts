@@ -57,6 +57,11 @@ export function handleObjectType(
   const objectMethod = strictValidation ? "z.object" : "z.looseObject";
   let code = `${objectMethod}({${shape.join(", ")}})`;
 
+  // Add .strict() for strict validation to reject unknown properties
+  if (strictValidation) {
+    code += ".strict()";
+  }
+
   if (schema.additionalProperties) {
     if (typeof schema.additionalProperties === "boolean") {
       code += ".catchall(z.unknown())";
