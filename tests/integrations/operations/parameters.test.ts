@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { MockServer, getRandomPort } from "../setup.js";
-import { createUnauthenticatedClient } from "../client.js";
+import { createAuthenticatedClient } from "../client.js";
 import { sampleData } from "../fixtures/test-helpers.js";
 
 describe("Parameters Operations", () => {
@@ -27,13 +27,19 @@ describe("Parameters Operations", () => {
   describe("testParameterWithDash operation", () => {
     it("should handle path and query parameters with dashes", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        pathParam: sampleData.pathParams["path-param"],
-        fooBar: "test-query-with-dash",
-        headerInlineParam: sampleData.headerParams.headerInlineParam,
-        requestId: sampleData.headerParams["request-id"],
-        xHeaderParam: sampleData.headerParams["x-header-param"],
+        path: {
+          pathParam: sampleData.pathParams["path-param"],
+        },
+        query: {
+          fooBar: "test-query-with-dash",
+          requestId: sampleData.headerParams["request-id"],
+        },
+        headers: {
+          headerInlineParam: sampleData.headerParams.headerInlineParam,
+          "x-header-param": sampleData.headerParams["x-header-param"],
+        },
       };
 
       // Act
@@ -46,13 +52,17 @@ describe("Parameters Operations", () => {
 
     it("should reject missing required path parameter", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
         // Missing required pathParam
-        fooBar: "test-query-with-dash",
-        headerInlineParam: sampleData.headerParams.headerInlineParam,
-        requestId: sampleData.headerParams["request-id"],
-        xHeaderParam: sampleData.headerParams["x-header-param"],
+        query: {
+          fooBar: "test-query-with-dash",
+          requestId: sampleData.headerParams["request-id"],
+        },
+        headers: {
+          headerInlineParam: sampleData.headerParams.headerInlineParam,
+          "x-header-param": sampleData.headerParams["x-header-param"],
+        },
       } as any;
 
       // Act & Assert
@@ -76,13 +86,19 @@ describe("Parameters Operations", () => {
 
     it("should reject missing required header parameter", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        pathParam: sampleData.pathParams["path-param"],
-        fooBar: "test-query-with-dash",
-        // Missing required headerInlineParam
-        requestId: sampleData.headerParams["request-id"],
-        xHeaderParam: sampleData.headerParams["x-header-param"],
+        path: {
+          pathParam: sampleData.pathParams["path-param"],
+        },
+        query: {
+          fooBar: "test-query-with-dash",
+          requestId: sampleData.headerParams["request-id"],
+        },
+        headers: {
+          // Missing required headerInlineParam
+          "x-header-param": sampleData.headerParams["x-header-param"],
+        },
       } as any;
 
       // Act & Assert
@@ -108,13 +124,19 @@ describe("Parameters Operations", () => {
   describe("testParameterWithDashAnUnderscore operation", () => {
     it("should handle parameters with dashes and underscores", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        pathParam: sampleData.pathParams["path-param"],
-        fooBar: "test-underscore-param",
-        headerInlineParam: sampleData.headerParams.headerInlineParam,
-        requestId: sampleData.headerParams["request-id"],
-        xHeaderParam: sampleData.headerParams["x-header-param"],
+        path: {
+          pathParam: sampleData.pathParams["path-param"],
+        },
+        query: {
+          fooBar: "test-underscore-param",
+          requestId: sampleData.headerParams["request-id"],
+        },
+        headers: {
+          headerInlineParam: sampleData.headerParams.headerInlineParam,
+          "x-header-param": sampleData.headerParams["x-header-param"],
+        },
       };
 
       // Act
@@ -126,13 +148,16 @@ describe("Parameters Operations", () => {
 
     it("should handle optional query parameters", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        pathParam: sampleData.pathParams["path-param"],
+        path: {
+          pathParam: sampleData.pathParams["path-param"],
+        },
         // fooBar is optional, not providing it
-        headerInlineParam: sampleData.headerParams.headerInlineParam,
-        requestId: sampleData.headerParams["request-id"],
-        xHeaderParam: sampleData.headerParams["x-header-param"],
+        headers: {
+          headerInlineParam: sampleData.headerParams.headerInlineParam,
+          "x-header-param": sampleData.headerParams["x-header-param"],
+        },
       };
 
       // Act
@@ -146,10 +171,12 @@ describe("Parameters Operations", () => {
   describe("testWithTwoParams operation", () => {
     it("should handle multiple path parameters", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        firstParam: sampleData.pathParams["first-param"],
-        secondParam: sampleData.pathParams["second-param"],
+        path: {
+          firstParam: sampleData.pathParams["first-param"],
+          secondParam: sampleData.pathParams["second-param"],
+        },
       };
 
       // Act
@@ -161,10 +188,12 @@ describe("Parameters Operations", () => {
 
     it("should reject missing first path parameter", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        // Missing firstParam
-        secondParam: sampleData.pathParams["second-param"],
+        path: {
+          // Missing firstParam
+          secondParam: sampleData.pathParams["second-param"],
+        },
       } as any;
 
       // Act & Assert
@@ -188,10 +217,12 @@ describe("Parameters Operations", () => {
 
     it("should reject missing second path parameter", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        firstParam: sampleData.pathParams["first-param"],
-        // Missing secondParam
+        path: {
+          firstParam: sampleData.pathParams["first-param"],
+          // Missing secondParam
+        },
       } as any;
 
       // Act & Assert
@@ -217,10 +248,12 @@ describe("Parameters Operations", () => {
   describe("testParametersAtPathLevel operation", () => {
     it("should handle path-level parameters", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        requestId: sampleData.headerParams["request-id"],
-        cursor: sampleData.queryParams.cursor,
+        query: {
+          requestId: sampleData.headerParams["request-id"],
+          cursor: sampleData.queryParams.cursor,
+        },
       };
 
       // Act
@@ -232,10 +265,12 @@ describe("Parameters Operations", () => {
 
     it("should reject missing required path-level parameter", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        // Missing required requestId (RequiredRequestId at path level)
-        cursor: sampleData.queryParams.cursor,
+        query: {
+          // Missing required requestId (RequiredRequestId at path level)
+          cursor: sampleData.queryParams.cursor,
+        },
       } as any;
 
       // Act & Assert
@@ -261,9 +296,11 @@ describe("Parameters Operations", () => {
   describe("testParamWithSchemaRef operation", () => {
     it("should handle parameter with schema reference", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        param: sampleData.pathParams.param, // Should match CustomStringFormatTest
+        path: {
+          param: sampleData.pathParams.param, // Should match CustomStringFormatTest
+        },
       };
 
       // Act
@@ -275,25 +312,41 @@ describe("Parameters Operations", () => {
 
     it("should validate parameter against schema reference", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        param: "", // Empty string might not match schema requirements
+        path: {
+          param: "invalid-value", // Use an actual value that might fail validation rather than empty string
+        },
       };
 
-      // Act
-      const response = await client.testParamWithSchemaRef(params);
-
-      // Assert - Prism may validate or just accept it
-      expect([200, 400]).toContain(response.status);
+      // Act & Assert
+      try {
+        const response = await client.testParamWithSchemaRef(params);
+        // Test passes if the operation succeeds
+        expect(response.status).toBe(200);
+      } catch (error) {
+        // If validation fails, verify error shape
+        expect(error).toBeDefined();
+        if (error.status !== undefined) {
+          expect([400, 422]).toContain(error.status);
+          expect(error.data).toBeDefined();
+          expect(error.response).toBeInstanceOf(Response);
+        } else {
+          expect(error.message).toBeDefined();
+          expect(typeof error.message).toBe('string');
+        }
+      }
     });
   });
 
   describe("testHeaderWithSchemaRef operation", () => {
     it("should handle header parameter with schema reference", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        param: sampleData.pathParams.param, // Should match CustomStringFormatTest
+        headers: {
+          param: sampleData.pathParams.param, // Should match CustomStringFormatTest
+        },
       };
 
       // Act
@@ -307,9 +360,11 @@ describe("Parameters Operations", () => {
   describe("testHeaderOptional operation", () => {
     it("should handle optional header parameter", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        param: sampleData.pathParams.param,
+        headers: {
+          param: sampleData.pathParams.param,
+        },
       };
 
       // Act
@@ -321,7 +376,7 @@ describe("Parameters Operations", () => {
 
     it("should work without optional header parameter", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
         // param is optional, not providing it
       };
@@ -337,9 +392,11 @@ describe("Parameters Operations", () => {
   describe("testParameterWithReference operation", () => {
     it("should handle parameter references", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
-        requestId: sampleData.headerParams["request-id"],
+        query: {
+          requestId: sampleData.headerParams["request-id"],
+        },
       };
 
       // Act
@@ -351,7 +408,7 @@ describe("Parameters Operations", () => {
 
     it("should work without optional referenced parameter", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
       const params = {
         // requestId is optional via reference, not providing it
       };

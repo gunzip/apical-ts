@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { MockServer, getRandomPort } from "../setup.js";
-import { createUnauthenticatedClient } from "../client.js";
+import { createAuthenticatedClient } from "../client.js";
 
 describe("Response Operations", () => {
   let mockServer: MockServer;
@@ -61,7 +61,7 @@ describe("Response Operations", () => {
 
     it("should handle 403 forbidden response with OneOfTest data", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testMultipleSuccess({});
@@ -241,7 +241,7 @@ describe("Response Operations", () => {
 
       // Assert
       expect(response).toHaveProperty("status");
-      expect(response).toHaveProperty("headers");
+      expect(response).toHaveProperty("response");
       expect(response).toHaveProperty("data");
       
       expect(typeof response.status).toBe("number");
