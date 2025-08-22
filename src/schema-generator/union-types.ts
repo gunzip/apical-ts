@@ -23,7 +23,7 @@ type ZodSchemaCodeOptions = {
 // Import from schema-converter to avoid circular dependencies
 type ZodSchemaResult = {
   code: string;
-  extensibleEnumValues?: any[];
+  extensibleEnumValues?: unknown[];
   imports: Set<string>;
 };
 
@@ -34,7 +34,7 @@ export function handleAllOfSchema(
   schemas: (ReferenceObject | SchemaObject)[],
   result: ZodSchemaResult,
   zodSchemaToCode: (
-    schema: any,
+    schema: ReferenceObject | SchemaObject,
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
 ): ZodSchemaResult {
@@ -70,7 +70,7 @@ export function handleUnionSchema(
   unionType: UnionType,
   result: ZodSchemaResult,
   zodSchemaToCode: (
-    schema: any,
+    schema: ReferenceObject | SchemaObject,
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
   discriminator?: DiscriminatorConfig,

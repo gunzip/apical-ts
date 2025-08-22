@@ -1,8 +1,8 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 
 import { Command } from "commander";
 
-import packageInfo from "../package.json" with { type: "json" };
 import { generate } from "./core-generator/index.js";
 
 const program = new Command();
@@ -23,6 +23,7 @@ program
   .option("--generate-client", "Generate the full HTTP client.", false)
   .action(async (options: Record<string, unknown>) => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await generate(options as any);
       console.log("✅ Client generated successfully!");
     } catch (error) {

@@ -16,7 +16,7 @@ export type EffectiveType =
 /**
  * Add default value to zod code if present in schema
  */
-export function addDefaultValue(code: string, defaultValue: any): string {
+export function addDefaultValue(code: string, defaultValue: unknown): string {
   if (defaultValue === undefined) {
     return code;
   }
@@ -97,14 +97,14 @@ export function mergeImports(
  * Converts kebab-case, snake_case, and other invalid characters to camelCase
  * Throws an error if the input cannot be sanitized to a valid identifier
  */
-export function sanitizeIdentifier(name: string): string {
+export function sanitizeIdentifier(id: string): string {
   // Handle empty strings
-  if (!name) {
+  if (!id) {
     throw new Error("Cannot sanitize empty string to identifier");
   }
 
   // Remove leading/trailing whitespace
-  name = name.trim();
+  const name = id.trim();
 
   // Handle empty strings after trimming
   if (!name) {

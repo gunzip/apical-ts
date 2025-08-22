@@ -81,7 +81,7 @@ export function generateOperationId(method: string, path: string): string {
  * Groups collisions first, then resolves them in batch
  */
 export function generateUniqueOperationIds(
-  paths: Record<string, any>,
+  paths: Record<string, unknown>,
 ): Map<string, string> {
   const operationIds = new Map<string, string>();
   const collisionGroups = new Map<
@@ -91,15 +91,19 @@ export function generateUniqueOperationIds(
 
   // O(n) - First pass: group operations by their generated ID
   for (const [path, pathItem] of Object.entries(paths)) {
-    for (const [method, operation] of Object.entries(pathItem)) {
-      if (operation && typeof operation === "object") {
-        const key = `${method}:${path}`;
-        const operationId = getOrGenerateOperationId(operation, method, path);
+    if (typeof pathItem === "object" && pathItem !== null) {
+      for (const [method, operation] of Object.entries(
+        pathItem as Record<string, unknown>,
+      )) {
+        if (operation && typeof operation === "object") {
+          const key = `${method}:${path}`;
+          const operationId = getOrGenerateOperationId(operation, method, path);
 
-        if (!collisionGroups.has(operationId)) {
-          collisionGroups.set(operationId, []);
+          if (!collisionGroups.has(operationId)) {
+            collisionGroups.set(operationId, []);
+          }
+          collisionGroups.get(operationId)?.push({ key, method, path });
         }
-        collisionGroups.get(operationId)!.push({ key, method, path });
       }
     }
   }

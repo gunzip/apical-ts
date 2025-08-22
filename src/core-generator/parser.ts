@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import { promises as fs } from "fs";
@@ -20,7 +21,7 @@ export async function parseOpenAPI(
   const fileContent = await fetchContent(filePathOrUrl);
   const extension = getFileExtension(filePathOrUrl);
 
-  let parsed: any;
+  let parsed: unknown;
 
   if (extension === "yaml" || extension === "yml") {
     parsed = yaml.load(fileContent);
