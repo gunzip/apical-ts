@@ -29,5 +29,14 @@ jobs:
       - name: Generate integration test client
         run: pnpm start generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client
 
+      - name: Run format check
+        run: pnpm format:check
+
+      - name: Run lint check
+        run: pnpm lint:check
+
+      - name: Run typecheck
+        run: pnpm typecheck
+
       - name: Run tests
         run: pnpm test

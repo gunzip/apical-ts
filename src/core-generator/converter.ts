@@ -1,6 +1,7 @@
 import type { OpenAPIObject as OpenAPIV3Document } from "openapi3-ts/oas30";
 import type {
   MediaTypeObject as V3MediaTypeObject,
+  OpenAPIObject as V3OpenAPIObject,
   OperationObject as V3OperationObject,
   ParameterObject as V3ParameterObject,
   PathItemObject as V3PathItemObject,
@@ -12,6 +13,7 @@ import type {
 import type { OpenAPIObject as OpenAPIV3_1Document } from "openapi3-ts/oas31";
 import type {
   MediaTypeObject as V31MediaTypeObject,
+  OpenAPIObject as V31OpenAPIObject,
   OperationObject as V31OperationObject,
   ParameterObject as V31ParameterObject,
   PathItemObject as V31PathItemObject,
@@ -135,7 +137,7 @@ export function isOpenAPI20(openapi: unknown): boolean {
 /**
  * Checks if an OpenAPI document is version 3.0.x
  */
-export function isOpenAPI30(openapi: unknown): boolean {
+export function isOpenAPI30(openapi: unknown): openapi is V3OpenAPIObject {
   return (
     typeof openapi === "object" &&
     openapi !== null &&
@@ -148,7 +150,7 @@ export function isOpenAPI30(openapi: unknown): boolean {
 /**
  * Checks if an OpenAPI document is version 3.1.x
  */
-export function isOpenAPI31(openapi: unknown): boolean {
+export function isOpenAPI31(openapi: unknown): openapi is V31OpenAPIObject {
   return (
     typeof openapi === "object" &&
     openapi !== null &&
