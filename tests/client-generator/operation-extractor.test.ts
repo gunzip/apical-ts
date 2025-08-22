@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
-  extractBaseURL,
+  extractServerUrls,
   extractAllOperations,
-  type OperationMetadata,
 } from "../../src/client-generator/operation-extractor.js";
 import type {
   OpenAPIObject,
@@ -12,62 +11,92 @@ import type {
 } from "openapi3-ts/oas31";
 
 describe("client-generator operation-extractor", () => {
-  describe("extractBaseURL", () => {
-    it("should extract base URL from first server", () => {
+  describe("extractServerUrls", () => {
+    it("should extract all server URLs", () => {
       const doc: OpenAPIObject = {
         openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
         servers: [
           { url: "https://api.example.com/v1" },
           { url: "https://backup.example.com/v1" },
+          { url: "https://dev.example.com/v1" },
         ],
       };
 
-      const result = extractBaseURL(doc);
-      expect(result).toBe("https://api.example.com/v1");
+      const result = extractServerUrls(doc);
+      expect(result).toEqual([
+        "https://api.example.com/v1",
+        "https://backup.example.com/v1",
+        "https://dev.example.com/v1",
+      ]);
     });
 
-    it("should return empty string when no servers", () => {
+    it("should return empty array when no servers", () => {
       const doc: OpenAPIObject = {
         openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
       };
 
-      const result = extractBaseURL(doc);
-      expect(result).toBe("");
+      const result = extractServerUrls(doc);
+      expect(result).toEqual([]);
     });
 
-    it("should return empty string when servers array is empty", () => {
+    it("should return empty array when servers array is empty", () => {
       const doc: OpenAPIObject = {
         openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
         servers: [],
       };
 
-      const result = extractBaseURL(doc);
-      expect(result).toBe("");
+      const result = extractServerUrls(doc);
+      expect(result).toEqual([]);
     });
 
-    it("should handle server with undefined URL", () => {
+    it("should filter out servers with undefined URLs", () => {
       const doc: OpenAPIObject = {
         openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
-        servers: [{ description: "Main server" }],
+        servers: [
+          { url: "https://api.example.com/v1" },
+          { url: undefined as any, description: "Server without URL" },
+          { url: "https://backup.example.com/v1" },
+        ],
       };
 
-      const result = extractBaseURL(doc);
-      expect(result).toBe("");
+      const result = extractServerUrls(doc);
+      expect(result).toEqual([
+        "https://api.example.com/v1",
+        "https://backup.example.com/v1",
+      ]);
     });
 
-    it("should handle server with empty URL", () => {
+    it("should filter out servers with empty URLs", () => {
       const doc: OpenAPIObject = {
         openapi: "3.1.0",
         info: { title: "Test API", version: "1.0.0" },
-        servers: [{ url: "" }],
+        servers: [
+          { url: "https://api.example.com/v1" },
+          { url: "" },
+          { url: "https://backup.example.com/v1" },
+        ],
       };
 
-      const result = extractBaseURL(doc);
-      expect(result).toBe("");
+      const result = extractServerUrls(doc);
+      expect(result).toEqual([
+        "https://api.example.com/v1",
+        "https://backup.example.com/v1",
+      ]);
+    });
+
+    it("should handle single server", () => {
+      const doc: OpenAPIObject = {
+        openapi: "3.1.0",
+        info: { title: "Test API", version: "1.0.0" },
+        servers: [{ url: "https://api.example.com/v1" }],
+      };
+
+      const result = extractServerUrls(doc);
+      expect(result).toEqual(["https://api.example.com/v1"]);
     });
   });
 

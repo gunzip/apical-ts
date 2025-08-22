@@ -28,10 +28,10 @@ export async function writeOperationFile(
  */
 export async function writeConfigFile(
   authHeaders: string[],
-  baseURL: string,
+  serverUrls: string[],
   operationsDir: string
 ): Promise<void> {
-  const configContent = generateConfigTypes(authHeaders, baseURL);
+  const configContent = generateConfigTypes(authHeaders, serverUrls);
   const configPath = path.join(operationsDir, "config.ts");
   await writeFormattedFile(configPath, configContent);
 }

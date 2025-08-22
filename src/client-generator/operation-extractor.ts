@@ -18,13 +18,15 @@ export interface OperationMetadata {
 }
 
 /**
- * Extracts base URL from the first server in OpenAPI spec
+ * Extracts all server URLs from OpenAPI spec
  */
-export function extractBaseURL(doc: OpenAPIObject): string {
+export function extractServerUrls(doc: OpenAPIObject): string[] {
   if (doc.servers && doc.servers.length > 0) {
-    return doc.servers[0].url || "";
+    return doc.servers
+      .map((server) => server.url || "")
+      .filter((url) => url !== "");
   }
-  return "";
+  return [];
 }
 
 /**

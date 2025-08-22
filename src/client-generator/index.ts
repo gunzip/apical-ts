@@ -2,7 +2,7 @@ import type { OpenAPIObject } from "openapi3-ts/oas31";
 import pLimit from "p-limit";
 import {
   extractAllOperations,
-  extractBaseURL,
+  extractServerUrls,
   type OperationMetadata,
 } from "./operation-extractor.js";
 import { extractAuthHeaders, type SecurityHeader } from "./security.js";
@@ -68,13 +68,13 @@ export async function generateOperations(
 
   // Extract auth headers for configuration types
   const authHeaders = extractAuthHeaders(doc);
-  const baseURL = extractBaseURL(doc);
+  const serverUrls = extractServerUrls(doc);
 
   // Process all operations and write files
   const operations = await processOperations(doc, operationsDir, concurrency);
 
   // Write configuration file
-  await writeConfigFile(authHeaders, baseURL, operationsDir);
+  await writeConfigFile(authHeaders, serverUrls, operationsDir);
 
   // Write index file that exports all operations
   await writeIndexFile(operations, operationsDir);
@@ -93,7 +93,10 @@ export type { ParameterGroups } from "./parameters.js";
 export type { RequestBodyTypeInfo } from "./request-body.js";
 export type { SecurityHeader } from "./security.js";
 
-export { extractAllOperations, extractBaseURL } from "./operation-extractor.js";
+export {
+  extractAllOperations,
+  extractServerUrls,
+} from "./operation-extractor.js";
 
 export { extractAuthHeaders } from "./security.js";
 

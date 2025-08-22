@@ -7,9 +7,9 @@
  */
 export function generateConfigFileContent(
   authHeaders: string[],
-  baseURL: string
+  serverUrls: string[] = []
 ): string {
-  return generateConfigTypes(authHeaders, baseURL);
+  return generateConfigTypes(authHeaders, serverUrls);
 }
 
 /**
@@ -17,17 +17,26 @@ export function generateConfigFileContent(
  */
 export function generateConfigTypes(
   authHeaders: string[],
-  baseURL: string
+  serverUrls: string[] = []
 ): string {
   const authHeadersType =
     authHeaders.length > 0
       ? authHeaders.map((h) => `'${h}'`).join(" | ")
       : "string";
 
+  // Generate baseURL type as union of server URLs and any string
+  const baseURLType =
+    serverUrls.length > 0
+      ? serverUrls.map((url) => `'${url}'`).join(" | ") + " | (string & {})"
+      : "string";
+
+  // Use first server URL as default, or empty string if none
+  const defaultBaseURL = serverUrls.length > 0 ? serverUrls[0] : "";
+
   return `
 // Configuration types
 export interface GlobalConfig {
-  baseURL: string;
+  baseURL: ${baseURLType};
   fetch: typeof fetch;
   headers: {
     [K in ${authHeaders.length > 0 ? `AuthHeaders` : "string"}]?: string;
@@ -38,7 +47,7 @@ ${authHeaders.length > 0 ? `export type AuthHeaders = ${authHeadersType};` : ""}
 
 // Default global configuration - immutable
 export const globalConfig: GlobalConfig = {
-  baseURL: '${baseURL}',
+  baseURL: '${defaultBaseURL}',
   fetch: fetch,
   headers: {}
 };
