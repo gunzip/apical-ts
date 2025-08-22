@@ -29,7 +29,6 @@ See [supported features](#features) for more information.
   - [Features](#features)
   - [Benefits of Operation-Based Architecture](#benefits-of-operation-based-architecture)
   - [Known Limitations](#known-limitations)
-    - [Multiple Content Types](#multiple-content-types)
     - [Missing Response Headers Validation](#missing-response-headers-validation)
     - [String Constraints on Query and Path Parameters](#string-constraints-on-query-and-path-parameters)
   - [Comparison with alternative libraries](#comparison-with-alternative-libraries)
@@ -272,41 +271,6 @@ if (!result.success) {
 
 ## Known Limitations
 
-### Multiple Content Types
-
-This is probably the biggest limitation and will be addressed in future versions.
-
-Currently, the generator supports only a **single content type per request or response**. If an OpenAPI specification defines multiple content types for the same request body, the generator will select one based on the following priority order:
-
-1. `application/json`
-2. `application/x-www-form-urlencoded`
-3. `multipart/form-data`
-4. `text/plain`
-5. `application/xml`
-6. `application/octet-stream`
-7. First available content type (if none of the above match)
-
-**Example:**
-
-```yaml
-# This OpenAPI spec defines multiple content types
-requestBody:
-  content:
-    application/json: # ← This will be selected (highest priority)
-      schema:
-        type: object
-    application/xml: # ← This will be ignored
-      schema:
-        type: string
-```
-
-The generated operation will only handle the `application/json` content type in this case.
-
-**Workaround**: If you need to support multiple content types for requests for the same endpoint, you can:
-
-1. Define separate operations for each content type in your OpenAPI spec
-2. Manually modify the generated code after generation
-
 ### Missing Response Headers Validation
 
 - Header defined within responses schemas are currently not verified; a parsed headers object could be added to `ApiResponse` in the future. You can get headers accessing the raw `response` object anyway.
@@ -332,6 +296,7 @@ Here is a comparison of the key features and limitations of each library.
 | **Generation Speed**           |                   Faster                    |                      Slower on big specs                      |          Fast          |
 | **Subtype constraints**        |                     ✅                      |                              ✅                               | ⚠️ (Only at top-level) |
 | **Multiple success responses** |                     ✅                      |                              ✅                               |           ❌           |
+| **Multiple content types (request/response)** | ✅ | ❌ | ❌ |
 | **Security header support**    |                     ✅                      |                              ✅                               |           ❌           |
 | **File download response**     |                     ✅                      |                              ✅                               |           ❌           |
 | **Tree-shaking friendly**      |                     ✅                      |                              ❌                               |           ❌           |
