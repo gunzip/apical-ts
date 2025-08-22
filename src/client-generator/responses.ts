@@ -3,8 +3,9 @@ import type {
   RequestBodyObject,
   ResponseObject,
 } from "openapi3-ts/oas31";
-import { isReferenceObject } from "openapi3-ts/oas31";
+
 import assert from "assert";
+import { isReferenceObject } from "openapi3-ts/oas31";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import {
@@ -83,6 +84,7 @@ export function generateContentTypeMaps(
 export function generateResponseHandlers(
   operation: OperationObject,
   typeImports: Set<string>,
+  hasResponseContentTypeMap = false,
 ): ResponseHandlerResult {
   const responseHandlers: string[] = [];
   const unionTypes: string[] = [];
@@ -96,45 +98,22 @@ export function generateResponseHandlers(
     for (const code of responseCodes) {
       const response = operation.responses[code] as ResponseObject;
       const contentType = getResponseContentType(response);
+      // multiple content types currently not altering static parsing strategy
 
       let typeName: null | string = null;
       let parseCode = "undefined";
 
       if (contentType && response.content?.[contentType]?.schema) {
-        const schema = response.content[contentType].schema;
-        if (isReferenceObject(schema)) {
-          // referenced schema
-          const ref = schema.$ref;
-          assert(
-            ref.startsWith("#/components/schemas/"),
-            `Unsupported schema reference: ${ref}`,
-          );
-          const originalSchemaName = ref.split("/").pop();
-          assert(originalSchemaName, "Invalid $ref in response schema");
-          typeName = sanitizeIdentifier(originalSchemaName as string);
-          typeImports.add(typeName);
-          if (contentType.includes("json")) {
-            // Conditionally validate only if actual runtime content-type is JSON
-            parseCode = `await (async () => { const raw = await parseResponseBody(response); return response.headers.get('content-type')?.includes('json') ? ${typeName}.parse(raw) : raw; })()`;
-          } else {
-            // Non-JSON: skip schema validation, just return raw parsed body
-            parseCode = `await parseResponseBody(response)`;
-          }
-        } else {
-          // inline schema -> synthetic name
-          assert(operation.operationId, "Invalid operationId");
-          const sanitizedOperationId = sanitizeIdentifier(
-            operation.operationId,
-          );
-          const responseTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${code}Response`;
-          typeName = responseTypeName;
-          typeImports.add(typeName);
-          if (contentType.includes("json")) {
-            parseCode = `await (async () => { const raw = await parseResponseBody(response); return response.headers.get('content-type')?.includes('json') ? ${typeName}.parse(raw) : raw; })()`;
-          } else {
-            parseCode = `await parseResponseBody(response)`;
-          }
-        }
+        const { parseExpression, resolvedTypeName } = buildParseInfo({
+          code,
+          contentType,
+          hasResponseContentTypeMap,
+          operation,
+          response,
+          typeImports,
+        });
+        typeName = resolvedTypeName;
+        parseCode = parseExpression;
       }
 
       const dataType = typeName || (contentType ? "unknown" : "void");
@@ -158,6 +137,80 @@ export function generateResponseHandlers(
       : "ApiResponse<number, unknown>";
 
   return { responseHandlers, returnType };
+}
+
+/*
+ * Given a response object and content type, determines the correct TypeScript type name
+ * and code to parse the response body.
+ *
+ * Handles both referenced and inline schemas, and generates the appropriate parse expression
+ * for JSON and non-JSON content types.
+ *
+ * Used by generateResponseHandlers to build the switch/case logic for handling API responses.
+ */
+function buildParseInfo({
+  code,
+  contentType,
+  hasResponseContentTypeMap,
+  operation,
+  response,
+  typeImports,
+}: {
+  code: string;
+  contentType: string;
+  hasResponseContentTypeMap: boolean;
+  operation: OperationObject;
+  response: ResponseObject;
+  typeImports: Set<string>;
+}): { parseExpression: string; resolvedTypeName: string } {
+  let parseExpression = "undefined";
+  let resolvedTypeName = "";
+  // Get all content types for this response
+  const allContentTypes = Object.keys(response.content || {});
+  // Check if any content type is JSON-like
+  const hasJsonLike = allContentTypes.some(
+    (ct) => ct.includes("json") || ct.includes("+json"),
+  );
+  // Check if any content type is not JSON-like
+  const hasNonJson = allContentTypes.some(
+    (ct) => !ct.includes("json") && !ct.includes("+json"),
+  );
+  // True if both JSON and non-JSON content types are present
+  const mixedJsonAndNonJson = hasJsonLike && hasNonJson;
+  // Get the schema for the current content type
+  const schema = response.content?.[contentType]?.schema;
+  if (schema) {
+    if (isReferenceObject(schema)) {
+      // If schema is a reference, extract the referenced type name
+      const ref = schema.$ref;
+      assert(
+        ref.startsWith("#/components/schemas/"),
+        `Unsupported schema reference: ${ref}`,
+      );
+      const originalSchemaName = ref.split("/").pop();
+      assert(originalSchemaName, "Invalid $ref in response schema");
+      resolvedTypeName = sanitizeIdentifier(originalSchemaName as string);
+      typeImports.add(resolvedTypeName);
+    } else {
+      // Inline schema: synthesize a type name based on operationId and status code
+      assert(operation.operationId, "Invalid operationId");
+      const sanitizedOperationId = sanitizeIdentifier(operation.operationId);
+      resolvedTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${code}Response`;
+      typeImports.add(resolvedTypeName);
+    }
+    // Choose the correct parse expression based on content type
+    if (mixedJsonAndNonJson && hasResponseContentTypeMap) {
+      // If both JSON and non-JSON are present, select parse logic at runtime
+      parseExpression = `(finalResponseContentType.includes("json") || finalResponseContentType.includes("+json")) ? ${resolvedTypeName}.parse(await parseResponseBody(response)) : await parseResponseBody(response) as ${resolvedTypeName}`;
+    } else if (contentType.includes("json") || contentType.includes("+json")) {
+      // JSON content type: use .parse
+      parseExpression = `${resolvedTypeName}.parse(await parseResponseBody(response))`;
+    } else {
+      // Non-JSON: just cast the parsed body
+      parseExpression = `await parseResponseBody(response) as ${resolvedTypeName}`;
+    }
+  }
+  return { parseExpression, resolvedTypeName };
 }
 
 /*

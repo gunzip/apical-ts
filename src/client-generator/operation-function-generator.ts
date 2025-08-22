@@ -98,6 +98,7 @@ export function generateOperationFunction(
   const { responseHandlers, returnType } = generateResponseHandlers(
     operation,
     typeImports,
+    bodyInfo.shouldGenerateResponseMap,
   );
 
   // Security overrides/auth headers
@@ -115,7 +116,6 @@ export function generateOperationFunction(
     overridesSecurity,
     parameterGroups,
     pathKey,
-    requestContentType: bodyInfo.requestContentType,
     requestContentTypes: bodyInfo.requestContentTypes,
     responseHandlers,
     shouldGenerateRequestMap: bodyInfo.shouldGenerateRequestMap,

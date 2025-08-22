@@ -5,7 +5,6 @@ import {
   generateQueryParamHandling,
   type ParameterGroups,
 } from "./parameters.js";
-import { generateRequestBodyHandling } from "./request-body.js";
 import {
   generateSecurityHeaderHandling,
   type SecurityHeader,
@@ -46,7 +45,6 @@ export function generateFunctionBody({
   overridesSecurity,
   parameterGroups,
   pathKey,
-  requestContentType,
   requestContentTypes,
   responseHandlers,
   shouldGenerateRequestMap,
@@ -62,13 +60,11 @@ export function generateFunctionBody({
       ? generateSecurityHeaderHandling(operationSecurityHeaders)
       : "";
 
-  // These variables are no longer needed as we always generate type maps
-
   // Generate content type determination logic
   let contentTypeLogic = "";
   let bodyContentCode = "";
   let acceptHeaderLogic = "";
-  let contentTypeHeaderCode = "";
+  const contentTypeHeaderCode = "";
 
   if (shouldGenerateRequestMap) {
     const defaultReq =
@@ -80,25 +76,15 @@ export function generateFunctionBody({
         requestContentTypes || [],
       );
     }
-  } else {
-    // Use static content type handling (backward compatibility)
-    if (hasBody) {
-      const { bodyContent, contentTypeHeader } = generateRequestBodyHandling(
-        hasBody,
-        requestContentType,
-      );
-      bodyContentCode = `  // Static body content
-  const bodyContent = ${bodyContent || "undefined"};`;
-      if (contentTypeHeader) {
-        contentTypeHeaderCode = contentTypeHeader;
-      }
-    }
   }
 
   if (shouldGenerateResponseMap) {
-    const defaultResp =
+    const defaultRespValue =
       contentTypeMaps.defaultResponseContentType || "application/json";
-    acceptHeaderLogic = `    "Accept": contentType?.response || "${defaultResp}",`;
+    acceptHeaderLogic = `    "Accept": contentType?.response || "${defaultRespValue}",`;
+    contentTypeLogic += `  const finalResponseContentType = contentType?.response || "${defaultRespValue}";\n`;
+  } else {
+    contentTypeLogic += `  const finalResponseContentType = "";\n`;
   }
 
   // Build the headers object
