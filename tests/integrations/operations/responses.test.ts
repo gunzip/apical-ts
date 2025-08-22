@@ -47,7 +47,7 @@ describe("Response Operations", () => {
 
     it("should handle 202 accepted response", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testMultipleSuccess({});
