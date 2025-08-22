@@ -10,18 +10,24 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Enable corepack
         run: corepack enable
-        
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
-          cache: 'pnpm'
-          
+          node-version: "22.x"
+          cache: "pnpm"
+
       - name: Install dependencies
         run: pnpm install
-        
+
+      - name: Build project
+        run: pnpm run build
+
+      - name: Generate integration test client
+        run: pnpm start generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client
+
       - name: Run tests
         run: pnpm test
