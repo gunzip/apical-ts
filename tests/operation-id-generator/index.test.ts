@@ -268,7 +268,7 @@ describe("applyGeneratedOperationIds", () => {
       info: { title: "Test API", version: "1.0.0" },
       paths: {
         "/users": {
-          parameters: [{ name: "test" }],
+          parameters: [{ name: "test", in: "query" }],
         },
       },
     };
