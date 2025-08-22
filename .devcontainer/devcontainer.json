@@ -1,0 +1,41 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/base:debian@sha256:6155a486f236fd5127b76af33086029d64f64cf49dd504accb6e5f949098eb7e",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22",
+      "installYarnUsingApt": false,
+      "pnpmVersion": "none",
+      "nvmInstallPath": "/opt/nvm"
+    }
+  },
+  "postStartCommand": {
+    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+  },
+  "containerEnv": {
+    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "-vscjava.vscode-java-pack",
+        "-ms-dotnettools.csharp",
+        "-ms-azuretools.vscode-azureterraform",
+        "ms-azuretools.vscode-azure-github-copilot",
+        "ms-vscode.vscode-websearchforcopilot",
+        "azapi-vscode.azapi",
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        "arcanis.vscode-zipfs",
+        "esbenp.prettier-vscode",
+        "EditorConfig.EditorConfig",
+        "bruno-api-client.bruno",
+        "vitest.explorer",
+        "redhat.vscode-yaml",
+        "dbaeumer.vscode-eslint",
+        "github.copilot",
+        "github.copilot-chat"
+      ]
+    }
+  }
+}

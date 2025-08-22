@@ -1,8 +1,12 @@
-node_modules/
-dist/
-coverage/
 .env
+*.DS_Store
 *.log
+.pnpm-store
+
+dist
+
+node_modules
+coverage
+
+*.local*
 generated*
-*.gitignore.*
-diff.diff
