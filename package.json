@@ -1,5 +1,5 @@
 {
-  "name": "typescript-openapi-generator",
+  "name": "@gunzip/typescript-openapi-generator",
   "version": "0.0.1",
   "description": "Generates fully-typed Zod v4 schemas and type-safe TypeScript REST API clients from OpenAPI 2.0, 3.0.x, and 3.1.x specifications.",
   "main": "dist/index.js",
@@ -8,8 +8,13 @@
     "type": "git",
     "url": "git+https://github.com/gunzip/typescript-openapi-generator.git"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "files": [
-    "bin"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "bin": {
     "typescript-openapi-generator": "./dist/index.js"
@@ -23,7 +28,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "prepublishOnly": "pnpm run build",
+    "release:patch": "pnpm version patch && git push && git push --tags",
+    "release:minor": "pnpm version minor && git push && git push --tags",
+    "release:major": "pnpm version major && git push && git push --tags",
+    "test:publish": "./scripts/test-publish.sh"
   },
   "keywords": [
     "openapi",
