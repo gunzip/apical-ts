@@ -15,7 +15,6 @@ export function generateConfigFileContent(
 /**
  * Generate configuration types
  */
-// eslint-disable-next-line max-lines-per-function
 export function generateConfigTypes(
   authHeaders: string[],
   serverUrls: string[] = [],
@@ -141,7 +140,7 @@ export async function parseResponseBody(response: Response): Promise<unknown | B
     return response.json().catch(() => null);
   }
 
-  // Handle text content types
+  // Handle XML & other text content types (return raw text, no parsing)
   if (contentType.includes('text/') || 
       contentType.includes('application/xml') ||
       contentType.includes('application/xhtml+xml')) {
@@ -170,14 +169,6 @@ export async function parseResponseBody(response: Response): Promise<unknown | B
   // Handle URL encoded data
   if (contentType.includes('application/x-www-form-urlencoded')) {
     return response.text().catch(() => null);
-  }
-  
-  // For very large responses or streaming, you might want to return the response itself
-  // to let the caller decide how to handle it
-  if (contentType.includes('application/octet-stream') && 
-      parseInt(response.headers.get('content-length') || '0') > 10 * 1024 * 1024) {
-    // For files larger than 10MB, return the response to allow streaming
-    return response;
   }
   
   // Default to text for unknown content types

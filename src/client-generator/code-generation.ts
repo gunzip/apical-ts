@@ -1,9 +1,10 @@
+import type { ContentTypeMaps } from "./responses.js";
+
 import {
   generateHeaderParamHandling,
   generateQueryParamHandling,
   type ParameterGroups,
 } from "./parameters.js";
-import { generateRequestBodyHandling } from "./request-body.js";
 import {
   generateSecurityHeaderHandling,
   type SecurityHeader,
@@ -11,24 +12,44 @@ import {
 import { generatePathInterpolation } from "./utils.js";
 
 /**
- * Generates the function body for an operation with explicit exhaustive handling
- *
- * NOTE: This function currently supports only a single content type per request.
- * Multiple content types in the same request body are not supported. The content
- * type is determined by the getRequestBodyContentType function which selects
- * one content type based on priority order.
+ * Options accepted by generateFunctionBody (collapsed from the previous long positional argument list).
  */
-export function generateFunctionBody(
-  pathKey: string,
-  method: string,
-  parameterGroups: ParameterGroups,
-  hasBody: boolean,
-  responseHandlers: string[],
-  requestContentType?: string,
-  operationSecurityHeaders?: SecurityHeader[],
-  overridesSecurity?: boolean,
-  authHeaders?: string[],
-): string {
+export type GenerateFunctionBodyOptions = {
+  authHeaders?: string[];
+  contentTypeMaps: ContentTypeMaps;
+  hasBody: boolean;
+  method: string;
+  operationSecurityHeaders?: SecurityHeader[];
+  overridesSecurity?: boolean;
+  parameterGroups: ParameterGroups;
+  pathKey: string;
+  requestContentType?: string;
+  requestContentTypes?: string[];
+  responseHandlers: string[];
+  shouldGenerateRequestMap: boolean;
+  shouldGenerateResponseMap: boolean;
+};
+
+/**
+ * Generates the function body for an operation with support for dynamic content types.
+ *
+ * NOTE: Supports multiple content types per request/response. The content types can be
+ * dynamically selected at runtime through the contentType parameter.
+ */
+export function generateFunctionBody({
+  authHeaders,
+  contentTypeMaps,
+  hasBody,
+  method,
+  operationSecurityHeaders,
+  overridesSecurity,
+  parameterGroups,
+  pathKey,
+  requestContentTypes,
+  responseHandlers,
+  shouldGenerateRequestMap,
+  shouldGenerateResponseMap,
+}: GenerateFunctionBodyOptions): string {
   const { headerParams, pathParams, queryParams } = parameterGroups;
 
   const finalPath = generatePathInterpolation(pathKey, pathParams);
@@ -39,21 +60,47 @@ export function generateFunctionBody(
       ? generateSecurityHeaderHandling(operationSecurityHeaders)
       : "";
 
-  const { bodyContent, contentTypeHeader } = generateRequestBodyHandling(
-    hasBody,
-    requestContentType,
+  // Generate content type determination logic
+  let contentTypeLogic = "";
+  let bodyContentCode = "";
+  let acceptHeaderLogic = "";
+  const contentTypeHeaderCode = "";
+
+  if (shouldGenerateRequestMap) {
+    const defaultReq =
+      contentTypeMaps.defaultRequestContentType || "application/json";
+    contentTypeLogic += `  const finalRequestContentType = contentType?.request || "${defaultReq}";\n`;
+
+    if (hasBody) {
+      bodyContentCode = generateDynamicBodyContentCode(
+        requestContentTypes || [],
+      );
+    }
+  }
+
+  if (shouldGenerateResponseMap) {
+    const defaultRespValue =
+      contentTypeMaps.defaultResponseContentType || "application/json";
+    acceptHeaderLogic = `    "Accept": contentType?.response || "${defaultRespValue}",`;
+    contentTypeLogic += `  const finalResponseContentType = contentType?.response || "${defaultRespValue}";\n`;
+  } else {
+    contentTypeLogic += `  const finalResponseContentType = "";\n`;
+  }
+
+  // Build the headers object
+  const headersContent = generateHeadersContent(
+    shouldGenerateRequestMap,
+    overridesSecurity,
+    authHeaders,
+    shouldGenerateResponseMap,
+    acceptHeaderLogic,
+    contentTypeHeaderCode,
   );
 
-  return `  const finalHeaders = {
-    ${
-      overridesSecurity && authHeaders && authHeaders.length > 0
-        ? `...Object.fromEntries(
-      Object.entries(config.headers).filter(([key]) => 
-        !['${authHeaders.join("', '")}'].includes(key)
-      )
-    ),`
-        : "...config.headers,"
-    }${contentTypeHeader}
+  return `${contentTypeLogic}${bodyContentCode}
+
+  const finalHeaders: Record<string, string> = {
+${headersContent}
   };
   ${headerParamLines ? `  ${headerParamLines}` : ""}${securityHeaderLines ? `  ${securityHeaderLines}` : ""}
 
@@ -63,9 +110,9 @@ export function generateFunctionBody(
   const response = await config.fetch(url.toString(), {
     method: "${method.toUpperCase()}",
     headers: finalHeaders,${
-      bodyContent
+      hasBody
         ? `
-${bodyContent}`
+    body: bodyContent,`
         : ""
     }
   });
@@ -78,4 +125,112 @@ ${responseHandlers.join("\n")}
       throw new UnexpectedResponseError(response.status, data, response);
     }
   }`;
+}
+
+/**
+ * Generates dynamic body content handling code for multiple content types
+ */
+/**
+ * Generates dynamic body content handling code for multiple content types
+ */
+function generateDynamicBodyContentCode(requestContentTypes: string[]): string {
+  // Map of content type to handler function
+  const contentTypeHandlers: Record<string, string> = {
+    "application/json": `      bodyContent = body ? JSON.stringify(body) : undefined;
+      contentTypeHeader = { "Content-Type": "application/json" };`,
+    "application/octet-stream": `      bodyContent = body;
+      contentTypeHeader = { "Content-Type": "application/octet-stream" };`,
+    "application/x-www-form-urlencoded": `      bodyContent = body ? new URLSearchParams(body as Record<string, string>).toString() : undefined;
+      contentTypeHeader = { "Content-Type": "application/x-www-form-urlencoded" };`,
+    "application/xml": `      bodyContent = typeof body === 'string' ? body : String(body);
+      contentTypeHeader = { "Content-Type": "application/xml" };`,
+    "multipart/form-data": `      if (body) {
+        const formData = new FormData();
+        Object.entries(body).forEach(([key, value]) => {
+          if (value !== undefined) {
+            formData.append(key, value);
+          }
+        });
+        bodyContent = formData;
+      }
+      contentTypeHeader = {}; // Don't set Content-Type for multipart/form-data`,
+    "text/plain": `      bodyContent = typeof body === 'string' ? body : String(body);
+      contentTypeHeader = { "Content-Type": "text/plain" };`,
+  };
+
+  // Generate switch cases only for the defined content types
+  const switchCases = requestContentTypes
+    .map((contentType) => {
+      const handler = contentTypeHandlers[contentType];
+      if (handler) {
+        return `    case "${contentType}":
+${handler}
+      break;`;
+      } else {
+        // For content types we don't have specific handlers for, use generic approach
+        return `    case "${contentType}":
+      bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
+      contentTypeHeader = { "Content-Type": "${contentType}" };
+      break;`;
+      }
+    })
+    .join("\n");
+
+  // Add default case for any content type not explicitly handled
+  const defaultCase = `    default:
+      bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
+      contentTypeHeader = { "Content-Type": finalRequestContentType };`;
+
+  return `  let bodyContent: string | FormData | undefined = "";
+  let contentTypeHeader = {};
+  
+  switch (finalRequestContentType) {
+${switchCases}
+${defaultCase}
+  }`;
+}
+
+/**
+ * Generates the headers content for the request
+ */
+function generateHeadersContent(
+  shouldGenerateRequestMap: boolean,
+  overridesSecurity: boolean | undefined,
+  authHeaders: string[] | undefined,
+  shouldGenerateResponseMap: boolean,
+  acceptHeaderLogic: string,
+  contentTypeHeaderCode: string,
+): string {
+  if (shouldGenerateRequestMap) {
+    return `    ${
+      overridesSecurity && authHeaders && authHeaders.length > 0
+        ? `...Object.fromEntries(
+      Object.entries(config.headers).filter(([key]) => 
+        !['${authHeaders.join("', '")}'].includes(key)
+      )
+    ),`
+        : "...config.headers,"
+    }${
+      shouldGenerateResponseMap
+        ? `
+${acceptHeaderLogic}`
+        : ""
+    }
+    ...contentTypeHeader,`;
+  } else {
+    return `    ${
+      overridesSecurity && authHeaders && authHeaders.length > 0
+        ? `...Object.fromEntries(
+      Object.entries(config.headers).filter(([key]) => 
+        !['${authHeaders.join("', '")}'].includes(key)
+      )
+    ),`
+        : "...config.headers,"
+    }${
+      shouldGenerateResponseMap
+        ? `
+${acceptHeaderLogic}`
+        : ""
+    }${contentTypeHeaderCode}`;
+  }
 }

@@ -46,6 +46,8 @@ export function buildDestructuredParameters(
   hasBody: boolean,
   bodyTypeInfo?: RequestBodyTypeInfo,
   operationSecurityHeaders?: SecurityHeader[],
+  hasRequestMap = false,
+  hasResponseMap = false,
 ): string {
   const processed = processParameterGroups(
     parameterGroups,
@@ -108,6 +110,11 @@ export function buildDestructuredParameters(
     destructureParams.push(`body${defaultValue}`);
   }
 
+  // Add contentType parameter if we have request or response maps
+  if (hasRequestMap || hasResponseMap) {
+    destructureParams.push("contentType = {}");
+  }
+
   return destructureParams.length > 0
     ? `{ ${destructureParams.join(", ")} }`
     : "{}";
@@ -121,6 +128,8 @@ export function buildParameterInterface(
   hasBody: boolean,
   bodyTypeInfo?: RequestBodyTypeInfo,
   operationSecurityHeaders?: SecurityHeader[],
+  requestMapTypeName?: string,
+  responseMapTypeName?: string,
 ): string {
   const processed = processParameterGroups(
     parameterGroups,
@@ -188,8 +197,29 @@ export function buildParameterInterface(
   // Body parameter
   if (hasBody && bodyTypeInfo) {
     const requiredMarker = bodyTypeInfo.isRequired ? "" : "?";
-    const typeName = bodyTypeInfo.typeName || "any";
+    let typeName = bodyTypeInfo.typeName || "any";
+
+    // Use generic type if we have a request map
+    if (requestMapTypeName) {
+      typeName = `${requestMapTypeName}[TRequestContentType]`;
+    }
+
     sections.push(`body${requiredMarker}: ${typeName}`);
+  }
+
+  // Add contentType parameter if we have request or response maps
+  if (requestMapTypeName || responseMapTypeName) {
+    const contentTypeParts: string[] = [];
+
+    if (requestMapTypeName) {
+      contentTypeParts.push("request?: TRequestContentType");
+    }
+
+    if (responseMapTypeName) {
+      contentTypeParts.push("response?: TResponseContentType");
+    }
+
+    sections.push(`contentType?: { ${contentTypeParts.join("; ")} }`);
   }
 
   return sections.length > 0 ? `{\n  ${sections.join(";\n  ")};\n}` : "{}";

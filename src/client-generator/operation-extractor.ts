@@ -3,9 +3,20 @@ import type {
   OperationObject,
   ParameterObject,
   ReferenceObject,
+  RequestBodyObject,
+  ResponseObject,
+  SchemaObject,
 } from "openapi3-ts/oas31";
 
 import assert from "assert";
+
+/**
+ * Content type mapping with schema information
+ */
+export type ContentTypeMapping = {
+  contentType: string;
+  schema: SchemaObject | { $ref: string };
+};
 
 /**
  * Metadata for an OpenAPI operation
@@ -16,6 +27,22 @@ export type OperationMetadata = {
   operationId: string;
   pathKey: string;
   pathLevelParameters: (ParameterObject | ReferenceObject)[];
+};
+
+/**
+ * Request body content types for an operation
+ */
+export type RequestContentTypes = {
+  contentTypes: ContentTypeMapping[];
+  isRequired: boolean;
+};
+
+/**
+ * Response content types for a specific status code
+ */
+export type ResponseContentTypes = {
+  contentTypes: ContentTypeMapping[];
+  statusCode: string;
 };
 
 /**
@@ -62,6 +89,71 @@ export function extractAllOperations(doc: OpenAPIObject): OperationMetadata[] {
   }
 
   return operations;
+}
+
+/**
+ * Extracts all request content types and their schemas from a request body
+ */
+export function extractRequestContentTypes(
+  requestBody: RequestBodyObject,
+): RequestContentTypes {
+  const contentTypes: ContentTypeMapping[] = [];
+  const isRequired = requestBody.required === true;
+
+  if (requestBody.content) {
+    for (const [contentType, mediaType] of Object.entries(
+      requestBody.content,
+    )) {
+      if (mediaType.schema) {
+        contentTypes.push({
+          contentType,
+          schema: mediaType.schema,
+        });
+      }
+    }
+  }
+
+  return { contentTypes, isRequired };
+}
+
+/**
+ * Extracts all response content types and their schemas from operation responses
+ */
+export function extractResponseContentTypes(
+  operation: OperationObject,
+): ResponseContentTypes[] {
+  const responseContentTypes: ResponseContentTypes[] = [];
+
+  if (operation.responses) {
+    for (const [statusCode, response] of Object.entries(operation.responses)) {
+      if (statusCode === "default") continue;
+
+      const responseObj = response as ResponseObject;
+      const contentTypes: ContentTypeMapping[] = [];
+
+      if (responseObj.content) {
+        for (const [contentType, mediaType] of Object.entries(
+          responseObj.content,
+        )) {
+          if (mediaType.schema) {
+            contentTypes.push({
+              contentType,
+              schema: mediaType.schema,
+            });
+          }
+        }
+      }
+
+      if (contentTypes.length > 0) {
+        responseContentTypes.push({
+          contentTypes,
+          statusCode,
+        });
+      }
+    }
+  }
+
+  return responseContentTypes;
 }
 
 /**
