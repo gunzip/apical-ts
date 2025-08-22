@@ -20,9 +20,9 @@ export function generateOperationId(method: string, path: string): string {
       return segment;
     })
     .map((segment) => {
-      // Split by dashes and capitalize each word, then join
+      // Split by dashes and underscores and capitalize each word, then join
       return segment
-        .split("-")
+        .split(/[-_]/)
         .map((word) => word.replace(/[^a-zA-Z0-9]/g, ""))
         .filter((word) => word)
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

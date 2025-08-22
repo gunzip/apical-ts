@@ -35,7 +35,7 @@ describe("generateOperationId", () => {
 
   it("should handle special characters in paths", () => {
     const result = generateOperationId("GET", "/api/v1/user_accounts");
-    expect(result).toBe("getApiV1Useraccounts"); // Underscores are removed as special chars
+    expect(result).toBe("getApiV1UserAccounts"); // Underscores are removed as special chars
   });
 
   it("should handle uppercase methods", () => {
@@ -147,7 +147,7 @@ describe("generateUniqueOperationIds", () => {
       "/users": {
         get: {},
         parameters: [{ name: "test" }], // Arrays are objects so will be processed
-        summary: "User endpoints", // Strings are not objects so ignored  
+        summary: "User endpoints", // Strings are not objects so ignored
         deprecated: true, // Primitives are not objects so ignored
         customObject: {}, // Objects are processed
       },
@@ -240,7 +240,9 @@ describe("applyGeneratedOperationIds", () => {
     expect(openApiDoc.paths!["/users"]!.get!.operationId).toBe("getUsers");
     expect(openApiDoc.paths!["/users"]!.post!.operationId).toBe("postUsers");
     expect(openApiDoc.paths!["/users"]!.put!.operationId).toBe("putUsers");
-    expect(openApiDoc.paths!["/users"]!.delete!.operationId).toBe("deleteUsers");
+    expect(openApiDoc.paths!["/users"]!.delete!.operationId).toBe(
+      "deleteUsers"
+    );
     expect(openApiDoc.paths!["/users"]!.patch!.operationId).toBe("patchUsers");
   });
 
