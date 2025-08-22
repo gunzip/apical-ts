@@ -53,6 +53,7 @@ import {
 /**
  * Converts an OpenAPI schema object to Zod validation code
  */
+// eslint-disable-next-line complexity
 export function zodSchemaToCode(
   schema: ReferenceObject | SchemaObject,
   options: ZodSchemaCodeOptions = {},

@@ -2,6 +2,13 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { addDefaultValue } from "./utils.js";
 
+/**
+ * Options for object type generation
+ */
+type ObjectTypeOptions = {
+  strictValidation?: boolean;
+};
+
 type ZodSchemaCodeOptions = {
   imports?: Set<string>;
   isTopLevel?: boolean;
@@ -12,13 +19,6 @@ type ZodSchemaResult = {
   code: string;
   extensibleEnumValues?: unknown[];
   imports: Set<string>;
-};
-
-/**
- * Options for object type generation
- */
-type ObjectTypeOptions = {
-  strictValidation?: boolean;
 };
 
 /**
@@ -56,7 +56,6 @@ export function handleObjectType(
 
   const objectMethod = strictValidation ? "z.strictObject" : "z.looseObject";
   let code = `${objectMethod}({${shape.join(", ")}})`;
-
 
   if (schema.additionalProperties) {
     if (typeof schema.additionalProperties === "boolean") {
