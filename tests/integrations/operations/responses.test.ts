@@ -125,7 +125,7 @@ describe("Response Operations", () => {
 
     it("should handle 500 internal server error", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testResponseHeader({});
