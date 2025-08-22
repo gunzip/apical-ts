@@ -113,9 +113,13 @@ export function generateResponseHandlers(
           assert(originalSchemaName, "Invalid $ref in response schema");
           typeName = sanitizeIdentifier(originalSchemaName as string);
           typeImports.add(typeName);
-          parseCode = contentType.includes("json")
-            ? `${typeName}.parse(await parseResponseBody(response))`
-            : `await parseResponseBody(response) as ${typeName}`;
+          if (contentType.includes("json")) {
+            // Conditionally validate only if actual runtime content-type is JSON
+            parseCode = `await (async () => { const raw = await parseResponseBody(response); return response.headers.get('content-type')?.includes('json') ? ${typeName}.parse(raw) : raw; })()`;
+          } else {
+            // Non-JSON: skip schema validation, just return raw parsed body
+            parseCode = `await parseResponseBody(response)`;
+          }
         } else {
           // inline schema -> synthetic name
           assert(operation.operationId, "Invalid operationId");
@@ -125,9 +129,11 @@ export function generateResponseHandlers(
           const responseTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${code}Response`;
           typeName = responseTypeName;
           typeImports.add(typeName);
-          parseCode = contentType.includes("json")
-            ? `${typeName}.parse(await parseResponseBody(response))`
-            : `await parseResponseBody(response) as ${typeName}`;
+          if (contentType.includes("json")) {
+            parseCode = `await (async () => { const raw = await parseResponseBody(response); return response.headers.get('content-type')?.includes('json') ? ${typeName}.parse(raw) : raw; })()`;
+          } else {
+            parseCode = `await parseResponseBody(response)`;
+          }
         }
       }
 

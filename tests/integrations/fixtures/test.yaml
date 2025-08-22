@@ -406,6 +406,41 @@ paths:
         "200":
           description: "Ok"
 
+  /test-multi-content-types:
+    post:
+      operationId: testMultiContentTypes
+      security: [] # override global security to simplify integration testing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewModel"
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+              required:
+                - id
+                - name
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewModel"
+            application/vnd.custom+json:
+              schema:
+                $ref: "#/components/schemas/NewModel"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/NewModel"
+
 # -------------
 # Components
 # -------------

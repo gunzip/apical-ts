@@ -15,7 +15,6 @@ export function generateConfigFileContent(
 /**
  * Generate configuration types
  */
-// eslint-disable-next-line max-lines-per-function
 export function generateConfigTypes(
   authHeaders: string[],
   serverUrls: string[] = [],
@@ -141,7 +140,7 @@ export async function parseResponseBody(response: Response): Promise<unknown | B
     return response.json().catch(() => null);
   }
 
-  // Handle text content types
+  // Handle XML & other text content types (return raw text, no parsing)
   if (contentType.includes('text/') || 
       contentType.includes('application/xml') ||
       contentType.includes('application/xhtml+xml')) {
