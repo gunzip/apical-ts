@@ -28,15 +28,27 @@ describe("client-generator utils", () => {
     });
 
     it("should handle multiple consecutive hyphens", () => {
-      expect(toCamelCase("test--case")).toBe("test-Case");
+      expect(toCamelCase("test--case")).toBe("testCase");
     });
 
     it("should handle hyphens at start and end", () => {
-      expect(toCamelCase("-test-case-")).toBe("TestCase-");
+      expect(toCamelCase("-test-case-")).toBe("testCase");
     });
 
     it("should handle uppercase letters after hyphens", () => {
-      expect(toCamelCase("test-Case")).toBe("test-Case"); // Only replaces lower case letters after hyphens
+      expect(toCamelCase("test-Case")).toBe("testCase");
+    });
+
+    it("should handle all uppercase input", () => {
+      expect(toCamelCase("TEST-CASE")).toBe("testCase");
+    });
+
+    it("should handle numbers in input", () => {
+      expect(toCamelCase("test-123-case")).toBe("test123Case");
+    });
+
+    it("should handle only separators", () => {
+      expect(toCamelCase("---")).toBe("");
     });
   });
 
@@ -48,7 +60,9 @@ describe("client-generator utils", () => {
 
     it("should handle spaces", () => {
       expect(toValidVariableName("hello world")).toBe("helloWorld");
-      expect(toValidVariableName("test  multiple   spaces")).toBe("testMultipleSpaces");
+      expect(toValidVariableName("test  multiple   spaces")).toBe(
+        "testMultipleSpaces"
+      );
     });
 
     it("should handle numbers", () => {
@@ -57,7 +71,9 @@ describe("client-generator utils", () => {
     });
 
     it("should handle mixed characters", () => {
-      expect(toValidVariableName("test-name_123@domain.com")).toBe("testName_123DomainCom");
+      expect(toValidVariableName("test-name_123@domain.com")).toBe(
+        "testName_123DomainCom"
+      );
     });
 
     it("should handle only special characters", () => {
@@ -86,7 +102,7 @@ describe("client-generator utils", () => {
       const pathParams: ParameterObject[] = [
         { name: "userId", in: "path", required: true },
       ];
-      
+
       const result = generatePathInterpolation("/users/{userId}", pathParams);
       expect(result).toBe("/users/${userId}");
     });
@@ -96,8 +112,11 @@ describe("client-generator utils", () => {
         { name: "userId", in: "path", required: true },
         { name: "postId", in: "path", required: true },
       ];
-      
-      const result = generatePathInterpolation("/users/{userId}/posts/{postId}", pathParams);
+
+      const result = generatePathInterpolation(
+        "/users/{userId}/posts/{postId}",
+        pathParams
+      );
       expect(result).toBe("/users/${userId}/posts/${postId}");
     });
 
@@ -106,8 +125,11 @@ describe("client-generator utils", () => {
         { name: "user-id", in: "path", required: true },
         { name: "post-id", in: "path", required: true },
       ];
-      
-      const result = generatePathInterpolation("/users/{user-id}/posts/{post-id}", pathParams);
+
+      const result = generatePathInterpolation(
+        "/users/{user-id}/posts/{post-id}",
+        pathParams
+      );
       expect(result).toBe("/users/${userId}/posts/${postId}");
     });
 
@@ -125,7 +147,7 @@ describe("client-generator utils", () => {
       const pathParams: ParameterObject[] = [
         { name: "nonExistent", in: "path", required: true },
       ];
-      
+
       const result = generatePathInterpolation("/users/{userId}", pathParams);
       expect(result).toBe("/users/{userId}"); // Parameter not replaced since it's not in path
     });
@@ -135,9 +157,12 @@ describe("client-generator utils", () => {
         { name: "user_id", in: "path", required: true },
         { name: "complex-param-name", in: "path", required: true },
       ];
-      
-      const result = generatePathInterpolation("/users/{user_id}/data/{complex-param-name}", pathParams);
-      expect(result).toBe("/users/${user_id}/data/${complexParamName}"); // Only complex-param-name gets converted
+
+      const result = generatePathInterpolation(
+        "/users/{user_id}/data/{complex-param-name}",
+        pathParams
+      );
+      expect(result).toBe("/users/${userId}/data/${complexParamName}"); // Only complex-param-name gets converted
     });
   });
 
