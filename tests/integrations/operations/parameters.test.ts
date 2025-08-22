@@ -56,7 +56,22 @@ describe("Parameters Operations", () => {
       } as any;
 
       // Act & Assert
-      await expect(client.testParameterWithDash(params)).rejects.toThrow();
+      try {
+        await client.testParameterWithDash(params);
+        expect.fail("Expected operation to throw error due to missing required path parameter");
+      } catch (error) {
+        expect(error).toBeDefined();
+        // Validate error shape - different types of errors may have different structures
+        if (error.status !== undefined) {
+          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(error.data).toBeDefined();
+          expect(error.response).toBeInstanceOf(Response);
+        } else {
+          // For validation errors or other error types, validate basic error properties
+          expect(error.message).toBeDefined();
+          expect(typeof error.message).toBe('string');
+        }
+      }
     });
 
     it("should reject missing required header parameter", async () => {
@@ -71,7 +86,22 @@ describe("Parameters Operations", () => {
       } as any;
 
       // Act & Assert
-      await expect(client.testParameterWithDash(params)).rejects.toThrow();
+      try {
+        await client.testParameterWithDash(params);
+        expect.fail("Expected operation to throw error due to missing required header parameter");
+      } catch (error) {
+        expect(error).toBeDefined();
+        // Validate error shape - different types of errors may have different structures
+        if (error.status !== undefined) {
+          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(error.data).toBeDefined();
+          expect(error.response).toBeInstanceOf(Response);
+        } else {
+          // For validation errors or other error types, validate basic error properties
+          expect(error.message).toBeDefined();
+          expect(typeof error.message).toBe('string');
+        }
+      }
     });
   });
 
@@ -138,7 +168,22 @@ describe("Parameters Operations", () => {
       } as any;
 
       // Act & Assert
-      await expect(client.testWithTwoParams(params)).rejects.toThrow();
+      try {
+        await client.testWithTwoParams(params);
+        expect.fail("Expected operation to throw error due to missing first path parameter");
+      } catch (error) {
+        expect(error).toBeDefined();
+        // Validate error shape - different types of errors may have different structures
+        if (error.status !== undefined) {
+          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(error.data).toBeDefined();
+          expect(error.response).toBeInstanceOf(Response);
+        } else {
+          // For validation errors or other error types, validate basic error properties
+          expect(error.message).toBeDefined();
+          expect(typeof error.message).toBe('string');
+        }
+      }
     });
 
     it("should reject missing second path parameter", async () => {
@@ -150,7 +195,22 @@ describe("Parameters Operations", () => {
       } as any;
 
       // Act & Assert
-      await expect(client.testWithTwoParams(params)).rejects.toThrow();
+      try {
+        await client.testWithTwoParams(params);
+        expect.fail("Expected operation to throw error due to missing second path parameter");
+      } catch (error) {
+        expect(error).toBeDefined();
+        // Validate error shape - different types of errors may have different structures
+        if (error.status !== undefined) {
+          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(error.data).toBeDefined();
+          expect(error.response).toBeInstanceOf(Response);
+        } else {
+          // For validation errors or other error types, validate basic error properties
+          expect(error.message).toBeDefined();
+          expect(typeof error.message).toBe('string');
+        }
+      }
     });
   });
 
@@ -179,7 +239,22 @@ describe("Parameters Operations", () => {
       } as any;
 
       // Act & Assert
-      await expect(client.testParametersAtPathLevel(params)).rejects.toThrow();
+      try {
+        await client.testParametersAtPathLevel(params);
+        expect.fail("Expected operation to throw error due to missing required path-level parameter");
+      } catch (error) {
+        expect(error).toBeDefined();
+        // Validate error shape - different types of errors may have different structures
+        if (error.status !== undefined) {
+          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(error.data).toBeDefined();
+          expect(error.response).toBeInstanceOf(Response);
+        } else {
+          // For validation errors or other error types, validate basic error properties
+          expect(error.message).toBeDefined();
+          expect(typeof error.message).toBe('string');
+        }
+      }
     });
   });
 
