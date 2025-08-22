@@ -122,7 +122,9 @@ export function zodSchemaToCode(
 
   // Handle composition schemas
   if (schema.allOf) {
-    return handleAllOfSchema(schema.allOf, result, zodSchemaToCode, { strictValidation });
+    return handleAllOfSchema(schema.allOf, result, zodSchemaToCode, {
+      strictValidation,
+    });
   }
 
   if (schema.anyOf) {
@@ -161,11 +163,15 @@ export function zodSchemaToCode(
   }
 
   if (effectiveType === "array") {
-    return handleArrayType(schema, result, zodSchemaToCode, { strictValidation });
+    return handleArrayType(schema, result, zodSchemaToCode, {
+      strictValidation,
+    });
   }
 
   if (effectiveType === "object") {
-    return handleObjectType(schema, result, zodSchemaToCode, { strictValidation });
+    return handleObjectType(schema, result, zodSchemaToCode, {
+      strictValidation,
+    });
   }
 
   // Fallback

@@ -27,13 +27,16 @@ describe("Strict Validation Feature", () => {
       expect(result.code).not.toContain("z.object(");
 
       const zodSchema = evalZod(result.code);
-      
+
       // Should accept valid objects
       expect(zodSchema.safeParse({ name: "John", age: 30 }).success).toBe(true);
-      
+
       // Should allow extra properties (loose validation)
-      expect(zodSchema.safeParse({ name: "John", age: 30, extra: "allowed" }).success).toBe(true);
-      
+      expect(
+        zodSchema.safeParse({ name: "John", age: 30, extra: "allowed" })
+          .success,
+      ).toBe(true);
+
       // Should still reject invalid types
       expect(zodSchema.safeParse({ name: 123 }).success).toBe(false);
     });
@@ -53,14 +56,16 @@ describe("Strict Validation Feature", () => {
 
       const result = zodSchemaToCode(schema);
       expect(result.code).toContain("z.looseObject");
-      
+
       const zodSchema = evalZod(result.code);
-      
+
       // Should allow extra properties in nested objects
-      expect(zodSchema.safeParse({ 
-        user: { name: "John", extraField: "allowed" },
-        extraTopLevel: "also allowed"
-      }).success).toBe(true);
+      expect(
+        zodSchema.safeParse({
+          user: { name: "John", extraField: "allowed" },
+          extraTopLevel: "also allowed",
+        }).success,
+      ).toBe(true);
     });
   });
 
@@ -80,13 +85,16 @@ describe("Strict Validation Feature", () => {
       expect(result.code).not.toContain("z.looseObject");
 
       const zodSchema = evalZod(result.code);
-      
+
       // Should accept valid objects
       expect(zodSchema.safeParse({ name: "John", age: 30 }).success).toBe(true);
-      
+
       // Should reject extra properties (strict validation)
-      expect(zodSchema.safeParse({ name: "John", age: 30, extra: "not allowed" }).success).toBe(false);
-      
+      expect(
+        zodSchema.safeParse({ name: "John", age: 30, extra: "not allowed" })
+          .success,
+      ).toBe(false);
+
       // Should still reject invalid types
       expect(zodSchema.safeParse({ name: 123 }).success).toBe(false);
     });
@@ -107,24 +115,30 @@ describe("Strict Validation Feature", () => {
       const result = zodSchemaToCode(schema, { strictValidation: true });
       expect(result.code).toContain("z.object(");
       expect(result.code).not.toContain("z.looseObject");
-      
+
       const zodSchema = evalZod(result.code);
-      
+
       // Should reject extra properties in nested objects
-      expect(zodSchema.safeParse({ 
-        user: { name: "John", extraField: "not allowed" }
-      }).success).toBe(false);
-      
+      expect(
+        zodSchema.safeParse({
+          user: { name: "John", extraField: "not allowed" },
+        }).success,
+      ).toBe(false);
+
       // Should reject extra properties at top level
-      expect(zodSchema.safeParse({ 
-        user: { name: "John" },
-        extraTopLevel: "not allowed"
-      }).success).toBe(false);
-      
+      expect(
+        zodSchema.safeParse({
+          user: { name: "John" },
+          extraTopLevel: "not allowed",
+        }).success,
+      ).toBe(false);
+
       // Should accept valid objects without extra properties
-      expect(zodSchema.safeParse({ 
-        user: { name: "John" }
-      }).success).toBe(true);
+      expect(
+        zodSchema.safeParse({
+          user: { name: "John" },
+        }).success,
+      ).toBe(true);
     });
   });
 
