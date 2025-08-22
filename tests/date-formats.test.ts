@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { zodSchemaToCode } from "../schema-generator";
+import { zodSchemaToCode } from "../src/schema-generator";
 import type { SchemaObject } from "openapi3-ts/oas31";
 
 describe("Date format handling", () => {

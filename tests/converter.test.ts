@@ -6,7 +6,7 @@ import {
   isOpenAPI20,
   isOpenAPI30,
   isOpenAPI31,
-} from "../core-generator/converter.js";
+} from "../src/core-generator/converter.js";
 
 describe("OpenAPI Converter", () => {
   describe("Version detection", () => {
