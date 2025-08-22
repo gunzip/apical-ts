@@ -285,21 +285,21 @@ After [evaluating several libraries](https://github.com/gunzip/openapi-generator
 
 Here is a comparison of the key features and limitations of each library.
 
-| Feature / Limitation           | typescript-openapi-generator (this project) |                      openapi-codegen-ts                       |   openapi-zod-client   |
-| ------------------------------ | :-----------------------------------------: | :-----------------------------------------------------------: | :--------------------: |
-| **Output structure**           |        Modular (per operation/type)         | Monolithic (single file for all operations and request types) |  Single file + zodios  |
-| **Dependency footprint**       |             Minimal (Zod only)              |               io-ts, @pagopa/ts-commons, fp-ts                |    zodios + others     |
-| **Runtime validation**         |                   Zod v4                    |                             io-ts                             |         Zod v3         |
-| **OpenAPI version support**    |     2.0, 3.0.x, 3.1.x (auto-normalized)     |                          2.0, 3.0.x                           |      3.0.x, 3.1.x      |
-| **Error handling**             |              Typed, exhaustive              |                       Typed, exhaustive                       |         Basic          |
-| **Type complexity**            |                   Simple                    |                 Complex and hard to maintain                  |         Simple         |
-| **Generation Speed**           |                   Faster                    |                      Slower on big specs                      |          Fast          |
-| **Subtype constraints**        |                     ✅                      |                              ✅                               | ⚠️ (Only at top-level) |
-| **Multiple success responses** |                     ✅                      |                              ✅                               |           ❌           |
-| **Multiple content types (request/response)** | ✅ | ❌ | ❌ |
-| **Security header support**    |                     ✅                      |                              ✅                               |           ❌           |
-| **File download response**     |                     ✅                      |                              ✅                               |           ❌           |
-| **Tree-shaking friendly**      |                     ✅                      |                              ❌                               |           ❌           |
-| **Per-operation overrides**    |                     ✅                      |                              ✅                               |           ❌           |
-| **File upload support**        |                     ✅                      |                              ✅                               |           ✅           |
-| **Server-side usage**          |                     ✅                      |                              ✅                               |           ✅           |
+| Feature / Limitation                          | typescript-openapi-generator (this project) |                      openapi-codegen-ts                       |   openapi-zod-client   |
+| --------------------------------------------- | :-----------------------------------------: | :-----------------------------------------------------------: | :--------------------: |
+| **Output structure**                          |        Modular (per operation/type)         | Monolithic (single file for all operations and request types) |  Single file + zodios  |
+| **Dependency footprint**                      |             Minimal (Zod only)              |               io-ts, @pagopa/ts-commons, fp-ts                |    zodios + others     |
+| **Runtime validation**                        |                   Zod v4                    |                             io-ts                             |         Zod v3         |
+| **OpenAPI version support**                   |     2.0, 3.0.x, 3.1.x (auto-normalized)     |                          2.0, 3.0.x                           |      3.0.x, 3.1.x      |
+| **Error handling**                            |              Typed, exhaustive              |                       Typed, exhaustive                       |         Basic          |
+| **Type complexity**                           |                   Simple                    |                 Complex and hard to maintain                  |         Simple         |
+| **Generation Speed**                          |                   Faster                    |                      Slower on big specs                      |          Fast          |
+| **Subtype constraints**                       |                     ✅                      |                              ✅                               | ⚠️ (Only at top-level) |
+| **Multiple success responses**                |                     ✅                      |                              ✅                               |           ❌           |
+| **Multiple content types (request/response)** |                     ✅                      |                              ❌                               |           ❌           |
+| **Security header support**                   |                     ✅                      |                              ✅                               |           ❌           |
+| **File download response**                    |                     ✅                      |                              ✅                               |           ❌           |
+| **Tree-shaking friendly**                     |                     ✅                      |                              ❌                               |           ❌           |
+| **Per-operation overrides**                   |                     ✅                      |                              ✅                               |           ❌           |
+| **File upload support**                       |                     ✅                      |                              ✅                               |           ✅           |
+| **Server-side usage**                         |                     ✅                      |                              ✅                               |           ✅           |
