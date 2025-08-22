@@ -19,6 +19,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@stoplight/prism-cli": "^5.14.2",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.12.12",
     "@types/swagger2openapi": "^7.0.4",
