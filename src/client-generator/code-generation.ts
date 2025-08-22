@@ -127,7 +127,8 @@ export function generateFunctionBody(
       )
     ),`
         : "...config.headers,"
-    }${acceptHeaderLogic}
+    }${hasMultipleResponseTypes ? `
+${acceptHeaderLogic}` : ""}
     ...contentTypeHeader,`;
   } else {
     headersContent = `    ${
@@ -138,7 +139,8 @@ export function generateFunctionBody(
       )
     ),`
         : "...config.headers,"
-    }${acceptHeaderLogic}${contentTypeHeaderCode}`;
+    }${hasMultipleResponseTypes ? `
+${acceptHeaderLogic}` : ""}${contentTypeHeaderCode}`;
   }
 
   return `${contentTypeLogic}${bodyContentCode}

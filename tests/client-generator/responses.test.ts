@@ -382,6 +382,10 @@ describe("client-generator responses", () => {
       expect(result.responseMapType).toContain('"application/xml": ApiResponse<200, PetFindByStatus200Response>;');
       expect(result.responseMapType).toContain('"text/plain": ApiResponse<404, PetFindByStatus404Response>;');
       
+      // Check counts
+      expect(result.requestContentTypeCount).toBe(2);
+      expect(result.responseContentTypeCount).toBe(3);
+      
       // Check type imports
       expect(result.typeImports.has("Pet")).toBe(true);
       expect(result.typeImports.has("PetFindByStatusRequest")).toBe(true);
@@ -409,6 +413,8 @@ describe("client-generator responses", () => {
       expect(result.defaultRequestContentType).toBeNull();
       expect(result.defaultResponseContentType).toBe("application/json");
       expect(result.requestMapType).toBe("{}");
+      expect(result.requestContentTypeCount).toBe(0);
+      expect(result.responseContentTypeCount).toBe(1);
       expect(result.responseMapType).toContain('"application/json": ApiResponse<200, User>;');
     });
 
@@ -430,6 +436,8 @@ describe("client-generator responses", () => {
 
       expect(result.defaultRequestContentType).toBe("application/json");
       expect(result.defaultResponseContentType).toBeNull();
+      expect(result.requestContentTypeCount).toBe(1);
+      expect(result.responseContentTypeCount).toBe(0);
       expect(result.requestMapType).toContain('"application/json": User;');
       expect(result.responseMapType).toBe("{}");
     });
@@ -444,6 +452,8 @@ describe("client-generator responses", () => {
 
       expect(result.defaultRequestContentType).toBeNull();
       expect(result.defaultResponseContentType).toBeNull();
+      expect(result.requestContentTypeCount).toBe(0);
+      expect(result.responseContentTypeCount).toBe(0);
       expect(result.requestMapType).toBe("{}");
       expect(result.responseMapType).toBe("{}");
     });

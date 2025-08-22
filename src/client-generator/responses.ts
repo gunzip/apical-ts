@@ -38,6 +38,8 @@ export type ContentTypeMaps = {
   defaultRequestContentType: string | null;
   defaultResponseContentType: string | null;
   typeImports: Set<string>;
+  requestContentTypeCount: number;
+  responseContentTypeCount: number;
 };
 
 /**
@@ -167,11 +169,13 @@ export function generateContentTypeMaps(
   // Generate request map type
   let requestMapType = "{}";
   let defaultRequestContentType: string | null = null;
+  let requestContentTypeCount = 0;
 
   if (operation.requestBody) {
     const requestBody = operation.requestBody as RequestBodyObject;
     const requestContentTypes = extractRequestContentTypes(requestBody);
     
+    requestContentTypeCount = requestContentTypes.contentTypes.length;
     if (requestContentTypes.contentTypes.length > 0) {
       defaultRequestContentType = requestContentTypes.contentTypes[0].contentType;
       
@@ -192,29 +196,43 @@ export function generateContentTypeMaps(
   // Generate response map type
   let responseMapType = "{}";
   let defaultResponseContentType: string | null = null;
+  let responseContentTypeCount = 0;
 
   const responseContentTypes = extractResponseContentTypes(operation);
   if (responseContentTypes.length > 0) {
     const responseMappings: string[] = [];
+    const seenContentTypes = new Set<string>();
     
     for (const responseGroup of responseContentTypes) {
       if (responseGroup.contentTypes.length > 0) {
-        if (!defaultResponseContentType) {
-          defaultResponseContentType = responseGroup.contentTypes[0].contentType;
-        }
-        
         for (const mapping of responseGroup.contentTypes) {
-          const typeName = resolveSchemaTypeName(
-            mapping.schema,
-            operationId,
-            `${responseGroup.statusCode}Response`,
-            typeImports
-          );
-          responseMappings.push(`  "${mapping.contentType}": ApiResponse<${responseGroup.statusCode}, ${typeName}>;`);
+          // Use a unique key that combines content type and status code
+          const uniqueKey = `${mapping.contentType}_${responseGroup.statusCode}`;
+          
+          if (!defaultResponseContentType) {
+            defaultResponseContentType = mapping.contentType;
+          }
+          
+          // Only add if we haven't seen this content type + status combination
+          if (!seenContentTypes.has(uniqueKey)) {
+            seenContentTypes.add(uniqueKey);
+            const typeName = resolveSchemaTypeName(
+              mapping.schema,
+              operationId,
+              `${responseGroup.statusCode}Response`,
+              typeImports
+            );
+            // For the map, we'll use just the content type as the key
+            // but ensure we don't have duplicates by preferring the first status code
+            if (!responseMappings.some(m => m.includes(`"${mapping.contentType}":`))) {
+              responseMappings.push(`  "${mapping.contentType}": ApiResponse<${responseGroup.statusCode}, ${typeName}>;`);
+            }
+          }
         }
       }
     }
     
+    responseContentTypeCount = responseMappings.length;
     if (responseMappings.length > 0) {
       responseMapType = `{\n${responseMappings.join("\n")}\n}`;
     }
@@ -226,5 +244,7 @@ export function generateContentTypeMaps(
     defaultRequestContentType,
     defaultResponseContentType,
     typeImports,
+    requestContentTypeCount,
+    responseContentTypeCount,
   };
 }

@@ -71,8 +71,12 @@ export function generateOperationFunction(
     bodyTypeInfo.typeImports.forEach((imp) => typeImports.add(imp));
   }
 
-  // Build parameter interface for types
-  const paramsInterface = buildParameterInterface(
+  // Generate type aliases for content type maps
+  const requestMapTypeName = `${operationName}RequestMap`;
+  const responseMapTypeName = `${operationName}ResponseMap`;
+
+  // Build parameter interface for types (will be updated later if needed)
+  let paramsInterface = buildParameterInterface(
     parameterGroups,
     hasBody,
     bodyTypeInfo,
@@ -96,6 +100,17 @@ export function generateOperationFunction(
   // Generate content type maps for multi-content-type support
   const contentTypeMaps = generateContentTypeMaps(operation);
   contentTypeMaps.typeImports.forEach((imp) => typeImports.add(imp));
+
+  // Check if we have multiple content types to generate generic signatures
+  const hasMultipleRequestTypes = contentTypeMaps.requestContentTypeCount > 1;
+  const hasMultipleResponseTypes = contentTypeMaps.responseContentTypeCount > 1;
+
+  // Update parameter interface to use generic body type if multiple request types exist
+  if (hasMultipleRequestTypes && hasBody && bodyTypeInfo?.typeName) {
+    // Replace the specific body type with the generic type
+    const bodyTypePattern = new RegExp(`body(\\??): ${bodyTypeInfo.typeName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+    paramsInterface = paramsInterface.replace(bodyTypePattern, `body$1: ${requestMapTypeName}[TRequestContentType]`);
+  }
 
   // Check if operation overrides security (empty or specific schemes)
   const overridesSecurity = hasSecurityOverride(operation);
@@ -125,18 +140,10 @@ export function generateOperationFunction(
     parameterDeclaration = `${destructuredParams}: ${paramsInterface}`;
   }
 
-  // Generate type aliases for content type maps
-  const requestMapTypeName = `${operationName}RequestMap`;
-  const responseMapTypeName = `${operationName}ResponseMap`;
-
   // Generate generic type parameters and defaults
   let genericParams = "";
   let optionsParam = "";
   let updatedReturnType = returnType;
-
-  // Check if we have multiple content types to generate generic signatures
-  const hasMultipleRequestTypes = contentTypeMaps.requestMapType !== "{}";
-  const hasMultipleResponseTypes = contentTypeMaps.responseMapType !== "{}";
 
   if (hasMultipleRequestTypes || hasMultipleResponseTypes) {
     const genericParts: string[] = [];
