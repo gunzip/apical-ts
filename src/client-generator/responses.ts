@@ -295,11 +295,6 @@ ${mappings.join("\n")}
 }
 
 /*
- * Type guard for schema objects that include a $ref string.
- */
-// Removed local hasRef in favor of openapi3-ts isReferenceObject
-
-/*
  * Resolves a schema to a TypeScript type name. Inline schemas get a synthetic
  * operation-scoped name; referenced schemas reuse their component name.
  */
