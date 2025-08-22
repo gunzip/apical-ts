@@ -4,6 +4,8 @@
 
 🤖 Need a client? Instantly generate a type-safe, operation-based REST API client alongside your schemas.
 
+Why choose this generator against alternatives? See [comparison](#comparison-openapi-client-ts-vs-openapi-zod-client-vs-openapi-codegen-ts) for more details.
+
 See [supported features](#features) for more information.
 
 ![Demo of OpenAPI TypeScript Client Generator](./demo.gif)
@@ -30,7 +32,7 @@ See [supported features](#features) for more information.
     - [Multiple Content Types](#multiple-content-types)
     - [Missing Response Headers Validation](#missing-response-headers-validation)
     - [String Constraints on Query and Path Parameters](#string-constraints-on-query-and-path-parameters)
-  - [Comparison: openapi-client-ts vs openapi-zod-client vs legacy generator](#comparison-openapi-client-ts-vs-openapi-zod-client-vs-legacy-generator)
+  - [Comparison: openapi-client-ts vs openapi-zod-client vs openapi-codegen-ts](#comparison-openapi-client-ts-vs-openapi-zod-client-vs-openapi-codegen-ts)
 
 ## Installation
 
@@ -313,22 +315,22 @@ The generated operation will only handle the `application/json` content type in 
 
 - String constraints (e.g., minLength, maxLength, pattern) on query and path parameters are not validated. Should we generate their schemas with Zod as well?
 
-## Comparison: openapi-client-ts vs openapi-zod-client vs legacy generator
+## Comparison: openapi-client-ts vs openapi-zod-client vs openapi-codegen-ts
 
-| Feature / Limitation           |  openapi-client-ts (this project)   |                      openapi-codegen-ts                       |   openapi-zod-client   |
-| ------------------------------ | :---------------------------------: | :-----------------------------------------------------------: | :--------------------: |
-| **Output structure**           |    Modular (per operation/type)     | Monolithic (single file for all operations and request types) |  Single file + zodios  |
-| **Dependency footprint**       |         Minimal (Zod only)          |               io-ts, @pagopa/ts-commons, fp-ts                |    zodios + others     |
-| **Runtime validation**         |               Zod v4                |                             io-ts                             |         Zod v3         |
-| **OpenAPI version support**    | 2.0, 3.0.x, 3.1.x (auto-normalized) |                          2.0, 3.0.x                           |      3.0.x, 3.1.x      |
-| **Error handling**             |          Typed, exhaustive          |                       Typed, exhaustive                       |         Basic          |
-| **Type complexity**            |               Simple                |                 Complex and hard to maintain                  |         Simple         |
-| **Generation Speed**           |               Faster                |                      Slower on big specs                      |          Fast          |
-| **Subtype constraints**        |                 ✅                  |                              ✅                               | ⚠️ (Only at top-level) |
-| **Multiple success responses** |                 ✅                  |                              ✅                               |           ❌           |
-| **Security header support**    |                 ✅                  |                              ✅                               |           ❌           |
-| **File download response**     |                 ✅                  |                              ✅                               |           ❌           |
-| **Tree-shaking friendly**      |                 ✅                  |                              ❌                               |           ❌           |
-| **Per-operation overrides**    |                 ✅                  |                              ✅                               |           ❌           |
-| **File upload support**        |                 ✅                  |                              ✅                               |           ✅           |
-| **Server-side usage**          |                 ✅                  |                              ✅                               |           ✅           |
+| Feature / Limitation           | typescript-openapi-generator (this project) |                      openapi-codegen-ts                       |   openapi-zod-client   |
+| ------------------------------ | :-----------------------------------------: | :-----------------------------------------------------------: | :--------------------: |
+| **Output structure**           |        Modular (per operation/type)         | Monolithic (single file for all operations and request types) |  Single file + zodios  |
+| **Dependency footprint**       |             Minimal (Zod only)              |               io-ts, @pagopa/ts-commons, fp-ts                |    zodios + others     |
+| **Runtime validation**         |                   Zod v4                    |                             io-ts                             |         Zod v3         |
+| **OpenAPI version support**    |     2.0, 3.0.x, 3.1.x (auto-normalized)     |                          2.0, 3.0.x                           |      3.0.x, 3.1.x      |
+| **Error handling**             |              Typed, exhaustive              |                       Typed, exhaustive                       |         Basic          |
+| **Type complexity**            |                   Simple                    |                 Complex and hard to maintain                  |         Simple         |
+| **Generation Speed**           |                   Faster                    |                      Slower on big specs                      |          Fast          |
+| **Subtype constraints**        |                     ✅                      |                              ✅                               | ⚠️ (Only at top-level) |
+| **Multiple success responses** |                     ✅                      |                              ✅                               |           ❌           |
+| **Security header support**    |                     ✅                      |                              ✅                               |           ❌           |
+| **File download response**     |                     ✅                      |                              ✅                               |           ❌           |
+| **Tree-shaking friendly**      |                     ✅                      |                              ❌                               |           ❌           |
+| **Per-operation overrides**    |                     ✅                      |                              ✅                               |           ❌           |
+| **File upload support**        |                     ✅                      |                              ✅                               |           ✅           |
+| **Server-side usage**          |                     ✅                      |                              ✅                               |           ✅           |
