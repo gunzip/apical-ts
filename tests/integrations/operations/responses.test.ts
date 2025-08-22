@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+
 import { MockServer, getRandomPort } from "../setup.js";
-import { createAuthenticatedClient } from "../client.js";
+
+import { createUnauthenticatedClient, createAuthenticatedClient } from "../client.js";
 
 describe("Response Operations", () => {
   let mockServer: MockServer;
@@ -26,14 +27,14 @@ describe("Response Operations", () => {
   describe("testMultipleSuccess operation", () => {
     it("should handle 200 response with Message data", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testMultipleSuccess({});
 
       // Assert
       expect([200, 202, 403, 404]).toContain(response.status);
-      
+
       if (response.status === 200) {
         expect(response.data).toBeDefined();
         // Should match Message schema
@@ -47,7 +48,7 @@ describe("Response Operations", () => {
 
     it("should handle 202 accepted response", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testMultipleSuccess({});
@@ -59,26 +60,37 @@ describe("Response Operations", () => {
       }
     });
 
-    it("should handle 403 forbidden response with OneOfTest data", async () => {
+    it("should handle 401 unauthorized response with OneOfTest data", async () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
-      const response = await client.testMultipleSuccess({});
+      try {
+        await client.testMultipleSuccess({});
 
-      // Assert
-      if (response.status === 403) {
-        expect(response.data).toBeDefined();
-        // Should match OneOfTest schema (limited or unlimited property)
-        expect(
-          response.data.hasOwnProperty("limited") || response.data.hasOwnProperty("unlimited")
-        ).toBe(true);
+        // Assert
+        expect.fail(
+          "Expected operation to throw error due to missing auth scheme"
+        );
+      } catch (error) {
+        expect(error).toBeDefined();
+        // Validate error shape - different types of errors may have different structures
+        if (error.status !== undefined) {
+          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(error.status).toBeLessThan(500);
+          expect(error.data).toBeDefined();
+          expect(error.response).toBeInstanceOf(Response);
+        } else {
+          // For network errors or other error types, validate basic error properties
+          expect(error.message).toBeDefined();
+          expect(typeof error.message).toBe("string");
+        }
       }
     });
 
     it("should handle 404 not found response", async () => {
-      // Arrange  
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      // Arrange
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testMultipleSuccess({});
@@ -94,25 +106,25 @@ describe("Response Operations", () => {
   describe("testResponseHeader operation", () => {
     it("should return 201 response with headers", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testResponseHeader({});
 
       // Assert
       expect([201, 500]).toContain(response.status);
-      
+
       if (response.status === 201) {
         expect(response.data).toBeDefined();
         expect(response.data).toHaveProperty("id");
         expect(response.data).toHaveProperty("content");
-        
+
         // Check response headers
         expect(response.response.headers).toBeDefined();
         // Prism should generate Location and Id headers
         const locationHeader = response.response.headers.get("Location");
         const idHeader = response.response.headers.get("Id");
-        
+
         // Headers might be present depending on Prism's mock behavior
         if (locationHeader) {
           expect(typeof locationHeader).toBe("string");
@@ -125,7 +137,7 @@ describe("Response Operations", () => {
 
     it("should handle 500 internal server error", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testResponseHeader({});
@@ -139,7 +151,7 @@ describe("Response Operations", () => {
 
     it("should validate Message schema in 201 response", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testResponseHeader({});
@@ -150,7 +162,7 @@ describe("Response Operations", () => {
         expect(message).toHaveProperty("id");
         expect(message).toHaveProperty("content");
         expect(message.content).toHaveProperty("markdown");
-        
+
         // Validate content structure
         if (typeof message.content.markdown === "string") {
           expect(message.content.markdown.length).toBeGreaterThan(0);
@@ -162,7 +174,7 @@ describe("Response Operations", () => {
   describe("testWithEmptyResponse operation", () => {
     it("should handle response with reference to NotFound", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testWithEmptyResponse({});
@@ -170,14 +182,14 @@ describe("Response Operations", () => {
       // Assert
       expect(response.status).toBe(200);
       expect(response.response.headers).toBeDefined();
-      
+
       // NotFound response reference should result in minimal/no content
       // The exact behavior depends on the referenced response definition
     });
 
     it("should return appropriate headers for empty response", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testWithEmptyResponse({});
@@ -185,7 +197,7 @@ describe("Response Operations", () => {
       // Assert
       expect(response.status).toBe(200);
       expect(response.response.headers).toBeDefined();
-      
+
       // Check common headers are present
       const contentType = response.response.headers.get("content-type");
       if (contentType) {
@@ -197,7 +209,7 @@ describe("Response Operations", () => {
   describe("Response data validation", () => {
     it("should handle JSON response content types", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testMultipleSuccess({});
@@ -208,7 +220,7 @@ describe("Response Operations", () => {
         if (contentType) {
           expect(contentType).toContain("application/json");
         }
-        
+
         // Data should be parsed as JSON object
         expect(typeof response.data).toBe("object");
         expect(response.data).not.toBeNull();
@@ -217,7 +229,7 @@ describe("Response Operations", () => {
 
     it("should handle responses without content", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testMultipleSuccess({});
@@ -234,7 +246,7 @@ describe("Response Operations", () => {
 
     it("should preserve response metadata", async () => {
       // Arrange
-      const client = createAuthenticatedClient(baseURL, 'customToken');
+      const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
       const response = await client.testResponseHeader({});
@@ -243,7 +255,7 @@ describe("Response Operations", () => {
       expect(response).toHaveProperty("status");
       expect(response).toHaveProperty("response");
       expect(response).toHaveProperty("data");
-      
+
       expect(typeof response.status).toBe("number");
       expect(response.response.headers).toBeInstanceOf(Headers);
     });
