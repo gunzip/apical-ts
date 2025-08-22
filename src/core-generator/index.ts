@@ -36,6 +36,7 @@ const DEFAULT_CONCURRENCY = 10;
  *   input: './openapi.yaml',
  *   output: './generated',
  *   generateClient: true,
+ *   strictValidation: false,
  *   concurrency: 10,
  * };
  * ```
@@ -49,6 +50,13 @@ export type GenerationOptions = {
   generateClient: boolean;
   input: string;
   output: string;
+  /**
+   * Use strict object validation (z.object) instead of loose validation (z.looseObject).
+   * When false (default), allows additional properties in objects for client-side flexibility.
+   * When true, rejects unknown properties for server-side validation.
+   * @default false
+   */
+  strictValidation?: boolean;
 };
 
 /**
@@ -60,6 +68,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
     generateClient: genClient,
     input,
     output,
+    strictValidation = false,
   } = options;
 
   await fs.mkdir(output, { recursive: true });
@@ -126,7 +135,21 @@ export async function generate(options: GenerationOptions): Promise<void> {
         ? schema.description.trim()
         : undefined;
       const promise = limit(() =>
-        generateSchemaFile(sanitizedName, schema, description).then(
+        generateSchemaFile(sanitizedName, schema, description, {
+          strictValidation,
+        }).then((schemaFile) => {
+          const filePath = path.join(schemasDir, schemaFile.fileName);
+          return fs.writeFile(filePath, schemaFile.content);
+        }),
+      );
+      schemaGenerationPromises.push(promise);
+    }
+
+    // Generate request schemas from operations
+    const requestSchemas = extractRequestSchemas(openApiDoc);
+    for (const [name, schema] of requestSchemas) {
+      const promise = limit(() =>
+        generateRequestSchemaFile(name, schema, { strictValidation }).then(
           (schemaFile) => {
             const filePath = path.join(schemasDir, schemaFile.fileName);
             return fs.writeFile(filePath, schemaFile.content);
@@ -136,26 +159,16 @@ export async function generate(options: GenerationOptions): Promise<void> {
       schemaGenerationPromises.push(promise);
     }
 
-    // Generate request schemas from operations
-    const requestSchemas = extractRequestSchemas(openApiDoc);
-    for (const [name, schema] of requestSchemas) {
-      const promise = limit(() =>
-        generateRequestSchemaFile(name, schema).then((schemaFile) => {
-          const filePath = path.join(schemasDir, schemaFile.fileName);
-          return fs.writeFile(filePath, schemaFile.content);
-        }),
-      );
-      schemaGenerationPromises.push(promise);
-    }
-
     // Generate response schemas from operations
     const responseSchemas = extractResponseSchemas(openApiDoc);
     for (const [name, schema] of responseSchemas) {
       const promise = limit(() =>
-        generateResponseSchemaFile(name, schema).then((schemaFile) => {
-          const filePath = path.join(schemasDir, schemaFile.fileName);
-          return fs.writeFile(filePath, schemaFile.content);
-        }),
+        generateResponseSchemaFile(name, schema, { strictValidation }).then(
+          (schemaFile) => {
+            const filePath = path.join(schemasDir, schemaFile.fileName);
+            return fs.writeFile(filePath, schemaFile.content);
+          },
+        ),
       );
       schemaGenerationPromises.push(promise);
     }

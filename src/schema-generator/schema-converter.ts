@@ -11,6 +11,7 @@ export type OpenAPISchema = ReferenceObject | SchemaObject;
 export type ZodSchemaCodeOptions = {
   imports?: Set<string>;
   isTopLevel?: boolean;
+  strictValidation?: boolean;
 };
 
 /**
@@ -56,7 +57,7 @@ export function zodSchemaToCode(
   schema: ReferenceObject | SchemaObject,
   options: ZodSchemaCodeOptions = {},
 ): ZodSchemaResult {
-  const { imports } = options;
+  const { imports, strictValidation = false } = options;
   const result: ZodSchemaResult = {
     code: "",
     imports: imports || new Set<string>(),
@@ -79,6 +80,7 @@ export function zodSchemaToCode(
       const clone = { ...schema, type: nonNullTypes[0] };
       const subResult = zodSchemaToCode(clone as SchemaObject, {
         imports: result.imports,
+        strictValidation,
       });
       result.code = `(${subResult.code}).nullable()`;
       mergeImports(result.imports, subResult.imports);
@@ -88,6 +90,7 @@ export function zodSchemaToCode(
       const subResults = effectiveType.map((t: string) =>
         zodSchemaToCode({ ...schema, type: t } as SchemaObject, {
           imports: result.imports,
+          strictValidation,
         }),
       );
       const schemas = subResults.map((r: ZodSchemaResult) => r.code);
@@ -110,6 +113,7 @@ export function zodSchemaToCode(
     const clone = cloneWithoutNullable(schema);
     const subResult = zodSchemaToCode(clone, {
       imports: result.imports,
+      strictValidation,
     });
     result.code = `(${subResult.code}).nullable()`;
     mergeImports(result.imports, subResult.imports);
@@ -118,7 +122,7 @@ export function zodSchemaToCode(
 
   // Handle composition schemas
   if (schema.allOf) {
-    return handleAllOfSchema(schema.allOf, result, zodSchemaToCode);
+    return handleAllOfSchema(schema.allOf, result, zodSchemaToCode, { strictValidation });
   }
 
   if (schema.anyOf) {
@@ -128,6 +132,7 @@ export function zodSchemaToCode(
       result,
       zodSchemaToCode,
       schema.discriminator,
+      { strictValidation },
     );
   }
 
@@ -138,6 +143,7 @@ export function zodSchemaToCode(
       result,
       zodSchemaToCode,
       schema.discriminator,
+      { strictValidation },
     );
   }
 
@@ -155,11 +161,11 @@ export function zodSchemaToCode(
   }
 
   if (effectiveType === "array") {
-    return handleArrayType(schema, result, zodSchemaToCode);
+    return handleArrayType(schema, result, zodSchemaToCode, { strictValidation });
   }
 
   if (effectiveType === "object") {
-    return handleObjectType(schema, result, zodSchemaToCode);
+    return handleObjectType(schema, result, zodSchemaToCode, { strictValidation });
   }
 
   // Fallback

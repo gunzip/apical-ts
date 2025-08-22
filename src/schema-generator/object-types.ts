@@ -15,6 +15,13 @@ type ZodSchemaResult = {
 };
 
 /**
+ * Options for object type generation
+ */
+type ObjectTypeOptions = {
+  strictValidation?: boolean;
+};
+
+/**
  * Handle object type conversion
  */
 export function handleObjectType(
@@ -24,7 +31,9 @@ export function handleObjectType(
     schema: ReferenceObject | SchemaObject,
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
+  options: ObjectTypeOptions = {},
 ): ZodSchemaResult {
+  const { strictValidation = false } = options;
   const shape: string[] = [];
   const requiredFields = schema.required || [];
 
@@ -32,6 +41,7 @@ export function handleObjectType(
     for (const [key, propSchema] of Object.entries(schema.properties)) {
       const propResult = zodSchemaToCode(propSchema, {
         imports: result.imports,
+        strictValidation,
       });
       result.imports = new Set([...propResult.imports, ...result.imports]);
 
@@ -44,7 +54,8 @@ export function handleObjectType(
     }
   }
 
-  let code = `z.object({${shape.join(", ")}})`;
+  const objectMethod = strictValidation ? "z.object" : "z.looseObject";
+  let code = `${objectMethod}({${shape.join(", ")}})`;
 
   if (schema.additionalProperties) {
     if (typeof schema.additionalProperties === "boolean") {
@@ -52,6 +63,7 @@ export function handleObjectType(
     } else {
       const additionalResult = zodSchemaToCode(schema.additionalProperties, {
         imports: result.imports,
+        strictValidation,
       });
       result.imports = new Set([
         ...additionalResult.imports,

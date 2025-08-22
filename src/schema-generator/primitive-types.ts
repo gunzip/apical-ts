@@ -6,6 +6,7 @@ import { addDefaultValue } from "./utils.js";
 type ZodSchemaCodeOptions = {
   imports?: Set<string>;
   isTopLevel?: boolean;
+  strictValidation?: boolean;
 };
 
 // Import from schema-converter to avoid circular dependencies
@@ -25,7 +26,9 @@ export function handleArrayType(
     schema: ReferenceObject | SchemaObject,
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
+  options: { strictValidation?: boolean } = {},
 ): ZodSchemaResult {
+  const { strictValidation = false } = options;
   if (!schema.items) {
     let code = "z.array(z.unknown())";
     code = addDefaultValue(code, schema.default);
@@ -35,6 +38,7 @@ export function handleArrayType(
 
   const itemsResult = zodSchemaToCode(schema.items, {
     imports: result.imports,
+    strictValidation,
   });
   let code = `z.array(${itemsResult.code})`;
   result.imports = new Set([...itemsResult.imports, ...result.imports]);
