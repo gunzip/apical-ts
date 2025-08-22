@@ -139,7 +139,7 @@ describe("Response Operations", () => {
 
     it("should validate Message schema in 201 response", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testResponseHeader({});
