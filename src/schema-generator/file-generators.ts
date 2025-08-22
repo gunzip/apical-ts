@@ -13,16 +13,24 @@ export type SchemaFileResult = {
 };
 
 /**
+ * Options for schema file generation
+ */
+export type SchemaGenerationOptions = {
+  strictValidation?: boolean;
+};
+
+/**
  * Generates file content for a request schema
  */
 export async function generateRequestSchemaFile(
   name: string,
   schema: SchemaObject,
+  options: SchemaGenerationOptions = {},
 ): Promise<SchemaFileResult> {
   const schemaVar = `${name.charAt(0).toUpperCase() + name.slice(1)}`;
   const description = `Request schema for ${name.replace("Request", "")} operation`;
 
-  return generateSchemaFile(schemaVar, schema, description);
+  return generateSchemaFile(schemaVar, schema, description, options);
 }
 
 /**
@@ -31,10 +39,11 @@ export async function generateRequestSchemaFile(
 export async function generateResponseSchemaFile(
   name: string,
   schema: SchemaObject,
+  options: SchemaGenerationOptions = {},
 ): Promise<SchemaFileResult> {
   const description = `Response schema for ${name.replace(/Response$/, "").replace(/\d+Response/, " operation")}`;
 
-  return generateSchemaFile(name, schema, description);
+  return generateSchemaFile(name, schema, description, options);
 }
 
 /**
@@ -44,8 +53,13 @@ export async function generateSchemaFile(
   name: string,
   schema: SchemaObject,
   description?: string,
+  options: SchemaGenerationOptions = {},
 ): Promise<SchemaFileResult> {
-  const schemaResult = zodSchemaToCode(schema, { isTopLevel: true });
+  const { strictValidation = false } = options;
+  const schemaResult = zodSchemaToCode(schema, {
+    isTopLevel: true,
+    strictValidation,
+  });
 
   // Generate comment if description exists
   const commentSection = description

@@ -18,6 +18,7 @@ export type UnionType = "anyOf" | "oneOf";
 type ZodSchemaCodeOptions = {
   imports?: Set<string>;
   isTopLevel?: boolean;
+  strictValidation?: boolean;
 };
 
 // Import from schema-converter to avoid circular dependencies
@@ -37,9 +38,11 @@ export function handleAllOfSchema(
     schema: ReferenceObject | SchemaObject,
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
+  options: { strictValidation?: boolean } = {},
 ): ZodSchemaResult {
+  const { strictValidation = false } = options;
   const subResults = schemas.map((s) =>
-    zodSchemaToCode(s, { imports: result.imports }),
+    zodSchemaToCode(s, { imports: result.imports, strictValidation }),
   );
   const schemaCodes = subResults.map((r) => r.code);
   subResults.forEach((r) => {
@@ -74,12 +77,14 @@ export function handleUnionSchema(
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
   discriminator?: DiscriminatorConfig,
+  options: { strictValidation?: boolean } = {},
 ): ZodSchemaResult {
+  const { strictValidation = false } = options;
   // Check if discriminator is present for discriminated unions
   if (discriminator && discriminator.propertyName) {
     const discriminatorProperty = discriminator.propertyName;
     const subResults = schemas.map((s) =>
-      zodSchemaToCode(s, { imports: result.imports }),
+      zodSchemaToCode(s, { imports: result.imports, strictValidation }),
     );
     const schemasCodes = subResults.map((r) => r.code);
     subResults.forEach((r) => {
@@ -102,7 +107,7 @@ export function handleUnionSchema(
 
   // Regular union without discriminator
   const subResults = schemas.map((s) =>
-    zodSchemaToCode(s, { imports: result.imports }),
+    zodSchemaToCode(s, { imports: result.imports, strictValidation }),
   );
   const schemasCodes = subResults.map((r) => r.code);
   subResults.forEach((r) => {

@@ -21,6 +21,11 @@ program
   )
   .requiredOption("-o, --output <path>", "Path to the output directory.")
   .option("--generate-client", "Generate the full HTTP client.", false)
+  .option(
+    "--strict-validation",
+    "Use strict object validation (reject unknown properties)",
+    false,
+  )
   .action(async (options: Record<string, unknown>) => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
