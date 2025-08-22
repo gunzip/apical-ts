@@ -217,7 +217,7 @@ describe("Response Operations", () => {
 
     it("should handle responses without content", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testMultipleSuccess({});
