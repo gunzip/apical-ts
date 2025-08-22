@@ -7,7 +7,7 @@
  */
 export function generateConfigFileContent(
   authHeaders: string[],
-  serverUrls: string[] = []
+  serverUrls: string[] = [],
 ): string {
   return generateConfigTypes(authHeaders, serverUrls);
 }
@@ -17,7 +17,7 @@ export function generateConfigFileContent(
  */
 export function generateConfigTypes(
   authHeaders: string[],
-  serverUrls: string[] = []
+  serverUrls: string[] = [],
 ): string {
   const authHeadersType =
     authHeaders.length > 0

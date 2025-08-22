@@ -1,19 +1,20 @@
 import type { ReferenceObject } from "openapi3-ts/oas31";
+
 import { sanitizeIdentifier } from "./utils.js";
 
 // Import from schema-converter to avoid circular dependencies
-interface ZodSchemaResult {
+type ZodSchemaResult = {
   code: string;
-  imports: Set<string>;
   extensibleEnumValues?: any[];
-}
+  imports: Set<string>;
+};
 
 /**
  * Handle $ref references
  */
 export function handleReference(
   schema: ReferenceObject,
-  result: ZodSchemaResult
+  result: ZodSchemaResult,
 ): ZodSchemaResult {
   if ("$ref" in schema && schema.$ref) {
     const ref = schema.$ref;

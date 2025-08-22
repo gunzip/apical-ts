@@ -1,14 +1,80 @@
 import type { OpenAPIObject, RequestBodyObject } from "openapi3-ts/oas31";
+
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 
 /**
  * Information about request body types
  */
-export interface RequestBodyTypeInfo {
-  typeName: string | null;
+export type RequestBodyTypeInfo = {
+  contentType: string;
   isRequired: boolean;
   typeImports: Set<string>;
-  contentType: string;
+  typeName: null | string;
+};
+
+/**
+ * Generates request body handling code for different content types
+ */
+export function generateRequestBodyHandling(
+  hasBody: boolean,
+  requestContentType?: string,
+): { bodyContent: string; contentTypeHeader: string } {
+  let bodyContent = "";
+  let contentTypeHeader = "";
+
+  if (hasBody && requestContentType) {
+    // Handle different content types appropriately
+    switch (requestContentType) {
+      case "application/json":
+        bodyContent = `    body: body ? JSON.stringify(body) : undefined,`;
+        contentTypeHeader = `    "Content-Type": "application/json",`;
+        break;
+
+      case "application/octet-stream":
+        bodyContent = `    body: body,`;
+        contentTypeHeader = `    "Content-Type": "application/octet-stream",`;
+        break;
+
+      case "application/x-www-form-urlencoded":
+        bodyContent = `    body: body ? new URLSearchParams(body as Record<string, string>).toString() : undefined,`;
+        contentTypeHeader = `    "Content-Type": "application/x-www-form-urlencoded",`;
+        break;
+
+      case "application/xml":
+        bodyContent = `    body: typeof body === 'string' ? body : String(body),`;
+        contentTypeHeader = `    "Content-Type": "application/xml",`;
+        break;
+
+      case "multipart/form-data":
+        // For multipart/form-data, create FormData and append each field
+        // Don't set Content-Type manually - fetch will set it with boundary
+        bodyContent = `    body: (() => {
+      const formData = new FormData();
+      if (body) {
+        Object.entries(body).forEach(([key, value]) => {
+          if (value !== undefined) {
+            formData.append(key, value);
+          }
+        });
+      }
+      return formData;
+    })(),`;
+        // contentTypeHeader remains empty for multipart/form-data
+        break;
+
+      case "text/plain":
+        bodyContent = `    body: typeof body === 'string' ? body : String(body),`;
+        contentTypeHeader = `    "Content-Type": "text/plain",`;
+        break;
+
+      default:
+        // For unknown content types, try to handle as string or fall back to JSON
+        bodyContent = `    body: typeof body === 'string' ? body : JSON.stringify(body),`;
+        contentTypeHeader = `    "Content-Type": "${requestContentType}",`;
+    }
+  }
+
+  return { bodyContent, contentTypeHeader };
 }
 
 /**
@@ -19,7 +85,7 @@ export interface RequestBodyTypeInfo {
  * one based on priority order. This is a known limitation.
  */
 export function getRequestBodyContentType(
-  requestBody: RequestBodyObject
+  requestBody: RequestBodyObject,
 ): string {
   if (!requestBody.content) {
     return "application/json"; // fallback default
@@ -54,7 +120,7 @@ export function getRequestBodyContentType(
 export function resolveRequestBodyType(
   requestBody: RequestBodyObject,
   operationId: string,
-  doc: OpenAPIObject
+  doc: OpenAPIObject,
 ): RequestBodyTypeInfo {
   // Check if request body is required (default is false)
   const isRequired = requestBody.required === true;
@@ -64,10 +130,10 @@ export function resolveRequestBodyType(
   const content = requestBody.content?.[contentType];
   if (!content?.schema) {
     return {
-      typeName: null,
+      contentType,
       isRequired,
       typeImports: new Set<string>(),
-      contentType,
+      typeName: null,
     };
   }
 
@@ -80,10 +146,10 @@ export function resolveRequestBodyType(
       ? sanitizeIdentifier(originalTypeName)
       : null;
     return {
-      typeName: typeName || null,
+      contentType,
       isRequired,
       typeImports: new Set([typeName || ""]),
-      contentType,
+      typeName: typeName || null,
     };
   }
 
@@ -92,74 +158,9 @@ export function resolveRequestBodyType(
   const sanitizedOperationId: string = sanitizeIdentifier(operationId);
   const requestTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}Request`;
   return {
-    typeName: requestTypeName,
+    contentType,
     isRequired,
     typeImports: new Set([requestTypeName]),
-    contentType,
+    typeName: requestTypeName,
   };
-}
-
-/**
- * Generates request body handling code for different content types
- */
-export function generateRequestBodyHandling(
-  hasBody: boolean,
-  requestContentType?: string
-): { bodyContent: string; contentTypeHeader: string } {
-  let bodyContent = "";
-  let contentTypeHeader = "";
-
-  if (hasBody && requestContentType) {
-    // Handle different content types appropriately
-    switch (requestContentType) {
-      case "application/json":
-        bodyContent = `    body: body ? JSON.stringify(body) : undefined,`;
-        contentTypeHeader = `    "Content-Type": "application/json",`;
-        break;
-
-      case "application/x-www-form-urlencoded":
-        bodyContent = `    body: body ? new URLSearchParams(body as Record<string, string>).toString() : undefined,`;
-        contentTypeHeader = `    "Content-Type": "application/x-www-form-urlencoded",`;
-        break;
-
-      case "multipart/form-data":
-        // For multipart/form-data, create FormData and append each field
-        // Don't set Content-Type manually - fetch will set it with boundary
-        bodyContent = `    body: (() => {
-      const formData = new FormData();
-      if (body) {
-        Object.entries(body).forEach(([key, value]) => {
-          if (value !== undefined) {
-            formData.append(key, value);
-          }
-        });
-      }
-      return formData;
-    })(),`;
-        // contentTypeHeader remains empty for multipart/form-data
-        break;
-
-      case "text/plain":
-        bodyContent = `    body: typeof body === 'string' ? body : String(body),`;
-        contentTypeHeader = `    "Content-Type": "text/plain",`;
-        break;
-
-      case "application/xml":
-        bodyContent = `    body: typeof body === 'string' ? body : String(body),`;
-        contentTypeHeader = `    "Content-Type": "application/xml",`;
-        break;
-
-      case "application/octet-stream":
-        bodyContent = `    body: body,`;
-        contentTypeHeader = `    "Content-Type": "application/octet-stream",`;
-        break;
-
-      default:
-        // For unknown content types, try to handle as string or fall back to JSON
-        bodyContent = `    body: typeof body === 'string' ? body : JSON.stringify(body),`;
-        contentTypeHeader = `    "Content-Type": "${requestContentType}",`;
-    }
-  }
-
-  return { bodyContent, contentTypeHeader };
 }

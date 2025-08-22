@@ -1,33 +1,21 @@
 import type {
   OpenAPIObject,
-  PathItemObject,
-  ParameterObject,
   OperationObject,
+  ParameterObject,
+  PathItemObject,
   ReferenceObject,
 } from "openapi3-ts/oas31";
 
 /**
  * Metadata for an OpenAPI operation
  */
-export interface OperationMetadata {
-  pathKey: string;
+export type OperationMetadata = {
   method: string;
   operation: OperationObject;
-  pathLevelParameters: (ParameterObject | ReferenceObject)[];
   operationId: string;
-}
-
-/**
- * Extracts all server URLs from OpenAPI spec
- */
-export function extractServerUrls(doc: OpenAPIObject): string[] {
-  if (doc.servers && doc.servers.length > 0) {
-    return doc.servers
-      .map((server) => server.url || "")
-      .filter((url) => url !== "");
-  }
-  return [];
-}
+  pathKey: string;
+  pathLevelParameters: (ParameterObject | ReferenceObject)[];
+};
 
 /**
  * Extracts all operations from the OpenAPI document
@@ -42,10 +30,10 @@ export function extractAllOperations(doc: OpenAPIObject): OperationMetadata[] {
         []) as ParameterObject[];
 
       // Define the HTTP methods we support with their corresponding operations
-      const httpMethods: Array<{
+      const httpMethods: {
         method: string;
         operation: OperationObject | undefined;
-      }> = [
+      }[] = [
         { method: "get", operation: pathItemObj.get },
         { method: "post", operation: pathItemObj.post },
         { method: "put", operation: pathItemObj.put },
@@ -60,11 +48,11 @@ export function extractAllOperations(doc: OpenAPIObject): OperationMetadata[] {
 
           // Skip operations that result in empty sanitized IDs
           operations.push({
-            pathKey,
             method,
             operation,
-            pathLevelParameters,
             operationId,
+            pathKey,
+            pathLevelParameters,
           });
         }
       }
@@ -72,4 +60,16 @@ export function extractAllOperations(doc: OpenAPIObject): OperationMetadata[] {
   }
 
   return operations;
+}
+
+/**
+ * Extracts all server URLs from OpenAPI spec
+ */
+export function extractServerUrls(doc: OpenAPIObject): string[] {
+  if (doc.servers && doc.servers.length > 0) {
+    return doc.servers
+      .map((server) => server.url || "")
+      .filter((url) => url !== "");
+  }
+  return [];
 }

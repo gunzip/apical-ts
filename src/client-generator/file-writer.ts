@@ -1,26 +1,24 @@
 import { promises as fs } from "fs";
 import path from "path";
-import {
-  writeFormattedFile,
-  buildOperationFileContent,
-} from "../core-generator/file-writer.js";
-import { generateConfigTypes } from "./config-generator.js";
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
+
 import type { OperationMetadata } from "./operation-extractor.js";
 
+import {
+  buildOperationFileContent,
+  writeFormattedFile,
+} from "../core-generator/file-writer.js";
+import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { generateConfigTypes } from "./config-generator.js";
+
 /**
- * Writes a single operation file to disk
+ * Creates the operations directory if it doesn't exist
  */
-export async function writeOperationFile(
-  operationId: string,
-  functionCode: string,
-  typeImports: Set<string>,
-  operationsDir: string
-): Promise<void> {
-  const sanitizedOperationId = sanitizeIdentifier(operationId);
-  const operationContent = buildOperationFileContent(typeImports, functionCode);
-  const operationPath = path.join(operationsDir, `${sanitizedOperationId}.ts`);
-  await writeFormattedFile(operationPath, operationContent);
+export async function createOperationsDirectory(
+  outputDir: string,
+): Promise<string> {
+  const operationsDir = path.join(outputDir, "operations");
+  await fs.mkdir(operationsDir, { recursive: true });
+  return operationsDir;
 }
 
 /**
@@ -29,7 +27,7 @@ export async function writeOperationFile(
 export async function writeConfigFile(
   authHeaders: string[],
   serverUrls: string[],
-  operationsDir: string
+  operationsDir: string,
 ): Promise<void> {
   const configContent = generateConfigTypes(authHeaders, serverUrls);
   const configPath = path.join(operationsDir, "config.ts");
@@ -41,7 +39,7 @@ export async function writeConfigFile(
  */
 export async function writeIndexFile(
   operations: OperationMetadata[],
-  operationsDir: string
+  operationsDir: string,
 ): Promise<void> {
   const operationImports: string[] = [];
   const operationExports: string[] = [];
@@ -58,7 +56,7 @@ export async function writeIndexFile(
 
     seenOperations.add(sanitizedOperationId);
     operationImports.push(
-      `import { ${sanitizedOperationId} } from './${sanitizedOperationId}.js';`
+      `import { ${sanitizedOperationId} } from './${sanitizedOperationId}.js';`,
     );
     operationExports.push(sanitizedOperationId);
   }
@@ -81,12 +79,16 @@ export {
 }
 
 /**
- * Creates the operations directory if it doesn't exist
+ * Writes a single operation file to disk
  */
-export async function createOperationsDirectory(
-  outputDir: string
-): Promise<string> {
-  const operationsDir = path.join(outputDir, "operations");
-  await fs.mkdir(operationsDir, { recursive: true });
-  return operationsDir;
+export async function writeOperationFile(
+  operationId: string,
+  functionCode: string,
+  typeImports: Set<string>,
+  operationsDir: string,
+): Promise<void> {
+  const sanitizedOperationId = sanitizeIdentifier(operationId);
+  const operationContent = buildOperationFileContent(typeImports, functionCode);
+  const operationPath = path.join(operationsDir, `${sanitizedOperationId}.ts`);
+  await writeFormattedFile(operationPath, operationContent);
 }

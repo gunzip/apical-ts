@@ -1,26 +1,28 @@
-import { promises as fs } from "fs";
-import path from "path";
 import type {
-  SchemaObject,
+  OpenAPIObject,
   OperationObject,
+  PathItemObject,
   RequestBodyObject,
   ResponseObject,
-  OpenAPIObject,
-  PathItemObject,
+  SchemaObject,
 } from "openapi3-ts/oas31";
+
+import $RefParser from "@apidevtools/json-schema-ref-parser";
+import { promises as fs } from "fs";
 import { isReferenceObject } from "openapi3-ts/oas31";
-import { parseOpenAPI } from "./parser.js";
-import { convertToOpenAPI31 } from "./converter.js";
+import pLimit from "p-limit";
+import path from "path";
+
+import { generateOperations } from "../client-generator/index.js";
+import { applyGeneratedOperationIds } from "../operation-id-generator/index.js";
 import {
-  generateSchemaFile,
   generateRequestSchemaFile,
   generateResponseSchemaFile,
+  generateSchemaFile,
 } from "../schema-generator/index.js";
-import { generateOperations } from "../client-generator/index.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { applyGeneratedOperationIds } from "../operation-id-generator/index.js";
-import $RefParser from "@apidevtools/json-schema-ref-parser";
-import pLimit from "p-limit";
+import { convertToOpenAPI31 } from "./converter.js";
+import { parseOpenAPI } from "./parser.js";
 
 const DEFAULT_CONCURRENCY = 10;
 
@@ -37,55 +39,149 @@ const DEFAULT_CONCURRENCY = 10;
  * };
  * ```
  */
-export interface GenerationOptions {
-  input: string;
-  output: string;
-  generateClient: boolean;
+export type GenerationOptions = {
   /**
    * The maximum number of parallel tasks to run during generation.
    * @default 10
    */
   concurrency?: number;
-}
+  generateClient: boolean;
+  input: string;
+  output: string;
+};
 
 /**
- * Common utility to iterate through all operations in an OpenAPI document.
- * Works with all operations, regardless of whether they have operationId
+ * Generates TypeScript schemas and optional API client from OpenAPI specification
  */
-function forEachOperation(
-  openApiDoc: OpenAPIObject,
-  callback: (
-    operation: OperationObject,
-    method: string,
-    pathKey: string
-  ) => void
-): void {
-  if (!openApiDoc.paths) {
-    return;
+export async function generate(options: GenerationOptions): Promise<void> {
+  const {
+    concurrency = DEFAULT_CONCURRENCY,
+    generateClient: genClient,
+    input,
+    output,
+  } = options;
+
+  await fs.mkdir(output, { recursive: true });
+
+  // Pre-process: Resolve external $ref pointers before parsing to avoid parsing failures
+  let openApiDoc: OpenAPIObject;
+  try {
+    // Bundle external references first, then convert to OpenAPI 3.1
+    const bundled = await $RefParser.bundle(input, {
+      mutateInputSchema: false, // Don't modify the original
+    });
+    console.log("✅ Successfully resolved external $ref pointers");
+
+    // Convert the bundled document to OpenAPI 3.1
+    openApiDoc = await convertToOpenAPI31(bundled);
+  } catch (error) {
+    console.warn(
+      "⚠️ Failed to resolve external $ref pointers, falling back to regular parsing:",
+      error,
+    );
+    openApiDoc = await parseOpenAPI(input);
   }
 
-  for (const [pathKey, pathItem] of Object.entries(openApiDoc.paths)) {
-    const pathItemObj = pathItem;
+  // Apply generated operation IDs for operations that don't have them
+  applyGeneratedOperationIds(openApiDoc);
+  console.log("✅ Applied generated operation IDs where missing");
 
-    // Define the HTTP methods we support with their corresponding operations
-    const httpMethods: Array<{
-      method: string;
-      operation: OperationObject | undefined;
-    }> = [
-      { method: "get", operation: pathItemObj.get },
-      { method: "post", operation: pathItemObj.post },
-      { method: "put", operation: pathItemObj.put },
-      { method: "delete", operation: pathItemObj.delete },
-      { method: "patch", operation: pathItemObj.patch },
-    ];
+  const limit = pLimit(concurrency);
+  const schemaGenerationPromises: Promise<void>[] = [];
 
-    for (const { method, operation } of httpMethods) {
-      if (operation) {
-        // OperationId is generated if missing
-        callback(operation, method, pathKey);
+  if (openApiDoc.components?.schemas) {
+    const schemasDir = path.join(output, "schemas");
+    await fs.mkdir(schemasDir, { recursive: true });
+
+    function isPlainSchemaObject(obj: any): obj is SchemaObject {
+      // Must be a plain object, not a Zod object, and not null
+      if (!obj || typeof obj !== "object") return false;
+      if (typeof obj.safeParse === "function" || obj._def) return false; // Zod instance
+      // Must have at least one OpenAPI schema property
+      return (
+        "type" in obj ||
+        "allOf" in obj ||
+        "anyOf" in obj ||
+        "oneOf" in obj ||
+        "properties" in obj ||
+        "additionalProperties" in obj ||
+        "array" in obj
+      );
+    }
+
+    // Generate schemas from components/schemas
+    for (const [name, schema] of Object.entries(
+      openApiDoc.components.schemas,
+    )) {
+      if (!isPlainSchemaObject(schema)) {
+        console.warn(
+          `⚠️ Skipping ${name}: not a plain OpenAPI schema object. Value:`,
+          schema,
+        );
+        continue;
       }
+
+      const sanitizedName = sanitizeIdentifier(name);
+
+      const description = schema.description
+        ? schema.description.trim()
+        : undefined;
+      const promise = limit(() =>
+        generateSchemaFile(sanitizedName, schema, description).then(
+          (schemaFile) => {
+            const filePath = path.join(schemasDir, schemaFile.fileName);
+            return fs.writeFile(filePath, schemaFile.content);
+          },
+        ),
+      );
+      schemaGenerationPromises.push(promise);
+    }
+
+    // Generate request schemas from operations
+    const requestSchemas = extractRequestSchemas(openApiDoc);
+    for (const [name, schema] of requestSchemas) {
+      const promise = limit(() =>
+        generateRequestSchemaFile(name, schema).then((schemaFile) => {
+          const filePath = path.join(schemasDir, schemaFile.fileName);
+          return fs.writeFile(filePath, schemaFile.content);
+        }),
+      );
+      schemaGenerationPromises.push(promise);
+    }
+
+    // Generate response schemas from operations
+    const responseSchemas = extractResponseSchemas(openApiDoc);
+    for (const [name, schema] of responseSchemas) {
+      const promise = limit(() =>
+        generateResponseSchemaFile(name, schema).then((schemaFile) => {
+          const filePath = path.join(schemasDir, schemaFile.fileName);
+          return fs.writeFile(filePath, schemaFile.content);
+        }),
+      );
+      schemaGenerationPromises.push(promise);
     }
   }
+
+  await Promise.all(schemaGenerationPromises);
+  console.log("✅ Schemas generated successfully");
+
+  if (genClient) {
+    await generateOperations(openApiDoc, output, concurrency);
+  }
+
+  const packageJsonContent = {
+    dependencies: {
+      zod: "^3.0.0",
+    },
+    name: "generated-client",
+    type: "module",
+    version: "1.0.0",
+  };
+  const packageJsonPath = path.join(output, "package.json");
+  await fs.writeFile(
+    packageJsonPath,
+    JSON.stringify(packageJsonContent, null, 2),
+  );
 }
 
 /**
@@ -118,7 +214,7 @@ function forEachOperation(
  * ```
  */
 function extractRequestSchemas(
-  openApiDoc: OpenAPIObject
+  openApiDoc: OpenAPIObject,
 ): Map<string, SchemaObject> {
   const requestSchemas = new Map<string, SchemaObject>();
 
@@ -186,7 +282,7 @@ function extractRequestSchemas(
  * ```
  */
 function extractResponseSchemas(
-  openApiDoc: OpenAPIObject
+  openApiDoc: OpenAPIObject,
 ): Map<string, SchemaObject> {
   const responseSchemas = new Map<string, SchemaObject>();
 
@@ -239,135 +335,41 @@ function extractResponseSchemas(
 }
 
 /**
- * Generates TypeScript schemas and optional API client from OpenAPI specification
+ * Common utility to iterate through all operations in an OpenAPI document.
+ * Works with all operations, regardless of whether they have operationId
  */
-export async function generate(options: GenerationOptions): Promise<void> {
-  const {
-    input,
-    output,
-    generateClient: genClient,
-    concurrency = DEFAULT_CONCURRENCY,
-  } = options;
-
-  await fs.mkdir(output, { recursive: true });
-
-  // Pre-process: Resolve external $ref pointers before parsing to avoid parsing failures
-  let openApiDoc: OpenAPIObject;
-  try {
-    // Bundle external references first, then convert to OpenAPI 3.1
-    const bundled = await $RefParser.bundle(input, {
-      mutateInputSchema: false, // Don't modify the original
-    });
-    console.log("✅ Successfully resolved external $ref pointers");
-
-    // Convert the bundled document to OpenAPI 3.1
-    openApiDoc = await convertToOpenAPI31(bundled);
-  } catch (error) {
-    console.warn(
-      "⚠️ Failed to resolve external $ref pointers, falling back to regular parsing:",
-      error
-    );
-    openApiDoc = await parseOpenAPI(input);
+function forEachOperation(
+  openApiDoc: OpenAPIObject,
+  callback: (
+    operation: OperationObject,
+    method: string,
+    pathKey: string,
+  ) => void,
+): void {
+  if (!openApiDoc.paths) {
+    return;
   }
 
-  // Apply generated operation IDs for operations that don't have them
-  applyGeneratedOperationIds(openApiDoc);
-  console.log("✅ Applied generated operation IDs where missing");
+  for (const [pathKey, pathItem] of Object.entries(openApiDoc.paths)) {
+    const pathItemObj = pathItem;
 
-  const limit = pLimit(concurrency);
-  const schemaGenerationPromises: Promise<void>[] = [];
+    // Define the HTTP methods we support with their corresponding operations
+    const httpMethods: {
+      method: string;
+      operation: OperationObject | undefined;
+    }[] = [
+      { method: "get", operation: pathItemObj.get },
+      { method: "post", operation: pathItemObj.post },
+      { method: "put", operation: pathItemObj.put },
+      { method: "delete", operation: pathItemObj.delete },
+      { method: "patch", operation: pathItemObj.patch },
+    ];
 
-  if (openApiDoc.components?.schemas) {
-    const schemasDir = path.join(output, "schemas");
-    await fs.mkdir(schemasDir, { recursive: true });
-
-    function isPlainSchemaObject(obj: any): obj is SchemaObject {
-      // Must be a plain object, not a Zod object, and not null
-      if (!obj || typeof obj !== "object") return false;
-      if (typeof obj.safeParse === "function" || obj._def) return false; // Zod instance
-      // Must have at least one OpenAPI schema property
-      return (
-        "type" in obj ||
-        "allOf" in obj ||
-        "anyOf" in obj ||
-        "oneOf" in obj ||
-        "properties" in obj ||
-        "additionalProperties" in obj ||
-        "array" in obj
-      );
-    }
-
-    // Generate schemas from components/schemas
-    for (const [name, schema] of Object.entries(
-      openApiDoc.components.schemas
-    )) {
-      if (!isPlainSchemaObject(schema)) {
-        console.warn(
-          `⚠️ Skipping ${name}: not a plain OpenAPI schema object. Value:`,
-          schema
-        );
-        continue;
+    for (const { method, operation } of httpMethods) {
+      if (operation) {
+        // OperationId is generated if missing
+        callback(operation, method, pathKey);
       }
-
-      const sanitizedName = sanitizeIdentifier(name);
-
-      const description = schema.description
-        ? schema.description.trim()
-        : undefined;
-      const promise = limit(() =>
-        generateSchemaFile(sanitizedName, schema, description).then(
-          (schemaFile) => {
-            const filePath = path.join(schemasDir, schemaFile.fileName);
-            return fs.writeFile(filePath, schemaFile.content);
-          }
-        )
-      );
-      schemaGenerationPromises.push(promise);
-    }
-
-    // Generate request schemas from operations
-    const requestSchemas = extractRequestSchemas(openApiDoc);
-    for (const [name, schema] of requestSchemas) {
-      const promise = limit(() =>
-        generateRequestSchemaFile(name, schema).then((schemaFile) => {
-          const filePath = path.join(schemasDir, schemaFile.fileName);
-          return fs.writeFile(filePath, schemaFile.content);
-        })
-      );
-      schemaGenerationPromises.push(promise);
-    }
-
-    // Generate response schemas from operations
-    const responseSchemas = extractResponseSchemas(openApiDoc);
-    for (const [name, schema] of responseSchemas) {
-      const promise = limit(() =>
-        generateResponseSchemaFile(name, schema).then((schemaFile) => {
-          const filePath = path.join(schemasDir, schemaFile.fileName);
-          return fs.writeFile(filePath, schemaFile.content);
-        })
-      );
-      schemaGenerationPromises.push(promise);
     }
   }
-
-  await Promise.all(schemaGenerationPromises);
-  console.log("✅ Schemas generated successfully");
-
-  if (genClient) {
-    await generateOperations(openApiDoc, output, concurrency);
-  }
-
-  const packageJsonContent = {
-    name: "generated-client",
-    version: "1.0.0",
-    type: "module",
-    dependencies: {
-      zod: "^3.0.0",
-    },
-  };
-  const packageJsonPath = path.join(output, "package.json");
-  await fs.writeFile(
-    packageJsonPath,
-    JSON.stringify(packageJsonContent, null, 2)
-  );
 }

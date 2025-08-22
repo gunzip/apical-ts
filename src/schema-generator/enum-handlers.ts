@@ -1,20 +1,21 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
+
 import { addDefaultValue } from "./utils.js";
 
 /**
  * Result of handling extensible enum
  */
-export interface ExtensibleEnumResult {
+export type ExtensibleEnumResult = {
   code: string;
   enumValues: any[];
-}
+};
 
 /**
  * Handles x-extensible-enum for string schemas
  * Always generates inline array format for consistency
  */
 export function handleExtensibleEnum(
-  schema: SchemaObject
+  schema: SchemaObject,
 ): ExtensibleEnumResult | null {
   const extensibleEnum = schema["x-extensible-enum"];
   if (!extensibleEnum || !Array.isArray(extensibleEnum)) {
@@ -41,16 +42,16 @@ export function handleExtensibleEnum(
  */
 export function handleRegularEnum(
   enumValues: any[],
-  defaultValue?: any
+  defaultValue?: any,
 ): string {
   // Single enum value should be a literal
   if (enumValues.length === 1) {
     const value = enumValues[0];
-    let code = `z.literal(${typeof value === "string" ? JSON.stringify(value) : value})`;
+    const code = `z.literal(${typeof value === "string" ? JSON.stringify(value) : value})`;
     return addDefaultValue(code, defaultValue);
   }
 
   // Multiple enum values
-  let code = `z.enum([${enumValues.map((e) => JSON.stringify(e)).join(", ")}])`;
+  const code = `z.enum([${enumValues.map((e) => JSON.stringify(e)).join(", ")}])`;
   return addDefaultValue(code, defaultValue);
 }

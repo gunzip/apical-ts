@@ -1,17 +1,103 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
-import { addDefaultValue } from "./utils.js";
+
 import { handleExtensibleEnum, handleRegularEnum } from "./enum-handlers.js";
+import { addDefaultValue } from "./utils.js";
 
-// Import from schema-converter to avoid circular dependencies
-interface ZodSchemaResult {
-  code: string;
-  imports: Set<string>;
-  extensibleEnumValues?: any[];
-}
-
-interface ZodSchemaCodeOptions {
+type ZodSchemaCodeOptions = {
   imports?: Set<string>;
   isTopLevel?: boolean;
+};
+
+// Import from schema-converter to avoid circular dependencies
+type ZodSchemaResult = {
+  code: string;
+  extensibleEnumValues?: any[];
+  imports: Set<string>;
+};
+
+/**
+ * Handle array type conversion
+ */
+export function handleArrayType(
+  schema: SchemaObject,
+  result: ZodSchemaResult,
+  zodSchemaToCode: (
+    schema: any,
+    options?: ZodSchemaCodeOptions,
+  ) => ZodSchemaResult,
+): ZodSchemaResult {
+  if (!schema.items) {
+    let code = "z.array(z.unknown())";
+    code = addDefaultValue(code, schema.default);
+    result.code = code;
+    return result;
+  }
+
+  const itemsResult = zodSchemaToCode(schema.items, {
+    imports: result.imports,
+  });
+  let code = `z.array(${itemsResult.code})`;
+  result.imports = new Set([...itemsResult.imports, ...result.imports]);
+
+  if (schema.minItems !== undefined) code += `.min(${schema.minItems})`;
+  if (schema.maxItems !== undefined) code += `.max(${schema.maxItems})`;
+  // uniqueItems not representable in code string
+
+  // Add default value if present
+  code = addDefaultValue(code, schema.default);
+
+  result.code = code;
+  return result;
+}
+
+/**
+ * Handle boolean type conversion
+ */
+export function handleBooleanType(
+  schema: SchemaObject,
+  result: ZodSchemaResult,
+): ZodSchemaResult {
+  let code = "z.boolean()";
+
+  // Handle enums for booleans (both single and multi-value, though rare)
+  if (schema.enum && schema.enum.length >= 1) {
+    code = handleRegularEnum(schema.enum, schema.default);
+  } else {
+    // Add default value if present and no enum
+    code = addDefaultValue(code, schema.default);
+  }
+
+  result.code = code;
+  return result;
+}
+
+/**
+ * Handle number/integer type conversion
+ */
+export function handleNumberType(
+  schema: SchemaObject,
+  result: ZodSchemaResult,
+): ZodSchemaResult {
+  let code = "z.number()";
+
+  if (schema.minimum !== undefined) code += `.min(${schema.minimum})`;
+  if (schema.maximum !== undefined) code += `.max(${schema.maximum})`;
+  if (schema.exclusiveMinimum !== undefined)
+    code += `.gt(${schema.exclusiveMinimum})`;
+  if (schema.exclusiveMaximum !== undefined)
+    code += `.lt(${schema.exclusiveMaximum})`;
+  if (schema.type === "integer") code += ".int()";
+
+  // Handle enums for numbers (both single and multi-value)
+  if (schema.enum && schema.enum.length >= 1) {
+    code = handleRegularEnum(schema.enum, schema.default);
+  } else {
+    // Add default value if present and no enum
+    code = addDefaultValue(code, schema.default);
+  }
+
+  result.code = code;
+  return result;
 }
 
 /**
@@ -19,7 +105,7 @@ interface ZodSchemaCodeOptions {
  */
 export function handleStringType(
   schema: SchemaObject,
-  result: ZodSchemaResult
+  result: ZodSchemaResult,
 ): ZodSchemaResult {
   // Handle x-extensible-enum first, as it takes precedence over regular enum
   const extensibleEnumResult = handleExtensibleEnum(schema);
@@ -62,91 +148,6 @@ export function handleStringType(
     // Add default value if present and no enum
     code = addDefaultValue(code, schema.default);
   }
-
-  result.code = code;
-  return result;
-}
-
-/**
- * Handle number/integer type conversion
- */
-export function handleNumberType(
-  schema: SchemaObject,
-  result: ZodSchemaResult
-): ZodSchemaResult {
-  let code = "z.number()";
-
-  if (schema.minimum !== undefined) code += `.min(${schema.minimum})`;
-  if (schema.maximum !== undefined) code += `.max(${schema.maximum})`;
-  if (schema.exclusiveMinimum !== undefined)
-    code += `.gt(${schema.exclusiveMinimum})`;
-  if (schema.exclusiveMaximum !== undefined)
-    code += `.lt(${schema.exclusiveMaximum})`;
-  if (schema.type === "integer") code += ".int()";
-
-  // Handle enums for numbers (both single and multi-value)
-  if (schema.enum && schema.enum.length >= 1) {
-    code = handleRegularEnum(schema.enum, schema.default);
-  } else {
-    // Add default value if present and no enum
-    code = addDefaultValue(code, schema.default);
-  }
-
-  result.code = code;
-  return result;
-}
-
-/**
- * Handle boolean type conversion
- */
-export function handleBooleanType(
-  schema: SchemaObject,
-  result: ZodSchemaResult
-): ZodSchemaResult {
-  let code = "z.boolean()";
-
-  // Handle enums for booleans (both single and multi-value, though rare)
-  if (schema.enum && schema.enum.length >= 1) {
-    code = handleRegularEnum(schema.enum, schema.default);
-  } else {
-    // Add default value if present and no enum
-    code = addDefaultValue(code, schema.default);
-  }
-
-  result.code = code;
-  return result;
-}
-
-/**
- * Handle array type conversion
- */
-export function handleArrayType(
-  schema: SchemaObject,
-  result: ZodSchemaResult,
-  zodSchemaToCode: (
-    schema: any,
-    options?: ZodSchemaCodeOptions
-  ) => ZodSchemaResult
-): ZodSchemaResult {
-  if (!schema.items) {
-    let code = "z.array(z.unknown())";
-    code = addDefaultValue(code, schema.default);
-    result.code = code;
-    return result;
-  }
-
-  const itemsResult = zodSchemaToCode(schema.items, {
-    imports: result.imports,
-  });
-  let code = `z.array(${itemsResult.code})`;
-  result.imports = new Set([...result.imports, ...itemsResult.imports]);
-
-  if (schema.minItems !== undefined) code += `.min(${schema.minItems})`;
-  if (schema.maxItems !== undefined) code += `.max(${schema.maxItems})`;
-  // uniqueItems not representable in code string
-
-  // Add default value if present
-  code = addDefaultValue(code, schema.default);
 
   result.code = code;
   return result;

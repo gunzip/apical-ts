@@ -4,14 +4,57 @@ import type { SchemaObject } from "openapi3-ts/oas31";
  * Effective type after resolving union types and inference
  */
 export type EffectiveType =
-  | "string"
-  | "number"
-  | "integer"
-  | "boolean"
   | "array"
+  | "boolean"
+  | "integer"
+  | "number"
   | "object"
+  | "string"
   | string[]
   | undefined;
+
+/**
+ * Add default value to zod code if present in schema
+ */
+export function addDefaultValue(code: string, defaultValue: any): string {
+  if (defaultValue === undefined) {
+    return code;
+  }
+
+  const serializedDefault =
+    typeof defaultValue === "string"
+      ? JSON.stringify(defaultValue)
+      : JSON.stringify(defaultValue);
+
+  return `${code}.default(${serializedDefault})`;
+}
+
+/**
+ * Check if a type array represents a nullable type (e.g., ["string", "null"])
+ */
+export function analyzeTypeArray(types: string[]): {
+  isNullable: boolean;
+  nonNullTypes: string[];
+} {
+  const nonNullTypes = types.filter((t: string) => t !== "null");
+  const isNullable = types.includes("null");
+
+  return {
+    isNullable,
+    nonNullTypes,
+  };
+}
+
+/**
+ * Create a clone of schema without the nullable property
+ */
+export function cloneWithoutNullable(schema: SchemaObject): SchemaObject {
+  const clone = { ...schema };
+  if ("nullable" in clone) {
+    delete clone.nullable;
+  }
+  return clone;
+}
 
 /**
  * Determine the type of a schema when it's not explicitly defined
@@ -33,49 +76,6 @@ export function inferEffectiveType(schema: SchemaObject): EffectiveType {
  */
 export function isNullable(schema: SchemaObject): boolean {
   return "nullable" in schema && schema.nullable === true;
-}
-
-/**
- * Create a clone of schema without the nullable property
- */
-export function cloneWithoutNullable(schema: SchemaObject): SchemaObject {
-  const clone = { ...schema };
-  if ("nullable" in clone) {
-    delete clone.nullable;
-  }
-  return clone;
-}
-
-/**
- * Check if a type array represents a nullable type (e.g., ["string", "null"])
- */
-export function analyzeTypeArray(types: string[]): {
-  isNullable: boolean;
-  nonNullTypes: string[];
-} {
-  const nonNullTypes = types.filter((t: string) => t !== "null");
-  const isNullable = types.includes("null");
-
-  return {
-    isNullable,
-    nonNullTypes,
-  };
-}
-
-/**
- * Add default value to zod code if present in schema
- */
-export function addDefaultValue(code: string, defaultValue: any): string {
-  if (defaultValue === undefined) {
-    return code;
-  }
-
-  const serializedDefault =
-    typeof defaultValue === "string"
-      ? JSON.stringify(defaultValue)
-      : JSON.stringify(defaultValue);
-
-  return `${code}.default(${serializedDefault})`;
 }
 
 /**
@@ -120,7 +120,7 @@ export function sanitizeIdentifier(name: string): string {
 
   if (parts.length === 0) {
     throw new Error(
-      `Cannot sanitize string '${name}' to identifier - no valid parts remaining`
+      `Cannot sanitize string '${name}' to identifier - no valid parts remaining`,
     );
   }
 
@@ -141,7 +141,7 @@ export function sanitizeIdentifier(name: string): string {
   // Ensure it's not empty after sanitization
   if (!sanitized) {
     throw new Error(
-      `Cannot sanitize string '${name}' to identifier - result is empty`
+      `Cannot sanitize string '${name}' to identifier - result is empty`,
     );
   }
 

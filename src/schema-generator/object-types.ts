@@ -1,17 +1,18 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
+
 import { addDefaultValue } from "./utils.js";
 
-// Import from schema-converter to avoid circular dependencies
-interface ZodSchemaResult {
-  code: string;
-  imports: Set<string>;
-  extensibleEnumValues?: any[];
-}
-
-interface ZodSchemaCodeOptions {
+type ZodSchemaCodeOptions = {
   imports?: Set<string>;
   isTopLevel?: boolean;
-}
+};
+
+// Import from schema-converter to avoid circular dependencies
+type ZodSchemaResult = {
+  code: string;
+  extensibleEnumValues?: any[];
+  imports: Set<string>;
+};
 
 /**
  * Handle object type conversion
@@ -21,8 +22,8 @@ export function handleObjectType(
   result: ZodSchemaResult,
   zodSchemaToCode: (
     schema: any,
-    options?: ZodSchemaCodeOptions
-  ) => ZodSchemaResult
+    options?: ZodSchemaCodeOptions,
+  ) => ZodSchemaResult,
 ): ZodSchemaResult {
   const shape: string[] = [];
   const requiredFields = schema.required || [];
@@ -32,7 +33,7 @@ export function handleObjectType(
       const propResult = zodSchemaToCode(propSchema, {
         imports: result.imports,
       });
-      result.imports = new Set([...result.imports, ...propResult.imports]);
+      result.imports = new Set([...propResult.imports, ...result.imports]);
 
       const isRequired = requiredFields.includes(key);
       const propCode = isRequired
@@ -53,8 +54,8 @@ export function handleObjectType(
         imports: result.imports,
       });
       result.imports = new Set([
-        ...result.imports,
         ...additionalResult.imports,
+        ...result.imports,
       ]);
       code += `.catchall(${additionalResult.code})`;
     }

@@ -1,5 +1,44 @@
 import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
+
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+
+/**
+ * Apply generated operation IDs to OpenAPI document
+ * Modifies the document in-place to add missing operation IDs
+ */
+export function applyGeneratedOperationIds(openApiDoc: OpenAPIObject): void {
+  if (!openApiDoc.paths) {
+    return;
+  }
+
+  const operationIds = generateUniqueOperationIds(openApiDoc.paths);
+
+  for (const [path, pathItem] of Object.entries(openApiDoc.paths)) {
+    const pathItemObj = pathItem;
+
+    // Define the HTTP methods we support
+    const httpMethods: {
+      method: string;
+      operation: OperationObject | undefined;
+    }[] = [
+      { method: "get", operation: pathItemObj.get },
+      { method: "post", operation: pathItemObj.post },
+      { method: "put", operation: pathItemObj.put },
+      { method: "delete", operation: pathItemObj.delete },
+      { method: "patch", operation: pathItemObj.patch },
+    ];
+
+    for (const { method, operation } of httpMethods) {
+      if (operation) {
+        const key = `${method}:${path}`;
+        const generatedId = operationIds.get(key);
+        if (generatedId && !operation.operationId) {
+          operation.operationId = generatedId;
+        }
+      }
+    }
+  }
+}
 
 /**
  * Generate operation ID from HTTP method and path
@@ -19,15 +58,15 @@ export function generateOperationId(method: string, path: string): string {
       }
       return segment;
     })
-    .map((segment) => {
+    .map((segment) =>
       // Split by dashes and underscores and capitalize each word, then join
-      return segment
+      segment
         .split(/[-_]/)
         .map((word) => word.replace(/[^a-zA-Z0-9]/g, ""))
         .filter((word) => word)
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join("");
-    })
+        .join(""),
+    )
     .filter((segment) => segment);
 
   // Simple concatenation: method + all path parts
@@ -38,31 +77,16 @@ export function generateOperationId(method: string, path: string): string {
 }
 
 /**
- * Get or generate operation ID for an OpenAPI operation
- */
-export function getOrGenerateOperationId(
-  operation: { operationId?: string },
-  method: string,
-  path: string
-): string {
-  if (operation.operationId) {
-    return sanitizeIdentifier(operation.operationId);
-  }
-
-  return generateOperationId(method, path);
-}
-
-/**
  * Generate unique operation IDs with O(n) collision resolution
  * Groups collisions first, then resolves them in batch
  */
 export function generateUniqueOperationIds(
-  paths: Record<string, any>
+  paths: Record<string, any>,
 ): Map<string, string> {
   const operationIds = new Map<string, string>();
   const collisionGroups = new Map<
     string,
-    Array<{ method: string; path: string; key: string }>
+    { key: string; method: string; path: string }[]
   >();
 
   // O(n) - First pass: group operations by their generated ID
@@ -75,7 +99,7 @@ export function generateUniqueOperationIds(
         if (!collisionGroups.has(operationId)) {
           collisionGroups.set(operationId, []);
         }
-        collisionGroups.get(operationId)!.push({ method, path, key });
+        collisionGroups.get(operationId)!.push({ key, method, path });
       }
     }
   }
@@ -98,39 +122,16 @@ export function generateUniqueOperationIds(
 }
 
 /**
- * Apply generated operation IDs to OpenAPI document
- * Modifies the document in-place to add missing operation IDs
+ * Get or generate operation ID for an OpenAPI operation
  */
-export function applyGeneratedOperationIds(openApiDoc: OpenAPIObject): void {
-  if (!openApiDoc.paths) {
-    return;
+export function getOrGenerateOperationId(
+  operation: { operationId?: string },
+  method: string,
+  path: string,
+): string {
+  if (operation.operationId) {
+    return sanitizeIdentifier(operation.operationId);
   }
 
-  const operationIds = generateUniqueOperationIds(openApiDoc.paths);
-
-  for (const [path, pathItem] of Object.entries(openApiDoc.paths)) {
-    const pathItemObj = pathItem;
-
-    // Define the HTTP methods we support
-    const httpMethods: Array<{
-      method: string;
-      operation: OperationObject | undefined;
-    }> = [
-      { method: "get", operation: pathItemObj.get },
-      { method: "post", operation: pathItemObj.post },
-      { method: "put", operation: pathItemObj.put },
-      { method: "delete", operation: pathItemObj.delete },
-      { method: "patch", operation: pathItemObj.patch },
-    ];
-
-    for (const { method, operation } of httpMethods) {
-      if (operation) {
-        const key = `${method}:${path}`;
-        const generatedId = operationIds.get(key);
-        if (generatedId && !operation.operationId) {
-          operation.operationId = generatedId;
-        }
-      }
-    }
-  }
+  return generateOperationId(method, path);
 }

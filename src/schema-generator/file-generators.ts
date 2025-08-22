@@ -1,13 +1,40 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
+
 import { format } from "prettier";
+
 import { zodSchemaToCode } from "./schema-converter.js";
 
 /**
  * Schema file generation result
  */
-export interface SchemaFileResult {
+export type SchemaFileResult = {
   content: string;
   fileName: string;
+};
+
+/**
+ * Generates file content for a request schema
+ */
+export async function generateRequestSchemaFile(
+  name: string,
+  schema: SchemaObject,
+): Promise<SchemaFileResult> {
+  const schemaVar = `${name.charAt(0).toUpperCase() + name.slice(1)}`;
+  const description = `Request schema for ${name.replace("Request", "")} operation`;
+
+  return generateSchemaFile(schemaVar, schema, description);
+}
+
+/**
+ * Generates file content for a response schema
+ */
+export async function generateResponseSchemaFile(
+  name: string,
+  schema: SchemaObject,
+): Promise<SchemaFileResult> {
+  const description = `Response schema for ${name.replace(/Response$/, "").replace(/\d+Response/, " operation")}`;
+
+  return generateSchemaFile(name, schema, description);
 }
 
 /**
@@ -16,7 +43,7 @@ export interface SchemaFileResult {
 export async function generateSchemaFile(
   name: string,
   schema: SchemaObject,
-  description?: string
+  description?: string,
 ): Promise<SchemaFileResult> {
   const schemaResult = zodSchemaToCode(schema, { isTopLevel: true });
 
@@ -63,29 +90,4 @@ export async function generateSchemaFile(
     content: formattedContent,
     fileName: `${name}.ts`,
   };
-}
-
-/**
- * Generates file content for a request schema
- */
-export async function generateRequestSchemaFile(
-  name: string,
-  schema: SchemaObject
-): Promise<SchemaFileResult> {
-  const schemaVar = `${name.charAt(0).toUpperCase() + name.slice(1)}`;
-  const description = `Request schema for ${name.replace("Request", "")} operation`;
-
-  return generateSchemaFile(schemaVar, schema, description);
-}
-
-/**
- * Generates file content for a response schema
- */
-export async function generateResponseSchemaFile(
-  name: string,
-  schema: SchemaObject
-): Promise<SchemaFileResult> {
-  const description = `Response schema for ${name.replace(/Response$/, "").replace(/\d+Response/, " operation")}`;
-
-  return generateSchemaFile(name, schema, description);
 }

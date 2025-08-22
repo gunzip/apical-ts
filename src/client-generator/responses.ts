@@ -1,30 +1,31 @@
 import type { OperationObject, ResponseObject } from "openapi3-ts/oas31";
-import { getResponseContentType } from "./utils.js";
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
 
-/**
- * Information about response types and handlers
- */
-export interface ResponseTypeInfo {
-  typeName: string | null;
-  typeImports: Set<string>;
-  responseHandlers: string[];
-}
+import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { getResponseContentType } from "./utils.js";
 
 /**
  * Result of response handler generation
  */
-export interface ResponseHandlerResult {
-  returnType: string;
+export type ResponseHandlerResult = {
   responseHandlers: string[];
-}
+  returnType: string;
+};
+
+/**
+ * Information about response types and handlers
+ */
+export type ResponseTypeInfo = {
+  responseHandlers: string[];
+  typeImports: Set<string>;
+  typeName: null | string;
+};
 
 /**
  * Generates response handling code and determines return type using discriminated unions
  */
 export function generateResponseHandlers(
   operation: OperationObject,
-  typeImports: Set<string>
+  typeImports: Set<string>,
 ): ResponseHandlerResult {
   const responseHandlers: string[] = [];
   const unionTypes: string[] = [];
@@ -32,7 +33,7 @@ export function generateResponseHandlers(
   if (operation.responses) {
     // Sort all response codes (both success and error)
     const responseCodes = Object.keys(operation.responses).filter(
-      (code) => code !== "default"
+      (code) => code !== "default",
     );
     responseCodes.sort((a, b) => parseInt(a) - parseInt(b));
 
@@ -40,7 +41,7 @@ export function generateResponseHandlers(
       const response = operation.responses[code] as ResponseObject;
       const contentType = getResponseContentType(response);
 
-      let typeName: string | null = null;
+      let typeName: null | string = null;
       let parseCode = "undefined";
 
       if (contentType && response.content?.[contentType]?.schema) {
@@ -96,5 +97,5 @@ export function generateResponseHandlers(
       ? unionTypes.join(" | ")
       : "ApiResponse<number, unknown>";
 
-  return { returnType, responseHandlers };
+  return { responseHandlers, returnType };
 }

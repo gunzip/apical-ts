@@ -4,108 +4,38 @@ import type {
   ParameterObject,
   ReferenceObject,
 } from "openapi3-ts/oas31";
+
 import { isReferenceObject } from "openapi3-ts/oas31";
-import { toCamelCase, toValidVariableName } from "./utils.js";
-import type { SecurityHeader } from "./security.js";
+
 import type { RequestBodyTypeInfo } from "./request-body.js";
+import type { SecurityHeader } from "./security.js";
+
+import { toCamelCase, toValidVariableName } from "./utils.js";
 
 /**
  * Grouped parameters by their location
  */
-export interface ParameterGroups {
+export type ParameterGroups = {
+  headerParams: ParameterObject[];
   pathParams: ParameterObject[];
   queryParams: ParameterObject[];
-  headerParams: ParameterObject[];
-}
+};
 
 /**
  * Processed parameter groups with security information
  */
-export interface ProcessedParameterGroup {
+export type ProcessedParameterGroup = {
+  headerParams: ParameterObject[];
+  isHeadersOptional: boolean;
+  isQueryOptional: boolean;
   pathParams: ParameterObject[];
   queryParams: ParameterObject[];
-  headerParams: ParameterObject[];
   securityHeaders: {
-    schemeName: string;
     headerName: string;
     isRequired: boolean;
+    schemeName: string;
   }[];
-  isQueryOptional: boolean;
-  isHeadersOptional: boolean;
-}
-
-/**
- * Resolves parameter references to actual parameter objects
- */
-export function resolveParameterReference(
-  param: ParameterObject | ReferenceObject,
-  doc: OpenAPIObject
-): ParameterObject {
-  if (isReferenceObject(param)) {
-    const refPath = param.$ref.replace("#/", "").split("/");
-    let resolved = doc as any;
-    for (const segment of refPath) {
-      resolved = resolved[segment];
-    }
-    return resolved as ParameterObject;
-  }
-  return param;
-}
-
-/**
- * Extracts and groups parameters from operation and path-level definitions
- */
-export function extractParameterGroups(
-  operation: OperationObject,
-  pathLevelParameters: (ParameterObject | ReferenceObject)[],
-  doc: OpenAPIObject
-): ParameterGroups {
-  // Resolve parameter references and combine path-level and operation-level parameters
-  const resolvedPathLevelParams = pathLevelParameters.map((p) =>
-    resolveParameterReference(p, doc)
-  );
-  const resolvedOperationParams = (operation.parameters || []).map((p) =>
-    resolveParameterReference(p, doc)
-  );
-  const allParameters = [
-    ...resolvedPathLevelParams,
-    ...resolvedOperationParams,
-  ];
-
-  return {
-    pathParams: allParameters.filter((p) => p.in === "path"),
-    queryParams: allParameters.filter((p) => p.in === "query"),
-    headerParams: allParameters.filter((p) => p.in === "header"),
-  };
-}
-
-/**
- * Processes parameter groups and security headers, determining optionality
- */
-export function processParameterGroups(
-  parameterGroups: ParameterGroups,
-  operationSecurityHeaders?: SecurityHeader[]
-): ProcessedParameterGroup {
-  const { pathParams, queryParams, headerParams } = parameterGroups;
-  const securityHeaders = operationSecurityHeaders || [];
-
-  // Determine if query section is optional (all query params are optional)
-  const isQueryOptional = queryParams.every((p) => p.required !== true);
-
-  // Determine if headers section is optional (all headers are optional)
-  const isHeadersOptional =
-    headerParams.every((p) => p.required !== true) &&
-    securityHeaders.every((h) => !h.isRequired);
-
-  return {
-    pathParams,
-    queryParams,
-    headerParams,
-    securityHeaders,
-    isQueryOptional,
-    isHeadersOptional,
-  };
-}
+};
 
 /**
  * Builds the destructured parameter signature for a function
@@ -114,18 +44,18 @@ export function buildDestructuredParameters(
   parameterGroups: ParameterGroups,
   hasBody: boolean,
   bodyTypeInfo?: RequestBodyTypeInfo,
-  operationSecurityHeaders?: SecurityHeader[]
+  operationSecurityHeaders?: SecurityHeader[],
 ): string {
   const processed = processParameterGroups(
     parameterGroups,
-    operationSecurityHeaders
+    operationSecurityHeaders,
   );
   const destructureParams: string[] = [];
 
   // Path parameters
   if (processed.pathParams.length > 0) {
     const pathProperties = processed.pathParams.map((param) =>
-      toCamelCase(param.name)
+      toCamelCase(param.name),
     );
     destructureParams.push(`path: { ${pathProperties.join(", ")} }`);
   }
@@ -133,11 +63,11 @@ export function buildDestructuredParameters(
   // Query parameters
   if (processed.queryParams.length > 0) {
     const queryProperties = processed.queryParams.map((param) =>
-      toCamelCase(param.name)
+      toCamelCase(param.name),
     );
     const defaultValue = processed.isQueryOptional ? " = {}" : "";
     destructureParams.push(
-      `query: { ${queryProperties.join(", ")} }${defaultValue}`
+      `query: { ${queryProperties.join(", ")} }${defaultValue}`,
     );
   }
 
@@ -167,7 +97,7 @@ export function buildDestructuredParameters(
 
     const defaultValue = processed.isHeadersOptional ? " = {}" : "";
     destructureParams.push(
-      `headers: { ${headerProperties.join(", ")} }${defaultValue}`
+      `headers: { ${headerProperties.join(", ")} }${defaultValue}`,
     );
   }
 
@@ -189,18 +119,18 @@ export function buildParameterInterface(
   parameterGroups: ParameterGroups,
   hasBody: boolean,
   bodyTypeInfo?: RequestBodyTypeInfo,
-  operationSecurityHeaders?: SecurityHeader[]
+  operationSecurityHeaders?: SecurityHeader[],
 ): string {
   const processed = processParameterGroups(
     parameterGroups,
-    operationSecurityHeaders
+    operationSecurityHeaders,
   );
   const sections: string[] = [];
 
   // Path parameters section (never optional if present)
   if (processed.pathParams.length > 0) {
     const pathProperties = processed.pathParams.map(
-      (param) => `${toCamelCase(param.name)}: string`
+      (param) => `${toCamelCase(param.name)}: string`,
     );
     sections.push(`path: {\n    ${pathProperties.join(";\n    ")};\n  }`);
   }
@@ -213,7 +143,7 @@ export function buildParameterInterface(
     });
     const optionalMarker = processed.isQueryOptional ? "?" : "";
     sections.push(
-      `query${optionalMarker}: {\n    ${queryProperties.join(";\n    ")};\n  }`
+      `query${optionalMarker}: {\n    ${queryProperties.join(";\n    ")};\n  }`,
     );
   }
 
@@ -231,11 +161,11 @@ export function buildParameterInterface(
       // If the header name contains special characters, use quoted property syntax
       if (param.name !== varName) {
         headerProperties.push(
-          `"${param.name}"${isRequired ? "" : "?"}: string`
+          `"${param.name}"${isRequired ? "" : "?"}: string`,
         );
       } else {
         headerProperties.push(
-          `${toCamelCase(param.name)}${isRequired ? "" : "?"}: string`
+          `${toCamelCase(param.name)}${isRequired ? "" : "?"}: string`,
         );
       }
     });
@@ -244,13 +174,13 @@ export function buildParameterInterface(
     processed.securityHeaders.forEach((securityHeader) => {
       const requiredMarker = securityHeader.isRequired ? "" : "?";
       headerProperties.push(
-        `"${securityHeader.headerName}"${requiredMarker}: string`
+        `"${securityHeader.headerName}"${requiredMarker}: string`,
       );
     });
 
     const optionalMarker = processed.isHeadersOptional ? "?" : "";
     sections.push(
-      `headers${optionalMarker}: {\n    ${headerProperties.join(";\n    ")};\n  }`
+      `headers${optionalMarker}: {\n    ${headerProperties.join(";\n    ")};\n  }`,
     );
   }
 
@@ -265,10 +195,53 @@ export function buildParameterInterface(
 }
 
 /**
+ * Extracts and groups parameters from operation and path-level definitions
+ */
+export function extractParameterGroups(
+  operation: OperationObject,
+  pathLevelParameters: (ParameterObject | ReferenceObject)[],
+  doc: OpenAPIObject,
+): ParameterGroups {
+  // Resolve parameter references and combine path-level and operation-level parameters
+  const resolvedPathLevelParams = pathLevelParameters.map((p) =>
+    resolveParameterReference(p, doc),
+  );
+  const resolvedOperationParams = (operation.parameters || []).map((p) =>
+    resolveParameterReference(p, doc),
+  );
+  const allParameters = [
+    ...resolvedPathLevelParams,
+    ...resolvedOperationParams,
+  ];
+
+  return {
+    headerParams: allParameters.filter((p) => p.in === "header"),
+    pathParams: allParameters.filter((p) => p.in === "path"),
+    queryParams: allParameters.filter((p) => p.in === "query"),
+  };
+}
+
+/**
+ * Generates header parameter handling code
+ */
+export function generateHeaderParamHandling(
+  headerParams: ParameterObject[],
+): string {
+  if (headerParams.length === 0) return "";
+
+  return headerParams
+    .map((p) => {
+      const varName = toValidVariableName(p.name);
+      return `if (${varName} !== undefined) finalHeaders['${p.name}'] = String(${varName});`;
+    })
+    .join("\n    ");
+}
+
+/**
  * Generates query parameter handling code
  */
 export function generateQueryParamHandling(
-  queryParams: ParameterObject[]
+  queryParams: ParameterObject[],
 ): string {
   if (queryParams.length === 0) return "";
 
@@ -281,17 +254,47 @@ export function generateQueryParamHandling(
 }
 
 /**
- * Generates header parameter handling code
+ * Processes parameter groups and security headers, determining optionality
  */
-export function generateHeaderParamHandling(
-  headerParams: ParameterObject[]
-): string {
-  if (headerParams.length === 0) return "";
+export function processParameterGroups(
+  parameterGroups: ParameterGroups,
+  operationSecurityHeaders?: SecurityHeader[],
+): ProcessedParameterGroup {
+  const { headerParams, pathParams, queryParams } = parameterGroups;
+  const securityHeaders = operationSecurityHeaders || [];
 
-  return headerParams
-    .map((p) => {
-      const varName = toValidVariableName(p.name);
-      return `if (${varName} !== undefined) finalHeaders['${p.name}'] = String(${varName});`;
-    })
-    .join("\n    ");
+  // Determine if query section is optional (all query params are optional)
+  const isQueryOptional = queryParams.every((p) => p.required !== true);
+
+  // Determine if headers section is optional (all headers are optional)
+  const isHeadersOptional =
+    headerParams.every((p) => p.required !== true) &&
+    securityHeaders.every((h) => !h.isRequired);
+
+  return {
+    headerParams,
+    isHeadersOptional,
+    isQueryOptional,
+    pathParams,
+    queryParams,
+    securityHeaders,
+  };
+}
+
+/**
+ * Resolves parameter references to actual parameter objects
+ */
+export function resolveParameterReference(
+  param: ParameterObject | ReferenceObject,
+  doc: OpenAPIObject,
+): ParameterObject {
+  if (isReferenceObject(param)) {
+    const refPath = param.$ref.replace("#/", "").split("/");
+    let resolved = doc as any;
+    for (const segment of refPath) {
+      resolved = resolved[segment];
+    }
+    return resolved as ParameterObject;
+  }
+  return param;
 }

@@ -1,44 +1,45 @@
-import type { SchemaObject, ReferenceObject } from "openapi3-ts/oas31";
+import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
+
 import { mergeImports } from "./utils.js";
+
+/**
+ * Discriminator configuration for discriminated unions
+ */
+export type DiscriminatorConfig = {
+  mapping?: Record<string, string>;
+  propertyName: string;
+};
 
 /**
  * Union handling types
  */
 export type UnionType = "anyOf" | "oneOf";
 
-/**
- * Discriminator configuration for discriminated unions
- */
-export interface DiscriminatorConfig {
-  propertyName: string;
-  mapping?: Record<string, string>;
-}
-
-// Import from schema-converter to avoid circular dependencies
-interface ZodSchemaResult {
-  code: string;
-  imports: Set<string>;
-  extensibleEnumValues?: any[];
-}
-
-interface ZodSchemaCodeOptions {
+type ZodSchemaCodeOptions = {
   imports?: Set<string>;
   isTopLevel?: boolean;
-}
+};
+
+// Import from schema-converter to avoid circular dependencies
+type ZodSchemaResult = {
+  code: string;
+  extensibleEnumValues?: any[];
+  imports: Set<string>;
+};
 
 /**
  * Handle allOf schema composition
  */
 export function handleAllOfSchema(
-  schemas: (SchemaObject | ReferenceObject)[],
+  schemas: (ReferenceObject | SchemaObject)[],
   result: ZodSchemaResult,
   zodSchemaToCode: (
     schema: any,
-    options?: ZodSchemaCodeOptions
-  ) => ZodSchemaResult
+    options?: ZodSchemaCodeOptions,
+  ) => ZodSchemaResult,
 ): ZodSchemaResult {
   const subResults = schemas.map((s) =>
-    zodSchemaToCode(s, { imports: result.imports })
+    zodSchemaToCode(s, { imports: result.imports }),
   );
   const schemaCodes = subResults.map((r) => r.code);
   subResults.forEach((r) => {
@@ -56,7 +57,7 @@ export function handleAllOfSchema(
 
   // If all are objects, merge; else intersection
   result.code = schemaCodes.reduce(
-    (acc, curr) => `z.intersection(${acc}, ${curr})`
+    (acc, curr) => `z.intersection(${acc}, ${curr})`,
   );
   return result;
 }
@@ -65,20 +66,20 @@ export function handleAllOfSchema(
  * Handle anyOf/oneOf union schemas with shared logic
  */
 export function handleUnionSchema(
-  schemas: (SchemaObject | ReferenceObject)[],
+  schemas: (ReferenceObject | SchemaObject)[],
   unionType: UnionType,
   result: ZodSchemaResult,
   zodSchemaToCode: (
     schema: any,
-    options?: ZodSchemaCodeOptions
+    options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
-  discriminator?: DiscriminatorConfig
+  discriminator?: DiscriminatorConfig,
 ): ZodSchemaResult {
   // Check if discriminator is present for discriminated unions
   if (discriminator && discriminator.propertyName) {
     const discriminatorProperty = discriminator.propertyName;
     const subResults = schemas.map((s) =>
-      zodSchemaToCode(s, { imports: result.imports })
+      zodSchemaToCode(s, { imports: result.imports }),
     );
     const schemasCodes = subResults.map((r) => r.code);
     subResults.forEach((r) => {
@@ -101,7 +102,7 @@ export function handleUnionSchema(
 
   // Regular union without discriminator
   const subResults = schemas.map((s) =>
-    zodSchemaToCode(s, { imports: result.imports })
+    zodSchemaToCode(s, { imports: result.imports }),
   );
   const schemasCodes = subResults.map((r) => r.code);
   subResults.forEach((r) => {

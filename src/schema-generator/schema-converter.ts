@@ -1,4 +1,17 @@
-import type { SchemaObject, ReferenceObject } from "openapi3-ts/oas31";
+import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
+
+/**
+ * Union type for OpenAPI schema types
+ */
+export type OpenAPISchema = ReferenceObject | SchemaObject;
+
+/**
+ * Options for zodSchemaToCode function
+ */
+export type ZodSchemaCodeOptions = {
+  imports?: Set<string>;
+  isTopLevel?: boolean;
+};
 
 /**
  * Result of converting an OpenAPI schema to Zod code
@@ -11,49 +24,37 @@ import type { SchemaObject, ReferenceObject } from "openapi3-ts/oas31";
  * };
  * ```
  */
-export interface ZodSchemaResult {
+export type ZodSchemaResult = {
   code: string;
-  imports: Set<string>;
   extensibleEnumValues?: any[];
-}
-
-/**
- * Options for zodSchemaToCode function
- */
-export interface ZodSchemaCodeOptions {
-  imports?: Set<string>;
-  isTopLevel?: boolean;
-}
-
-/**
- * Union type for OpenAPI schema types
- */
-export type OpenAPISchema = SchemaObject | ReferenceObject;
+  imports: Set<string>;
+};
 import { isSchemaObject } from "openapi3-ts/oas31";
+
+import { handleRegularEnum } from "./enum-handlers.js";
+import { handleObjectType } from "./object-types.js";
 import {
+  handleArrayType,
+  handleBooleanType,
+  handleNumberType,
+  handleStringType,
+} from "./primitive-types.js";
+import { handleReference } from "./reference-handlers.js";
+import { handleAllOfSchema, handleUnionSchema } from "./union-types.js";
+import {
+  analyzeTypeArray,
+  cloneWithoutNullable,
   inferEffectiveType,
   isNullable,
-  cloneWithoutNullable,
-  analyzeTypeArray,
   mergeImports,
 } from "./utils.js";
-import { handleReference } from "./reference-handlers.js";
-import { handleRegularEnum } from "./enum-handlers.js";
-import {
-  handleStringType,
-  handleNumberType,
-  handleBooleanType,
-  handleArrayType,
-} from "./primitive-types.js";
-import { handleObjectType } from "./object-types.js";
-import { handleAllOfSchema, handleUnionSchema } from "./union-types.js";
 
 /**
  * Converts an OpenAPI schema object to Zod validation code
  */
 export function zodSchemaToCode(
-  schema: SchemaObject | ReferenceObject,
-  options: ZodSchemaCodeOptions = {}
+  schema: ReferenceObject | SchemaObject,
+  options: ZodSchemaCodeOptions = {},
 ): ZodSchemaResult {
   const { imports } = options;
   const result: ZodSchemaResult = {
@@ -87,7 +88,7 @@ export function zodSchemaToCode(
       const subResults = effectiveType.map((t: string) =>
         zodSchemaToCode({ ...schema, type: t } as SchemaObject, {
           imports: result.imports,
-        })
+        }),
       );
       const schemas = subResults.map((r: ZodSchemaResult) => r.code);
       subResults.forEach((r: ZodSchemaResult) => {
@@ -126,7 +127,7 @@ export function zodSchemaToCode(
       "anyOf",
       result,
       zodSchemaToCode,
-      schema.discriminator
+      schema.discriminator,
     );
   }
 
@@ -136,7 +137,7 @@ export function zodSchemaToCode(
       "oneOf",
       result,
       zodSchemaToCode,
-      schema.discriminator
+      schema.discriminator,
     );
   }
 

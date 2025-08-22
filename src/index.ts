@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+
 import packageInfo from "../package.json" with { type: "json" };
 import { generate } from "./core-generator/index.js";
 
@@ -16,7 +17,7 @@ program
   .description("Generate the client.")
   .requiredOption(
     "-i, --input <path>",
-    "Path to the OpenAPI specification file."
+    "Path to the OpenAPI specification file.",
   )
   .requiredOption("-o, --output <path>", "Path to the output directory.")
   .option("--generate-client", "Generate the full HTTP client.", false)

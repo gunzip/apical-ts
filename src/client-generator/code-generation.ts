@@ -1,15 +1,16 @@
 import type { ParameterObject } from "openapi3-ts/oas31";
-import { generatePathInterpolation } from "./utils.js";
+
 import {
-  generateQueryParamHandling,
   generateHeaderParamHandling,
+  generateQueryParamHandling,
   type ParameterGroups,
 } from "./parameters.js";
+import { generateRequestBodyHandling } from "./request-body.js";
 import {
   generateSecurityHeaderHandling,
   type SecurityHeader,
 } from "./security.js";
-import { generateRequestBodyHandling } from "./request-body.js";
+import { generatePathInterpolation } from "./utils.js";
 
 /**
  * Generates the function body for an operation with explicit exhaustive handling
@@ -28,9 +29,9 @@ export function generateFunctionBody(
   requestContentType?: string,
   operationSecurityHeaders?: SecurityHeader[],
   overridesSecurity?: boolean,
-  authHeaders?: string[]
+  authHeaders?: string[],
 ): string {
-  const { pathParams, queryParams, headerParams } = parameterGroups;
+  const { headerParams, pathParams, queryParams } = parameterGroups;
 
   const finalPath = generatePathInterpolation(pathKey, pathParams);
   const queryParamLines = generateQueryParamHandling(queryParams);
@@ -42,7 +43,7 @@ export function generateFunctionBody(
 
   const { bodyContent, contentTypeHeader } = generateRequestBodyHandling(
     hasBody,
-    requestContentType
+    requestContentType,
   );
 
   return `  const finalHeaders = {

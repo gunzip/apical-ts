@@ -3,16 +3,17 @@ import type {
   OperationObject,
   SecuritySchemeObject,
 } from "openapi3-ts/oas31";
+
 import { toValidVariableName } from "./utils.js";
 
 /**
  * Security header information for operations
  */
-export interface SecurityHeader {
-  schemeName: string;
+export type SecurityHeader = {
   headerName: string;
   isRequired: boolean;
-}
+  schemeName: string;
+};
 
 /**
  * Extracts global auth header names from security schemes (only those used globally)
@@ -33,7 +34,7 @@ export function extractAuthHeaders(doc: OpenAPIObject): string[] {
 
     // Map global security schemes to their headers
     for (const [name, scheme] of Object.entries(
-      doc.components.securitySchemes
+      doc.components.securitySchemes,
     )) {
       if (globalSecuritySchemes.has(name)) {
         const securityScheme = scheme as SecuritySchemeObject;
@@ -57,10 +58,23 @@ export function extractAuthHeaders(doc: OpenAPIObject): string[] {
 }
 
 /**
- * Checks if an operation overrides global security (either empty or with specific schemes)
+ * Generates security header handling code from params
  */
-export function hasSecurityOverride(operation: OperationObject): boolean {
-  return operation.security !== undefined;
+export function generateSecurityHeaderHandling(
+  operationSecurityHeaders: SecurityHeader[],
+): string {
+  if (operationSecurityHeaders.length === 0) return "";
+
+  return operationSecurityHeaders
+    .map((securityHeader) => {
+      const varName = toValidVariableName(securityHeader.headerName);
+      if (securityHeader.isRequired) {
+        return `finalHeaders['${securityHeader.headerName}'] = ${varName};`;
+      } else {
+        return `if (${varName} !== undefined) finalHeaders['${securityHeader.headerName}'] = ${varName};`;
+      }
+    })
+    .join("\n    ");
 }
 
 /**
@@ -68,7 +82,7 @@ export function hasSecurityOverride(operation: OperationObject): boolean {
  */
 export function getOperationSecuritySchemes(
   operation: OperationObject,
-  doc: OpenAPIObject
+  doc: OpenAPIObject,
 ): SecurityHeader[] {
   const operationSecurityHeaders: SecurityHeader[] = [];
 
@@ -84,7 +98,7 @@ export function getOperationSecuritySchemes(
       ] as SecuritySchemeObject;
       if (!scheme) continue;
 
-      let headerName: string | null = null;
+      let headerName: null | string = null;
 
       if (scheme.type === "apiKey" && scheme.in === "header" && scheme.name) {
         headerName = scheme.name;
@@ -94,9 +108,9 @@ export function getOperationSecuritySchemes(
 
       if (headerName) {
         operationSecurityHeaders.push({
-          schemeName,
           headerName,
           isRequired: true, // Operation-specific security is always required
+          schemeName,
         });
       }
     }
@@ -106,21 +120,8 @@ export function getOperationSecuritySchemes(
 }
 
 /**
- * Generates security header handling code from params
+ * Checks if an operation overrides global security (either empty or with specific schemes)
  */
-export function generateSecurityHeaderHandling(
-  operationSecurityHeaders: SecurityHeader[]
-): string {
-  if (operationSecurityHeaders.length === 0) return "";
-
-  return operationSecurityHeaders
-    .map((securityHeader) => {
-      const varName = toValidVariableName(securityHeader.headerName);
-      if (securityHeader.isRequired) {
-        return `finalHeaders['${securityHeader.headerName}'] = ${varName};`;
-      } else {
-        return `if (${varName} !== undefined) finalHeaders['${securityHeader.headerName}'] = ${varName};`;
-      }
-    })
-    .join("\n    ");
+export function hasSecurityOverride(operation: OperationObject): boolean {
+  return operation.security !== undefined;
 }

@@ -2,31 +2,32 @@ import type {
   OpenAPIObject,
   OperationObject,
   ParameterObject,
-  RequestBodyObject,
   ReferenceObject,
+  RequestBodyObject,
 } from "openapi3-ts/oas31";
+
+import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { generateFunctionBody } from "./code-generation.js";
 import { extractParameterGroups } from "./parameters.js";
 import {
-  buildParameterInterface,
   buildDestructuredParameters,
+  buildParameterInterface,
 } from "./parameters.js";
-import { generateResponseHandlers } from "./responses.js";
 import { resolveRequestBodyType } from "./request-body.js";
+import { generateResponseHandlers } from "./responses.js";
 import {
+  extractAuthHeaders,
   getOperationSecuritySchemes,
   hasSecurityOverride,
-  extractAuthHeaders,
 } from "./security.js";
-import { generateFunctionBody } from "./code-generation.js";
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
 
 /**
  * Result of generating a function with imports
  */
-export interface GeneratedFunction {
+export type GeneratedFunction = {
   functionCode: string;
   typeImports: Set<string>;
-}
+};
 
 /**
  * Generates a single operation function
@@ -37,7 +38,7 @@ export function generateOperationFunction(
   method: string,
   operation: OperationObject,
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
-  doc: OpenAPIObject
+  doc: OpenAPIObject,
 ): GeneratedFunction {
   const functionName: string = sanitizeIdentifier(operation.operationId!);
 
@@ -48,7 +49,7 @@ export function generateOperationFunction(
   const parameterGroups = extractParameterGroups(
     operation,
     pathLevelParameters,
-    doc
+    doc,
   );
   const hasBody = !!operation.requestBody;
 
@@ -71,7 +72,7 @@ export function generateOperationFunction(
     parameterGroups,
     hasBody,
     bodyTypeInfo,
-    operationSecurityHeaders
+    operationSecurityHeaders,
   );
 
   // Build destructured parameters for function signature
@@ -79,13 +80,13 @@ export function generateOperationFunction(
     parameterGroups,
     hasBody,
     bodyTypeInfo,
-    operationSecurityHeaders
+    operationSecurityHeaders,
   );
 
   // Generate response handlers and return type
-  const { returnType, responseHandlers } = generateResponseHandlers(
+  const { responseHandlers, returnType } = generateResponseHandlers(
     operation,
-    typeImports
+    typeImports,
   );
 
   // Check if operation overrides security (empty or specific schemes)
@@ -102,7 +103,7 @@ export function generateOperationFunction(
     requestContentType,
     operationSecurityHeaders,
     overridesSecurity,
-    authHeaders
+    authHeaders,
   );
 
   // Handle empty parameters case - use simple destructuring with default
