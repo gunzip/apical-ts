@@ -1,4 +1,4 @@
-# OpenAPI TypeScript Client Generator
+# OpenAPI TypeScript Generator
 
 ✨ Effortlessly turn your OpenAPI specifications into fully-typed Zod v4 schemas—ready for runtime (client or server) validation and TypeScript development.
 
@@ -8,9 +8,9 @@ Why choose this generator against alternatives? See [comparison](#comparison-ope
 
 See [supported features](#features) for more information.
 
-![Demo of OpenAPI TypeScript Client Generator](./demo.gif)
+![Demo of OpenAPI TypeScript Generator](./demo.gif)
 
-- [OpenAPI TypeScript Client Generator](#openapi-typescript-client-generator)
+- [OpenAPI TypeScript Generator](#openapi-typescript-generator)
   - [Installation](#installation)
     - [From GitHub Packages](#from-github-packages)
     - [For Development](#for-development)
