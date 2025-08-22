@@ -94,7 +94,7 @@ describe("Response Operations", () => {
   describe("testResponseHeader operation", () => {
     it("should return 201 response with headers", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testResponseHeader({});
