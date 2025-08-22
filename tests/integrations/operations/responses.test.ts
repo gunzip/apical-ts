@@ -234,7 +234,7 @@ describe("Response Operations", () => {
 
     it("should preserve response metadata", async () => {
       // Arrange
-      const client = createUnauthenticatedClient(baseURL);
+      const client = createAuthenticatedClient(baseURL, 'customToken');
 
       // Act
       const response = await client.testResponseHeader({});
