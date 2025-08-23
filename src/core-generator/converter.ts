@@ -160,6 +160,102 @@ export function isOpenAPI31(openapi: unknown): openapi is V31OpenAPIObject {
   );
 }
 
+/* Helper: normalize singular example to examples array */
+function applyExampleConversion(
+  source: V3SchemaObject,
+  target: V31SchemaObject,
+): void {
+  if (source.example !== undefined && source.examples === undefined) {
+    target.examples = [source.example];
+    delete (target as V3SchemaObject).example;
+  }
+}
+
+/* Helper: convert boolean exclusiveMinimum/Maximum to numeric values */
+function applyExclusiveBoundsConversion(
+  source: V3SchemaObject,
+  target: V31SchemaObject,
+): void {
+  if (typeof source.exclusiveMinimum === "boolean") {
+    if (source.exclusiveMinimum && typeof source.minimum === "number") {
+      target.exclusiveMinimum = source.minimum;
+      delete target.minimum;
+    } else {
+      delete target.exclusiveMinimum;
+    }
+  }
+  if (typeof source.exclusiveMaximum === "boolean") {
+    if (source.exclusiveMaximum && typeof source.maximum === "number") {
+      target.exclusiveMaximum = source.maximum;
+      delete target.maximum;
+    } else {
+      delete target.exclusiveMaximum;
+    }
+  }
+}
+
+/* Helper: convert legacy format markers for binary/base64 content */
+function applyFormatConversion(
+  source: V3SchemaObject,
+  target: V31SchemaObject,
+): void {
+  if (source.format === "binary") {
+    delete target.format;
+    target.contentMediaType = "application/octet-stream";
+  } else if (source.format === "base64") {
+    delete target.format;
+    target.contentEncoding = "base64";
+  }
+}
+
+/* Helper: recursively convert nested schema structures */
+function applyNestedSchemaConversion(
+  source: V3SchemaObject,
+  target: V31SchemaObject,
+): void {
+  if (source.properties) {
+    const convertedProperties: Record<
+      string,
+      V31ReferenceObject | V31SchemaObject
+    > = {};
+    for (const [propName, propSchema] of Object.entries(source.properties)) {
+      convertedProperties[propName] = convertSchema(propSchema);
+    }
+    target.properties = convertedProperties;
+  }
+  if (source.items) {
+    target.items = convertSchema(source.items);
+  }
+  if (
+    source.additionalProperties &&
+    typeof source.additionalProperties === "object"
+  ) {
+    target.additionalProperties = convertSchema(source.additionalProperties);
+  }
+  if (source.allOf) target.allOf = source.allOf.map(convertSchema);
+  if (source.anyOf) target.anyOf = source.anyOf.map(convertSchema);
+  if (source.oneOf) target.oneOf = source.oneOf.map(convertSchema);
+  if (source.not) target.not = convertSchema(source.not);
+}
+
+/* Helper: nullable -> type union conversion and nullable flag removal */
+function applyNullableConversion(
+  source: V3SchemaObject,
+  target: V31SchemaObject,
+): void {
+  if (!("nullable" in target)) return;
+  if (source.nullable === true && source.type) {
+    delete target.nullable;
+    if (Array.isArray(source.type)) {
+      if (!source.type.includes("null")) target.type = [...source.type, "null"];
+    } else {
+      target.type = [source.type, "null"];
+    }
+  } else if (source.nullable === false) {
+    delete target.nullable;
+  }
+}
+
 /**
  * Converts a media type object from 3.0 to 3.1 format
  */
@@ -246,30 +342,25 @@ function convertParameter(
 /**
  * Converts a path item from 3.0 to 3.1 format
  */
+
 function convertPathItem(pathItem: V3PathItemObject): V31PathItemObject {
   if (!pathItem || typeof pathItem !== "object") {
     return pathItem as V31PathItemObject;
   }
 
   const converted = { ...pathItem } as V31PathItemObject;
-
-  // Convert each operation
   const methods: (keyof Pick<
     V3PathItemObject,
     "delete" | "get" | "head" | "options" | "patch" | "post" | "put" | "trace"
   >)[] = ["get", "post", "put", "patch", "delete", "head", "options", "trace"];
-
   for (const method of methods) {
     if (pathItem[method]) {
       converted[method] = convertOperation(pathItem[method]);
     }
   }
-
-  // Convert parameters
   if (pathItem.parameters) {
     converted.parameters = pathItem.parameters.map(convertParameter);
   }
-
   return converted;
 }
 
@@ -282,7 +373,6 @@ function convertRequestBody(
   if (!requestBody || typeof requestBody !== "object") {
     return requestBody as V31ReferenceObject | V31RequestBodyObject;
   }
-
   if (isV3ReferenceObject(requestBody)) {
     return requestBody;
   }
@@ -334,107 +424,19 @@ function convertResponse(
 /**
  * Recursively converts a schema object from 3.0 to 3.1 format
  */
-// eslint-disable-next-line complexity
 function convertSchema(
   schema: V3ReferenceObject | V3SchemaObject,
 ): V31ReferenceObject | V31SchemaObject {
-  if (!schema || typeof schema !== "object") {
-    return schema;
-  }
-
-  // Handle reference objects
-  if (isV3ReferenceObject(schema)) {
-    return schema;
-  }
+  if (!schema || typeof schema !== "object") return schema;
+  if (isV3ReferenceObject(schema)) return schema;
 
   const converted = { ...schema } as V31SchemaObject;
 
-  // 1. Convert nullable to type arrays
-  if (schema.nullable === true && schema.type && "nullable" in converted) {
-    delete converted.nullable;
-    if (Array.isArray(schema.type)) {
-      if (!schema.type.includes("null")) {
-        converted.type = [...schema.type, "null"];
-      }
-    } else {
-      converted.type = [schema.type, "null"];
-    }
-  } else if (schema.nullable === false && "nullable" in converted) {
-    delete converted.nullable;
-  }
-
-  // 2. Convert exclusiveMinimum/exclusiveMaximum from boolean to numeric
-  if (typeof schema.exclusiveMinimum === "boolean") {
-    if (schema.exclusiveMinimum && typeof schema.minimum === "number") {
-      converted.exclusiveMinimum = schema.minimum;
-      delete converted.minimum;
-    } else {
-      delete converted.exclusiveMinimum;
-    }
-  }
-
-  if (typeof schema.exclusiveMaximum === "boolean") {
-    if (schema.exclusiveMaximum && typeof schema.maximum === "number") {
-      converted.exclusiveMaximum = schema.maximum;
-      delete converted.maximum;
-    } else {
-      delete converted.exclusiveMaximum;
-    }
-  }
-
-  // 3. Convert singular example to examples array
-  if (schema.example !== undefined && schema.examples === undefined) {
-    converted.examples = [schema.example];
-    delete converted.example;
-  }
-
-  // 4. Convert format: binary/base64 to contentEncoding/contentMediaType
-  if (schema.format === "binary") {
-    delete converted.format;
-    converted.contentMediaType = "application/octet-stream";
-  } else if (schema.format === "base64") {
-    delete converted.format;
-    converted.contentEncoding = "base64";
-  }
-
-  // Recursively convert nested schemas
-  if (schema.properties) {
-    const convertedProperties: Record<
-      string,
-      V31ReferenceObject | V31SchemaObject
-    > = {};
-    for (const [propName, propSchema] of Object.entries(schema.properties)) {
-      convertedProperties[propName] = convertSchema(propSchema);
-    }
-    converted.properties = convertedProperties;
-  }
-
-  if (schema.items) {
-    converted.items = convertSchema(schema.items);
-  }
-
-  if (
-    schema.additionalProperties &&
-    typeof schema.additionalProperties === "object"
-  ) {
-    converted.additionalProperties = convertSchema(schema.additionalProperties);
-  }
-
-  if (schema.allOf) {
-    converted.allOf = schema.allOf.map(convertSchema);
-  }
-
-  if (schema.anyOf) {
-    converted.anyOf = schema.anyOf.map(convertSchema);
-  }
-
-  if (schema.oneOf) {
-    converted.oneOf = schema.oneOf.map(convertSchema);
-  }
-
-  if (schema.not) {
-    converted.not = convertSchema(schema.not);
-  }
+  applyNullableConversion(schema, converted);
+  applyExclusiveBoundsConversion(schema, converted);
+  applyExampleConversion(schema, converted);
+  applyFormatConversion(schema, converted);
+  applyNestedSchemaConversion(schema, converted);
 
   return converted;
 }
