@@ -35,6 +35,20 @@ pnpm run build
 # Build time: ~2 seconds
 ```
 
+### pnpm Tasks
+
+- `pnpm run build`: builds the project using tsup (compiles TypeScript to dist/ without type checking)
+- `pnpm run lint`: runs eslint with autofix on src
+- `pnpm run lint:check`: runs eslint on src (no autofix)
+- `pnpm run format`: formats all files using Prettier (writes changes)
+- `pnpm run format:check`: checks formatting using Prettier (no changes written)
+- `pnpm run typecheck`: runs TypeScript type checking only (`tsc --noEmit`)
+- `pnpm run test`: runs all tests with Vitest
+- `pnpm run test:coverage`: runs tests with coverage report
+- `pnpm run start`: runs the CLI from dist/index.js
+
+Always run `pnpm run typecheck` for type validation, `pnpm run build` only for compilation. Use `pnpm run lint` and `pnpm run format` before committing code.
+
 **Preconditions**:
 
 - Dependencies must be installed with `pnpm install`

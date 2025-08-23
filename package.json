@@ -32,8 +32,7 @@
     "prepublishOnly": "pnpm run build",
     "release:patch": "pnpm version patch && git push && git push --tags",
     "release:minor": "pnpm version minor && git push && git push --tags",
-    "release:major": "pnpm version major && git push && git push --tags",
-    "test:publish": "./scripts/test-publish.sh"
+    "release:major": "pnpm version major && git push && git push --tags"
   },
   "keywords": [
     "openapi",
