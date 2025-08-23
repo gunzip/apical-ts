@@ -19,6 +19,9 @@ See [supported features](#features) for more information.
   - [Supported Input Formats](#supported-input-formats)
   - [Programmatic Usage](#programmatic-usage)
   - [Generated Architecture](#generated-architecture)
+  - [Handling Multiple Content Types (Request \& Response)](#handling-multiple-content-types-request--response)
+    - [Example: Endpoint with Multiple Request Content Types](#example-endpoint-with-multiple-request-content-types)
+    - [Example: Endpoint with Multiple Response Content Types](#example-endpoint-with-multiple-response-content-types)
   - [Using the Generated Operations](#using-the-generated-operations)
     - [Define Configuration](#define-configuration)
     - [Call Operations](#call-operations)
@@ -114,6 +117,101 @@ The generator creates:
 - **`operations/index.ts`** - Configuration types, immutable global config, and operation exports
 - **`operations/`** - Individual operation functions
 - **`schemas/`** - Zod schemas and TypeScript types
+
+## Handling Multiple Content Types (Request & Response)
+
+This generator fully supports OpenAPI endpoints that define multiple content types for both requests and responses. For each operation, the generated client:
+
+- Accepts a `contentType` property in the request object, which is an object with optional `request` and `response` keys, to specify which content type to use for the request and which to prefer for the response.
+- Returns a response typed according to the selected response content type.
+- Validates and parses the response according to the content type actually returned by the server.
+
+### Example: Endpoint with Multiple Request Content Types
+
+Suppose your OpenAPI spec defines an operation that accepts both `application/json` and `application/x-www-form-urlencoded` for the request body:
+
+```yaml
+requestBody:
+  content:
+    application/json:
+      schema:
+        $ref: "#/components/schemas/Pet"
+    application/x-www-form-urlencoded:
+      schema:
+        $ref: "#/components/schemas/PetForm"
+```
+
+The generated operation function will accept a `contentType` object to select the body and/or response format:
+
+```ts
+import { createPet } from "./generated/operations/index.js";
+
+// Send as JSON (default)
+await createPet({
+  body: { name: "Fluffy", status: "available" },
+});
+
+// Send as form-urlencoded
+await createPet({
+  body: { name: "Fluffy", status: "available" },
+  contentType: { request: "application/x-www-form-urlencoded" },
+});
+
+// Send as form-urlencoded and request a custom response type
+await createPet({
+  body: { name: "Fluffy", status: "available" },
+  contentType: {
+    request: "application/x-www-form-urlencoded",
+    response: "application/vnd.custom+json",
+  },
+});
+```
+
+### Example: Endpoint with Multiple Response Content Types
+
+Suppose an operation returns either JSON or XML:
+
+```yaml
+responses:
+  "200":
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/Pet"
+      application/xml:
+        schema:
+          $ref: "#/components/schemas/PetXml"
+```
+
+The generated response type will match the selected or default response content type:
+
+```ts
+const result = await getPetById({
+  petId: "123",
+  contentType: { response: "application/xml" },
+});
+
+if (result.status === 200) {
+  // result.data is typed as PetXml if response: "application/xml" was selected
+  // or as Pet if response: "application/json" was selected
+}
+```
+
+You can also use the provided helpers to handle all cases:
+
+```ts
+import { handleResponse } from "./generated/operations/index.js";
+
+handleResponse(result, {
+  200: {
+    "application/json": (data) => console.log("Pet:", data),
+    "application/xml": (data) => {
+      /* handle XML */
+    },
+  },
+  default: (res) => console.error("Other status", res.status),
+});
+```
 
 ## Using the Generated Operations
 
