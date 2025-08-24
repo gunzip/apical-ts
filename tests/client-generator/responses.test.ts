@@ -31,11 +31,11 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, User>");
+      expect(result.returnType).toBe("ApiResponse<200, User | { zodError: import(\"zod\").ZodError }>");
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 200:");
       expect(result.responseHandlers[0]).toContain(
-        "User.parse(await parseResponseBody(response))",
+        "User.safeParse(await parseResponseBody(response))",
       );
       expect(typeImports.has("User")).toBe(true);
     });
@@ -63,11 +63,11 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<201, CreateUser201Response>");
+      expect(result.returnType).toBe("ApiResponse<201, CreateUser201Response | { zodError: import(\"zod\").ZodError }>");
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 201:");
       expect(result.responseHandlers[0]).toContain(
-        "CreateUser201Response.parse(await parseResponseBody(response))",
+        "CreateUser201Response.safeParse(await parseResponseBody(response))",
       );
       expect(typeImports.has("CreateUser201Response")).toBe(true);
     });
@@ -99,7 +99,7 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "ApiResponse<200, User> | ApiResponse<404, Error>",
+        "ApiResponse<200, User | { zodError: import(\"zod\").ZodError }> | ApiResponse<404, Error | { zodError: import(\"zod\").ZodError }>",
       );
       expect(result.responseHandlers).toHaveLength(2);
       expect(result.responseHandlers[0]).toContain("case 200:");
@@ -261,7 +261,7 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "ApiResponse<200, UserProfileData200Response>",
+        "ApiResponse<200, UserProfileData200Response | { zodError: import(\"zod\").ZodError }>",
       );
       expect(typeImports.has("UserProfileData200Response")).toBe(true);
     });
@@ -284,9 +284,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, ApiData>");
+      expect(result.returnType).toBe("ApiResponse<200, ApiData | { zodError: import(\"zod\").ZodError }>");
       expect(result.responseHandlers[0]).toContain(
-        "ApiData.parse(await parseResponseBody(response))",
+        "ApiData.safeParse(await parseResponseBody(response))",
       );
       expect(typeImports.has("ApiData")).toBe(true);
     });
@@ -313,9 +313,9 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       // Should prefer JSON content type (getResponseContentType logic)
-      expect(result.returnType).toBe("ApiResponse<200, Data>");
+      expect(result.returnType).toBe("ApiResponse<200, Data | { zodError: import(\"zod\").ZodError }>");
       expect(result.responseHandlers[0]).toContain(
-        "Data.parse(await parseResponseBody(response))",
+        "Data.safeParse(await parseResponseBody(response))",
       );
       expect(typeImports.has("Data")).toBe(true);
     });

@@ -104,7 +104,7 @@ export function generateResponseHandlers(
       let parseCode = "undefined";
 
       if (contentType && response.content?.[contentType]?.schema) {
-        const { parseExpression, resolvedTypeName } = buildParseInfo({
+        const { parseExpression, resolvedTypeName, usesZodValidation } = buildParseInfo({
           code,
           contentType,
           hasResponseContentTypeMap,
@@ -114,10 +114,19 @@ export function generateResponseHandlers(
         });
         typeName = resolvedTypeName;
         parseCode = parseExpression;
+        
+        /* 
+         * For responses that use Zod validation, the data type could be either
+         * the successfully parsed type or a validation error object
+         */
+        const dataType = usesZodValidation 
+          ? `${typeName} | { zodError: import("zod").ZodError }`
+          : typeName;
+        unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
+      } else {
+        const dataType = typeName || (contentType ? "unknown" : "void");
+        unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
       }
-
-      const dataType = typeName || (contentType ? "unknown" : "void");
-      unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
 
       if (typeName || contentType) {
         responseHandlers.push(
@@ -162,9 +171,10 @@ function buildParseInfo({
   operation: OperationObject;
   response: ResponseObject;
   typeImports: Set<string>;
-}): { parseExpression: string; resolvedTypeName: string } {
+}): { parseExpression: string; resolvedTypeName: string; usesZodValidation: boolean } {
   let parseExpression = "undefined";
   let resolvedTypeName = "";
+  let usesZodValidation = false;
   // Get all content types for this response
   const allContentTypes = Object.keys(response.content || {});
   // Check if any content type is JSON-like
@@ -201,16 +211,19 @@ function buildParseInfo({
     // Choose the correct parse expression based on content type
     if (mixedJsonAndNonJson && hasResponseContentTypeMap) {
       // If both JSON and non-JSON are present, select parse logic at runtime
-      parseExpression = `(finalResponseContentType.includes("json") || finalResponseContentType.includes("+json")) ? ${resolvedTypeName}.parse(await parseResponseBody(response)) : await parseResponseBody(response) as ${resolvedTypeName}`;
+      parseExpression = `(finalResponseContentType.includes("json") || finalResponseContentType.includes("+json")) ? (() => { const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response)); if (!parseResult.success) { return { zodError: parseResult.error }; } return parseResult.data; })() : await parseResponseBody(response) as ${resolvedTypeName}`;
+      usesZodValidation = true;
     } else if (contentType.includes("json") || contentType.includes("+json")) {
-      // JSON content type: use .parse
-      parseExpression = `${resolvedTypeName}.parse(await parseResponseBody(response))`;
+      // JSON content type: use .safeParse
+      parseExpression = `(() => { const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response)); if (!parseResult.success) { return { zodError: parseResult.error }; } return parseResult.data; })()`;
+      usesZodValidation = true;
     } else {
       // Non-JSON: just cast the parsed body
       parseExpression = `await parseResponseBody(response) as ${resolvedTypeName}`;
+      usesZodValidation = false;
     }
   }
-  return { parseExpression, resolvedTypeName };
+  return { parseExpression, resolvedTypeName, usesZodValidation };
 }
 
 /*
