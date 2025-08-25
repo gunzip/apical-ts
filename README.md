@@ -25,6 +25,7 @@ See [supported features](#features) for more information.
   - [Binding Configuration to All Operations](#binding-configuration-to-all-operations)
   - [Response Handling](#response-handling)
   - [Exception Handling](#exception-handling)
+  - [Validation Error Handling](#validation-error-handling)
   - [Handling Multiple Content Types (Request \& Response)](#handling-multiple-content-types-request--response)
     - [Example: Endpoint with Multiple Request Content Types](#example-endpoint-with-multiple-request-content-types)
     - [Example: Endpoint with Multiple Response Content Types](#example-endpoint-with-multiple-response-content-types)
@@ -237,21 +238,18 @@ try {
 
 ## Validation Error Handling
 
-When operations return JSON responses with Zod schemas, the generated client uses `safeParse()` for graceful validation error handling. Instead of throwing exceptions, validation failures return a structured error object:
+When operations return JSON responses with Zod schemas, the generated client uses `safeParse()` for graceful validation error handling. Instead of throwing exceptions, validation failures return a structured error object with a top-level `error` property:
 
 ```ts
 const result = await getUserProfile({ userId: "123" }, apiConfig);
 
 if (result.status === 200) {
-  // Check if validation succeeded
-  if ("parseError" in result.data) {
-    // Handle validation error
-    console.error("Response validation failed:", result.data.parseError);
-    result.data.parseError.issues.forEach((issue) => {
+  if ("error" in result) {
+    console.error("Response validation failed:", result.error);
+    result.error.issues.forEach((issue) => {
       console.log(`Field ${issue.path.join(".")}: ${issue.message}`);
     });
   } else {
-    // Successful validation - result.data is the parsed User object
     console.log("User:", result.data.name, result.data.email);
   }
 } else if (result.status === 404) {
@@ -271,11 +269,9 @@ const result = await getDocument(
 );
 
 if (result.status === 200) {
-  if ("parseError" in result.data) {
-    // Validation error only possible for JSON responses
-    console.error("JSON parsing failed:", result.data.parseError);
+  if ("error" in result) {
+    console.error("JSON parsing failed:", result.error);
   } else {
-    // Successfully parsed JSON document
     console.log("Document:", result.data);
   }
 }
@@ -286,9 +282,8 @@ Non-JSON responses (like `text/plain`, `application/octet-stream`) don't use Zod
 ```ts
 const result = await downloadFile({ fileId: "123" }, apiConfig);
 
-if (result.status === 200) {
-  // result.data is directly the file content (no parseError possible)
-  console.log("Downloaded file size:", result.data.length);
+if (result.status === 200 && "data" in result) {
+  console.log("Downloaded file size:", (result.data as any).length);
 }
 ```
 

@@ -31,9 +31,7 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe(
-        'ApiResponse<200, User | { parseError: import("zod").ZodError }>',
-      );
+      expect(result.returnType).toBe("ApiResponse<200, User>");
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 200:");
       expect(result.responseHandlers[0]).toContain(
@@ -65,9 +63,7 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe(
-        'ApiResponse<201, CreateUser201Response | { parseError: import("zod").ZodError }>',
-      );
+      expect(result.returnType).toBe("ApiResponse<201, CreateUser201Response>");
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 201:");
       expect(result.responseHandlers[0]).toContain(
@@ -103,7 +99,7 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        'ApiResponse<200, User | { parseError: import("zod").ZodError }> | ApiResponse<404, Error | { parseError: import("zod").ZodError }>',
+        "ApiResponse<200, User> | ApiResponse<404, Error>",
       );
       expect(result.responseHandlers).toHaveLength(2);
       expect(result.responseHandlers[0]).toContain("case 200:");
@@ -265,7 +261,7 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        'ApiResponse<200, UserProfileData200Response | { parseError: import("zod").ZodError }>',
+        "ApiResponse<200, UserProfileData200Response>",
       );
       expect(typeImports.has("UserProfileData200Response")).toBe(true);
     });
@@ -288,9 +284,7 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe(
-        'ApiResponse<200, ApiData | { parseError: import("zod").ZodError }>',
-      );
+      expect(result.returnType).toBe("ApiResponse<200, ApiData>");
       expect(result.responseHandlers[0]).toContain(
         "ApiData.safeParse(await parseResponseBody(response))",
       );
@@ -319,9 +313,7 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       // Should prefer JSON content type (getResponseContentType logic)
-      expect(result.returnType).toBe(
-        'ApiResponse<200, Data | { parseError: import("zod").ZodError }>',
-      );
+      expect(result.returnType).toBe("ApiResponse<200, Data>");
       expect(result.responseHandlers[0]).toContain(
         "Data.safeParse(await parseResponseBody(response))",
       );

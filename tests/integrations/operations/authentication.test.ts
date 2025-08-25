@@ -43,24 +43,18 @@ describe("Authentication Operations", () => {
         },
       };
 
-      // Act & Assert
-      try {
-        const response = await client.testAuthBearer(params);
+      // Act
+      const response = await client.testAuthBearer(params);
 
-        // Assert - If successful, validate response structure
-        expect(response.status).toBe(200);
+      // Assert - Validate response structure (allow top-level validation error branch)
+      expect(response.status).toBe(200);
+      expect(response.response.headers).toBeDefined();
+      if ("error" in response) {
+        // Validation failed; ensure ZodError shape
+        expect(response.error.issues).toBeDefined();
+        expect(response.error.issues.length).toBeGreaterThan(0);
+      } else {
         expect(response.data).toBeDefined();
-        expect(response.response.headers).toBeDefined();
-      } catch (error) {
-        // If Zod validation fails due to mock data, that's acceptable for this test
-        // What we're testing is that authentication works and the client structure is correct
-        if (error.name === "ZodError") {
-          expect(error.issues).toBeDefined();
-          expect(error.issues.length).toBeGreaterThan(0);
-        } else {
-          // Re-throw unexpected errors
-          throw error;
-        }
       }
     });
 
@@ -176,7 +170,7 @@ describe("Authentication Operations", () => {
 
       // Assert - Prism might return different status codes for different scenarios
       expect([200, 503, 504]).toContain(response.status);
-      if (response.status === 503 && response.data) {
+      if (response.status === 503 && "data" in response) {
         expect(response.data).toHaveProperty("prop1");
       }
     });

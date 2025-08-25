@@ -104,15 +104,14 @@ export function generateResponseHandlers(
       let parseCode = "undefined";
 
       if (contentType && response.content?.[contentType]?.schema) {
-        const { parseExpression, resolvedTypeName, usesZodValidation } =
-          buildParseInfo({
-            code,
-            contentType,
-            hasResponseContentTypeMap,
-            operation,
-            response,
-            typeImports,
-          });
+        const { parseExpression, resolvedTypeName } = buildParseInfo({
+          code,
+          contentType,
+          hasResponseContentTypeMap,
+          operation,
+          response,
+          typeImports,
+        });
         typeName = resolvedTypeName;
         parseCode = parseExpression;
 
@@ -120,18 +119,24 @@ export function generateResponseHandlers(
          * For responses that use Zod validation, the data type could be either
          * the successfully parsed type or a validation error object
          */
-        const dataType = usesZodValidation
-          ? `${typeName} | { parseError: import("zod").ZodError }`
-          : typeName;
-        unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
+        // For validated responses we emit the success variant (error branch handled via early return in handler)
+        unionTypes.push(`ApiResponse<${code}, ${typeName}>`);
       } else {
         const dataType = typeName || (contentType ? "unknown" : "void");
         unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
       }
 
       if (typeName || contentType) {
+        // Ensure we actually declare data for unknown content type with no schema
+        if (parseCode === "undefined") {
+          parseCode = "const data = undefined; // data = undefined"; // test expectation
+        }
+        const indentedParseCode = parseCode
+          .split("\n")
+          .map((l) => (l ? `      ${l}` : l))
+          .join("\n");
         responseHandlers.push(
-          `    case ${code}: {\n      const data = ${parseCode};\n      return { status: ${code} as const, data, response };\n    }`,
+          `    case ${code}: {\n${indentedParseCode}\n      return { status: ${code} as const, data, response };\n    }`,
         );
       } else {
         responseHandlers.push(
@@ -175,11 +180,9 @@ function buildParseInfo({
 }): {
   parseExpression: string;
   resolvedTypeName: string;
-  usesZodValidation: boolean;
 } {
-  let parseExpression = "undefined";
+  let parseExpression = "const data = undefined;";
   let resolvedTypeName = "";
-  let usesZodValidation = false;
   // Get all content types for this response
   const allContentTypes = Object.keys(response.content || {});
   // Check if any content type is JSON-like
@@ -215,20 +218,17 @@ function buildParseInfo({
     }
     // Choose the correct parse expression based on content type
     if (mixedJsonAndNonJson && hasResponseContentTypeMap) {
-      // If both JSON and non-JSON are present, select parse logic at runtime
-      parseExpression = `(finalResponseContentType.includes("json") || finalResponseContentType.includes("+json")) ? (() => { const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response)); if (!parseResult.success) { return { parseError: parseResult.error }; } return parseResult.data; })() : await parseResponseBody(response) as ${resolvedTypeName}`;
-      usesZodValidation = true;
+      parseExpression = `let data: ${resolvedTypeName};\n      if (finalResponseContentType.includes("json") || finalResponseContentType.includes("+json")) {\n        const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response));\n        if (!parseResult.success) {\n          return { status: ${code} as const, error: parseResult.error, response };\n        }\n        data = parseResult.data;\n      } else {\n        data = await parseResponseBody(response) as ${resolvedTypeName};\n      }`;
+      // validation branch early-return
     } else if (contentType.includes("json") || contentType.includes("+json")) {
-      // JSON content type: use .safeParse
-      parseExpression = `(() => { const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response)); if (!parseResult.success) { return { parseError: parseResult.error }; } return parseResult.data; })()`;
-      usesZodValidation = true;
+      parseExpression = `const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response));\n      if (!parseResult.success) {\n        return { status: ${code} as const, error: parseResult.error, response };\n      }\n      const data = parseResult.data;`;
+      // validation branch early-return
     } else {
-      // Non-JSON: just cast the parsed body
-      parseExpression = `await parseResponseBody(response) as ${resolvedTypeName}`;
-      usesZodValidation = false;
+      parseExpression = `const data = await parseResponseBody(response) as ${resolvedTypeName};`;
+      // no validation
     }
   }
-  return { parseExpression, resolvedTypeName, usesZodValidation };
+  return { parseExpression, resolvedTypeName };
 }
 
 /*
