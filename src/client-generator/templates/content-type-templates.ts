@@ -58,7 +58,7 @@ export const CONTENT_TYPE_HANDLERS: Record<string, ContentTypeHandler> = {
  */
 export function determineContentTypeHandlers(
   requestContentTypes: string[],
-): Array<{ contentType: string; handler: ContentTypeHandler }> {
+): { contentType: string; handler: ContentTypeHandler }[] {
   return requestContentTypes.map((contentType) => ({
     contentType,
     handler: CONTENT_TYPE_HANDLERS[contentType] || {
@@ -76,12 +76,12 @@ export function renderContentTypeSwitch(requestContentTypes: string[]): string {
   const handlers = determineContentTypeHandlers(requestContentTypes);
 
   const switchCases = handlers
-    .map(({ contentType, handler }) => {
-      return `    case "${contentType}":
+    .map(
+      ({ contentType, handler }) => `    case "${contentType}":
       ${handler.bodyContentCode}
       ${handler.contentTypeHeaderCode}
-      break;`;
-    })
+      break;`,
+    )
     .join("\n");
 
   const defaultCase = `    default:

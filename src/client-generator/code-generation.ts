@@ -9,14 +9,14 @@ import {
   generateSecurityHeaderHandling,
   type SecurityHeader,
 } from "./security.js";
-import { generatePathInterpolation } from "./utils.js";
 import { renderContentTypeSwitch } from "./templates/content-type-templates.js";
 import {
   determineFunctionBodyStructure,
   determineHeaderConfiguration,
-  renderHeadersObject,
   renderFunctionBody,
+  renderHeadersObject,
 } from "./templates/function-body-templates.js";
+import { generatePathInterpolation } from "./utils.js";
 
 /**
  * Options accepted by generateFunctionBody (collapsed from the previous long positional argument list).

@@ -1,24 +1,22 @@
 import type { ContentTypeMaps } from "../responses.js";
-import type { ParameterGroups } from "../parameters.js";
-import type { SecurityHeader } from "../security.js";
 
 /* Function body structure analysis and template rendering */
 
 export type FunctionBodyStructure = {
-  contentTypeLogic: string;
-  bodyContentCode: string;
   acceptHeaderLogic: string;
+  bodyContentCode: string;
   contentTypeHeaderCode: string;
+  contentTypeLogic: string;
   headersContent: string;
 };
 
 export type HeaderConfiguration = {
-  shouldGenerateRequestMap: boolean;
-  overridesSecurity?: boolean;
-  authHeaders?: string[];
-  shouldGenerateResponseMap: boolean;
   acceptHeaderLogic: string;
+  authHeaders?: string[];
   contentTypeHeaderCode: string;
+  overridesSecurity?: boolean;
+  shouldGenerateRequestMap: boolean;
+  shouldGenerateResponseMap: boolean;
 };
 
 /*
@@ -32,7 +30,7 @@ export function determineFunctionBodyStructure(
   shouldGenerateResponseMap: boolean,
 ): Pick<
   FunctionBodyStructure,
-  "contentTypeLogic" | "acceptHeaderLogic" | "contentTypeHeaderCode"
+  "acceptHeaderLogic" | "contentTypeHeaderCode" | "contentTypeLogic"
 > {
   let contentTypeLogic = "";
   let acceptHeaderLogic = "";
@@ -54,9 +52,9 @@ export function determineFunctionBodyStructure(
   }
 
   return {
-    contentTypeLogic,
     acceptHeaderLogic,
     contentTypeHeaderCode,
+    contentTypeLogic,
   };
 }
 
@@ -72,55 +70,13 @@ export function determineHeaderConfiguration(
   contentTypeHeaderCode?: string,
 ): HeaderConfiguration {
   return {
-    shouldGenerateRequestMap,
-    overridesSecurity,
-    authHeaders,
-    shouldGenerateResponseMap: shouldGenerateResponseMap || false,
     acceptHeaderLogic: acceptHeaderLogic || "",
+    authHeaders,
     contentTypeHeaderCode: contentTypeHeaderCode || "",
+    overridesSecurity,
+    shouldGenerateRequestMap,
+    shouldGenerateResponseMap: shouldGenerateResponseMap || false,
   };
-}
-
-/*
- * Renders the headers object construction code.
- */
-export function renderHeadersObject(config: HeaderConfiguration): string {
-  if (config.shouldGenerateRequestMap) {
-    return `    ${
-      config.overridesSecurity &&
-      config.authHeaders &&
-      config.authHeaders.length > 0
-        ? `...Object.fromEntries(
-      Object.entries(config.headers).filter(([key]) => 
-        !['${config.authHeaders.join("', '")}'].includes(key)
-      )
-    ),`
-        : "...config.headers,"
-    }${
-      config.shouldGenerateResponseMap
-        ? `
-${config.acceptHeaderLogic}`
-        : ""
-    }
-    ...contentTypeHeader,`;
-  } else {
-    return `    ${
-      config.overridesSecurity &&
-      config.authHeaders &&
-      config.authHeaders.length > 0
-        ? `...Object.fromEntries(
-      Object.entries(config.headers).filter(([key]) => 
-        !['${config.authHeaders.join("', '")}'].includes(key)
-      )
-    ),`
-        : "...config.headers,"
-    }${
-      config.shouldGenerateResponseMap
-        ? `
-${config.acceptHeaderLogic}`
-        : ""
-    }${config.contentTypeHeaderCode}`;
-  }
 }
 
 /*
@@ -166,4 +122,46 @@ ${responseHandlers.join("\n")}
       throw new UnexpectedResponseError(response.status, data, response);
     }
   }`;
+}
+
+/*
+ * Renders the headers object construction code.
+ */
+export function renderHeadersObject(config: HeaderConfiguration): string {
+  if (config.shouldGenerateRequestMap) {
+    return `    ${
+      config.overridesSecurity &&
+      config.authHeaders &&
+      config.authHeaders.length > 0
+        ? `...Object.fromEntries(
+      Object.entries(config.headers).filter(([key]) => 
+        !['${config.authHeaders.join("', '")}'].includes(key)
+      )
+    ),`
+        : "...config.headers,"
+    }${
+      config.shouldGenerateResponseMap
+        ? `
+${config.acceptHeaderLogic}`
+        : ""
+    }
+    ...contentTypeHeader,`;
+  } else {
+    return `    ${
+      config.overridesSecurity &&
+      config.authHeaders &&
+      config.authHeaders.length > 0
+        ? `...Object.fromEntries(
+      Object.entries(config.headers).filter(([key]) => 
+        !['${config.authHeaders.join("', '")}'].includes(key)
+      )
+    ),`
+        : "...config.headers,"
+    }${
+      config.shouldGenerateResponseMap
+        ? `
+${config.acceptHeaderLogic}`
+        : ""
+    }${config.contentTypeHeaderCode}`;
+  }
 }
