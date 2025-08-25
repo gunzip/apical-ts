@@ -36,7 +36,10 @@ describe("extractOperationMetadata", () => {
           description: "Bad Request",
           content: {
             "application/json": {
-              schema: { type: "object", properties: { error: { type: "string" } } },
+              schema: {
+                type: "object",
+                properties: { error: { type: "string" } },
+              },
             },
           },
         },
@@ -74,7 +77,9 @@ describe("extractOperationMetadata", () => {
     expect(metadata.parameterGroups.headerParams).toEqual([]);
 
     /* Response handlers */
-    expect(metadata.responseHandlers.responseHandlers.length).toBeGreaterThan(0);
+    expect(metadata.responseHandlers.responseHandlers.length).toBeGreaterThan(
+      0,
+    );
     expect(metadata.responseHandlers.returnType).toContain("ApiResponse");
 
     /* Security */
@@ -115,7 +120,10 @@ describe("extractOperationMetadata", () => {
           description: "Not Found",
           content: {
             "application/json": {
-              schema: { type: "object", properties: { error: { type: "string" } } },
+              schema: {
+                type: "object",
+                properties: { error: { type: "string" } },
+              },
             },
           },
         },
@@ -153,7 +161,9 @@ describe("extractOperationMetadata", () => {
     /* Parameter structures should include path and query parameters */
     expect(metadata.parameterStructures.destructuredParams).toContain("path");
     expect(metadata.parameterStructures.destructuredParams).toContain("query");
-    expect(metadata.parameterStructures.paramsInterface).toContain("id: string");
+    expect(metadata.parameterStructures.paramsInterface).toContain(
+      "id: string",
+    );
   });
 
   it("should handle operation with path-level parameters", () => {
@@ -209,7 +219,9 @@ describe("extractOperationMetadata", () => {
 
     /* Parameter structures should include both path-level and operation parameters */
     expect(metadata.parameterStructures.destructuredParams).toContain("path");
-    expect(metadata.parameterStructures.destructuredParams).toContain("headers");
+    expect(metadata.parameterStructures.destructuredParams).toContain(
+      "headers",
+    );
     expect(metadata.parameterStructures.destructuredParams).toContain("body");
   });
 
@@ -255,7 +267,9 @@ describe("extractOperationMetadata", () => {
 
     /* Should extract operation-specific security headers */
     expect(metadata.operationSecurityHeaders).toHaveLength(1);
-    expect(metadata.operationSecurityHeaders[0].headerName).toBe("Authorization");
+    expect(metadata.operationSecurityHeaders[0].headerName).toBe(
+      "Authorization",
+    );
     expect(metadata.operationSecurityHeaders[0].schemeName).toBe("bearerAuth");
 
     /* Should extract global auth headers */

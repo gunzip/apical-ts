@@ -88,7 +88,10 @@ export {
   extractAllOperations,
   extractServerUrls,
 } from "./operation-extractor.js";
-export { generateOperationFunction, extractOperationMetadata } from "./operation-function-generator.js";
+export {
+  generateOperationFunction,
+  extractOperationMetadata,
+} from "./operation-function-generator.js";
 export type { OperationMetadata as OperationFunctionMetadata } from "./templates/operation-templates.js";
 export {
   buildGenericParams,

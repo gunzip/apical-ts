@@ -69,7 +69,9 @@ export type ParameterDeclarationConfig = {
  * Example output: <TRequestContentType extends keyof MyOpRequestMap = "application/json", TResponseContentType extends keyof MyOpResponseMap = "application/json">
  * Returns both the generic parameter string and the adjusted return type (map lookup when response map present).
  */
-export function buildGenericParams(config: GenericParamsConfig): GenericParamsResult {
+export function buildGenericParams(
+  config: GenericParamsConfig,
+): GenericParamsResult {
   let genericParams = "";
   let updatedReturnType = config.initialReturnType;
 
@@ -103,7 +105,9 @@ export function buildGenericParams(config: GenericParamsConfig): GenericParamsRe
  * Produces the function's first parameter declaration.
  * Special case: empty destructuring + empty interface => provide default {} to keep valid signature.
  */
-export function buildParameterDeclaration(config: ParameterDeclarationConfig): string {
+export function buildParameterDeclaration(
+  config: ParameterDeclarationConfig,
+): string {
   if (config.destructuredParams === "{}" && config.paramsInterface === "{}") {
     return "{}: {} = {}";
   }
@@ -120,7 +124,10 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
     typeAliases += `export type ${config.requestMapTypeName} = ${config.contentTypeMaps.requestMapType};\n\n`;
   }
   /* Always emit response map type alias for stability; if empty map that's fine */
-  if (config.shouldGenerateResponseMap || config.contentTypeMaps.responseMapType) {
+  if (
+    config.shouldGenerateResponseMap ||
+    config.contentTypeMaps.responseMapType
+  ) {
     typeAliases += `export type ${config.responseMapTypeName} = ${config.contentTypeMaps.responseMapType || "{}"};\n\n`;
   }
   return typeAliases;
@@ -139,7 +146,9 @@ export type OperationFunctionRenderConfig = {
   typeAliases: string;
 };
 
-export function renderOperationFunction(config: OperationFunctionRenderConfig): string {
+export function renderOperationFunction(
+  config: OperationFunctionRenderConfig,
+): string {
   return `${config.typeAliases}${config.summary}export async function ${config.functionName}${config.genericParams}(
   ${config.parameterDeclaration},
   config: GlobalConfig = globalConfig

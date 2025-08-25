@@ -45,7 +45,8 @@ describe("operation-templates", () => {
           defaultRequestContentType: "application/json",
           defaultResponseContentType: null,
           requestContentTypeCount: 2,
-          requestMapType: "{ 'application/json': User; 'application/xml': string; }",
+          requestMapType:
+            "{ 'application/json': User; 'application/xml': string; }",
           responseContentTypeCount: 0,
           responseMapType: "{}",
           typeImports: new Set(),
@@ -73,7 +74,8 @@ describe("operation-templates", () => {
           requestContentTypeCount: 0,
           requestMapType: "{}",
           responseContentTypeCount: 2,
-          responseMapType: "{ 'application/json': User; 'text/plain': string; }",
+          responseMapType:
+            "{ 'application/json': User; 'text/plain': string; }",
           typeImports: new Set(),
         },
         requestMapTypeName: "TestRequestMap",
@@ -86,7 +88,9 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         '<TResponseContentType extends keyof TestResponseMap = "application/json">',
       );
-      expect(result.updatedReturnType).toBe("TestResponseMap[TResponseContentType]");
+      expect(result.updatedReturnType).toBe(
+        "TestResponseMap[TResponseContentType]",
+      );
     });
 
     it("should generate both request and response map generic params", () => {
@@ -97,9 +101,11 @@ describe("operation-templates", () => {
           defaultRequestContentType: "application/json",
           defaultResponseContentType: "application/xml",
           requestContentTypeCount: 2,
-          requestMapType: "{ 'application/json': User; 'application/xml': string; }",
+          requestMapType:
+            "{ 'application/json': User; 'application/xml': string; }",
           responseContentTypeCount: 2,
-          responseMapType: "{ 'application/json': User; 'text/plain': string; }",
+          responseMapType:
+            "{ 'application/json': User; 'text/plain': string; }",
           typeImports: new Set(),
         },
         requestMapTypeName: "TestRequestMap",
@@ -112,7 +118,9 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         '<TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends keyof TestResponseMap = "application/xml">',
       );
-      expect(result.updatedReturnType).toBe("TestResponseMap[TResponseContentType]");
+      expect(result.updatedReturnType).toBe(
+        "TestResponseMap[TResponseContentType]",
+      );
     });
 
     it("should fallback to application/json when no default content type", () => {
@@ -138,7 +146,9 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         '<TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends keyof TestResponseMap = "application/json">',
       );
-      expect(result.updatedReturnType).toBe("TestResponseMap[TResponseContentType]");
+      expect(result.updatedReturnType).toBe(
+        "TestResponseMap[TResponseContentType]",
+      );
     });
   });
 
@@ -146,7 +156,8 @@ describe("operation-templates", () => {
     it("should build regular parameter declaration", () => {
       const config: ParameterDeclarationConfig = {
         destructuredParams: "{ path, query, body }",
-        paramsInterface: "{ path: { id: string }; query?: { limit?: number }; body: User }",
+        paramsInterface:
+          "{ path: { id: string }; query?: { limit?: number }; body: User }",
       };
 
       const result = buildParameterDeclaration(config);
@@ -190,9 +201,11 @@ describe("operation-templates", () => {
           defaultRequestContentType: "application/json",
           defaultResponseContentType: "application/json",
           requestContentTypeCount: 2,
-          requestMapType: "{ 'application/json': User; 'application/xml': string; }",
+          requestMapType:
+            "{ 'application/json': User; 'application/xml': string; }",
           responseContentTypeCount: 2,
-          responseMapType: "{ 'application/json': User; 'text/plain': string; }",
+          responseMapType:
+            "{ 'application/json': User; 'text/plain': string; }",
           typeImports: new Set(),
         },
       };
@@ -201,7 +214,7 @@ describe("operation-templates", () => {
 
       expect(result).toBe(
         "export type TestRequestMap = { 'application/json': User; 'application/xml': string; };\n\n" +
-        "export type TestResponseMap = { 'application/json': User; 'text/plain': string; };\n\n",
+          "export type TestResponseMap = { 'application/json': User; 'text/plain': string; };\n\n",
       );
     });
 
@@ -272,9 +285,7 @@ describe("operation-templates", () => {
 
       const result = buildTypeAliases(config);
 
-      expect(result).toBe(
-        "export type TestResponseMap = {};\n\n",
-      );
+      expect(result).toBe("export type TestResponseMap = {};\n\n");
     });
   });
 
@@ -283,24 +294,27 @@ describe("operation-templates", () => {
       const config: OperationFunctionRenderConfig = {
         functionName: "testOperation",
         summary: "/** Test operation */\n",
-        genericParams: '<TRequestContentType extends keyof TestRequestMap = "application/json">',
-        parameterDeclaration: "{ body }: { body: TestRequestMap[TRequestContentType] }",
+        genericParams:
+          '<TRequestContentType extends keyof TestRequestMap = "application/json">',
+        parameterDeclaration:
+          "{ body }: { body: TestRequestMap[TRequestContentType] }",
         updatedReturnType: "ApiResponse<200, User>",
         functionBodyCode: "return fetchApi('/test', { method: 'POST', body });",
-        typeAliases: "export type TestRequestMap = { 'application/json': User; };\n\n",
+        typeAliases:
+          "export type TestRequestMap = { 'application/json': User; };\n\n",
       };
 
       const result = renderOperationFunction(config);
 
       expect(result).toBe(
         "export type TestRequestMap = { 'application/json': User; };\n\n" +
-        "/** Test operation */\n" +
-        "export async function testOperation<TRequestContentType extends keyof TestRequestMap = \"application/json\">(\n" +
-        "  { body }: { body: TestRequestMap[TRequestContentType] },\n" +
-        "  config: GlobalConfig = globalConfig\n" +
-        "): Promise<ApiResponse<200, User>> {\n" +
-        "  return fetchApi('/test', { method: 'POST', body });\n" +
-        "}",
+          "/** Test operation */\n" +
+          'export async function testOperation<TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
+          "  { body }: { body: TestRequestMap[TRequestContentType] },\n" +
+          "  config: GlobalConfig = globalConfig\n" +
+          "): Promise<ApiResponse<200, User>> {\n" +
+          "  return fetchApi('/test', { method: 'POST', body });\n" +
+          "}",
       );
     });
 
@@ -319,11 +333,11 @@ describe("operation-templates", () => {
 
       expect(result).toBe(
         "export async function testOperation(\n" +
-        "  {}: {} = {},\n" +
-        "  config: GlobalConfig = globalConfig\n" +
-        "): Promise<ApiResponse<200, User>> {\n" +
-        "  return fetchApi('/test');\n" +
-        "}",
+          "  {}: {} = {},\n" +
+          "  config: GlobalConfig = globalConfig\n" +
+          "): Promise<ApiResponse<200, User>> {\n" +
+          "  return fetchApi('/test');\n" +
+          "}",
       );
     });
   });
