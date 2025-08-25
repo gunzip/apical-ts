@@ -8,35 +8,95 @@ import type {
 import { assert } from "console";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
+import type {
+  ParameterAnalysis,
+  ParameterGroups,
+  ParameterOptionalityRules,
+  ParameterStructure,
+  ProcessedParameterGroup,
+} from "./models/parameter-models.js";
 import type { RequestBodyTypeInfo } from "./request-body.js";
 import type { SecurityHeader } from "./security.js";
 
+import {
+  renderDestructuredParameters,
+  renderParameterHandling,
+  renderParameterInterface,
+} from "./templates/parameter-templates.js";
 import { toCamelCase, toValidVariableName } from "./utils.js";
 
-/**
- * Grouped parameters by their location
- */
-export type ParameterGroups = {
-  headerParams: ParameterObject[];
-  pathParams: ParameterObject[];
-  queryParams: ParameterObject[];
-};
+/* Re-export types for backward compatibility */
+export type {
+  ParameterGroups,
+  ProcessedParameterGroup,
+} from "./models/parameter-models.js";
 
 /**
- * Processed parameter groups with security information
+ * Analyzes parameters and creates structured data for template generation
  */
-export type ProcessedParameterGroup = {
-  headerParams: ParameterObject[];
-  isHeadersOptional: boolean;
-  isQueryOptional: boolean;
-  pathParams: ParameterObject[];
-  queryParams: ParameterObject[];
-  securityHeaders: {
-    headerName: string;
-    isRequired: boolean;
-    schemeName: string;
-  }[];
-};
+export function analyzeParameters(
+  parameterGroups: ParameterGroups,
+  hasBody: boolean,
+  bodyTypeInfo?: RequestBodyTypeInfo,
+  operationSecurityHeaders?: SecurityHeader[],
+  hasRequestMap = false,
+  hasResponseMap = false,
+  requestMapTypeName?: string,
+  responseMapTypeName?: string,
+): ParameterAnalysis {
+  const structure = determineParameterStructure(
+    parameterGroups,
+    hasBody,
+    bodyTypeInfo,
+    operationSecurityHeaders,
+    hasRequestMap,
+    hasResponseMap,
+    requestMapTypeName,
+    responseMapTypeName,
+  );
+
+  const optionalityRules = determineParameterOptionalityRules(structure);
+
+  /* Analyze path parameters */
+  const pathProperties = structure.processed.pathParams.map((param) =>
+    toCamelCase(param.name),
+  );
+
+  /* Analyze query parameters */
+  const queryProperties = structure.processed.queryParams.map((param) => ({
+    isRequired: param.required === true,
+    name: toCamelCase(param.name),
+  }));
+
+  /* Analyze header parameters */
+  const headerProperties = structure.processed.headerParams.map((param) => {
+    const varName = toValidVariableName(param.name);
+    return {
+      isRequired: param.required === true,
+      name: param.name !== varName ? param.name : toCamelCase(param.name),
+      needsQuoting: param.name !== varName,
+      varName,
+    };
+  });
+
+  /* Analyze security headers */
+  const securityHeaderProperties = structure.processed.securityHeaders.map(
+    (securityHeader) => ({
+      headerName: securityHeader.headerName,
+      isRequired: securityHeader.isRequired,
+      varName: toValidVariableName(securityHeader.headerName),
+    }),
+  );
+
+  return {
+    headerProperties,
+    optionalityRules,
+    pathProperties,
+    queryProperties,
+    securityHeaderProperties,
+    structure,
+  };
+}
 
 /**
  * Builds the destructured parameter signature for a function
@@ -49,75 +109,16 @@ export function buildDestructuredParameters(
   hasRequestMap = false,
   hasResponseMap = false,
 ): string {
-  const processed = processParameterGroups(
+  const analysis = analyzeParameters(
     parameterGroups,
+    hasBody,
+    bodyTypeInfo,
     operationSecurityHeaders,
+    hasRequestMap,
+    hasResponseMap,
   );
-  const destructureParams: string[] = [];
 
-  // Path parameters
-  if (processed.pathParams.length > 0) {
-    const pathProperties = processed.pathParams.map((param) =>
-      toCamelCase(param.name),
-    );
-    destructureParams.push(`path: { ${pathProperties.join(", ")} }`);
-  }
-
-  // Query parameters
-  if (processed.queryParams.length > 0) {
-    const queryProperties = processed.queryParams.map((param) =>
-      toCamelCase(param.name),
-    );
-    const defaultValue = processed.isQueryOptional ? " = {}" : "";
-    destructureParams.push(
-      `query: { ${queryProperties.join(", ")} }${defaultValue}`,
-    );
-  }
-
-  // Header parameters (including operation-specific security headers)
-  if (
-    processed.headerParams.length > 0 ||
-    processed.securityHeaders.length > 0
-  ) {
-    const headerProperties: string[] = [];
-
-    // Regular header parameters - handle special characters in header names
-    processed.headerParams.forEach((param) => {
-      const varName = toValidVariableName(param.name);
-      // If the header name contains special characters, use object property syntax
-      if (param.name !== varName) {
-        headerProperties.push(`"${param.name}": ${varName}`);
-      } else {
-        headerProperties.push(toCamelCase(param.name));
-      }
-    });
-
-    // Operation-specific security headers - need to handle special characters
-    processed.securityHeaders.forEach((securityHeader) => {
-      const varName = toValidVariableName(securityHeader.headerName);
-      headerProperties.push(`"${securityHeader.headerName}": ${varName}`);
-    });
-
-    const defaultValue = processed.isHeadersOptional ? " = {}" : "";
-    destructureParams.push(
-      `headers: { ${headerProperties.join(", ")} }${defaultValue}`,
-    );
-  }
-
-  // Body parameter
-  if (hasBody && bodyTypeInfo) {
-    const defaultValue = bodyTypeInfo.isRequired ? "" : " = undefined";
-    destructureParams.push(`body${defaultValue}`);
-  }
-
-  // Add contentType parameter if we have request or response maps
-  if (hasRequestMap || hasResponseMap) {
-    destructureParams.push("contentType = {}");
-  }
-
-  return destructureParams.length > 0
-    ? `{ ${destructureParams.join(", ")} }`
-    : "{}";
+  return renderDestructuredParameters(analysis);
 }
 
 /**
@@ -131,98 +132,60 @@ export function buildParameterInterface(
   requestMapTypeName?: string,
   responseMapTypeName?: string,
 ): string {
+  const analysis = analyzeParameters(
+    parameterGroups,
+    hasBody,
+    bodyTypeInfo,
+    operationSecurityHeaders,
+    !!requestMapTypeName,
+    !!responseMapTypeName,
+    requestMapTypeName,
+    responseMapTypeName,
+  );
+
+  return renderParameterInterface(analysis);
+}
+
+/**
+ * Determines parameter optionality rules
+ */
+export function determineParameterOptionalityRules(
+  structure: ParameterStructure,
+): ParameterOptionalityRules {
+  return {
+    isBodyOptional: !structure.hasBody || !structure.bodyTypeInfo?.isRequired,
+    isHeadersOptional: structure.processed.isHeadersOptional,
+    isQueryOptional: structure.processed.isQueryOptional,
+  };
+}
+
+/**
+ * Determines parameter structure information for interface and destructuring generation
+ */
+export function determineParameterStructure(
+  parameterGroups: ParameterGroups,
+  hasBody: boolean,
+  bodyTypeInfo?: RequestBodyTypeInfo,
+  operationSecurityHeaders?: SecurityHeader[],
+  hasRequestMap = false,
+  hasResponseMap = false,
+  requestMapTypeName?: string,
+  responseMapTypeName?: string,
+): ParameterStructure {
   const processed = processParameterGroups(
     parameterGroups,
     operationSecurityHeaders,
   );
-  const sections: string[] = [];
 
-  // Path parameters section (never optional if present)
-  if (processed.pathParams.length > 0) {
-    const pathProperties = processed.pathParams.map(
-      (param) => `${toCamelCase(param.name)}: string`,
-    );
-    sections.push(`path: {\n    ${pathProperties.join(";\n    ")};\n  }`);
-  }
-
-  // Query parameters section
-  if (processed.queryParams.length > 0) {
-    const queryProperties = processed.queryParams.map((param) => {
-      const isRequired = param.required === true;
-      return `${toCamelCase(param.name)}${isRequired ? "" : "?"}: string`;
-    });
-    const optionalMarker = processed.isQueryOptional ? "?" : "";
-    sections.push(
-      `query${optionalMarker}: {\n    ${queryProperties.join(";\n    ")};\n  }`,
-    );
-  }
-
-  // Header parameters section (including operation-specific security headers)
-  if (
-    processed.headerParams.length > 0 ||
-    processed.securityHeaders.length > 0
-  ) {
-    const headerProperties: string[] = [];
-
-    // Regular header parameters - handle special characters in header names
-    processed.headerParams.forEach((param) => {
-      const isRequired = param.required === true;
-      const varName = toValidVariableName(param.name);
-      // If the header name contains special characters, use quoted property syntax
-      if (param.name !== varName) {
-        headerProperties.push(
-          `"${param.name}"${isRequired ? "" : "?"}: string`,
-        );
-      } else {
-        headerProperties.push(
-          `${toCamelCase(param.name)}${isRequired ? "" : "?"}: string`,
-        );
-      }
-    });
-
-    // Operation-specific security headers
-    processed.securityHeaders.forEach((securityHeader) => {
-      const requiredMarker = securityHeader.isRequired ? "" : "?";
-      headerProperties.push(
-        `"${securityHeader.headerName}"${requiredMarker}: string`,
-      );
-    });
-
-    const optionalMarker = processed.isHeadersOptional ? "?" : "";
-    sections.push(
-      `headers${optionalMarker}: {\n    ${headerProperties.join(";\n    ")};\n  }`,
-    );
-  }
-
-  // Body parameter
-  if (hasBody && bodyTypeInfo) {
-    const requiredMarker = bodyTypeInfo.isRequired ? "" : "?";
-    let typeName = bodyTypeInfo.typeName || "any";
-
-    // Use generic type if we have a request map
-    if (requestMapTypeName) {
-      typeName = `${requestMapTypeName}[TRequestContentType]`;
-    }
-
-    sections.push(`body${requiredMarker}: ${typeName}`);
-  }
-
-  // Add contentType parameter if we have request or response maps
-  if (requestMapTypeName || responseMapTypeName) {
-    const contentTypeParts: string[] = [];
-
-    if (requestMapTypeName) {
-      contentTypeParts.push("request?: TRequestContentType");
-    }
-
-    if (responseMapTypeName) {
-      contentTypeParts.push("response?: TResponseContentType");
-    }
-
-    sections.push(`contentType?: { ${contentTypeParts.join("; ")} }`);
-  }
-
-  return sections.length > 0 ? `{\n  ${sections.join(";\n  ")};\n}` : "{}";
+  return {
+    bodyTypeInfo,
+    hasBody,
+    hasRequestMap,
+    hasResponseMap,
+    processed,
+    requestMapTypeName,
+    responseMapTypeName,
+  };
 }
 
 /**
@@ -258,14 +221,7 @@ export function extractParameterGroups(
 export function generateHeaderParamHandling(
   headerParams: ParameterObject[],
 ): string {
-  if (headerParams.length === 0) return "";
-
-  return headerParams
-    .map((p) => {
-      const varName = toValidVariableName(p.name);
-      return `if (${varName} !== undefined) finalHeaders['${p.name}'] = String(${varName});`;
-    })
-    .join("\n    ");
+  return renderParameterHandling("header", headerParams);
 }
 
 /**
@@ -274,14 +230,7 @@ export function generateHeaderParamHandling(
 export function generateQueryParamHandling(
   queryParams: ParameterObject[],
 ): string {
-  if (queryParams.length === 0) return "";
-
-  return queryParams
-    .map((p) => {
-      const varName = toCamelCase(p.name);
-      return `if (${varName} !== undefined) url.searchParams.append('${p.name}', String(${varName}));`;
-    })
-    .join("\n    ");
+  return renderParameterHandling("query", queryParams);
 }
 
 /**
