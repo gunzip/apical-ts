@@ -16,7 +16,7 @@ export function renderApiResponseType(
  * Renders a parse expression for a response based on its parsing strategy
  */
 export function renderParseExpression(
-  responseInfo: ResponseTypeInfo,
+  responseInfo: ResponseInfo,
   config: {
     hasResponseContentTypeMap: boolean;
     statusCode: string;
@@ -64,7 +64,7 @@ export function renderParseExpression(
  * Renders a single response handler case for a switch statement
  */
 export function renderResponseHandler(
-  responseInfo: ResponseTypeInfo,
+  responseInfo: ResponseInfo,
   parseExpression: string,
 ): string {
   const { contentType, statusCode, typeName } = responseInfo;
