@@ -9,7 +9,13 @@ import {
   generateSecurityHeaderHandling,
   type SecurityHeader,
 } from "./security.js";
-import { renderDynamicBodyHandling } from "./templates/request-body-templates.js";
+import { renderContentTypeSwitch } from "./templates/content-type-templates.js";
+import {
+  determineFunctionBodyStructure,
+  determineHeaderConfiguration,
+  renderFunctionBody,
+  renderHeadersObject,
+} from "./templates/function-body-templates.js";
 import { generatePathInterpolation } from "./utils.js";
 
 /**
@@ -61,122 +67,43 @@ export function generateFunctionBody({
       ? generateSecurityHeaderHandling(operationSecurityHeaders)
       : "";
 
-  // Generate content type determination logic
-  let contentTypeLogic = "";
+  // Determine what components are needed for the function body
+  const structure = determineFunctionBodyStructure(
+    contentTypeMaps,
+    hasBody,
+    requestContentTypes,
+    shouldGenerateRequestMap,
+    shouldGenerateResponseMap,
+  );
+
+  // Generate body content code if needed
   let bodyContentCode = "";
-  let acceptHeaderLogic = "";
-  const contentTypeHeaderCode = "";
-
-  if (shouldGenerateRequestMap) {
-    const defaultReq =
-      contentTypeMaps.defaultRequestContentType || "application/json";
-    contentTypeLogic += `  const finalRequestContentType = contentType?.request || "${defaultReq}";\n`;
-
-    if (hasBody) {
-      bodyContentCode = generateDynamicBodyContentCode(
-        requestContentTypes || [],
-      );
-    }
+  if (shouldGenerateRequestMap && hasBody) {
+    bodyContentCode = renderContentTypeSwitch(requestContentTypes || []);
   }
 
-  if (shouldGenerateResponseMap) {
-    const defaultRespValue =
-      contentTypeMaps.defaultResponseContentType || "application/json";
-    acceptHeaderLogic = `    "Accept": contentType?.response || "${defaultRespValue}",`;
-    contentTypeLogic += `  const finalResponseContentType = contentType?.response || "${defaultRespValue}";\n`;
-  } else {
-    contentTypeLogic += `  const finalResponseContentType = "";\n`;
-  }
-
-  // Build the headers object
-  const headersContent = generateHeadersContent(
+  // Determine header configuration and render headers object
+  const headerConfig = determineHeaderConfiguration(
     shouldGenerateRequestMap,
     overridesSecurity,
     authHeaders,
     shouldGenerateResponseMap,
-    acceptHeaderLogic,
-    contentTypeHeaderCode,
+    structure.acceptHeaderLogic,
+    structure.contentTypeHeaderCode,
   );
+  const headersContent = renderHeadersObject(headerConfig);
 
-  return `${contentTypeLogic}${bodyContentCode}
-
-  const finalHeaders: Record<string, string> = {
-${headersContent}
-  };
-  ${headerParamLines ? `  ${headerParamLines}` : ""}${securityHeaderLines ? `  ${securityHeaderLines}` : ""}
-
-  const url = new URL(\`${finalPath}\`, config.baseURL);
-  ${queryParamLines ? `  ${queryParamLines}` : ""}
-
-  const response = await config.fetch(url.toString(), {
-    method: "${method.toUpperCase()}",
-    headers: finalHeaders,${
-      hasBody
-        ? `
-    body: bodyContent,`
-        : ""
-    }
-  });
-
-  switch (response.status) {
-${responseHandlers.join("\n")}
-    default: {
-      // Throw UnexpectedResponseError for undefined status codes
-      const data = await parseResponseBody(response);
-      throw new UnexpectedResponseError(response.status, data, response);
-    }
-  }`;
-}
-
-/*
- * Generates dynamic body content handling code for multiple content types
- * Uses the centralized template system for consistency
- */
-function generateDynamicBodyContentCode(requestContentTypes: string[]): string {
-  return renderDynamicBodyHandling(requestContentTypes);
-}
-
-/**
- * Generates the headers content for the request
- */
-function generateHeadersContent(
-  shouldGenerateRequestMap: boolean,
-  overridesSecurity: boolean | undefined,
-  authHeaders: string[] | undefined,
-  shouldGenerateResponseMap: boolean,
-  acceptHeaderLogic: string,
-  contentTypeHeaderCode: string,
-): string {
-  if (shouldGenerateRequestMap) {
-    return `    ${
-      overridesSecurity && authHeaders && authHeaders.length > 0
-        ? `...Object.fromEntries(
-      Object.entries(config.headers).filter(([key]) => 
-        !['${authHeaders.join("', '")}'].includes(key)
-      )
-    ),`
-        : "...config.headers,"
-    }${
-      shouldGenerateResponseMap
-        ? `
-${acceptHeaderLogic}`
-        : ""
-    }
-    ...contentTypeHeader,`;
-  } else {
-    return `    ${
-      overridesSecurity && authHeaders && authHeaders.length > 0
-        ? `...Object.fromEntries(
-      Object.entries(config.headers).filter(([key]) => 
-        !['${authHeaders.join("', '")}'].includes(key)
-      )
-    ),`
-        : "...config.headers,"
-    }${
-      shouldGenerateResponseMap
-        ? `
-${acceptHeaderLogic}`
-        : ""
-    }${contentTypeHeaderCode}`;
-  }
+  // Render the complete function body
+  return renderFunctionBody(
+    structure.contentTypeLogic,
+    bodyContentCode,
+    headersContent,
+    finalPath,
+    method,
+    hasBody,
+    responseHandlers,
+    headerParamLines,
+    securityHeaderLines,
+    queryParamLines,
+  );
 }
