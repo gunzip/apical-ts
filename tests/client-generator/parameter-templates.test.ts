@@ -10,7 +10,9 @@ import {
 import type { ParameterAnalysis } from "../../src/client-generator/models/parameter-models.js";
 
 describe("parameter template functions", () => {
-  const createBasicAnalysis = (overrides: Partial<ParameterAnalysis> = {}): ParameterAnalysis => ({
+  const createBasicAnalysis = (
+    overrides: Partial<ParameterAnalysis> = {},
+  ): ParameterAnalysis => ({
     structure: {
       processed: {
         pathParams: [],
@@ -51,13 +53,23 @@ describe("parameter template functions", () => {
           processed: {
             ...createBasicAnalysis().structure.processed,
             pathParams: [
-              { in: "path", name: "user-id", required: true, schema: { type: "string" } },
-              { in: "path", name: "project-id", required: true, schema: { type: "string" } },
+              {
+                in: "path",
+                name: "user-id",
+                required: true,
+                schema: { type: "string" },
+              },
+              {
+                in: "path",
+                name: "project-id",
+                required: true,
+                schema: { type: "string" },
+              },
             ] as ParameterObject[],
           },
         },
       });
-      
+
       const result = renderParameterInterface(analysis);
       expect(result).toContain("path: {");
       expect(result).toContain("userId: string");
@@ -79,14 +91,24 @@ describe("parameter template functions", () => {
           processed: {
             ...createBasicAnalysis().structure.processed,
             queryParams: [
-              { in: "query", name: "filter", required: true, schema: { type: "string" } },
-              { in: "query", name: "sort", required: false, schema: { type: "string" } },
+              {
+                in: "query",
+                name: "filter",
+                required: true,
+                schema: { type: "string" },
+              },
+              {
+                in: "query",
+                name: "sort",
+                required: false,
+                schema: { type: "string" },
+              },
             ] as ParameterObject[],
             isQueryOptional: false,
           },
         },
       });
-      
+
       const result = renderParameterInterface(analysis);
       expect(result).toContain("query: {");
       expect(result).toContain("filter: string");
@@ -96,8 +118,18 @@ describe("parameter template functions", () => {
     it("should render header parameters with quoting", () => {
       const analysis = createBasicAnalysis({
         headerProperties: [
-          { name: "Content-Type", isRequired: true, varName: "contentType", needsQuoting: true },
-          { name: "simpleheader", isRequired: false, varName: "simpleheader", needsQuoting: false },
+          {
+            name: "Content-Type",
+            isRequired: true,
+            varName: "contentType",
+            needsQuoting: true,
+          },
+          {
+            name: "simpleheader",
+            isRequired: false,
+            varName: "simpleheader",
+            needsQuoting: false,
+          },
         ],
         optionalityRules: {
           ...createBasicAnalysis().optionalityRules,
@@ -108,14 +140,24 @@ describe("parameter template functions", () => {
           processed: {
             ...createBasicAnalysis().structure.processed,
             headerParams: [
-              { in: "header", name: "Content-Type", required: true, schema: { type: "string" } },
-              { in: "header", name: "simpleheader", required: false, schema: { type: "string" } },
+              {
+                in: "header",
+                name: "Content-Type",
+                required: true,
+                schema: { type: "string" },
+              },
+              {
+                in: "header",
+                name: "simpleheader",
+                required: false,
+                schema: { type: "string" },
+              },
             ] as ParameterObject[],
             isHeadersOptional: false,
           },
         },
       });
-      
+
       const result = renderParameterInterface(analysis);
       expect(result).toContain("headers: {");
       expect(result).toContain('"Content-Type": string');
@@ -125,19 +167,27 @@ describe("parameter template functions", () => {
     it("should render security headers", () => {
       const analysis = createBasicAnalysis({
         securityHeaderProperties: [
-          { headerName: "Authorization", isRequired: true, varName: "authorization" },
+          {
+            headerName: "Authorization",
+            isRequired: true,
+            varName: "authorization",
+          },
         ],
         structure: {
           ...createBasicAnalysis().structure,
           processed: {
             ...createBasicAnalysis().structure.processed,
             securityHeaders: [
-              { headerName: "Authorization", isRequired: true, schemeName: "bearerAuth" },
+              {
+                headerName: "Authorization",
+                isRequired: true,
+                schemeName: "bearerAuth",
+              },
             ],
           },
         },
       });
-      
+
       const result = renderParameterInterface(analysis);
       expect(result).toContain('"Authorization": string');
     });
@@ -154,7 +204,7 @@ describe("parameter template functions", () => {
           isBodyOptional: false,
         },
       });
-      
+
       const result = renderParameterInterface(analysis);
       expect(result).toContain("body: UserCreateRequest");
     });
@@ -169,9 +219,11 @@ describe("parameter template functions", () => {
           responseMapTypeName: "ResponseMap",
         },
       });
-      
+
       const result = renderParameterInterface(analysis);
-      expect(result).toContain("contentType?: { request?: TRequestContentType; response?: TResponseContentType }");
+      expect(result).toContain(
+        "contentType?: { request?: TRequestContentType; response?: TResponseContentType }",
+      );
     });
   });
 
@@ -190,12 +242,17 @@ describe("parameter template functions", () => {
           processed: {
             ...createBasicAnalysis().structure.processed,
             pathParams: [
-              { in: "path", name: "user-id", required: true, schema: { type: "string" } },
+              {
+                in: "path",
+                name: "user-id",
+                required: true,
+                schema: { type: "string" },
+              },
             ] as ParameterObject[],
           },
         },
       });
-      
+
       const result = renderDestructuredParameters(analysis);
       expect(result).toContain("path: { userId, projectId }");
     });
@@ -208,12 +265,17 @@ describe("parameter template functions", () => {
           processed: {
             ...createBasicAnalysis().structure.processed,
             queryParams: [
-              { in: "query", name: "filter", required: false, schema: { type: "string" } },
+              {
+                in: "query",
+                name: "filter",
+                required: false,
+                schema: { type: "string" },
+              },
             ] as ParameterObject[],
           },
         },
       });
-      
+
       const result = renderDestructuredParameters(analysis);
       expect(result).toContain("query: { filter } = {}");
     });
@@ -221,19 +283,29 @@ describe("parameter template functions", () => {
     it("should render destructured header parameters with quoting", () => {
       const analysis = createBasicAnalysis({
         headerProperties: [
-          { name: "Content-Type", isRequired: true, varName: "ContentType", needsQuoting: true },
+          {
+            name: "Content-Type",
+            isRequired: true,
+            varName: "ContentType",
+            needsQuoting: true,
+          },
         ],
         structure: {
           ...createBasicAnalysis().structure,
           processed: {
             ...createBasicAnalysis().structure.processed,
             headerParams: [
-              { in: "header", name: "Content-Type", required: true, schema: { type: "string" } },
+              {
+                in: "header",
+                name: "Content-Type",
+                required: true,
+                schema: { type: "string" },
+              },
             ] as ParameterObject[],
           },
         },
       });
-      
+
       const result = renderDestructuredParameters(analysis);
       expect(result).toContain('"Content-Type": ContentType');
     });
@@ -246,7 +318,7 @@ describe("parameter template functions", () => {
           bodyTypeInfo: { typeName: "UserCreateRequest", isRequired: false },
         },
       });
-      
+
       const result = renderDestructuredParameters(analysis);
       expect(result).toContain("body = undefined");
     });
@@ -255,24 +327,52 @@ describe("parameter template functions", () => {
   describe("renderParameterHandling", () => {
     it("should render header parameter handling code", () => {
       const params: ParameterObject[] = [
-        { in: "header", name: "X-API-Key", required: true, schema: { type: "string" } },
-        { in: "header", name: "Content-Type", required: false, schema: { type: "string" } },
+        {
+          in: "header",
+          name: "X-API-Key",
+          required: true,
+          schema: { type: "string" },
+        },
+        {
+          in: "header",
+          name: "Content-Type",
+          required: false,
+          schema: { type: "string" },
+        },
       ];
-      
+
       const result = renderParameterHandling("header", params);
-      expect(result).toContain("if (XAPIKey !== undefined) finalHeaders['X-API-Key'] = String(XAPIKey);");
-      expect(result).toContain("if (ContentType !== undefined) finalHeaders['Content-Type'] = String(ContentType);");
+      expect(result).toContain(
+        "if (XAPIKey !== undefined) finalHeaders['X-API-Key'] = String(XAPIKey);",
+      );
+      expect(result).toContain(
+        "if (ContentType !== undefined) finalHeaders['Content-Type'] = String(ContentType);",
+      );
     });
 
     it("should render query parameter handling code", () => {
       const params: ParameterObject[] = [
-        { in: "query", name: "filter", required: true, schema: { type: "string" } },
-        { in: "query", name: "sort-by", required: false, schema: { type: "string" } },
+        {
+          in: "query",
+          name: "filter",
+          required: true,
+          schema: { type: "string" },
+        },
+        {
+          in: "query",
+          name: "sort-by",
+          required: false,
+          schema: { type: "string" },
+        },
       ];
-      
+
       const result = renderParameterHandling("query", params);
-      expect(result).toContain("if (filter !== undefined) url.searchParams.append('filter', String(filter));");
-      expect(result).toContain("if (sortBy !== undefined) url.searchParams.append('sort-by', String(sortBy));");
+      expect(result).toContain(
+        "if (filter !== undefined) url.searchParams.append('filter', String(filter));",
+      );
+      expect(result).toContain(
+        "if (sortBy !== undefined) url.searchParams.append('sort-by', String(sortBy));",
+      );
     });
 
     it("should return empty string for no parameters", () => {

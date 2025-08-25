@@ -42,7 +42,7 @@ describe("parameter logic functions", () => {
     it("should determine query optionality correctly", () => {
       const result = processParameterGroups(sampleParameterGroups);
       expect(result.isQueryOptional).toBe(true); // all query params are optional
-      
+
       const requiredQueryGroups: ParameterGroups = {
         ...sampleParameterGroups,
         queryParams: [{ ...sampleQueryParam, required: true }],
@@ -54,7 +54,7 @@ describe("parameter logic functions", () => {
     it("should determine header optionality correctly", () => {
       const result = processParameterGroups(sampleParameterGroups);
       expect(result.isHeadersOptional).toBe(false); // header is required
-      
+
       const optionalHeaderGroups: ParameterGroups = {
         ...sampleParameterGroups,
         headerParams: [{ ...sampleHeaderParam, required: false }],
@@ -64,13 +64,18 @@ describe("parameter logic functions", () => {
     });
 
     it("should include security headers in result", () => {
-      const securityHeaders = [{
-        headerName: "Authorization",
-        isRequired: true,
-        schemeName: "bearerAuth",
-      }];
-      
-      const result = processParameterGroups(sampleParameterGroups, securityHeaders);
+      const securityHeaders = [
+        {
+          headerName: "Authorization",
+          isRequired: true,
+          schemeName: "bearerAuth",
+        },
+      ];
+
+      const result = processParameterGroups(
+        sampleParameterGroups,
+        securityHeaders,
+      );
       expect(result.securityHeaders).toEqual(securityHeaders);
       expect(result.isHeadersOptional).toBe(false); // required security header
     });
@@ -88,7 +93,7 @@ describe("parameter logic functions", () => {
         "RequestMap",
         undefined,
       );
-      
+
       expect(result.hasBody).toBe(true);
       expect(result.hasRequestMap).toBe(true);
       expect(result.hasResponseMap).toBe(false);
@@ -104,9 +109,9 @@ describe("parameter logic functions", () => {
         true,
         { typeName: "UserCreateRequest", isRequired: false },
       );
-      
+
       const rules = determineParameterOptionalityRules(structure);
-      
+
       expect(rules.isQueryOptional).toBe(true);
       expect(rules.isHeadersOptional).toBe(false);
       expect(rules.isBodyOptional).toBe(true); // body not required
@@ -115,46 +120,47 @@ describe("parameter logic functions", () => {
 
   describe("analyzeParameters", () => {
     it("should analyze parameters comprehensively", () => {
-      const analysis = analyzeParameters(
-        sampleParameterGroups,
-        true,
-        { typeName: "UserCreateRequest", isRequired: true },
-      );
-      
+      const analysis = analyzeParameters(sampleParameterGroups, true, {
+        typeName: "UserCreateRequest",
+        isRequired: true,
+      });
+
       expect(analysis.pathProperties).toEqual(["userId"]);
       expect(analysis.queryProperties).toEqual([
         { name: "filter", isRequired: false },
       ]);
       expect(analysis.headerProperties).toEqual([
-        { 
-          name: "X-API-Version", 
-          isRequired: true, 
-          varName: "XAPIVersion", 
-          needsQuoting: true 
+        {
+          name: "X-API-Version",
+          isRequired: true,
+          varName: "XAPIVersion",
+          needsQuoting: true,
         },
       ]);
       expect(analysis.securityHeaderProperties).toEqual([]);
     });
 
     it("should handle security headers correctly", () => {
-      const securityHeaders = [{
-        headerName: "Authorization",
-        isRequired: true,
-        schemeName: "bearerAuth",
-      }];
-      
+      const securityHeaders = [
+        {
+          headerName: "Authorization",
+          isRequired: true,
+          schemeName: "bearerAuth",
+        },
+      ];
+
       const analysis = analyzeParameters(
         sampleParameterGroups,
         false,
         undefined,
         securityHeaders,
       );
-      
+
       expect(analysis.securityHeaderProperties).toEqual([
-        { 
-          headerName: "Authorization", 
-          isRequired: true, 
-          varName: "Authorization" 
+        {
+          headerName: "Authorization",
+          isRequired: true,
+          varName: "Authorization",
         },
       ]);
     });
@@ -178,21 +184,21 @@ describe("parameter logic functions", () => {
           },
         ],
       };
-      
+
       const analysis = analyzeParameters(specialHeaderGroups, false);
-      
+
       expect(analysis.headerProperties).toEqual([
-        { 
-          name: "Content-Type", 
-          isRequired: true, 
-          varName: "ContentType", 
-          needsQuoting: true 
+        {
+          name: "Content-Type",
+          isRequired: true,
+          varName: "ContentType",
+          needsQuoting: true,
         },
-        { 
-          name: "simpleheader", 
-          isRequired: false, 
-          varName: "simpleheader", 
-          needsQuoting: false 
+        {
+          name: "simpleheader",
+          isRequired: false,
+          varName: "simpleheader",
+          needsQuoting: false,
         },
       ]);
     });
