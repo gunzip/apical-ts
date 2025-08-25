@@ -1,7 +1,22 @@
 import type { SecurityHeader } from "../models/security-models.js";
+
 import { toValidVariableName } from "../utils.js";
 
 /* Security code generation templates and rendering functions */
+
+/**
+ * Renders auth header validation code
+ */
+export function renderAuthHeaderValidation(authHeaders: string[]): string {
+  if (authHeaders.length === 0) return "";
+
+  const validationChecks = authHeaders.map((headerName) => {
+    const varName = toValidVariableName(headerName);
+    return `if (!${varName}) throw new Error('Missing required auth header: ${headerName}');`;
+  });
+
+  return validationChecks.join("\n  ");
+}
 
 /**
  * Renders security header handling code from security headers
@@ -21,22 +36,6 @@ export function renderSecurityHeaderHandling(
       }
     })
     .join("\n    ");
-}
-
-/**
- * Renders auth header validation code
- */
-export function renderAuthHeaderValidation(
-  authHeaders: string[],
-): string {
-  if (authHeaders.length === 0) return "";
-
-  const validationChecks = authHeaders.map((headerName) => {
-    const varName = toValidVariableName(headerName);
-    return `if (!${varName}) throw new Error('Missing required auth header: ${headerName}');`;
-  });
-
-  return validationChecks.join("\n  ");
 }
 
 /**

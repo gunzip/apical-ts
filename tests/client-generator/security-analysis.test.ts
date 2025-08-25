@@ -110,7 +110,9 @@ describe("client-generator security analysis", () => {
 
       const result = analyzeGlobalSecuritySchemes(doc);
 
-      expect(result.globalSchemeNames).toEqual(new Set(["apiKey", "bearerAuth"]));
+      expect(result.globalSchemeNames).toEqual(
+        new Set(["apiKey", "bearerAuth"]),
+      );
       expect(result.authHeaders).toEqual(["X-API-Key", "Authorization"]);
       expect(result.analyzedSchemes).toHaveLength(2);
       expect(result.analyzedSchemes[0].schemeName).toBe("apiKey");

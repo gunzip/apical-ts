@@ -3,40 +3,13 @@ import type { SecuritySchemeObject } from "openapi3-ts/oas31";
 /* Security-related data structures and type definitions */
 
 /**
- * Security header information for operations
- */
-export type SecurityHeader = {
-  headerName: string;
-  isRequired: boolean;
-  schemeName: string;
-};
-
-/**
  * Analyzed security scheme information
  */
 export type AnalyzedSecurityScheme = {
-  schemeName: string;
-  scheme: SecuritySchemeObject;
-  headerName: string | null;
+  headerName: null | string;
   isHeaderBased: boolean;
-};
-
-/**
- * Security analysis result for global schemes
- */
-export type GlobalSecurityAnalysis = {
-  globalSchemeNames: Set<string>;
-  authHeaders: string[];
-  analyzedSchemes: AnalyzedSecurityScheme[];
-};
-
-/**
- * Security analysis result for operation-specific schemes
- */
-export type OperationSecurityAnalysis = {
-  operationHeaders: SecurityHeader[];
-  hasOverride: boolean;
-  analyzedSchemes: AnalyzedSecurityScheme[];
+  scheme: SecuritySchemeObject;
+  schemeName: string;
 };
 
 /**
@@ -46,4 +19,31 @@ export type AuthHeaderRequirements = {
   globalHeaders: string[];
   operationHeaders: SecurityHeader[];
   requiresAuthentication: boolean;
+};
+
+/**
+ * Security analysis result for global schemes
+ */
+export type GlobalSecurityAnalysis = {
+  analyzedSchemes: AnalyzedSecurityScheme[];
+  authHeaders: string[];
+  globalSchemeNames: Set<string>;
+};
+
+/**
+ * Security analysis result for operation-specific schemes
+ */
+export type OperationSecurityAnalysis = {
+  analyzedSchemes: AnalyzedSecurityScheme[];
+  hasOverride: boolean;
+  operationHeaders: SecurityHeader[];
+};
+
+/**
+ * Security header information for operations
+ */
+export type SecurityHeader = {
+  headerName: string;
+  isRequired: boolean;
+  schemeName: string;
 };

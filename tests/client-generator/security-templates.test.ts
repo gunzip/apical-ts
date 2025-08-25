@@ -138,9 +138,7 @@ describe("client-generator security templates", () => {
       ];
 
       const result = renderSecurityParameterExtraction(headers);
-      expect(result).toBe(
-        "const XAPIKey = config.headers?.['X-API-Key'];",
-      );
+      expect(result).toBe("const XAPIKey = config.headers?.['X-API-Key'];");
     });
 
     it("should render extraction for multiple headers", () => {
