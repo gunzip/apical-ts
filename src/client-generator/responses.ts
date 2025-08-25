@@ -120,7 +120,7 @@ export function generateResponseHandlers(
          * the successfully parsed type or a validation error object
          */
         const dataType = usesZodValidation 
-          ? `${typeName} | { zodError: import("zod").ZodError }`
+          ? `${typeName} | { parseError: import("zod").ZodError }`
           : typeName;
         unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
       } else {
@@ -211,11 +211,11 @@ function buildParseInfo({
     // Choose the correct parse expression based on content type
     if (mixedJsonAndNonJson && hasResponseContentTypeMap) {
       // If both JSON and non-JSON are present, select parse logic at runtime
-      parseExpression = `(finalResponseContentType.includes("json") || finalResponseContentType.includes("+json")) ? (() => { const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response)); if (!parseResult.success) { return { zodError: parseResult.error }; } return parseResult.data; })() : await parseResponseBody(response) as ${resolvedTypeName}`;
+      parseExpression = `(finalResponseContentType.includes("json") || finalResponseContentType.includes("+json")) ? (() => { const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response)); if (!parseResult.success) { return { parseError: parseResult.error }; } return parseResult.data; })() : await parseResponseBody(response) as ${resolvedTypeName}`;
       usesZodValidation = true;
     } else if (contentType.includes("json") || contentType.includes("+json")) {
       // JSON content type: use .safeParse
-      parseExpression = `(() => { const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response)); if (!parseResult.success) { return { zodError: parseResult.error }; } return parseResult.data; })()`;
+      parseExpression = `(() => { const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response)); if (!parseResult.success) { return { parseError: parseResult.error }; } return parseResult.data; })()`;
       usesZodValidation = true;
     } else {
       // Non-JSON: just cast the parsed body

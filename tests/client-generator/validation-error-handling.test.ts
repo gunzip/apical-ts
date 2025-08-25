@@ -8,7 +8,7 @@ import {
 
 describe("client-generator validation error handling", () => {
   describe("generateResponseHandlers with safeParse", () => {
-    it("should generate handler code that returns zodError object on validation failure", () => {
+    it("should generate handler code that returns parseError object on validation failure", () => {
       const operation: OperationObject = {
         operationId: "getUser",
         responses: {
@@ -28,14 +28,14 @@ describe("client-generator validation error handling", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      /* Verify that the generated code includes safeParse and zodError handling */
+      /* Verify that the generated code includes safeParse and parseError handling */
       expect(result.responseHandlers[0]).toContain("safeParse(");
       expect(result.responseHandlers[0]).toContain("if (!parseResult.success)");
-      expect(result.responseHandlers[0]).toContain("return { zodError: parseResult.error }");
+      expect(result.responseHandlers[0]).toContain("return { parseError: parseResult.error }");
       expect(result.responseHandlers[0]).toContain("return parseResult.data");
       
-      /* Verify that the return type includes zodError possibility */
-      expect(result.returnType).toContain("{ zodError: import(\"zod\").ZodError }");
+      /* Verify that the return type includes parseError possibility */
+      expect(result.returnType).toContain("{ parseError: import(\"zod\").ZodError }");
     });
 
     it("should generate handler code for mixed JSON/non-JSON responses with conditional validation", () => {
@@ -62,13 +62,13 @@ describe("client-generator validation error handling", () => {
       /* Verify that the generated code includes conditional safeParse logic */
       expect(result.responseHandlers[0]).toContain("finalResponseContentType.includes(\"json\")");
       expect(result.responseHandlers[0]).toContain("safeParse(");
-      expect(result.responseHandlers[0]).toContain("zodError: parseResult.error");
+      expect(result.responseHandlers[0]).toContain("parseError: parseResult.error");
       
-      /* Verify that the return type includes zodError possibility */
-      expect(result.returnType).toContain("{ zodError: import(\"zod\").ZodError }");
+      /* Verify that the return type includes parseError possibility */
+      expect(result.returnType).toContain("{ parseError: import(\"zod\").ZodError }");
     });
 
-    it("should not include zodError for non-JSON responses", () => {
+    it("should not include parseError for non-JSON responses", () => {
       const operation: OperationObject = {
         operationId: "downloadFile",
         responses: {
@@ -88,11 +88,11 @@ describe("client-generator validation error handling", () => {
 
       /* Verify that non-JSON responses don't use safeParse */
       expect(result.responseHandlers[0]).not.toContain("safeParse(");
-      expect(result.responseHandlers[0]).not.toContain("zodError");
+      expect(result.responseHandlers[0]).not.toContain("parseError");
       expect(result.responseHandlers[0]).toContain("as FileContent");
       
-      /* Verify that the return type does NOT include zodError */
-      expect(result.returnType).not.toContain("zodError");
+      /* Verify that the return type does NOT include parseError */
+      expect(result.returnType).not.toContain("parseError");
       expect(result.returnType).toBe("ApiResponse<200, FileContent>");
     });
 
@@ -111,10 +111,10 @@ describe("client-generator validation error handling", () => {
 
       /* Verify that responses without content don't include validation logic */
       expect(result.responseHandlers[0]).not.toContain("safeParse(");
-      expect(result.responseHandlers[0]).not.toContain("zodError");
+      expect(result.responseHandlers[0]).not.toContain("parseError");
       expect(result.responseHandlers[0]).toContain("data: undefined");
       
-      /* Verify that the return type is simple void without zodError */
+      /* Verify that the return type is simple void without parseError */
       expect(result.returnType).toBe("ApiResponse<204, void>");
     });
   });

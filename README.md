@@ -235,6 +235,60 @@ try {
 }
 ```
 
+## Validation Error Handling
+
+When operations return JSON responses with Zod schemas, the generated client uses `safeParse()` for graceful validation error handling. Instead of throwing exceptions, validation failures return a structured error object:
+
+```ts
+const result = await getUserProfile({ userId: "123" }, apiConfig);
+
+if (result.status === 200) {
+  // Check if validation succeeded
+  if ('parseError' in result.data) {
+    // Handle validation error
+    console.error("Response validation failed:", result.data.parseError);
+    result.data.parseError.issues.forEach(issue => {
+      console.log(`Field ${issue.path.join('.')}: ${issue.message}`);
+    });
+  } else {
+    // Successful validation - result.data is the parsed User object
+    console.log("User:", result.data.name, result.data.email);
+  }
+} else if (result.status === 404) {
+  console.warn("User not found");
+}
+```
+
+For operations with mixed content types, validation only applies to JSON responses:
+
+```ts
+const result = await getDocument({ 
+  docId: "123",
+  contentType: { response: "application/json" }
+}, apiConfig);
+
+if (result.status === 200) {
+  if ('parseError' in result.data) {
+    // Validation error only possible for JSON responses
+    console.error("JSON parsing failed:", result.data.parseError);
+  } else {
+    // Successfully parsed JSON document
+    console.log("Document:", result.data);
+  }
+}
+```
+
+Non-JSON responses (like `text/plain`, `application/octet-stream`) don't use Zod validation and therefore never include `parseError`:
+
+```ts
+const result = await downloadFile({ fileId: "123" }, apiConfig);
+
+if (result.status === 200) {
+  // result.data is directly the file content (no parseError possible)
+  console.log("Downloaded file size:", result.data.length);
+}
+```
+
 ## Handling Multiple Content Types (Request & Response)
 
 This generator fully supports OpenAPI endpoints that define multiple content types for both requests and responses. For each operation, the generated client:
