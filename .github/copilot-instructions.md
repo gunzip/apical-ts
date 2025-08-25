@@ -37,17 +37,26 @@ pnpm run build
 
 ### pnpm Tasks
 
-- `pnpm run build`: builds the project using tsup (compiles TypeScript to dist/ without type checking)
-- `pnpm run lint`: runs eslint with autofix on src
-- `pnpm run lint:check`: runs eslint on src (no autofix)
-- `pnpm run format`: formats all files using Prettier (writes changes)
-- `pnpm run format:check`: checks formatting using Prettier (no changes written)
-- `pnpm run typecheck`: runs TypeScript type checking only (`tsc --noEmit`)
-- `pnpm run test`: runs all tests with Vitest
-- `pnpm run test:coverage`: runs tests with coverage report
-- `pnpm run start`: runs the CLI from dist/index.js
+- `pnpm run build`: Build the project using tsup (compiles TypeScript to `dist/` without type checking)
+- `pnpm run lint`: Run eslint with autofix on `src/`
+- `pnpm run lint:check`: Run eslint on `src/` (no autofix)
+- `pnpm run format`: Format all files using Prettier (writes changes)
+- `pnpm run format:check`: Check formatting using Prettier (no changes written)
+- `pnpm run typecheck`: Run TypeScript type checking only (`tsc --noEmit`)
+- `pnpm run test`: Run all tests with Vitest
+- `pnpm run test:coverage`: Run tests with coverage report
+- `pnpm run start`: Run the CLI from `dist/index.js`
 
-Always run `pnpm run typecheck` for type validation, `pnpm run build` only for compilation. Use `pnpm run lint` and `pnpm run format` before committing code.
+#### Additional VS Code Tasks
+
+The workspace provides the following VS Code tasks for common workflows:
+
+- **TypeScript Build**: `pnpm run build`
+- **Run Tests**: `pnpm test`
+- **Test OpenAPI 3.1 Generation**: `pnpm start generate -i test.yaml -o generated-test --generate-client`
+- **Remove old generated test**: `rm -rf generated-test`
+
+> **Note:** Always run `pnpm install` before any other command. Use `pnpm run typecheck` for type validation, and run `pnpm run lint` and `pnpm run format` before committing code.
 
 **Preconditions**:
 
@@ -64,7 +73,6 @@ Always run `pnpm run typecheck` for type validation, `pnpm run build` only for c
 ```bash
 # Run all tests
 pnpm test
-# Test time: ~1 second (58 tests across 5 files)
 ```
 
 **Test Configuration**: Uses Vitest with Node.js environment, tests located in `src/tests/`
@@ -100,13 +108,13 @@ await generate({
 
 1. **Always run `pnpm install` before any other command**
 2. **Build validation**: `pnpm run build` should complete without errors
-3. **Test validation**: `pnpm test` should pass all 58 tests
+3. **Test validation**: `pnpm test` should pass all tests
 4. **CLI validation**: Test generation with `test.yaml` or `definitions.yaml`
+5. **File Formatting**: `pnpm format:check`must pass
+6. **Linting**: `pnpm lint:check`must pass
 
 ### Known Issues and Workarounds
 
-- **No linting configured**: There are no ESLint rules, rely on TypeScript compiler errors
-- **No format script**: Prettier is available as dependency but no npm script exists
 - **CLI parsing**: Use `pnpm start generate` (not `pnpm start -- generate`)
 - **Error handling**: Generator is robust and continues processing even with invalid input files
 
@@ -117,15 +125,26 @@ await generate({
 ```
 ├── .github/instructions/           # Copilot test guidelines
 ├── src/                           # Source code
+│   ├── index.ts
+│   ├── client-generator/           # Client generator modules
+│   ├── core-generator/             # Core generator modules
+│   ├── operation-id-generator/     # Operation ID generator
+│   ├── schema-generator/           # Zod schema generator
+│   └── tests/                      # Test helpers and fixtures
 ├── dist/                          # Build output (generated)
 ├── package.json                   # Dependencies and scripts
 ├── tsconfig.json                  # TypeScript configuration
-├── vitest.config.ts              # Test configuration
+├── vitest.config.ts               # Test configuration
 ├── .node-version                  # Node.js version requirement
-├── pnpm-lock.yaml                # pnpm lockfile
+├── pnpm-lock.yaml                 # pnpm lockfile
 ├── test.yaml                      # Sample OpenAPI spec for testing
 ├── definitions.yaml               # Sample schema definitions
-└── README.md                      # Comprehensive documentation
+├── README.md                      # Comprehensive documentation
+├── demo.gif                       # Demo animation
+├── eslint.config.js               # ESLint configuration
+├── tsup.config.js                 # tsup build config
+├── generated-bigspec.json         # Example generated output
+├── generated-genspec.ts           # Example generated output
 ```
 
 ### Source Code Architecture (`src/`)
@@ -168,9 +187,10 @@ await generate({
 
 **Tests** (`src/tests/`):
 
-- Unit tests for core functionality
+- Unit tests for core functionality and all generators
 - Use Vitest with descriptive test names
 - Follow Arrange-Act-Assert pattern
+- Test helpers and fixtures in `src/tests/integrations/fixtures/`
 
 ### Configuration Files
 
@@ -222,14 +242,14 @@ await generate({
 
 ```
 <output-dir>/
-├── package.json              # Generated package metadata
-├── operations/               # Client operations (if --generate-client)
-│   ├── index.ts             # Operation exports and configuration
-│   ├── config.ts            # Global configuration types
-│   └── <operationId>.ts     # Individual operation functions
-└── schemas/                  # Zod schemas
-    ├── <SchemaName>.ts      # Individual schema files
-    └── index.ts             # Schema exports
+├── package.json                  # Generated package metadata
+├── operations/                   # Client operations (if --generate-client)
+│   ├── index.ts                  # Operation exports and configuration
+│   ├── config.ts                 # Global configuration types
+│   └── <operationId>.ts          # Individual operation functions
+└── schemas/                      # Zod schemas
+  ├── <SchemaName>.ts           # Individual schema files
+  └── index.ts                  # Schema exports
 ```
 
 ### Validation Pipeline
