@@ -12,19 +12,25 @@ export type ContentTypeHandler = {
 export const CONTENT_TYPE_HANDLERS: Record<string, ContentTypeHandler> = {
   "application/json": {
     bodyContentCode: "bodyContent = body ? JSON.stringify(body) : undefined;",
-    contentTypeHeaderCode: 'contentTypeHeader = { "Content-Type": "application/json" };',
+    contentTypeHeaderCode:
+      'contentTypeHeader = { "Content-Type": "application/json" };',
   },
   "application/octet-stream": {
     bodyContentCode: "bodyContent = body;",
-    contentTypeHeaderCode: 'contentTypeHeader = { "Content-Type": "application/octet-stream" };',
+    contentTypeHeaderCode:
+      'contentTypeHeader = { "Content-Type": "application/octet-stream" };',
   },
   "application/x-www-form-urlencoded": {
-    bodyContentCode: "bodyContent = body ? new URLSearchParams(body as Record<string, string>).toString() : undefined;",
-    contentTypeHeaderCode: 'contentTypeHeader = { "Content-Type": "application/x-www-form-urlencoded" };',
+    bodyContentCode:
+      "bodyContent = body ? new URLSearchParams(body as Record<string, string>).toString() : undefined;",
+    contentTypeHeaderCode:
+      'contentTypeHeader = { "Content-Type": "application/x-www-form-urlencoded" };',
   },
   "application/xml": {
-    bodyContentCode: "bodyContent = typeof body === 'string' ? body : String(body);",
-    contentTypeHeaderCode: 'contentTypeHeader = { "Content-Type": "application/xml" };',
+    bodyContentCode:
+      "bodyContent = typeof body === 'string' ? body : String(body);",
+    contentTypeHeaderCode:
+      'contentTypeHeader = { "Content-Type": "application/xml" };',
   },
   "multipart/form-data": {
     bodyContentCode: `if (body) {
@@ -36,11 +42,14 @@ export const CONTENT_TYPE_HANDLERS: Record<string, ContentTypeHandler> = {
         });
         bodyContent = formData;
       }`,
-    contentTypeHeaderCode: "contentTypeHeader = {}; // Don't set Content-Type for multipart/form-data",
+    contentTypeHeaderCode:
+      "contentTypeHeader = {}; // Don't set Content-Type for multipart/form-data",
   },
   "text/plain": {
-    bodyContentCode: "bodyContent = typeof body === 'string' ? body : String(body);",
-    contentTypeHeaderCode: 'contentTypeHeader = { "Content-Type": "text/plain" };',
+    bodyContentCode:
+      "bodyContent = typeof body === 'string' ? body : String(body);",
+    contentTypeHeaderCode:
+      'contentTypeHeader = { "Content-Type": "text/plain" };',
   },
 };
 
@@ -53,7 +62,8 @@ export function determineContentTypeHandlers(
   return requestContentTypes.map((contentType) => ({
     contentType,
     handler: CONTENT_TYPE_HANDLERS[contentType] || {
-      bodyContentCode: "bodyContent = typeof body === 'string' ? body : JSON.stringify(body);",
+      bodyContentCode:
+        "bodyContent = typeof body === 'string' ? body : JSON.stringify(body);",
       contentTypeHeaderCode: `contentTypeHeader = { "Content-Type": "${contentType}" };`,
     },
   }));
@@ -64,7 +74,7 @@ export function determineContentTypeHandlers(
  */
 export function renderContentTypeSwitch(requestContentTypes: string[]): string {
   const handlers = determineContentTypeHandlers(requestContentTypes);
-  
+
   const switchCases = handlers
     .map(({ contentType, handler }) => {
       return `    case "${contentType}":

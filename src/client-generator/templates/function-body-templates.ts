@@ -30,7 +30,10 @@ export function determineFunctionBodyStructure(
   requestContentTypes: string[] | undefined,
   shouldGenerateRequestMap: boolean,
   shouldGenerateResponseMap: boolean,
-): Pick<FunctionBodyStructure, "contentTypeLogic" | "acceptHeaderLogic" | "contentTypeHeaderCode"> {
+): Pick<
+  FunctionBodyStructure,
+  "contentTypeLogic" | "acceptHeaderLogic" | "contentTypeHeaderCode"
+> {
   let contentTypeLogic = "";
   let acceptHeaderLogic = "";
   const contentTypeHeaderCode = "";
@@ -84,7 +87,9 @@ export function determineHeaderConfiguration(
 export function renderHeadersObject(config: HeaderConfiguration): string {
   if (config.shouldGenerateRequestMap) {
     return `    ${
-      config.overridesSecurity && config.authHeaders && config.authHeaders.length > 0
+      config.overridesSecurity &&
+      config.authHeaders &&
+      config.authHeaders.length > 0
         ? `...Object.fromEntries(
       Object.entries(config.headers).filter(([key]) => 
         !['${config.authHeaders.join("', '")}'].includes(key)
@@ -100,7 +105,9 @@ ${config.acceptHeaderLogic}`
     ...contentTypeHeader,`;
   } else {
     return `    ${
-      config.overridesSecurity && config.authHeaders && config.authHeaders.length > 0
+      config.overridesSecurity &&
+      config.authHeaders &&
+      config.authHeaders.length > 0
         ? `...Object.fromEntries(
       Object.entries(config.headers).filter(([key]) => 
         !['${config.authHeaders.join("', '")}'].includes(key)

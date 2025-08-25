@@ -30,8 +30,12 @@ describe("function-body-templates", () => {
         false,
       );
 
-      expect(result.contentTypeLogic).toContain('const finalRequestContentType = contentType?.request || "application/json";');
-      expect(result.contentTypeLogic).toContain('const finalResponseContentType = "";');
+      expect(result.contentTypeLogic).toContain(
+        'const finalRequestContentType = contentType?.request || "application/json";',
+      );
+      expect(result.contentTypeLogic).toContain(
+        'const finalResponseContentType = "";',
+      );
       expect(result.acceptHeaderLogic).toBe("");
     });
 
@@ -54,8 +58,12 @@ describe("function-body-templates", () => {
         true,
       );
 
-      expect(result.contentTypeLogic).toContain('const finalResponseContentType = contentType?.response || "application/xml";');
-      expect(result.acceptHeaderLogic).toBe('    "Accept": contentType?.response || "application/xml",');
+      expect(result.contentTypeLogic).toContain(
+        'const finalResponseContentType = contentType?.response || "application/xml";',
+      );
+      expect(result.acceptHeaderLogic).toBe(
+        '    "Accept": contentType?.response || "application/xml",',
+      );
     });
 
     it("should generate content type logic for both request and response maps", () => {
@@ -77,9 +85,15 @@ describe("function-body-templates", () => {
         true,
       );
 
-      expect(result.contentTypeLogic).toContain('const finalRequestContentType = contentType?.request || "application/json";');
-      expect(result.contentTypeLogic).toContain('const finalResponseContentType = contentType?.response || "application/xml";');
-      expect(result.acceptHeaderLogic).toBe('    "Accept": contentType?.response || "application/xml",');
+      expect(result.contentTypeLogic).toContain(
+        'const finalRequestContentType = contentType?.request || "application/json";',
+      );
+      expect(result.contentTypeLogic).toContain(
+        'const finalResponseContentType = contentType?.response || "application/xml";',
+      );
+      expect(result.acceptHeaderLogic).toBe(
+        '    "Accept": contentType?.response || "application/xml",',
+      );
     });
 
     it("should use application/json as default when no default is specified", () => {
@@ -101,8 +115,12 @@ describe("function-body-templates", () => {
         true,
       );
 
-      expect(result.contentTypeLogic).toContain('const finalRequestContentType = contentType?.request || "application/json";');
-      expect(result.acceptHeaderLogic).toBe('    "Accept": contentType?.response || "application/json",');
+      expect(result.contentTypeLogic).toContain(
+        'const finalRequestContentType = contentType?.request || "application/json";',
+      );
+      expect(result.acceptHeaderLogic).toBe(
+        '    "Accept": contentType?.response || "application/json",',
+      );
     });
   });
 
@@ -122,7 +140,9 @@ describe("function-body-templates", () => {
       expect(result.authHeaders).toEqual(["Authorization"]);
       expect(result.shouldGenerateResponseMap).toBe(true);
       expect(result.acceptHeaderLogic).toBe('"Accept": application/json');
-      expect(result.contentTypeHeaderCode).toBe('"Content-Type": application/json');
+      expect(result.contentTypeHeaderCode).toBe(
+        '"Content-Type": application/json',
+      );
     });
 
     it("should handle optional parameters", () => {
@@ -201,7 +221,7 @@ describe("function-body-templates", () => {
     it("should render complete function body with all components", () => {
       const result = renderFunctionBody(
         '  const finalRequestContentType = "application/json";\n',
-        '  let bodyContent = JSON.stringify(body);\n',
+        "  let bodyContent = JSON.stringify(body);\n",
         "    ...config.headers,",
         "/api/users/${userId}",
         "POST",
@@ -212,20 +232,28 @@ describe("function-body-templates", () => {
         "url.searchParams.append('filter', filter);",
       );
 
-      expect(result).toContain('const finalRequestContentType = "application/json";');
+      expect(result).toContain(
+        'const finalRequestContentType = "application/json";',
+      );
       expect(result).toContain("let bodyContent = JSON.stringify(body);");
-      expect(result).toContain("const finalHeaders: Record<string, string> = {");
+      expect(result).toContain(
+        "const finalHeaders: Record<string, string> = {",
+      );
       expect(result).toContain("...config.headers,");
       expect(result).toContain("finalHeaders['X-Custom'] = customHeader;");
       expect(result).toContain("finalHeaders['Authorization'] = token;");
-      expect(result).toContain("const url = new URL(`/api/users/${userId}`, config.baseURL);");
+      expect(result).toContain(
+        "const url = new URL(`/api/users/${userId}`, config.baseURL);",
+      );
       expect(result).toContain("url.searchParams.append('filter', filter);");
       expect(result).toContain('method: "POST",');
       expect(result).toContain("body: bodyContent,");
       expect(result).toContain("switch (response.status) {");
       expect(result).toContain('case "200": return { status: 200, data };');
       expect(result).toContain("default: {");
-      expect(result).toContain("throw new UnexpectedResponseError(response.status, data, response);");
+      expect(result).toContain(
+        "throw new UnexpectedResponseError(response.status, data, response);",
+      );
     });
 
     it("should render function body without body for GET request", () => {
