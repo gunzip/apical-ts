@@ -14,6 +14,8 @@ import {
   extractResponseContentTypes,
 } from "./operation-extractor.js";
 import { getResponseContentType } from "./utils.js";
+import { analyzeResponseStructure } from "./response-analysis.js";
+import { renderResponseHandlers, renderUnionType } from "./templates/response-templates.js";
 
 /**
  * Result of generating content type maps
@@ -86,149 +88,20 @@ export function generateResponseHandlers(
   typeImports: Set<string>,
   hasResponseContentTypeMap = false,
 ): ResponseHandlerResult {
-  const responseHandlers: string[] = [];
-  const unionTypes: string[] = [];
+  /* Analyze the response structure */
+  const analysis = analyzeResponseStructure({
+    operation,
+    typeImports,
+    hasResponseContentTypeMap,
+  });
 
-  if (operation.responses) {
-    const responseCodes = Object.keys(operation.responses).filter(
-      (code) => code !== "default",
-    );
-    responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  /* Generate response handlers using templates */
+  const responseHandlers = renderResponseHandlers(analysis.responses);
 
-    for (const code of responseCodes) {
-      const response = operation.responses[code] as ResponseObject;
-      const contentType = getResponseContentType(response);
-      // multiple content types currently not altering static parsing strategy
-
-      let typeName: null | string = null;
-      let parseCode = "undefined";
-
-      if (contentType && response.content?.[contentType]?.schema) {
-        const { parseExpression, resolvedTypeName } = buildParseInfo({
-          code,
-          contentType,
-          hasResponseContentTypeMap,
-          operation,
-          response,
-          typeImports,
-        });
-        typeName = resolvedTypeName;
-        parseCode = parseExpression;
-
-        /*
-         * For responses that use Zod validation, the data type could be either
-         * the successfully parsed type or a validation error object
-         */
-        // For validated responses we emit the success variant (error branch handled via early return in handler)
-        unionTypes.push(`ApiResponse<${code}, ${typeName}>`);
-      } else {
-        const dataType = typeName || (contentType ? "unknown" : "void");
-        unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
-      }
-
-      if (typeName || contentType) {
-        // Ensure we actually declare data for unknown content type with no schema
-        if (parseCode === "undefined") {
-          parseCode = "const data = undefined; // data = undefined"; // test expectation
-        }
-        const indentedParseCode = parseCode
-          .split("\n")
-          .map((l) => (l ? `      ${l}` : l))
-          .join("\n");
-        responseHandlers.push(
-          `    case ${code}: {\n${indentedParseCode}\n      return { status: ${code} as const, data, response };\n    }`,
-        );
-      } else {
-        responseHandlers.push(
-          `    case ${code}:\n      return { status: ${code} as const, data: undefined, response };`,
-        );
-      }
-    }
-  }
-
-  const returnType =
-    unionTypes.length > 0
-      ? unionTypes.join(" | ")
-      : "ApiResponse<number, unknown>";
+  /* Generate return type using templates */
+  const returnType = renderUnionType(analysis.unionTypes, analysis.defaultReturnType);
 
   return { responseHandlers, returnType };
-}
-
-/*
- * Given a response object and content type, determines the correct TypeScript type name
- * and code to parse the response body.
- *
- * Handles both referenced and inline schemas, and generates the appropriate parse expression
- * for JSON and non-JSON content types.
- *
- * Used by generateResponseHandlers to build the switch/case logic for handling API responses.
- */
-function buildParseInfo({
-  code,
-  contentType,
-  hasResponseContentTypeMap,
-  operation,
-  response,
-  typeImports,
-}: {
-  code: string;
-  contentType: string;
-  hasResponseContentTypeMap: boolean;
-  operation: OperationObject;
-  response: ResponseObject;
-  typeImports: Set<string>;
-}): {
-  parseExpression: string;
-  resolvedTypeName: string;
-} {
-  let parseExpression = "const data = undefined;";
-  let resolvedTypeName = "";
-  // Get all content types for this response
-  const allContentTypes = Object.keys(response.content || {});
-  // Check if any content type is JSON-like
-  const hasJsonLike = allContentTypes.some(
-    (ct) => ct.includes("json") || ct.includes("+json"),
-  );
-  // Check if any content type is not JSON-like
-  const hasNonJson = allContentTypes.some(
-    (ct) => !ct.includes("json") && !ct.includes("+json"),
-  );
-  // True if both JSON and non-JSON content types are present
-  const mixedJsonAndNonJson = hasJsonLike && hasNonJson;
-  // Get the schema for the current content type
-  const schema = response.content?.[contentType]?.schema;
-  if (schema) {
-    if (isReferenceObject(schema)) {
-      // If schema is a reference, extract the referenced type name
-      const ref = schema.$ref;
-      assert(
-        ref.startsWith("#/components/schemas/"),
-        `Unsupported schema reference: ${ref}`,
-      );
-      const originalSchemaName = ref.split("/").pop();
-      assert(originalSchemaName, "Invalid $ref in response schema");
-      resolvedTypeName = sanitizeIdentifier(originalSchemaName as string);
-      typeImports.add(resolvedTypeName);
-    } else {
-      // Inline schema: synthesize a type name based on operationId and status code
-      assert(operation.operationId, "Invalid operationId");
-      const sanitizedOperationId = sanitizeIdentifier(operation.operationId);
-      resolvedTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${code}Response`;
-      typeImports.add(resolvedTypeName);
-    }
-    // Choose the correct parse expression based on content type
-    if (mixedJsonAndNonJson && hasResponseContentTypeMap) {
-      parseExpression = `let data: ${resolvedTypeName};\n      if (finalResponseContentType.includes("json") || finalResponseContentType.includes("+json")) {\n        const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response));\n        if (!parseResult.success) {\n          return { status: ${code} as const, error: parseResult.error, response };\n        }\n        data = parseResult.data;\n      } else {\n        data = await parseResponseBody(response) as ${resolvedTypeName};\n      }`;
-      // validation branch early-return
-    } else if (contentType.includes("json") || contentType.includes("+json")) {
-      parseExpression = `const parseResult = ${resolvedTypeName}.safeParse(await parseResponseBody(response));\n      if (!parseResult.success) {\n        return { status: ${code} as const, error: parseResult.error, response };\n      }\n      const data = parseResult.data;`;
-      // validation branch early-return
-    } else {
-      parseExpression = `const data = await parseResponseBody(response) as ${resolvedTypeName};`;
-      // no validation
-    }
-  }
-  return { parseExpression, resolvedTypeName };
 }
 
 /*
