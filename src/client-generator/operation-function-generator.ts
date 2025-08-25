@@ -8,6 +8,8 @@ import type {
 
 import assert from "assert";
 
+import type { OperationMetadata } from "./templates/operation-templates.js";
+
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateFunctionBody } from "./code-generation.js";
 import { extractParameterGroups } from "./parameters.js";
@@ -25,7 +27,6 @@ import {
   getOperationSecuritySchemes,
   hasSecurityOverride,
 } from "./security.js";
-import type { OperationMetadata } from "./templates/operation-templates.js";
 import {
   buildGenericParams,
   buildParameterDeclaration,
@@ -122,19 +123,19 @@ export function extractOperationMetadata(
   });
 
   return {
-    functionName,
-    operationName,
-    summary,
-    typeImports,
-    parameterGroups,
-    hasBody,
-    operationSecurityHeaders,
+    authHeaders,
     bodyInfo,
+    functionBodyCode,
+    functionName,
+    hasBody,
+    operationName,
+    operationSecurityHeaders,
+    overridesSecurity,
+    parameterGroups,
     parameterStructures,
     responseHandlers,
-    overridesSecurity,
-    authHeaders,
-    functionBodyCode,
+    summary,
+    typeImports,
   };
 }
 
@@ -176,32 +177,32 @@ export function generateOperationFunction(
 
   /* Compute generic parameters and adjust return type if response map present */
   const { genericParams, updatedReturnType } = buildGenericParams({
-    shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
-    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
     contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+    initialReturnType: metadata.responseHandlers.returnType,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
-    initialReturnType: metadata.responseHandlers.returnType,
+    shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
+    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
   });
 
   /* Emit request/response map type aliases (only when non-empty / applicable) */
   const typeAliases = buildTypeAliases({
-    shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
-    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
+    contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
-    contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+    shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
+    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
   });
 
   /* Render the complete function */
   const functionStr = renderOperationFunction({
+    functionBodyCode: metadata.functionBodyCode,
     functionName: metadata.functionName,
-    summary: metadata.summary,
     genericParams,
     parameterDeclaration,
-    updatedReturnType,
-    functionBodyCode: metadata.functionBodyCode,
+    summary: metadata.summary,
     typeAliases,
+    updatedReturnType,
   });
 
   return { functionCode: functionStr, typeImports: metadata.typeImports };

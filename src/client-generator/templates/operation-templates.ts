@@ -1,19 +1,40 @@
-import type { generateContentTypeMaps } from "../responses.js";
 import type { extractParameterGroups } from "../parameters.js";
 import type { resolveRequestBodyType } from "../request-body.js";
+import type { generateContentTypeMaps } from "../responses.js";
 import type { getOperationSecuritySchemes } from "../security.js";
 
 /* TypeScript rendering functions for operation code generation */
 
+export type GenericParamsConfig = {
+  contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
+  initialReturnType: string;
+  requestMapTypeName: string;
+  responseMapTypeName: string;
+  shouldGenerateRequestMap: boolean;
+  shouldGenerateResponseMap: boolean;
+};
+
+export type GenericParamsResult = {
+  genericParams: string;
+  updatedReturnType: string;
+};
+
+/**
+ * Renders the complete TypeScript function code from structured metadata
+ */
+export type OperationFunctionRenderConfig = {
+  functionBodyCode: string;
+  functionName: string;
+  genericParams: string;
+  parameterDeclaration: string;
+  summary: string;
+  typeAliases: string;
+  updatedReturnType: string;
+};
+
 /* Data structure representing operation metadata extracted from OpenAPI specification */
 export type OperationMetadata = {
-  functionName: string;
-  operationName: string;
-  summary: string;
-  typeImports: Set<string>;
-  parameterGroups: ReturnType<typeof extractParameterGroups>;
-  hasBody: boolean;
-  operationSecurityHeaders: ReturnType<typeof getOperationSecuritySchemes>;
+  authHeaders: string[];
   bodyInfo: {
     bodyTypeInfo: ReturnType<typeof resolveRequestBodyType> | undefined;
     contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
@@ -24,6 +45,13 @@ export type OperationMetadata = {
     shouldGenerateRequestMap: boolean;
     shouldGenerateResponseMap: boolean;
   };
+  functionBodyCode: string;
+  functionName: string;
+  hasBody: boolean;
+  operationName: string;
+  operationSecurityHeaders: ReturnType<typeof getOperationSecuritySchemes>;
+  overridesSecurity: boolean;
+  parameterGroups: ReturnType<typeof extractParameterGroups>;
   parameterStructures: {
     destructuredParams: string;
     paramsInterface: string;
@@ -32,36 +60,21 @@ export type OperationMetadata = {
     responseHandlers: string[];
     returnType: string;
   };
-  overridesSecurity: boolean;
-  authHeaders: string[];
-  functionBodyCode: string;
-};
-
-export type GenericParamsConfig = {
-  shouldGenerateRequestMap: boolean;
-  shouldGenerateResponseMap: boolean;
-  contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
-  requestMapTypeName: string;
-  responseMapTypeName: string;
-  initialReturnType: string;
-};
-
-export type GenericParamsResult = {
-  genericParams: string;
-  updatedReturnType: string;
-};
-
-export type TypeAliasesConfig = {
-  shouldGenerateRequestMap: boolean;
-  shouldGenerateResponseMap: boolean;
-  requestMapTypeName: string;
-  responseMapTypeName: string;
-  contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
+  summary: string;
+  typeImports: Set<string>;
 };
 
 export type ParameterDeclarationConfig = {
   destructuredParams: string;
   paramsInterface: string;
+};
+
+export type TypeAliasesConfig = {
+  contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
+  requestMapTypeName: string;
+  responseMapTypeName: string;
+  shouldGenerateRequestMap: boolean;
+  shouldGenerateResponseMap: boolean;
 };
 
 /**
@@ -132,19 +145,6 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
   }
   return typeAliases;
 }
-
-/**
- * Renders the complete TypeScript function code from structured metadata
- */
-export type OperationFunctionRenderConfig = {
-  functionName: string;
-  summary: string;
-  genericParams: string;
-  parameterDeclaration: string;
-  updatedReturnType: string;
-  functionBodyCode: string;
-  typeAliases: string;
-};
 
 export function renderOperationFunction(
   config: OperationFunctionRenderConfig,

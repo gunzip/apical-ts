@@ -89,22 +89,22 @@ export {
   extractServerUrls,
 } from "./operation-extractor.js";
 export {
-  generateOperationFunction,
   extractOperationMetadata,
+  generateOperationFunction,
 } from "./operation-function-generator.js";
+export type { ParameterGroups } from "./parameters.js";
+export type { RequestBodyTypeInfo } from "./request-body.js";
+export type { SecurityHeader } from "./security.js";
+
+export { extractAuthHeaders } from "./security.js";
+
 export type { OperationMetadata as OperationFunctionMetadata } from "./templates/operation-templates.js";
+
 export {
   buildGenericParams,
   buildParameterDeclaration,
   buildTypeAliases,
   renderOperationFunction,
 } from "./templates/operation-templates.js";
-export type { ParameterGroups } from "./parameters.js";
-
-export type { RequestBodyTypeInfo } from "./request-body.js";
-
-export type { SecurityHeader } from "./security.js";
-
-export { extractAuthHeaders } from "./security.js";
 
 export { toCamelCase, toValidVariableName } from "./utils.js";
