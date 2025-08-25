@@ -229,6 +229,17 @@ describe("client-generator config-generator", () => {
       const result = generateConfigTypes(authHeaders, serverUrls);
 
       expect(result).toContain("baseURL: '',");
+      
+      /* Verify the complete output structure for integration testing */
+      expect(result).toContain("// Configuration types");
+      expect(result).toContain("export interface GlobalConfig");
+      expect(result).toContain("export type AuthHeaders = 'custom-token';");
+      expect(result).toContain("// Default global configuration - immutable");
+      expect(result).toContain("export const globalConfig: GlobalConfig");
+      expect(result).toContain("export type ApiResponse<S extends number, T>");
+      expect(result).toContain("export function isSuccessResponse");
+      expect(result).toContain("export class UnexpectedResponseError extends Error");
+      expect(result).toContain("export function configureOperations");
     });
   });
 });

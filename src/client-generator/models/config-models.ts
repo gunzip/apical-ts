@@ -13,20 +13,6 @@ export type AuthConfiguration = {
 };
 
 /*
- * Represents the analysis result of server configuration
- */
-export type ServerConfiguration = {
-  /* List of server URLs from OpenAPI spec */
-  serverUrls: string[];
-  /* TypeScript union type string for baseURL (includes server URLs + string extension) */
-  baseURLType: string;
-  /* Default baseURL value to use in configuration object */
-  defaultBaseURL: string;
-  /* Whether any server URLs were found */
-  hasServerUrls: boolean;
-};
-
-/*
  * Represents the complete configuration structure needed for code generation
  */
 export type ConfigStructure = {
@@ -40,10 +26,24 @@ export type ConfigStructure = {
  * Configuration for template rendering
  */
 export type ConfigTemplateOptions = {
+  /* Whether to include default configuration object */
+  includeDefaultConfig?: boolean;
   /* Whether to include the full static support code */
   includeStaticSupport?: boolean;
   /* Whether to include type exports */
   includeTypeExports?: boolean;
-  /* Whether to include default configuration object */
-  includeDefaultConfig?: boolean;
+};
+
+/*
+ * Represents the analysis result of server configuration
+ */
+export type ServerConfiguration = {
+  /* TypeScript union type string for baseURL (includes server URLs + string extension) */
+  baseURLType: string;
+  /* Default baseURL value to use in configuration object */
+  defaultBaseURL: string;
+  /* Whether any server URLs were found */
+  hasServerUrls: boolean;
+  /* List of server URLs from OpenAPI spec */
+  serverUrls: string[];
 };

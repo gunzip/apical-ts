@@ -3,49 +3,6 @@
 import type { ConfigStructure } from "../models/config-models.js";
 
 /*
- * Renders the GlobalConfig interface
- */
-export function renderConfigInterface(config: ConfigStructure): string {
-  const { auth, server } = config;
-  
-  return `// Configuration types
-export interface GlobalConfig {
-  baseURL: ${server.baseURLType};
-  fetch: typeof fetch;
-  headers: {
-    [K in ${auth.hasAuthHeaders ? `AuthHeaders` : "string"}]?: string;
-  } & Record<string, string>;
-}`;
-}
-
-/*
- * Renders the AuthHeaders type export (if needed)
- */
-export function renderAuthHeadersType(config: ConfigStructure): string {
-  const { auth } = config;
-  
-  if (!auth.hasAuthHeaders) {
-    return "";
-  }
-  
-  return `export type AuthHeaders = ${auth.authHeadersType};`;
-}
-
-/*
- * Renders the default configuration object
- */
-export function renderConfigImplementation(config: ConfigStructure): string {
-  const { server } = config;
-  
-  return `// Default global configuration - immutable
-export const globalConfig: GlobalConfig = {
-  baseURL: '${server.defaultBaseURL}',
-  fetch: fetch,
-  headers: {}
-};`;
-}
-
-/*
  * Renders the API response type definitions
  */
 export function renderApiResponseTypes(): string {
@@ -76,21 +33,63 @@ export type ApiResponse<S extends number, T> =
 }
 
 /*
- * Renders type guard functions for response status codes
+ * Renders the AuthHeaders type export (if needed)
  */
-export function renderTypeGuards(): string {
-  return `/* Type guards for response status codes */
-export function isSuccessResponse<T>(
-  result: ApiResponse<number, any>
-): result is ApiResponse<number, T> {
-  return result.status >= 200 && result.status < 300;
+export function renderAuthHeadersType(config: ConfigStructure): string {
+  const { auth } = config;
+
+  if (!auth.hasAuthHeaders) {
+    return "";
+  }
+
+  return `export type AuthHeaders = ${auth.authHeadersType};`;
 }
 
-export function isErrorResponse<T>(
-  result: ApiResponse<number, any>
-): result is ApiResponse<number, T> {
-  return !isSuccessResponse(result);
+/*
+ * Renders the default configuration object
+ */
+export function renderConfigImplementation(config: ConfigStructure): string {
+  const { server } = config;
+
+  return `// Default global configuration - immutable
+export const globalConfig: GlobalConfig = {
+  baseURL: '${server.defaultBaseURL}',
+  fetch: fetch,
+  headers: {}
+};`;
+}
+
+/*
+ * Renders the GlobalConfig interface
+ */
+export function renderConfigInterface(config: ConfigStructure): string {
+  const { auth, server } = config;
+
+  return `// Configuration types
+export interface GlobalConfig {
+  baseURL: ${server.baseURLType};
+  fetch: typeof fetch;
+  headers: {
+    [K in ${auth.hasAuthHeaders ? `AuthHeaders` : "string"}]?: string;
+  } & Record<string, string>;
 }`;
+}
+
+/*
+ * Renders the complete static support code
+ */
+export function renderConfigSupport(): string {
+  return [
+    renderApiResponseTypes(),
+    "",
+    renderTypeGuards(),
+    "",
+    renderErrorClasses(),
+    "",
+    renderUtilityFunctions(),
+    "",
+    renderOperationUtilities(),
+  ].join("\n");
 }
 
 /*
@@ -122,6 +121,48 @@ export class ApiError extends Error {
     this.body = body;
     this.headers = headers;
   }
+}`;
+}
+
+/*
+ * Renders operation binding utilities
+ */
+export function renderOperationUtilities(): string {
+  return `/* Utility types for operation binding */
+type Operation = (params: any, config?: GlobalConfig) => Promise<any>;
+
+/* Bind all operations with a specific config */
+export function configureOperations<T extends Record<string, Operation>>(
+  operations: T, 
+  config: GlobalConfig
+): {
+  [K in keyof T]: (params: Parameters<T[K]>[0]) => ReturnType<T[K]>;
+} {
+  const bound: Partial<Record<keyof T, any>> = {};
+  for (const key in operations) {
+    if (typeof operations[key] === 'function') {
+      bound[key] = (params: any) => operations[key](params, config);
+    }
+  }
+  return bound as any;
+}`;
+}
+
+/*
+ * Renders type guard functions for response status codes
+ */
+export function renderTypeGuards(): string {
+  return `/* Type guards for response status codes */
+export function isSuccessResponse<T>(
+  result: ApiResponse<number, any>
+): result is ApiResponse<number, T> {
+  return result.status >= 200 && result.status < 300;
+}
+
+export function isErrorResponse<T>(
+  result: ApiResponse<number, any>
+): result is ApiResponse<number, T> {
+  return !isSuccessResponse(result);
 }`;
 }
 
@@ -207,45 +248,4 @@ export async function parseResponseBody(response: Response): Promise<unknown | B
   }
   return response.text().catch(() => null);
 }`;
-}
-
-/*
- * Renders operation binding utilities
- */
-export function renderOperationUtilities(): string {
-  return `/* Utility types for operation binding */
-type Operation = (params: any, config?: GlobalConfig) => Promise<any>;
-
-/* Bind all operations with a specific config */
-export function configureOperations<T extends Record<string, Operation>>(
-  operations: T, 
-  config: GlobalConfig
-): {
-  [K in keyof T]: (params: Parameters<T[K]>[0]) => ReturnType<T[K]>;
-} {
-  const bound: Partial<Record<keyof T, any>> = {};
-  for (const key in operations) {
-    if (typeof operations[key] === 'function') {
-      bound[key] = (params: any) => operations[key](params, config);
-    }
-  }
-  return bound as any;
-}`;
-}
-
-/*
- * Renders the complete static support code
- */
-export function renderConfigSupport(): string {
-  return [
-    renderApiResponseTypes(),
-    "",
-    renderTypeGuards(),
-    "",
-    renderErrorClasses(),
-    "",
-    renderUtilityFunctions(),
-    "",
-    renderOperationUtilities(),
-  ].join("\n");
 }

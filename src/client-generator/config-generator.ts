@@ -1,6 +1,11 @@
 /* Generates the configuration file content and types */
 
-import type { AuthConfiguration, ConfigStructure, ServerConfiguration } from "./models/config-models.js";
+import type {
+  AuthConfiguration,
+  ConfigStructure,
+  ServerConfiguration,
+} from "./models/config-models.js";
+
 import {
   renderAuthHeadersType,
   renderConfigImplementation,
@@ -11,12 +16,14 @@ import {
 /*
  * Analyzes authentication configuration from auth headers
  */
-export function analyzeAuthConfiguration(authHeaders: string[]): AuthConfiguration {
+export function analyzeAuthConfiguration(
+  authHeaders: string[],
+): AuthConfiguration {
   const hasAuthHeaders = authHeaders.length > 0;
   const authHeadersType = hasAuthHeaders
     ? authHeaders.map((h) => `'${h}'`).join(" | ")
     : "string";
-  
+
   return {
     authHeaders,
     authHeadersType,
@@ -27,18 +34,20 @@ export function analyzeAuthConfiguration(authHeaders: string[]): AuthConfigurati
 /*
  * Analyzes server configuration from server URLs
  */
-export function analyzeServerConfiguration(serverUrls: string[] = []): ServerConfiguration {
+export function analyzeServerConfiguration(
+  serverUrls: string[] = [],
+): ServerConfiguration {
   const hasServerUrls = serverUrls.length > 0;
   const baseURLType = hasServerUrls
     ? serverUrls.map((url) => `'${url}'`).join(" | ") + " | (string & {})"
     : "string";
   const defaultBaseURL = hasServerUrls ? serverUrls[0] : "";
-  
+
   return {
-    serverUrls,
     baseURLType,
     defaultBaseURL,
     hasServerUrls,
+    serverUrls,
   };
 }
 
@@ -63,15 +72,13 @@ export function generateConfigFileContent(
   return generateConfigTypes(authHeaders, serverUrls);
 }
 
-
-
 /* Generate configuration types */
 export function generateConfigTypes(
   authHeaders: string[],
   serverUrls: string[] = [],
 ): string {
   const config = determineConfigStructure(authHeaders, serverUrls);
-  
+
   const parts = [
     renderConfigInterface(config),
     "",
@@ -80,7 +87,7 @@ export function generateConfigTypes(
     renderConfigImplementation(config),
     renderConfigSupport(),
   ];
-  
+
   /* Filter out empty parts and join */
-  return parts.filter(part => part.trim() !== "").join("\n");
+  return parts.filter((part) => part.trim() !== "").join("\n");
 }
