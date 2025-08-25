@@ -1,8 +1,4 @@
-import type {
-  OperationObject,
-  RequestBodyObject,
-  ResponseObject,
-} from "openapi3-ts/oas31";
+import type { OperationObject, RequestBodyObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";
@@ -13,9 +9,11 @@ import {
   extractRequestContentTypes,
   extractResponseContentTypes,
 } from "./operation-extractor.js";
-import { getResponseContentType } from "./utils.js";
 import { analyzeResponseStructure } from "./response-analysis.js";
-import { renderResponseHandlers, renderUnionType } from "./templates/response-templates.js";
+import {
+  renderResponseHandlers,
+  renderUnionType,
+} from "./templates/response-templates.js";
 
 /**
  * Result of generating content type maps
@@ -90,16 +88,19 @@ export function generateResponseHandlers(
 ): ResponseHandlerResult {
   /* Analyze the response structure */
   const analysis = analyzeResponseStructure({
+    hasResponseContentTypeMap,
     operation,
     typeImports,
-    hasResponseContentTypeMap,
   });
 
   /* Generate response handlers using templates */
   const responseHandlers = renderResponseHandlers(analysis.responses);
 
   /* Generate return type using templates */
-  const returnType = renderUnionType(analysis.unionTypes, analysis.defaultReturnType);
+  const returnType = renderUnionType(
+    analysis.unionTypes,
+    analysis.defaultReturnType,
+  );
 
   return { responseHandlers, returnType };
 }

@@ -1,6 +1,16 @@
 /* Response-related template functions for TypeScript code generation */
 
-import type { ResponseInfo, ParsingStrategy } from "../models/response-models.js";
+import type { ResponseInfo } from "../models/response-models.js";
+
+/*
+ * Renders an ApiResponse union type component for a response
+ */
+export function renderApiResponseType(
+  statusCode: string,
+  typeName: string,
+): string {
+  return `ApiResponse<${statusCode}, ${typeName}>`;
+}
 
 /*
  * Renders a parse expression for a response based on its parsing strategy
@@ -8,9 +18,9 @@ import type { ResponseInfo, ParsingStrategy } from "../models/response-models.js
 export function renderParseExpression(
   responseInfo: ResponseTypeInfo,
   config: {
+    hasResponseContentTypeMap: boolean;
     statusCode: string;
     typeName: string;
-    hasResponseContentTypeMap: boolean;
   },
 ): string {
   const { statusCode, typeName } = config;
@@ -21,7 +31,10 @@ export function renderParseExpression(
   }
 
   /* Handle mixed content types with runtime checking */
-  if (parsingStrategy.requiresRuntimeContentTypeCheck && config.hasResponseContentTypeMap) {
+  if (
+    parsingStrategy.requiresRuntimeContentTypeCheck &&
+    config.hasResponseContentTypeMap
+  ) {
     return `let data: ${typeName};
       if (finalResponseContentType.includes("json") || finalResponseContentType.includes("+json")) {
         const parseResult = ${typeName}.safeParse(await parseResponseBody(response));
@@ -54,7 +67,7 @@ export function renderResponseHandler(
   responseInfo: ResponseTypeInfo,
   parseExpression: string,
 ): string {
-  const { statusCode, typeName, contentType } = responseInfo;
+  const { contentType, statusCode, typeName } = responseInfo;
 
   if (typeName || contentType) {
     /* Ensure we actually declare data for unknown content type with no schema */
@@ -86,9 +99,10 @@ export function renderResponseHandlers(responses: ResponseInfo[]): string[] {
 
   for (const responseInfo of responses) {
     const parseExpression = renderParseExpression(responseInfo, {
+      hasResponseContentTypeMap:
+        responseInfo.parsingStrategy.requiresRuntimeContentTypeCheck,
       statusCode: responseInfo.statusCode,
       typeName: responseInfo.typeName || "",
-      hasResponseContentTypeMap: responseInfo.parsingStrategy.requiresRuntimeContentTypeCheck,
     });
 
     const handler = renderResponseHandler(responseInfo, parseExpression);
@@ -101,13 +115,9 @@ export function renderResponseHandlers(responses: ResponseInfo[]): string[] {
 /*
  * Renders a TypeScript union type string from union type components
  */
-export function renderUnionType(unionTypes: string[], defaultType = "ApiResponse<number, unknown>"): string {
+export function renderUnionType(
+  unionTypes: string[],
+  defaultType = "ApiResponse<number, unknown>",
+): string {
   return unionTypes.length > 0 ? unionTypes.join(" | ") : defaultType;
-}
-
-/*
- * Renders an ApiResponse union type component for a response
- */
-export function renderApiResponseType(statusCode: string, typeName: string): string {
-  return `ApiResponse<${statusCode}, ${typeName}>`;
 }

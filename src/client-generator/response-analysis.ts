@@ -1,29 +1,33 @@
 /* Pure analysis functions for response processing */
 
 import type { OperationObject, ResponseObject } from "openapi3-ts/oas31";
+
 import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { getResponseContentType } from "./utils.js";
 import type {
+  ContentTypeAnalysis,
+  ParsingStrategy,
   ResponseAnalysis,
   ResponseAnalysisConfig,
   ResponseInfo,
-  ParsingStrategy,
-  ContentTypeAnalysis,
 } from "./models/response-models.js";
+
+import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { getResponseContentType } from "./utils.js";
 
 /*
  * Analyzes the content type structure of a response
  */
-export function analyzeContentTypes(response: ResponseObject): ContentTypeAnalysis {
+export function analyzeContentTypes(
+  response: ResponseObject,
+): ContentTypeAnalysis {
   const allContentTypes = Object.keys(response.content || {});
-  
+
   const hasJsonLike = allContentTypes.some(
     (ct) => ct.includes("json") || ct.includes("+json"),
   );
-  
+
   const hasNonJson = allContentTypes.some(
     (ct) => !ct.includes("json") && !ct.includes("+json"),
   );
@@ -31,8 +35,98 @@ export function analyzeContentTypes(response: ResponseObject): ContentTypeAnalys
   return {
     allContentTypes,
     hasJsonLike,
-    hasNonJson,
     hasMixedContentTypes: hasJsonLike && hasNonJson,
+    hasNonJson,
+  };
+}
+
+/*
+ * Analyzes the complete response structure for an operation
+ */
+export function analyzeResponseStructure(
+  config: ResponseAnalysisConfig,
+): ResponseAnalysis {
+  const { hasResponseContentTypeMap = false, operation, typeImports } = config;
+  const responses: ResponseInfo[] = [];
+  const unionTypes: string[] = [];
+
+  if (operation.responses) {
+    const responseCodes = Object.keys(operation.responses).filter(
+      (code) => code !== "default",
+    );
+    responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+
+    for (const code of responseCodes) {
+      const response = operation.responses[code] as ResponseObject;
+
+      const responseInfo = buildResponseTypeInfo(
+        code,
+        response,
+        operation,
+        typeImports,
+        hasResponseContentTypeMap,
+      );
+
+      responses.push(responseInfo);
+
+      /* Build union type component */
+      if (responseInfo.hasSchema && responseInfo.typeName) {
+        unionTypes.push(`ApiResponse<${code}, ${responseInfo.typeName}>`);
+      } else {
+        const dataType =
+          responseInfo.typeName ||
+          (responseInfo.contentType ? "unknown" : "void");
+        unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
+      }
+    }
+  }
+
+  return {
+    defaultReturnType: "ApiResponse<number, unknown>",
+    responses,
+    unionTypes,
+  };
+}
+
+/*
+ * Builds response type information for a single response
+ */
+export function buildResponseTypeInfo(
+  statusCode: string,
+  response: ResponseObject,
+  operation: OperationObject,
+  typeImports: Set<string>,
+  hasResponseContentTypeMap: boolean,
+): ResponseInfo {
+  const contentType = getResponseContentType(response);
+  const contentTypeAnalysis = analyzeContentTypes(response);
+
+  let typeName: null | string = null;
+  let hasSchema = false;
+
+  if (contentType && response.content?.[contentType]?.schema) {
+    hasSchema = true;
+    typeName = resolveResponseTypeName(
+      response.content[contentType].schema,
+      operation,
+      statusCode,
+      typeImports,
+    );
+  }
+
+  const parsingStrategy = determineParsingStrategy(
+    contentType || "",
+    hasSchema,
+    contentTypeAnalysis,
+    hasResponseContentTypeMap,
+  );
+
+  return {
+    contentType,
+    hasSchema,
+    parsingStrategy,
+    statusCode,
+    typeName,
   };
 }
 
@@ -45,15 +139,16 @@ export function determineParsingStrategy(
   contentTypeAnalysis: ContentTypeAnalysis,
   hasResponseContentTypeMap: boolean,
 ): ParsingStrategy {
-  const isJsonLike = contentType.includes("json") || contentType.includes("+json");
+  const isJsonLike =
+    contentType.includes("json") || contentType.includes("+json");
   const useValidation = hasSchema && isJsonLike;
-  const requiresRuntimeContentTypeCheck = 
+  const requiresRuntimeContentTypeCheck =
     contentTypeAnalysis.hasMixedContentTypes && hasResponseContentTypeMap;
 
   return {
-    useValidation,
     isJsonLike,
     requiresRuntimeContentTypeCheck,
+    useValidation,
   };
 }
 
@@ -61,7 +156,7 @@ export function determineParsingStrategy(
  * Resolves a schema to a TypeScript type name and updates type imports
  */
 export function resolveResponseTypeName(
-  schema: any,
+  schema: unknown,
   operation: OperationObject,
   statusCode: string,
   typeImports: Set<string>,
@@ -85,90 +180,4 @@ export function resolveResponseTypeName(
   const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${statusCode}Response`;
   typeImports.add(typeName);
   return typeName;
-}
-
-/*
- * Builds response type information for a single response
- */
-export function buildResponseTypeInfo(
-  statusCode: string,
-  response: ResponseObject,
-  operation: OperationObject,
-  typeImports: Set<string>,
-  hasResponseContentTypeMap: boolean,
-): ResponseInfo {
-  const contentType = getResponseContentType(response);
-  const contentTypeAnalysis = analyzeContentTypes(response);
-  
-  let typeName: string | null = null;
-  let hasSchema = false;
-
-  if (contentType && response.content?.[contentType]?.schema) {
-    hasSchema = true;
-    typeName = resolveResponseTypeName(
-      response.content[contentType].schema,
-      operation,
-      statusCode,
-      typeImports,
-    );
-  }
-
-  const parsingStrategy = determineParsingStrategy(
-    contentType || "",
-    hasSchema,
-    contentTypeAnalysis,
-    hasResponseContentTypeMap,
-  );
-
-  return {
-    statusCode,
-    typeName,
-    contentType,
-    parsingStrategy,
-    hasSchema,
-  };
-}
-
-/*
- * Analyzes the complete response structure for an operation
- */
-export function analyzeResponseStructure(config: ResponseAnalysisConfig): ResponseAnalysis {
-  const { operation, typeImports, hasResponseContentTypeMap = false } = config;
-  const responses: ResponseInfo[] = [];
-  const unionTypes: string[] = [];
-
-  if (operation.responses) {
-    const responseCodes = Object.keys(operation.responses).filter(
-      (code) => code !== "default",
-    );
-    responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-
-    for (const code of responseCodes) {
-      const response = operation.responses[code] as ResponseObject;
-      
-      const responseInfo = buildResponseTypeInfo(
-        code,
-        response,
-        operation,
-        typeImports,
-        hasResponseContentTypeMap,
-      );
-
-      responses.push(responseInfo);
-
-      /* Build union type component */
-      if (responseInfo.hasSchema && responseInfo.typeName) {
-        unionTypes.push(`ApiResponse<${code}, ${responseInfo.typeName}>`);
-      } else {
-        const dataType = responseInfo.typeName || (responseInfo.contentType ? "unknown" : "void");
-        unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
-      }
-    }
-  }
-
-  return {
-    responses,
-    unionTypes,
-    defaultReturnType: "ApiResponse<number, unknown>",
-  };
 }

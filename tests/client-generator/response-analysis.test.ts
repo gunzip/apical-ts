@@ -62,7 +62,10 @@ describe("response-analysis", () => {
       expect(result.hasJsonLike).toBe(true);
       expect(result.hasNonJson).toBe(true);
       expect(result.hasMixedContentTypes).toBe(true);
-      expect(result.allContentTypes).toEqual(["application/json", "text/plain"]);
+      expect(result.allContentTypes).toEqual([
+        "application/json",
+        "text/plain",
+      ]);
     });
 
     it("should handle response with no content", () => {
@@ -84,7 +87,12 @@ describe("response-analysis", () => {
       const strategy = determineParsingStrategy(
         "application/json",
         true,
-        { hasJsonLike: true, hasNonJson: false, hasMixedContentTypes: false, allContentTypes: ["application/json"] },
+        {
+          hasJsonLike: true,
+          hasNonJson: false,
+          hasMixedContentTypes: false,
+          allContentTypes: ["application/json"],
+        },
         false,
       );
 
@@ -97,7 +105,12 @@ describe("response-analysis", () => {
       const strategy = determineParsingStrategy(
         "text/plain",
         true,
-        { hasJsonLike: false, hasNonJson: true, hasMixedContentTypes: false, allContentTypes: ["text/plain"] },
+        {
+          hasJsonLike: false,
+          hasNonJson: true,
+          hasMixedContentTypes: false,
+          allContentTypes: ["text/plain"],
+        },
         false,
       );
 
@@ -110,7 +123,12 @@ describe("response-analysis", () => {
       const strategy = determineParsingStrategy(
         "application/json",
         true,
-        { hasJsonLike: true, hasNonJson: true, hasMixedContentTypes: true, allContentTypes: ["application/json", "text/plain"] },
+        {
+          hasJsonLike: true,
+          hasNonJson: true,
+          hasMixedContentTypes: true,
+          allContentTypes: ["application/json", "text/plain"],
+        },
         true,
       );
 
@@ -123,7 +141,12 @@ describe("response-analysis", () => {
       const strategy = determineParsingStrategy(
         "application/json",
         false,
-        { hasJsonLike: true, hasNonJson: false, hasMixedContentTypes: false, allContentTypes: ["application/json"] },
+        {
+          hasJsonLike: true,
+          hasNonJson: false,
+          hasMixedContentTypes: false,
+          allContentTypes: ["application/json"],
+        },
         false,
       );
 
@@ -150,7 +173,13 @@ describe("response-analysis", () => {
       };
 
       const typeImports = new Set<string>();
-      const result = buildResponseTypeInfo("200", response, operation, typeImports, false);
+      const result = buildResponseTypeInfo(
+        "200",
+        response,
+        operation,
+        typeImports,
+        false,
+      );
 
       expect(result.statusCode).toBe("200");
       expect(result.typeName).toBe("User");
@@ -180,7 +209,13 @@ describe("response-analysis", () => {
       };
 
       const typeImports = new Set<string>();
-      const result = buildResponseTypeInfo("201", response, operation, typeImports, false);
+      const result = buildResponseTypeInfo(
+        "201",
+        response,
+        operation,
+        typeImports,
+        false,
+      );
 
       expect(result.statusCode).toBe("201");
       expect(result.typeName).toBe("CreateUser201Response");
@@ -200,7 +235,13 @@ describe("response-analysis", () => {
       };
 
       const typeImports = new Set<string>();
-      const result = buildResponseTypeInfo("204", response, operation, typeImports, false);
+      const result = buildResponseTypeInfo(
+        "204",
+        response,
+        operation,
+        typeImports,
+        false,
+      );
 
       expect(result.statusCode).toBe("204");
       expect(result.typeName).toBeNull();

@@ -30,9 +30,13 @@ describe("response-templates", () => {
         hasResponseContentTypeMap: false,
       });
 
-      expect(result).toContain("User.safeParse(await parseResponseBody(response))");
+      expect(result).toContain(
+        "User.safeParse(await parseResponseBody(response))",
+      );
       expect(result).toContain("if (!parseResult.success)");
-      expect(result).toContain("return { status: 200 as const, error: parseResult.error, response }");
+      expect(result).toContain(
+        "return { status: 200 as const, error: parseResult.error, response }",
+      );
       expect(result).toContain("const data = parseResult.data;");
     });
 
@@ -55,7 +59,9 @@ describe("response-templates", () => {
         hasResponseContentTypeMap: false,
       });
 
-      expect(result).toBe("const data = await parseResponseBody(response) as FileContent;");
+      expect(result).toBe(
+        "const data = await parseResponseBody(response) as FileContent;",
+      );
     });
 
     it("should render mixed content type expression with runtime check", () => {
@@ -79,9 +85,13 @@ describe("response-templates", () => {
 
       expect(result).toContain("let data: Data;");
       expect(result).toContain('if (finalResponseContentType.includes("json")');
-      expect(result).toContain("Data.safeParse(await parseResponseBody(response))");
+      expect(result).toContain(
+        "Data.safeParse(await parseResponseBody(response))",
+      );
       expect(result).toContain("} else {");
-      expect(result).toContain("data = await parseResponseBody(response) as Data;");
+      expect(result).toContain(
+        "data = await parseResponseBody(response) as Data;",
+      );
     });
 
     it("should render undefined for response without schema", () => {
@@ -121,12 +131,17 @@ describe("response-templates", () => {
         },
       };
 
-      const parseExpression = "const parseResult = User.safeParse(await parseResponseBody(response));\\nconst data = parseResult.data;";
+      const parseExpression =
+        "const parseResult = User.safeParse(await parseResponseBody(response));\\nconst data = parseResult.data;";
       const result = renderResponseHandler(responseInfo, parseExpression);
 
       expect(result).toContain("case 200: {");
-      expect(result).toContain("User.safeParse(await parseResponseBody(response))");
-      expect(result).toContain("return { status: 200 as const, data, response };");
+      expect(result).toContain(
+        "User.safeParse(await parseResponseBody(response))",
+      );
+      expect(result).toContain(
+        "return { status: 200 as const, data, response };",
+      );
       expect(result).toContain("}");
     });
 
@@ -146,7 +161,9 @@ describe("response-templates", () => {
       const result = renderResponseHandler(responseInfo, "undefined");
 
       expect(result).toContain("case 204:");
-      expect(result).toContain("return { status: 204 as const, data: undefined, response };");
+      expect(result).toContain(
+        "return { status: 204 as const, data: undefined, response };",
+      );
       expect(result).not.toContain("{");
     });
 
@@ -167,7 +184,9 @@ describe("response-templates", () => {
 
       expect(result).toContain("case 200: {");
       expect(result).toContain("const data = undefined; // data = undefined");
-      expect(result).toContain("return { status: 200 as const, data, response };");
+      expect(result).toContain(
+        "return { status: 200 as const, data, response };",
+      );
     });
   });
 
@@ -215,10 +234,7 @@ describe("response-templates", () => {
 
   describe("renderUnionType", () => {
     it("should render union type from components", () => {
-      const unionTypes = [
-        "ApiResponse<200, User>",
-        "ApiResponse<404, Error>",
-      ];
+      const unionTypes = ["ApiResponse<200, User>", "ApiResponse<404, Error>"];
 
       const result = renderUnionType(unionTypes);
 
