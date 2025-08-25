@@ -244,11 +244,11 @@ const result = await getUserProfile({ userId: "123" }, apiConfig);
 
 if (result.status === 200) {
   // Check if validation succeeded
-  if ('parseError' in result.data) {
+  if ("parseError" in result.data) {
     // Handle validation error
     console.error("Response validation failed:", result.data.parseError);
-    result.data.parseError.issues.forEach(issue => {
-      console.log(`Field ${issue.path.join('.')}: ${issue.message}`);
+    result.data.parseError.issues.forEach((issue) => {
+      console.log(`Field ${issue.path.join(".")}: ${issue.message}`);
     });
   } else {
     // Successful validation - result.data is the parsed User object
@@ -262,13 +262,16 @@ if (result.status === 200) {
 For operations with mixed content types, validation only applies to JSON responses:
 
 ```ts
-const result = await getDocument({ 
-  docId: "123",
-  contentType: { response: "application/json" }
-}, apiConfig);
+const result = await getDocument(
+  {
+    docId: "123",
+    contentType: { response: "application/json" },
+  },
+  apiConfig,
+);
 
 if (result.status === 200) {
-  if ('parseError' in result.data) {
+  if ("parseError" in result.data) {
     // Validation error only possible for JSON responses
     console.error("JSON parsing failed:", result.data.parseError);
   } else {
