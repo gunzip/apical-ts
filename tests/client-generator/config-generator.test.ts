@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { 
+import {
   analyzeAuthConfiguration,
   analyzeServerConfiguration,
   determineConfigStructure,
-  generateConfigTypes 
+  generateConfigTypes,
 } from "../../src/client-generator/config-generator.js";
 
 describe("client-generator config-generator", () => {
   describe("analyzeAuthConfiguration", () => {
     it("should analyze auth headers when present", () => {
       const authHeaders = ["authorization", "x-api-key"];
-      
+
       const result = analyzeAuthConfiguration(authHeaders);
-      
+
       expect(result).toEqual({
         authHeaders: ["authorization", "x-api-key"],
         authHeadersType: "'authorization' | 'x-api-key'",
@@ -23,9 +23,9 @@ describe("client-generator config-generator", () => {
 
     it("should handle empty auth headers", () => {
       const authHeaders: string[] = [];
-      
+
       const result = analyzeAuthConfiguration(authHeaders);
-      
+
       expect(result).toEqual({
         authHeaders: [],
         authHeadersType: "string",
@@ -35,9 +35,9 @@ describe("client-generator config-generator", () => {
 
     it("should handle single auth header", () => {
       const authHeaders = ["authorization"];
-      
+
       const result = analyzeAuthConfiguration(authHeaders);
-      
+
       expect(result).toEqual({
         authHeaders: ["authorization"],
         authHeadersType: "'authorization'",
@@ -48,13 +48,17 @@ describe("client-generator config-generator", () => {
 
   describe("analyzeServerConfiguration", () => {
     it("should analyze server URLs when present", () => {
-      const serverUrls = ["https://api.example.com", "https://api-test.example.com"];
-      
+      const serverUrls = [
+        "https://api.example.com",
+        "https://api-test.example.com",
+      ];
+
       const result = analyzeServerConfiguration(serverUrls);
-      
+
       expect(result).toEqual({
         serverUrls: ["https://api.example.com", "https://api-test.example.com"],
-        baseURLType: "'https://api.example.com' | 'https://api-test.example.com' | (string & {})",
+        baseURLType:
+          "'https://api.example.com' | 'https://api-test.example.com' | (string & {})",
         defaultBaseURL: "https://api.example.com",
         hasServerUrls: true,
       });
@@ -62,9 +66,9 @@ describe("client-generator config-generator", () => {
 
     it("should handle empty server URLs", () => {
       const serverUrls: string[] = [];
-      
+
       const result = analyzeServerConfiguration(serverUrls);
-      
+
       expect(result).toEqual({
         serverUrls: [],
         baseURLType: "string",
@@ -75,7 +79,7 @@ describe("client-generator config-generator", () => {
 
     it("should handle undefined server URLs", () => {
       const result = analyzeServerConfiguration();
-      
+
       expect(result).toEqual({
         serverUrls: [],
         baseURLType: "string",
@@ -86,9 +90,9 @@ describe("client-generator config-generator", () => {
 
     it("should handle single server URL", () => {
       const serverUrls = ["https://api.example.com"];
-      
+
       const result = analyzeServerConfiguration(serverUrls);
-      
+
       expect(result).toEqual({
         serverUrls: ["https://api.example.com"],
         baseURLType: "'https://api.example.com' | (string & {})",
@@ -102,9 +106,9 @@ describe("client-generator config-generator", () => {
     it("should combine auth and server configuration", () => {
       const authHeaders = ["authorization"];
       const serverUrls = ["https://api.example.com"];
-      
+
       const result = determineConfigStructure(authHeaders, serverUrls);
-      
+
       expect(result.auth).toEqual({
         authHeaders: ["authorization"],
         authHeadersType: "'authorization'",
@@ -121,9 +125,9 @@ describe("client-generator config-generator", () => {
     it("should handle empty inputs", () => {
       const authHeaders: string[] = [];
       const serverUrls: string[] = [];
-      
+
       const result = determineConfigStructure(authHeaders, serverUrls);
-      
+
       expect(result.auth.hasAuthHeaders).toBe(false);
       expect(result.server.hasServerUrls).toBe(false);
     });
@@ -229,7 +233,7 @@ describe("client-generator config-generator", () => {
       const result = generateConfigTypes(authHeaders, serverUrls);
 
       expect(result).toContain("baseURL: '',");
-      
+
       /* Verify the complete output structure for integration testing */
       expect(result).toContain("// Configuration types");
       expect(result).toContain("export interface GlobalConfig");
@@ -238,7 +242,9 @@ describe("client-generator config-generator", () => {
       expect(result).toContain("export const globalConfig: GlobalConfig");
       expect(result).toContain("export type ApiResponse<S extends number, T>");
       expect(result).toContain("export function isSuccessResponse");
-      expect(result).toContain("export class UnexpectedResponseError extends Error");
+      expect(result).toContain(
+        "export class UnexpectedResponseError extends Error",
+      );
       expect(result).toContain("export function configureOperations");
     });
   });

@@ -33,7 +33,9 @@ describe("client-generator config-templates", () => {
       const result = renderConfigInterface(config);
 
       expect(result).toContain("export interface GlobalConfig");
-      expect(result).toContain("baseURL: 'https://api.example.com' | (string & {});");
+      expect(result).toContain(
+        "baseURL: 'https://api.example.com' | (string & {});",
+      );
       expect(result).toContain("[K in AuthHeaders]?: string;");
     });
 
@@ -78,7 +80,9 @@ describe("client-generator config-templates", () => {
 
       const result = renderAuthHeadersType(config);
 
-      expect(result).toBe("export type AuthHeaders = 'authorization' | 'x-api-key';");
+      expect(result).toBe(
+        "export type AuthHeaders = 'authorization' | 'x-api-key';",
+      );
     });
 
     it("should render empty string when no auth headers", () => {
@@ -154,7 +158,7 @@ describe("client-generator config-templates", () => {
       expect(result).toContain("export type ApiResponse<S extends number, T>");
       expect(result).toContain("readonly status: S;");
       expect(result).toContain("readonly data: T;");
-      expect(result).toContain("readonly error: import(\"zod\").ZodError;");
+      expect(result).toContain('readonly error: import("zod").ZodError;');
     });
   });
 
@@ -172,7 +176,9 @@ describe("client-generator config-templates", () => {
     it("should render error classes", () => {
       const result = renderErrorClasses();
 
-      expect(result).toContain("export class UnexpectedResponseError extends Error");
+      expect(result).toContain(
+        "export class UnexpectedResponseError extends Error",
+      );
       expect(result).toContain("export class ApiError extends Error");
       expect(result).toContain("status: number;");
       expect(result).toContain("data: unknown;");
