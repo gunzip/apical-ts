@@ -5,13 +5,16 @@ import type { getOperationSecuritySchemes } from "../security.js";
 
 /* TypeScript rendering functions for operation code generation */
 
-export type GenericParamsConfig = {
+export type ContentTypeMapsConfig = {
   contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
-  initialReturnType: string;
   requestMapTypeName: string;
   responseMapTypeName: string;
   shouldGenerateRequestMap: boolean;
   shouldGenerateResponseMap: boolean;
+};
+
+export type GenericParamsConfig = ContentTypeMapsConfig & {
+  initialReturnType: string;
 };
 
 export type GenericParamsResult = {
@@ -19,9 +22,7 @@ export type GenericParamsResult = {
   updatedReturnType: string;
 };
 
-/**
- * Renders the complete TypeScript function code from structured metadata
- */
+/* Renders the complete TypeScript function code from structured metadata */
 export type OperationFunctionRenderConfig = {
   functionBodyCode: string;
   functionName: string;
@@ -35,15 +36,10 @@ export type OperationFunctionRenderConfig = {
 /* Data structure representing operation metadata extracted from OpenAPI specification */
 export type OperationMetadata = {
   authHeaders: string[];
-  bodyInfo: {
+  bodyInfo: ContentTypeMapsConfig & {
     bodyTypeInfo: ReturnType<typeof resolveRequestBodyType> | undefined;
-    contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
     requestContentType: string | undefined;
     requestContentTypes: string[];
-    requestMapTypeName: string;
-    responseMapTypeName: string;
-    shouldGenerateRequestMap: boolean;
-    shouldGenerateResponseMap: boolean;
   };
   functionBodyCode: string;
   functionName: string;
@@ -69,15 +65,9 @@ export type ParameterDeclarationConfig = {
   paramsInterface: string;
 };
 
-export type TypeAliasesConfig = {
-  contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
-  requestMapTypeName: string;
-  responseMapTypeName: string;
-  shouldGenerateRequestMap: boolean;
-  shouldGenerateResponseMap: boolean;
-};
+export type TypeAliasesConfig = ContentTypeMapsConfig;
 
-/**
+/*
  * Creates generic parameter list for request/response content-type selection.
  * Example output: <TRequestContentType extends keyof MyOpRequestMap = "application/json", TResponseContentType extends keyof MyOpResponseMap = "application/json">
  * Returns both the generic parameter string and the adjusted return type (map lookup when response map present).
@@ -114,7 +104,7 @@ export function buildGenericParams(
   return { genericParams, updatedReturnType };
 }
 
-/**
+/*
  * Produces the function's first parameter declaration.
  * Special case: empty destructuring + empty interface => provide default {} to keep valid signature.
  */
@@ -127,7 +117,7 @@ export function buildParameterDeclaration(
   return `${config.destructuredParams}: ${config.paramsInterface}`;
 }
 
-/**
+/*
  * Emits exported request/response content-type map aliases.
  * Skips each side when no map required (empty object or no body for request).
  */
