@@ -85,6 +85,7 @@ export function generateResponseHandlers(
   operation: OperationObject,
   typeImports: Set<string>,
   hasResponseContentTypeMap = false,
+  responseMapName?: string,
 ): ResponseHandlerResult {
   /* Analyze the response structure */
   const analysis = analyzeResponseStructure({
@@ -94,7 +95,7 @@ export function generateResponseHandlers(
   });
 
   /* Generate response handlers using templates */
-  const responseHandlers = renderResponseHandlers(analysis.responses);
+  const responseHandlers = renderResponseHandlers(analysis.responses, responseMapName);
 
   /* Generate return type using templates */
   const returnType = renderUnionType(
@@ -224,17 +225,16 @@ function buildResponseContentTypeMap(
   ) {
     const mappings: string[] = Object.entries(contentTypeToResponses).map(
       ([ct, entries]) => {
-        const union = entries
-          .map((e) => `ApiResponse<${e.status}, ${e.typeName}>`)
-          .join(" | ");
-        return `  "${ct}": ${union};`;
+        /* For unknown mode, map content types to schema objects, not ApiResponse types */
+        const schemaType = entries[0].typeName; // Use first schema type for each content type
+        return `  "${ct}": ${schemaType},`;
       },
     );
     responseContentTypeCount = mappings.length;
     if (mappings.length > 0) {
       responseMapType = `{
 ${mappings.join("\n")}
-}`;
+} as const`;
     }
   }
 

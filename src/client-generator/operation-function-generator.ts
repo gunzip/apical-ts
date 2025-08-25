@@ -99,6 +99,7 @@ export function extractOperationMetadata(
     operation,
     typeImports,
     bodyInfo.shouldGenerateResponseMap,
+    bodyInfo.shouldGenerateResponseMap ? bodyInfo.responseMapTypeName : undefined,
   );
 
   /* Security overrides/auth headers */
