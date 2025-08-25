@@ -8,25 +8,95 @@ import type {
 import { assert } from "console";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
+import type {
+  ParameterAnalysis,
+  ParameterGroups,
+  ParameterOptionalityRules,
+  ParameterStructure,
+  ProcessedParameterGroup,
+} from "./models/parameter-models.js";
 import type { RequestBodyTypeInfo } from "./request-body.js";
 import type { SecurityHeader } from "./security.js";
-import type { 
-  ParameterGroups, 
-  ProcessedParameterGroup,
-  ParameterStructure,
-  ParameterOptionalityRules,
-  ParameterAnalysis
-} from "./models/parameter-models.js";
-import { 
-  renderParameterInterface,
-  renderDestructuredParameters,
-  renderParameterHandling
-} from "./templates/parameter-templates.js";
 
+import {
+  renderDestructuredParameters,
+  renderParameterHandling,
+  renderParameterInterface,
+} from "./templates/parameter-templates.js";
 import { toCamelCase, toValidVariableName } from "./utils.js";
 
 /* Re-export types for backward compatibility */
-export type { ParameterGroups, ProcessedParameterGroup } from "./models/parameter-models.js";
+export type {
+  ParameterGroups,
+  ProcessedParameterGroup,
+} from "./models/parameter-models.js";
+
+/**
+ * Analyzes parameters and creates structured data for template generation
+ */
+export function analyzeParameters(
+  parameterGroups: ParameterGroups,
+  hasBody: boolean,
+  bodyTypeInfo?: RequestBodyTypeInfo,
+  operationSecurityHeaders?: SecurityHeader[],
+  hasRequestMap = false,
+  hasResponseMap = false,
+  requestMapTypeName?: string,
+  responseMapTypeName?: string,
+): ParameterAnalysis {
+  const structure = determineParameterStructure(
+    parameterGroups,
+    hasBody,
+    bodyTypeInfo,
+    operationSecurityHeaders,
+    hasRequestMap,
+    hasResponseMap,
+    requestMapTypeName,
+    responseMapTypeName,
+  );
+
+  const optionalityRules = determineParameterOptionalityRules(structure);
+
+  /* Analyze path parameters */
+  const pathProperties = structure.processed.pathParams.map((param) =>
+    toCamelCase(param.name),
+  );
+
+  /* Analyze query parameters */
+  const queryProperties = structure.processed.queryParams.map((param) => ({
+    isRequired: param.required === true,
+    name: toCamelCase(param.name),
+  }));
+
+  /* Analyze header parameters */
+  const headerProperties = structure.processed.headerParams.map((param) => {
+    const varName = toValidVariableName(param.name);
+    return {
+      isRequired: param.required === true,
+      name: param.name !== varName ? param.name : toCamelCase(param.name),
+      needsQuoting: param.name !== varName,
+      varName,
+    };
+  });
+
+  /* Analyze security headers */
+  const securityHeaderProperties = structure.processed.securityHeaders.map(
+    (securityHeader) => ({
+      headerName: securityHeader.headerName,
+      isRequired: securityHeader.isRequired,
+      varName: toValidVariableName(securityHeader.headerName),
+    }),
+  );
+
+  return {
+    headerProperties,
+    optionalityRules,
+    pathProperties,
+    queryProperties,
+    securityHeaderProperties,
+    structure,
+  };
+}
 
 /**
  * Builds the destructured parameter signature for a function
@@ -77,6 +147,19 @@ export function buildParameterInterface(
 }
 
 /**
+ * Determines parameter optionality rules
+ */
+export function determineParameterOptionalityRules(
+  structure: ParameterStructure,
+): ParameterOptionalityRules {
+  return {
+    isBodyOptional: !structure.hasBody || !structure.bodyTypeInfo?.isRequired,
+    isHeadersOptional: structure.processed.isHeadersOptional,
+    isQueryOptional: structure.processed.isQueryOptional,
+  };
+}
+
+/**
  * Determines parameter structure information for interface and destructuring generation
  */
 export function determineParameterStructure(
@@ -95,93 +178,13 @@ export function determineParameterStructure(
   );
 
   return {
+    bodyTypeInfo,
+    hasBody,
+    hasRequestMap,
+    hasResponseMap,
     processed,
-    hasBody,
-    bodyTypeInfo,
-    hasRequestMap,
-    hasResponseMap,
     requestMapTypeName,
     responseMapTypeName,
-  };
-}
-
-/**
- * Determines parameter optionality rules
- */
-export function determineParameterOptionalityRules(
-  structure: ParameterStructure,
-): ParameterOptionalityRules {
-  return {
-    isQueryOptional: structure.processed.isQueryOptional,
-    isHeadersOptional: structure.processed.isHeadersOptional,
-    isBodyOptional: !structure.hasBody || !structure.bodyTypeInfo?.isRequired,
-  };
-}
-
-/**
- * Analyzes parameters and creates structured data for template generation
- */
-export function analyzeParameters(
-  parameterGroups: ParameterGroups,
-  hasBody: boolean,
-  bodyTypeInfo?: RequestBodyTypeInfo,
-  operationSecurityHeaders?: SecurityHeader[],
-  hasRequestMap = false,
-  hasResponseMap = false,
-  requestMapTypeName?: string,
-  responseMapTypeName?: string,
-): ParameterAnalysis {
-  const structure = determineParameterStructure(
-    parameterGroups,
-    hasBody,
-    bodyTypeInfo,
-    operationSecurityHeaders,
-    hasRequestMap,
-    hasResponseMap,
-    requestMapTypeName,
-    responseMapTypeName,
-  );
-
-  const optionalityRules = determineParameterOptionalityRules(structure);
-
-  /* Analyze path parameters */
-  const pathProperties = structure.processed.pathParams.map((param) =>
-    toCamelCase(param.name),
-  );
-
-  /* Analyze query parameters */
-  const queryProperties = structure.processed.queryParams.map((param) => ({
-    name: toCamelCase(param.name),
-    isRequired: param.required === true,
-  }));
-
-  /* Analyze header parameters */
-  const headerProperties = structure.processed.headerParams.map((param) => {
-    const varName = toValidVariableName(param.name);
-    return {
-      name: param.name !== varName ? param.name : toCamelCase(param.name),
-      isRequired: param.required === true,
-      varName,
-      needsQuoting: param.name !== varName,
-    };
-  });
-
-  /* Analyze security headers */
-  const securityHeaderProperties = structure.processed.securityHeaders.map(
-    (securityHeader) => ({
-      headerName: securityHeader.headerName,
-      isRequired: securityHeader.isRequired,
-      varName: toValidVariableName(securityHeader.headerName),
-    }),
-  );
-
-  return {
-    structure,
-    optionalityRules,
-    pathProperties,
-    queryProperties,
-    headerProperties,
-    securityHeaderProperties,
   };
 }
 
