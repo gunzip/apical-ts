@@ -1,5 +1,60 @@
 /* Generates the configuration file content and types */
 
+import type { AuthConfiguration, ConfigStructure, ServerConfiguration } from "./models/config-models.js";
+import {
+  renderAuthHeadersType,
+  renderConfigImplementation,
+  renderConfigInterface,
+  renderConfigSupport,
+} from "./templates/config-templates.js";
+
+/*
+ * Analyzes authentication configuration from auth headers
+ */
+export function analyzeAuthConfiguration(authHeaders: string[]): AuthConfiguration {
+  const hasAuthHeaders = authHeaders.length > 0;
+  const authHeadersType = hasAuthHeaders
+    ? authHeaders.map((h) => `'${h}'`).join(" | ")
+    : "string";
+  
+  return {
+    authHeaders,
+    authHeadersType,
+    hasAuthHeaders,
+  };
+}
+
+/*
+ * Analyzes server configuration from server URLs
+ */
+export function analyzeServerConfiguration(serverUrls: string[] = []): ServerConfiguration {
+  const hasServerUrls = serverUrls.length > 0;
+  const baseURLType = hasServerUrls
+    ? serverUrls.map((url) => `'${url}'`).join(" | ") + " | (string & {})"
+    : "string";
+  const defaultBaseURL = hasServerUrls ? serverUrls[0] : "";
+  
+  return {
+    serverUrls,
+    baseURLType,
+    defaultBaseURL,
+    hasServerUrls,
+  };
+}
+
+/*
+ * Determines the complete configuration structure
+ */
+export function determineConfigStructure(
+  authHeaders: string[],
+  serverUrls: string[] = [],
+): ConfigStructure {
+  return {
+    auth: analyzeAuthConfiguration(authHeaders),
+    server: analyzeServerConfiguration(serverUrls),
+  };
+}
+
 /* Generates the configuration file content */
 export function generateConfigFileContent(
   authHeaders: string[],
@@ -8,210 +63,24 @@ export function generateConfigFileContent(
   return generateConfigTypes(authHeaders, serverUrls);
 }
 
-/* Static support code appended to every generated config file.
- * Contains response/result types, helpers, error classes and utilities.
- */
-const STATIC_CONFIG_SUPPORT = `
-/**
- * Represents a generic API response for the new discriminated union pattern.
- * @template S The HTTP status code.
- * @template T The response body type.
- */
-/*
- * ApiResponse now models validation errors as a top-level discriminated branch.
- * For JSON-like responses validated with Zod:
- *   { status: 200, data: ParsedType, response }
- * or { status: 200, error: ZodError, response }
- * This avoids nesting the error inside the data union and lets consumers test
- * for the presence of the error key directly on the result object.
- */
-export type ApiResponse<S extends number, T> =
-  | {
-      readonly status: S;
-      readonly data: T;
-      readonly response: Response;
-    }
-  | {
-      readonly status: S;
-      readonly error: import("zod").ZodError;
-      readonly response: Response;
-    };
 
-/* Type guards for response status codes */
-export function isSuccessResponse<T>(
-  result: ApiResponse<number, any>
-): result is ApiResponse<number, T> {
-  return result.status >= 200 && result.status < 300;
-}
-
-export function isErrorResponse<T>(
-  result: ApiResponse<number, any>
-): result is ApiResponse<number, T> {
-  return !isSuccessResponse(result);
-}
-
-/* Error thrown when receiving an unexpected response status code */
-export class UnexpectedResponseError extends Error {
-  status: number;
-  data: unknown;
-  response: Response;
-  constructor(status: number, data: unknown, response: Response) {
-  super('Unexpected response status: ' + status);
-    this.name = 'UnexpectedResponseError';
-    this.status = status;
-    this.data = data;
-    this.response = response;
-  }
-}
-
-/* Type-safe status checking function */
-export function isStatus<
-  TResponse extends ApiResponse<number, any>,
-  S extends TResponse['status']
->(
-  result: TResponse,
-  status: S,
-): result is Extract<TResponse, { status: S }> {
-  return result.status === status;
-}
-
-/* Utility function to handle response with exhaustive type checking */
-export function handleResponse<T extends ApiResponse<number, any>>(
-  result: T,
-  handlers: {
-    [K in T['status']]?: (
-      payload: Extract<Extract<T, { status: K }>, { data: any }> extends infer R
-        ? R extends { data: infer D }
-          ? D
-          : never
-        : never,
-      full: Extract<T, { status: K }>
-    ) => void;
-  } & {
-    default?: (result: T) => void;
-    error?: (error: import('zod').ZodError, full: T) => void;
-  }
-): void {
-  if ('error' in result) {
-    if (handlers.error) {
-      handlers.error(result.error, result);
-      return;
-    }
-    if (handlers.default) {
-      handlers.default(result);
-      return;
-    }
-  }
-  const handler = handlers[result.status as keyof typeof handlers];
-  if (handler && 'data' in result) {
-    (handler as any)(result.data, result);
-  } else if (handlers.default) {
-    handlers.default(result);
-  }
-}
-
-/* Helper function to parse response body based on content type */
-export async function parseResponseBody(response: Response): Promise<unknown | Blob | FormData | ReadableStream | Response> {
-  const contentType = response.headers.get('content-type') || '';
-  if (contentType.includes('application/json') || 
-      contentType.includes('+json')) {
-    return response.json().catch(() => null);
-  }
-  if (contentType.includes('text/') || 
-      contentType.includes('application/xml') ||
-      contentType.includes('application/xhtml+xml')) {
-    return response.text().catch(() => null);
-  }
-  if (contentType.includes('image/') ||
-      contentType.includes('video/') ||
-      contentType.includes('audio/') ||
-      contentType.includes('application/pdf') ||
-      contentType.includes('application/zip') ||
-      contentType.includes('application/x-zip-compressed') ||
-      contentType.includes('application/octet-stream') ||
-      contentType.includes('application/msword') ||
-      contentType.includes('application/vnd.') ||
-      contentType.includes('binary')) {
-    return response.blob().catch(() => null);
-  }
-  if (contentType.includes('multipart/form-data')) {
-    return response.formData().catch(() => null);
-  }
-  if (contentType.includes('application/x-www-form-urlencoded')) {
-    return response.text().catch(() => null);
-  }
-  return response.text().catch(() => null);
-}
-
-/* ApiError class for backwards compatibility */
-export class ApiError extends Error {
-  status: number;
-  body: unknown;
-  headers: Headers;
-  constructor(status: number, body: unknown, headers: Headers) {
-  super('API Error: ' + status);
-    this.status = status;
-    this.body = body;
-    this.headers = headers;
-  }
-}
-
-/* Utility types for operation binding */
-type Operation = (params: any, config?: GlobalConfig) => Promise<any>;
-
-/* Bind all operations with a specific config */
-export function configureOperations<T extends Record<string, Operation>>(
-  operations: T, 
-  config: GlobalConfig
-): {
-  [K in keyof T]: (params: Parameters<T[K]>[0]) => ReturnType<T[K]>;
-} {
-  const bound: Partial<Record<keyof T, any>> = {};
-  for (const key in operations) {
-    if (typeof operations[key] === 'function') {
-      bound[key] = (params: any) => operations[key](params, config);
-    }
-  }
-  return bound as any;
-}
-`;
 
 /* Generate configuration types */
 export function generateConfigTypes(
   authHeaders: string[],
   serverUrls: string[] = [],
 ): string {
-  const authHeadersType =
-    authHeaders.length > 0
-      ? authHeaders.map((h) => `'${h}'`).join(" | ")
-      : "string";
-
-  // Generate baseURL type as union of server URLs and any string
-  const baseURLType =
-    serverUrls.length > 0
-      ? serverUrls.map((url) => `'${url}'`).join(" | ") + " | (string & {})"
-      : "string";
-
-  // Use first server URL as default, or empty string if none
-  const defaultBaseURL = serverUrls.length > 0 ? serverUrls[0] : "";
-
-  return `
-// Configuration types
-export interface GlobalConfig {
-  baseURL: ${baseURLType};
-  fetch: typeof fetch;
-  headers: {
-    [K in ${authHeaders.length > 0 ? `AuthHeaders` : "string"}]?: string;
-  } & Record<string, string>;
-}
-
-${authHeaders.length > 0 ? `export type AuthHeaders = ${authHeadersType};` : ""}
-
-// Default global configuration - immutable
-export const globalConfig: GlobalConfig = {
-  baseURL: '${defaultBaseURL}',
-  fetch: fetch,
-  headers: {}
-};
-${STATIC_CONFIG_SUPPORT}`;
+  const config = determineConfigStructure(authHeaders, serverUrls);
+  
+  const parts = [
+    renderConfigInterface(config),
+    "",
+    renderAuthHeadersType(config),
+    "",
+    renderConfigImplementation(config),
+    renderConfigSupport(),
+  ];
+  
+  /* Filter out empty parts and join */
+  return parts.filter(part => part.trim() !== "").join("\n");
 }
