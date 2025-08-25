@@ -164,7 +164,6 @@ describe("response-templates", () => {
       expect(result).toContain(
         "return { status: 204 as const, data: undefined, response };",
       );
-      expect(result).not.toContain("{");
     });
 
     it("should handle undefined parse expression", () => {
