@@ -104,22 +104,23 @@ export function generateResponseHandlers(
       let parseCode = "undefined";
 
       if (contentType && response.content?.[contentType]?.schema) {
-        const { parseExpression, resolvedTypeName, usesZodValidation } = buildParseInfo({
-          code,
-          contentType,
-          hasResponseContentTypeMap,
-          operation,
-          response,
-          typeImports,
-        });
+        const { parseExpression, resolvedTypeName, usesZodValidation } =
+          buildParseInfo({
+            code,
+            contentType,
+            hasResponseContentTypeMap,
+            operation,
+            response,
+            typeImports,
+          });
         typeName = resolvedTypeName;
         parseCode = parseExpression;
-        
-        /* 
+
+        /*
          * For responses that use Zod validation, the data type could be either
          * the successfully parsed type or a validation error object
          */
-        const dataType = usesZodValidation 
+        const dataType = usesZodValidation
           ? `${typeName} | { parseError: import("zod").ZodError }`
           : typeName;
         unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
@@ -171,7 +172,11 @@ function buildParseInfo({
   operation: OperationObject;
   response: ResponseObject;
   typeImports: Set<string>;
-}): { parseExpression: string; resolvedTypeName: string; usesZodValidation: boolean } {
+}): {
+  parseExpression: string;
+  resolvedTypeName: string;
+  usesZodValidation: boolean;
+} {
   let parseExpression = "undefined";
   let resolvedTypeName = "";
   let usesZodValidation = false;
