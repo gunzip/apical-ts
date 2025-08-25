@@ -1,12 +1,13 @@
 import type { RequestBodyObject } from "openapi3-ts/oas31";
 
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import type {
   ContentTypeAnalysis,
   ContentTypePriority,
   RequestBodyStructure,
   RequestBodyTypeInfo,
 } from "./models/request-body-models.js";
+
+import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import {
   DEFAULT_CONTENT_TYPE_HANDLERS,
   renderLegacyRequestBodyHandling,
@@ -21,6 +22,7 @@ export type { RequestBodyTypeInfo } from "./models/request-body-models.js";
 
 /* Default content type prioritization configuration */
 const DEFAULT_CONTENT_TYPE_PRIORITY: ContentTypePriority = {
+  fallbackType: "application/json",
   preferredTypes: [
     "application/json",
     "application/x-www-form-urlencoded",
@@ -29,40 +31,7 @@ const DEFAULT_CONTENT_TYPE_PRIORITY: ContentTypePriority = {
     "application/xml",
     "application/octet-stream",
   ],
-  fallbackType: "application/json",
 };
-
-/*
- * Orders content types by preference based on priority configuration
- */
-export function prioritizeContentTypes(
-  availableTypes: string[],
-  priority: ContentTypePriority = DEFAULT_CONTENT_TYPE_PRIORITY,
-): ContentTypeAnalysis {
-  const prioritizedTypes: string[] = [];
-
-  /* Add preferred types in order if they are available */
-  for (const preferredType of priority.preferredTypes) {
-    if (availableTypes.includes(preferredType)) {
-      prioritizedTypes.push(preferredType);
-    }
-  }
-
-  /* Add any remaining types that weren't in the preferred list */
-  for (const availableType of availableTypes) {
-    if (!prioritizedTypes.includes(availableType)) {
-      prioritizedTypes.push(availableType);
-    }
-  }
-
-  const selectedType = prioritizedTypes[0] || priority.fallbackType;
-
-  return {
-    availableTypes,
-    prioritizedTypes,
-    selectedType,
-  };
-}
 
 /*
  * Selects appropriate content type handling strategy
@@ -142,6 +111,38 @@ export function getRequestBodyContentType(
   const availableTypes = Object.keys(requestBody.content);
   const analysis = prioritizeContentTypes(availableTypes);
   return analysis.selectedType;
+}
+
+/*
+ * Orders content types by preference based on priority configuration
+ */
+export function prioritizeContentTypes(
+  availableTypes: string[],
+  priority: ContentTypePriority = DEFAULT_CONTENT_TYPE_PRIORITY,
+): ContentTypeAnalysis {
+  const prioritizedTypes: string[] = [];
+
+  /* Add preferred types in order if they are available */
+  for (const preferredType of priority.preferredTypes) {
+    if (availableTypes.includes(preferredType)) {
+      prioritizedTypes.push(preferredType);
+    }
+  }
+
+  /* Add any remaining types that weren't in the preferred list */
+  for (const availableType of availableTypes) {
+    if (!prioritizedTypes.includes(availableType)) {
+      prioritizedTypes.push(availableType);
+    }
+  }
+
+  const selectedType = prioritizedTypes[0] || priority.fallbackType;
+
+  return {
+    availableTypes,
+    prioritizedTypes,
+    selectedType,
+  };
 }
 
 /**

@@ -77,38 +77,6 @@ export function renderContentTypeHeaders(
 }
 
 /*
- * Renders complete request body handling code using legacy format
- * for backward compatibility with existing generateRequestBodyHandling
- */
-export function renderLegacyRequestBodyHandling(
-  context: RequestBodyRenderContext,
-  handlers: ContentTypeHandlerConfig = DEFAULT_CONTENT_TYPE_HANDLERS,
-): { bodyContent: string; contentTypeHeader: string } {
-  let bodyContent = "";
-  let contentTypeHeader = "";
-
-  if (context.hasBody && context.requestContentType) {
-    const strategy = handlers[context.requestContentType];
-    if (strategy) {
-      bodyContent = renderBodyHandling(strategy);
-      contentTypeHeader = renderContentTypeHeaders(strategy);
-    } else {
-      /* Fallback for unknown content types */
-      const fallbackStrategy: ContentTypeStrategy = {
-        bodyProcessing:
-          "typeof body === 'string' ? body : JSON.stringify(body)",
-        contentTypeHeader: `"Content-Type": "${context.requestContentType}"`,
-        requiresFormData: false,
-      };
-      bodyContent = renderBodyHandling(fallbackStrategy);
-      contentTypeHeader = renderContentTypeHeaders(fallbackStrategy);
-    }
-  }
-
-  return { bodyContent, contentTypeHeader };
-}
-
-/*
  * Renders dynamic body content handling code for multiple content types
  * Used when generating switch statements for content type selection
  */
@@ -149,4 +117,36 @@ export function renderDynamicBodyHandling(
 ${switchCases}
 ${defaultCase}
   }`;
+}
+
+/*
+ * Renders complete request body handling code using legacy format
+ * for backward compatibility with existing generateRequestBodyHandling
+ */
+export function renderLegacyRequestBodyHandling(
+  context: RequestBodyRenderContext,
+  handlers: ContentTypeHandlerConfig = DEFAULT_CONTENT_TYPE_HANDLERS,
+): { bodyContent: string; contentTypeHeader: string } {
+  let bodyContent = "";
+  let contentTypeHeader = "";
+
+  if (context.hasBody && context.requestContentType) {
+    const strategy = handlers[context.requestContentType];
+    if (strategy) {
+      bodyContent = renderBodyHandling(strategy);
+      contentTypeHeader = renderContentTypeHeaders(strategy);
+    } else {
+      /* Fallback for unknown content types */
+      const fallbackStrategy: ContentTypeStrategy = {
+        bodyProcessing:
+          "typeof body === 'string' ? body : JSON.stringify(body)",
+        contentTypeHeader: `"Content-Type": "${context.requestContentType}"`,
+        requiresFormData: false,
+      };
+      bodyContent = renderBodyHandling(fallbackStrategy);
+      contentTypeHeader = renderContentTypeHeaders(fallbackStrategy);
+    }
+  }
+
+  return { bodyContent, contentTypeHeader };
 }

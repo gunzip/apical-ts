@@ -1,15 +1,21 @@
-import type { RequestBodyObject } from "openapi3-ts/oas31";
-
 /*
  * Data structures for request body analysis and code generation
  */
 
-/* Information about request body types */
-export type RequestBodyTypeInfo = {
-  contentType: string;
-  isRequired: boolean;
-  typeImports: Set<string>;
-  typeName: null | string;
+/* Result of content type analysis */
+export type ContentTypeAnalysis = {
+  availableTypes: string[];
+  prioritizedTypes: string[];
+  selectedType: string;
+};
+
+/* Configuration for content type handling */
+export type ContentTypeHandlerConfig = Record<string, ContentTypeStrategy>;
+
+/* Content type prioritization configuration */
+export type ContentTypePriority = {
+  fallbackType: string;
+  preferredTypes: readonly string[];
 };
 
 /* Strategy for handling a specific content type */
@@ -19,9 +25,12 @@ export type ContentTypeStrategy = {
   requiresFormData: boolean;
 };
 
-/* Configuration for content type handling */
-export type ContentTypeHandlerConfig = {
-  [contentType: string]: ContentTypeStrategy;
+/* Template rendering context for request body handling */
+export type RequestBodyRenderContext = {
+  bodyContent: string;
+  contentTypeHeader: string;
+  hasBody: boolean;
+  requestContentType: string | undefined;
 };
 
 /* Structure representing analyzed request body requirements */
@@ -30,26 +39,13 @@ export type RequestBodyStructure = {
   hasBody: boolean;
   isRequired: boolean;
   strategy: ContentTypeStrategy;
-  typeInfo: RequestBodyTypeInfo | null;
+  typeInfo: null | RequestBodyTypeInfo;
 };
 
-/* Content type prioritization configuration */
-export type ContentTypePriority = {
-  preferredTypes: readonly string[];
-  fallbackType: string;
-};
-
-/* Result of content type analysis */
-export type ContentTypeAnalysis = {
-  availableTypes: string[];
-  prioritizedTypes: string[];
-  selectedType: string;
-};
-
-/* Template rendering context for request body handling */
-export type RequestBodyRenderContext = {
-  bodyContent: string;
-  contentTypeHeader: string;
-  hasBody: boolean;
-  requestContentType: string | undefined;
+/* Information about request body types */
+export type RequestBodyTypeInfo = {
+  contentType: string;
+  isRequired: boolean;
+  typeImports: Set<string>;
+  typeName: null | string;
 };
