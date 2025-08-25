@@ -25,12 +25,118 @@ import {
   getOperationSecuritySchemes,
   hasSecurityOverride,
 } from "./security.js";
+import type { OperationMetadata } from "./templates/operation-templates.js";
+import {
+  buildGenericParams,
+  buildParameterDeclaration,
+  buildTypeAliases,
+  renderOperationFunction,
+} from "./templates/operation-templates.js";
 
 /* Result of generating a function with imports */
 export type GeneratedFunction = {
   functionCode: string;
   typeImports: Set<string>;
 };
+
+/**
+ * extractOperationMetadata
+ * Pure function that extracts and assembles all metadata needed for generating an operation function.
+ * This function focuses solely on business logic and data extraction without any code rendering.
+ * Returns structured data that can be passed to rendering functions.
+ */
+export function extractOperationMetadata(
+  pathKey: string,
+  method: string,
+  operation: OperationObject,
+  pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
+  doc: OpenAPIObject,
+): OperationMetadata {
+  assert(operation.operationId, "Operation ID is required");
+  const functionName: string = sanitizeIdentifier(operation.operationId);
+  const operationName =
+    functionName.charAt(0).toUpperCase() + functionName.slice(1);
+
+  const summary = operation.summary ? `/** ${operation.summary} */\n` : "";
+  const typeImports = new Set<string>();
+
+  /* Extract parameters & security */
+  const parameterGroups = extractParameterGroups(
+    operation,
+    pathLevelParameters,
+    doc,
+  );
+  const hasBody = !!operation.requestBody;
+  const operationSecurityHeaders = getOperationSecuritySchemes(operation, doc);
+
+  /* Body & content type meta */
+  /* Collect body related type info + request/response content-type maps (if any) */
+  const bodyInfo = collectBodyAndContentTypes(
+    hasBody,
+    operation,
+    functionName,
+    typeImports,
+    operationName,
+  );
+
+  /* Build parameter shapes */
+  /* Build the "first parameter" surface: destructured runtime parameter object + its TS interface */
+  const parameterStructures = buildParameterStructures(
+    parameterGroups,
+    hasBody,
+    bodyInfo.bodyTypeInfo,
+    operationSecurityHeaders,
+    bodyInfo.shouldGenerateRequestMap,
+    bodyInfo.shouldGenerateResponseMap,
+    bodyInfo.requestMapTypeName,
+    bodyInfo.responseMapTypeName,
+  );
+
+  /* Responses & union return type */
+  /* Build response handlers + discriminated union return type (ApiResponse<code, Data>) */
+  const responseHandlers = generateResponseHandlers(
+    operation,
+    typeImports,
+    bodyInfo.shouldGenerateResponseMap,
+  );
+
+  /* Security overrides/auth headers */
+  const overridesSecurity = hasSecurityOverride(operation);
+  const authHeaders = extractAuthHeaders(doc);
+
+  /* Function internal body code */
+  /* Assemble the inner imperative body (headers, fetch call, switch over request content-type, parsing) */
+  const functionBodyCode = generateFunctionBody({
+    authHeaders,
+    contentTypeMaps: bodyInfo.contentTypeMaps,
+    hasBody,
+    method,
+    operationSecurityHeaders,
+    overridesSecurity,
+    parameterGroups,
+    pathKey,
+    requestContentTypes: bodyInfo.requestContentTypes,
+    responseHandlers: responseHandlers.responseHandlers,
+    shouldGenerateRequestMap: bodyInfo.shouldGenerateRequestMap,
+    shouldGenerateResponseMap: bodyInfo.shouldGenerateResponseMap,
+  });
+
+  return {
+    functionName,
+    operationName,
+    summary,
+    typeImports,
+    parameterGroups,
+    hasBody,
+    operationSecurityHeaders,
+    bodyInfo,
+    parameterStructures,
+    responseHandlers,
+    overridesSecurity,
+    authHeaders,
+    functionBodyCode,
+  };
+}
 
 /**
  * generateOperationFunction
@@ -53,168 +159,55 @@ export function generateOperationFunction(
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
   doc: OpenAPIObject,
 ): GeneratedFunction {
-  assert(operation.operationId, "Operation ID is required");
-  const functionName: string = sanitizeIdentifier(operation.operationId);
-  const operationName =
-    functionName.charAt(0).toUpperCase() + functionName.slice(1);
-
-  const summary = operation.summary ? `/** ${operation.summary} */\n` : "";
-  const typeImports = new Set<string>();
-
-  // Extract parameters & security
-  const parameterGroups = extractParameterGroups(
+  /* Extract all metadata using pure logic function */
+  const metadata = extractOperationMetadata(
+    pathKey,
+    method,
     operation,
     pathLevelParameters,
     doc,
   );
-  const hasBody = !!operation.requestBody;
-  const operationSecurityHeaders = getOperationSecuritySchemes(operation, doc);
 
-  // Body & content type meta
-  // Collect body related type info + request/response content-type maps (if any)
-  const bodyInfo = collectBodyAndContentTypes(
-    hasBody,
-    operation,
-    functionName,
-    typeImports,
-    operationName,
-  );
-
-  // Build parameter shapes
-  // Build the "first parameter" surface: destructured runtime parameter object + its TS interface
-  const { destructuredParams, paramsInterface } = buildParameterStructures(
-    parameterGroups,
-    hasBody,
-    bodyInfo.bodyTypeInfo,
-    operationSecurityHeaders,
-    bodyInfo.shouldGenerateRequestMap,
-    bodyInfo.shouldGenerateResponseMap,
-    bodyInfo.requestMapTypeName,
-    bodyInfo.responseMapTypeName,
-  );
-
-  // Responses & union return type
-  // Build response handlers + discriminated union return type (ApiResponse<code, Data>)
-  const { responseHandlers, returnType } = generateResponseHandlers(
-    operation,
-    typeImports,
-    bodyInfo.shouldGenerateResponseMap,
-  );
-
-  // Security overrides/auth headers
-  const overridesSecurity = hasSecurityOverride(operation);
-  const authHeaders = extractAuthHeaders(doc);
-
-  // Function internal body code
-  // Assemble the inner imperative body (headers, fetch call, switch over request content-type, parsing)
-  const functionBodyCode = generateFunctionBody({
-    authHeaders,
-    contentTypeMaps: bodyInfo.contentTypeMaps,
-    hasBody,
-    method,
-    operationSecurityHeaders,
-    overridesSecurity,
-    parameterGroups,
-    pathKey,
-    requestContentTypes: bodyInfo.requestContentTypes,
-    responseHandlers,
-    shouldGenerateRequestMap: bodyInfo.shouldGenerateRequestMap,
-    shouldGenerateResponseMap: bodyInfo.shouldGenerateResponseMap,
+  /* Render using template functions */
+  const parameterDeclaration = buildParameterDeclaration({
+    destructuredParams: metadata.parameterStructures.destructuredParams,
+    paramsInterface: metadata.parameterStructures.paramsInterface,
   });
 
-  const parameterDeclaration = buildParameterDeclaration(
-    destructuredParams,
-    paramsInterface,
-  );
+  /* Compute generic parameters and adjust return type if response map present */
+  const { genericParams, updatedReturnType } = buildGenericParams({
+    shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
+    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
+    contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
+    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+    initialReturnType: metadata.responseHandlers.returnType,
+  });
 
-  // Compute generic parameters and adjust return type if response map present
-  const { genericParams, updatedReturnType } = buildGenericParams(
-    bodyInfo.shouldGenerateRequestMap,
-    bodyInfo.shouldGenerateResponseMap,
-    bodyInfo.contentTypeMaps,
-    bodyInfo.requestMapTypeName,
-    bodyInfo.responseMapTypeName,
-    returnType,
-  );
+  /* Emit request/response map type aliases (only when non-empty / applicable) */
+  const typeAliases = buildTypeAliases({
+    shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
+    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
+    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
+    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+    contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+  });
 
-  // Emit request/response map type aliases (only when non-empty / applicable)
-  const typeAliases = buildTypeAliases(
-    bodyInfo.shouldGenerateRequestMap,
-    bodyInfo.shouldGenerateResponseMap,
-    bodyInfo.requestMapTypeName,
-    bodyInfo.responseMapTypeName,
-    bodyInfo.contentTypeMaps,
-  );
+  /* Render the complete function */
+  const functionStr = renderOperationFunction({
+    functionName: metadata.functionName,
+    summary: metadata.summary,
+    genericParams,
+    parameterDeclaration,
+    updatedReturnType,
+    functionBodyCode: metadata.functionBodyCode,
+    typeAliases,
+  });
 
-  const functionStr = `${typeAliases}${summary}export async function ${functionName}${genericParams}(
-  ${parameterDeclaration},
-  config: GlobalConfig = globalConfig
-): Promise<${updatedReturnType}> {
-  ${functionBodyCode}
-}`;
-
-  return { functionCode: functionStr, typeImports };
+  return { functionCode: functionStr, typeImports: metadata.typeImports };
 }
 
-// ---------------- Helper extraction functions (kept local to module) ----------------
-
-/**
- * buildGenericParams
- * Creates generic parameter list for request/response content-type selection.
- * Example output: <TRequestContentType extends keyof MyOpRequestMap = "application/json", TResponseContentType extends keyof MyOpResponseMap = "application/json">
- * Returns both the generic parameter string and the adjusted return type (map lookup when response map present).
- */
-function buildGenericParams(
-  shouldGenerateRequestMap: boolean,
-  shouldGenerateResponseMap: boolean,
-  contentTypeMaps: ReturnType<typeof generateContentTypeMaps>,
-  requestMapTypeName: string,
-  responseMapTypeName: string,
-  initialReturnType: string,
-) {
-  let genericParams = "";
-  let updatedReturnType = initialReturnType;
-
-  if (shouldGenerateRequestMap || shouldGenerateResponseMap) {
-    const genericParts: string[] = [];
-    if (shouldGenerateRequestMap) {
-      const defaultReq =
-        contentTypeMaps.defaultRequestContentType || "application/json";
-      genericParts.push(
-        `TRequestContentType extends keyof ${requestMapTypeName} = "${defaultReq}"`,
-      );
-    }
-    if (shouldGenerateResponseMap) {
-      const defaultResp =
-        contentTypeMaps.defaultResponseContentType || "application/json";
-      genericParts.push(
-        `TResponseContentType extends keyof ${responseMapTypeName} = "${defaultResp}"`,
-      );
-    }
-    if (genericParts.length > 0) {
-      genericParams = `<${genericParts.join(", ")}>`;
-      if (shouldGenerateResponseMap) {
-        updatedReturnType = `${responseMapTypeName}[TResponseContentType]`;
-      }
-    }
-  }
-  return { genericParams, updatedReturnType };
-}
-
-/**
- * buildParameterDeclaration
- * Produces the function's first parameter declaration.
- * Special case: empty destructuring + empty interface => provide default {} to keep valid signature.
- */
-function buildParameterDeclaration(
-  destructuredParams: string,
-  paramsInterface: string,
-) {
-  if (destructuredParams === "{}" && paramsInterface === "{}") {
-    return "{}: {} = {}";
-  }
-  return `${destructuredParams}: ${paramsInterface}`;
-}
+/* ---------------- Helper extraction functions (kept local to module) ---------------- */
 
 /**
  * buildParameterStructures
@@ -250,29 +243,6 @@ function buildParameterStructures(
   );
 
   return { destructuredParams, paramsInterface };
-}
-
-/**
- * buildTypeAliases
- * Emits exported request/response content-type map aliases.
- * Skips each side when no map required (empty object or no body for request).
- */
-function buildTypeAliases(
-  shouldGenerateRequestMap: boolean,
-  shouldGenerateResponseMap: boolean,
-  requestMapTypeName: string,
-  responseMapTypeName: string,
-  contentTypeMaps: ReturnType<typeof generateContentTypeMaps>,
-) {
-  let typeAliases = "";
-  if (shouldGenerateRequestMap) {
-    typeAliases += `export type ${requestMapTypeName} = ${contentTypeMaps.requestMapType};\n\n`;
-  }
-  // Always emit response map type alias for stability; if empty map that's fine
-  if (shouldGenerateResponseMap || contentTypeMaps.responseMapType) {
-    typeAliases += `export type ${responseMapTypeName} = ${contentTypeMaps.responseMapType || "{}"};\n\n`;
-  }
-  return typeAliases;
 }
 
 /**
