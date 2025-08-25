@@ -82,19 +82,29 @@ async function processOperations(
   return operations;
 }
 
-// Re-export key types and functions for external use
+/* Re-export key types and functions for external use */
 export type { OperationMetadata } from "./operation-extractor.js";
 export {
   extractAllOperations,
   extractServerUrls,
 } from "./operation-extractor.js";
-export { generateOperationFunction } from "./operation-function-generator.js";
+export {
+  extractOperationMetadata,
+  generateOperationFunction,
+} from "./operation-function-generator.js";
 export type { ParameterGroups } from "./parameters.js";
-
 export type { RequestBodyTypeInfo } from "./request-body.js";
-
 export type { SecurityHeader } from "./security.js";
 
 export { extractAuthHeaders } from "./security.js";
+
+export type { OperationMetadata as OperationFunctionMetadata } from "./templates/operation-templates.js";
+
+export {
+  buildGenericParams,
+  buildParameterDeclaration,
+  buildTypeAliases,
+  renderOperationFunction,
+} from "./templates/operation-templates.js";
 
 export { toCamelCase, toValidVariableName } from "./utils.js";
