@@ -441,6 +441,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/NewModel"
 
+  /test-deserialization:
+    get:
+      operationId: testDeserialization
+      security: []
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestDeserUser"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/TestDeserUser"
+
 # -------------
 # Components
 # -------------
@@ -677,6 +692,16 @@ components:
           $ref: "#/components/schemas/SimpleDefinition"
       required:
         - prop1
+    TestDeserUser:
+      type: object
+      required:
+        - name
+        - age
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
     WithinRangeStringTest:
       title: WithinRangeStringTest
       type: string
