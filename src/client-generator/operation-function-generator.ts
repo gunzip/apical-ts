@@ -192,7 +192,7 @@ export function generateOperationFunction(
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
-    shouldGenerateResponseMap: metadata.bodyInfo.shouldExportResponseMap, // Use shouldExportResponseMap for type aliases
+    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap, // Use shouldGenerateResponseMap for type aliases
   });
 
   /* Render the complete function */
