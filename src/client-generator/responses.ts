@@ -246,6 +246,7 @@ ${mappings.join("\n")}
  * Resolves a schema to a TypeScript type name. Inline schemas get a synthetic
  * operation-scoped name; referenced schemas reuse their component name.
  */
+// Exported so server generator can reuse schema naming logic without duplication
 function resolveSchemaTypeName(
   schema: ContentTypeMapping["schema"],
   operationId: string,
@@ -264,3 +265,5 @@ function resolveSchemaTypeName(
   typeImports.add(typeName);
   return typeName;
 }
+
+export { resolveSchemaTypeName };

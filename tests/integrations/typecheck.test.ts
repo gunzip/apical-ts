@@ -18,26 +18,28 @@ const tsconfigPath = join(__dirname, "tsconfig.typecheck.json");
 
 describe("generated client + server typecheck", () => {
   it("should compile with tsc (noEmit) without type errors", () => {
-    // If either generated client or server wrappers are missing, attempt generation (both client & server)
-    if (!existsSync(operationsIndex) || !existsSync(serverOperationsIndex)) {
-      const specPath = join(__dirname, "fixtures", "test.yaml");
-      const resultGen = spawnSync(
-        "pnpm",
-        [
-          "start",
-          "generate",
-          "-i",
-          specPath,
-          "-o",
-          generatedDir,
-          "--generate-client",
-          "--generate-server",
-        ],
-        { encoding: "utf-8" },
-      );
-
-      expect(resultGen.status).toBe(0);
-    }
+    // Ensure latest source changes are reflected in dist (server generator uses dist via CLI)
+    const buildResult = spawnSync("pnpm", ["run", "build"], {
+      encoding: "utf-8",
+    });
+    expect(buildResult.status).toBe(0);
+    // Always regenerate to ensure templates and logic changes are reflected (avoid stale cached output)
+    const specPath = join(__dirname, "fixtures", "test.yaml");
+    const resultGen = spawnSync(
+      "pnpm",
+      [
+        "start",
+        "generate",
+        "-i",
+        specPath,
+        "-o",
+        generatedDir,
+        "--generate-client",
+        "--generate-server",
+      ],
+      { encoding: "utf-8" },
+    );
+    expect(resultGen.status).toBe(0);
 
     // Sanity checks that generation produced expected entrypoints
     expect(existsSync(operationsIndex)).toBe(true);

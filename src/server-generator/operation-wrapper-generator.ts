@@ -6,6 +6,7 @@ import type {
 } from "openapi3-ts/oas31";
 
 import assert from "assert";
+import { isReferenceObject } from "openapi3-ts/oas31";
 
 import { extractParameterGroups } from "../client-generator/parameters.js";
 import { resolveRequestBodyType } from "../client-generator/request-body.js";
@@ -69,7 +70,10 @@ export function extractServerOperationMetadata(
   let hasBody = false;
 
   if (operation.requestBody) {
-    bodyTypeInfo = resolveRequestBodyType(operation.requestBody, operationId);
+    const rbCandidate = operation.requestBody;
+    if (rbCandidate && !isReferenceObject(rbCandidate)) {
+      bodyTypeInfo = resolveRequestBodyType(rbCandidate, operationId);
+    }
     hasBody = true;
   }
 
@@ -137,6 +141,7 @@ export function generateServerOperationWrapper(
   /* Render the complete wrapper function */
   const wrapperCode = renderServerOperationWrapper({
     functionName: metadata.functionName,
+    hasBody: metadata.bodyInfo.hasBody,
     operationId: metadata.operationId,
     parameterGroups: metadata.parameterGroups,
     requestMapCode,

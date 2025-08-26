@@ -1,6 +1,8 @@
 import type { ParameterGroups } from "../../client-generator/parameters.js";
 import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
 
+import { extractResponseContentTypes } from "../../client-generator/operation-extractor.js";
+import { resolveSchemaTypeName } from "../../client-generator/responses.js";
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
 
 /**
@@ -8,6 +10,8 @@ import { sanitizeIdentifier } from "../../schema-generator/utils.js";
  */
 export interface ServerOperationTemplateParams {
   functionName: string;
+  /** True if the operation defines a request body (even if only one content type) */
+  hasBody: boolean;
   operationId: string;
   parameterGroups: ParameterGroups;
   requestMapCode: string;
@@ -47,48 +51,28 @@ export function buildServerResponseMap(
   metadata: ServerOperationMetadata,
   typeImports: Set<string>,
 ): string {
-  const { contentTypeMaps } = metadata.bodyInfo;
   const operationId = sanitizeIdentifier(metadata.operationId);
   const responseTypeName = `${operationId}Response`;
-  contentTypeMaps.typeImports.forEach((imp) => typeImports.add(imp));
-  // For now, build a simple union using unknown for response data
-  // (enhancements can map to actual response schemas later)
   const responseEntries: string[] = [];
 
-  if (metadata.operation.responses) {
-    for (const [statusCode, response] of Object.entries(
-      metadata.operation.responses,
-    )) {
-      if (statusCode === "default") continue;
+  // Reuse client extractor to gather responses with content types
+  const responseGroups = extractResponseContentTypes(metadata.operation);
 
-      if ("$ref" in response) {
-        continue;
-      }
-
-      const responseObj = response;
-
-      if (responseObj.content) {
-        for (const [contentType, mediaType] of Object.entries(
-          responseObj.content,
-        )) {
-          if ((mediaType as any).schema) {
-            responseEntries.push(
-              `  | { status: ${statusCode}; contentType: "${contentType}"; data: unknown }`,
-            );
-          } else {
-            responseEntries.push(
-              `  | { status: ${statusCode}; contentType: "${contentType}; data: unknown }`,
-            );
-          }
-        }
-      } else {
-        responseEntries.push(
-          `  | { status: ${statusCode}; contentType: "text/plain"; data: string }`,
-        );
-      }
+  for (const group of responseGroups) {
+    for (const mapping of group.contentTypes) {
+      const schemaType = resolveSchemaTypeName(
+        mapping.schema,
+        metadata.operationId,
+        `${group.statusCode}Response`,
+        typeImports,
+      );
+      responseEntries.push(
+        `  | { status: ${group.statusCode}; contentType: "${mapping.contentType}"; data: ${schemaType} }`,
+      );
     }
   }
 
+  // Fallback for operations without explicit content
   if (responseEntries.length === 0) {
     responseEntries.push(
       `  | { status: 200; contentType: "application/json"; data: unknown }`,
@@ -106,13 +90,14 @@ export function renderServerOperationWrapper(
 ): string {
   const {
     functionName,
+    hasBody,
     operationId,
     parameterGroups,
     requestMapCode,
     requestMapTypeName,
     responseMapCode,
-    responseMapTypeName,
-    summary,
+    // responseMapTypeName,
+    // summary,
   } = params;
 
   const sanitizedId = sanitizeIdentifier(operationId);
@@ -120,13 +105,16 @@ export function renderServerOperationWrapper(
   const validationLogic = renderValidationLogic(
     operationId,
     requestMapTypeName,
+    hasBody,
   );
 
   /* Build handler and parsed params types */
   const responseType = `${sanitizedId}Response`;
   const bodyType = requestMapTypeName
     ? `z.infer<(typeof ${requestMapTypeName})["application/json"]>`
-    : "undefined";
+    : hasBody
+      ? "unknown"
+      : "undefined";
 
   const validationErrorType = `type ${sanitizedId}ValidationError =
   | { type: "query_error"; error: z.ZodError }
@@ -246,33 +234,51 @@ function renderParameterSchemas(
  */
 function renderValidationLogic(
   operationId: string,
-  requestMapTypeName?: string,
+  requestMapTypeName: string | undefined,
+  hasBody: boolean | undefined,
 ): string {
   const sanitizedId = sanitizeIdentifier(operationId);
   const bodyType = requestMapTypeName
     ? `z.infer<(typeof ${requestMapTypeName})["application/json"]>`
     : "undefined";
-
-  return `  const queryParse = ${sanitizedId}QuerySchema.safeParse(req.query);
+  const shared = `  const queryParse = ${sanitizedId}QuerySchema.safeParse(req.query);
   if (!queryParse.success) return handler({ type: "query_error", error: queryParse.error });
 
   const pathParse = ${sanitizedId}PathSchema.safeParse(req.path);
   if (!pathParse.success) return handler({ type: "path_error", error: pathParse.error });
 
   const headersParse = ${sanitizedId}HeadersSchema.safeParse(req.headers);
-  if (!headersParse.success) return handler({ type: "headers_error", error: headersParse.error });
+  if (!headersParse.success) return handler({ type: "headers_error", error: headersParse.error });`;
 
+  const bodyLogic = requestMapTypeName
+    ? `
   let parsedBody: ${bodyType} | undefined = undefined;
-  if (req.body !== undefined && req.contentType && ${requestMapTypeName || "false"}) {
-    const mapRef = ${requestMapTypeName || "{}"} as Record<string, z.ZodTypeAny>;
+  if (req.body !== undefined && req.contentType) {
+    const mapRef = ${requestMapTypeName} as Record<string, z.ZodTypeAny | undefined>;
     const schema = mapRef[req.contentType as string];
     if (schema) {
-  const bodyParse = (schema as z.ZodTypeAny).safeParse(req.body);
+      const bodyParse = schema.safeParse(req.body);
+      if (!bodyParse.success) return handler({ type: "body_error", error: bodyParse.error });
+      parsedBody = bodyParse.data as ${bodyType};
+    } else {
+      /* Unknown content-type fallback: accept any */
+      const bodyParse = z.any().safeParse(req.body);
       if (!bodyParse.success) return handler({ type: "body_error", error: bodyParse.error });
       parsedBody = bodyParse.data as ${bodyType};
     }
-  }
+  }`
+    : hasBody
+      ? `
+  let parsedBody: unknown | undefined = undefined;
+  if (req.body !== undefined) {
+    const bodyParse = z.any().safeParse(req.body);
+    if (!bodyParse.success) return handler({ type: "body_error", error: bodyParse.error });
+    parsedBody = bodyParse.data as unknown;
+  }`
+      : `
+  let parsedBody: undefined | undefined = undefined;`;
 
+  const tail = `
   return handler({
     type: "ok",
     value: { 
@@ -282,4 +288,6 @@ function renderValidationLogic(
       body: parsedBody 
     },
   });`;
+
+  return shared + bodyLogic + tail;
 }
