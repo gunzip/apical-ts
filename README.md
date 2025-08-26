@@ -26,6 +26,14 @@ See [supported features](#features) for more information.
   - [Response Handling](#response-handling)
   - [Exception Handling](#exception-handling)
   - [Validation Error Handling](#validation-error-handling)
+  - [Custom Response Deserialization](#custom-response-deserialization)
+    - [Why use `parse()`?](#why-use-parse)
+    - [Basic Usage](#basic-usage)
+    - [Deserializer Map](#deserializer-map)
+    - [Returned Object Shapes](#returned-object-shapes)
+    - [Common Patterns](#common-patterns)
+    - [Error Handling Summary](#error-handling-summary)
+    - [Best Practices](#best-practices)
   - [Handling Multiple Content Types (Request \& Response)](#handling-multiple-content-types-request--response)
     - [Example: Endpoint with Multiple Request Content Types](#example-endpoint-with-multiple-request-content-types)
     - [Example: Endpoint with Multiple Response Content Types](#example-endpoint-with-multiple-response-content-types)
@@ -286,6 +294,121 @@ if (result.status === 200 && "data" in result) {
   console.log("Downloaded file size:", (result.data as any).length);
 }
 ```
+
+## Custom Response Deserialization
+
+For advanced scenarios (e.g. XML parsing, vendor-specific media types, binary post-processing) each successful response object provides a `parse(deserializerMap?)` method. This lets you plug custom per–content-type deserializers before schema validation occurs.
+
+### Why use `parse()`?
+
+- Apply transformations (e.g. date reviver, case normalization) prior to Zod validation
+- Decode non‑JSON types (XML → JS object, CSV → array, binary → metadata)
+- Gracefully handle vendor or unknown content types without modifying generated code
+
+### Basic Usage
+
+```ts
+const res = await testMultiContentTypes({
+  body: { id: "123", name: "Example" },
+  contentType: { response: "application/xml" },
+});
+
+if (res.status === 200) {
+  const outcome = res.parse({
+    "application/xml": (raw: unknown) => customXmlToJson(raw as string),
+    "application/octet-stream": (blob: unknown) => ({
+      size: (blob as Blob).size,
+    }),
+  });
+
+  if ("parsed" in outcome) {
+    // Zod-validated & transformed data
+    console.log(outcome.parsed);
+  } else if ("error" in outcome) {
+    console.error("Validation failed", outcome.error);
+  } else if ("deserializationError" in outcome) {
+    console.error("Deserializer threw", outcome.deserializationError);
+  } else if (outcome.missingSchema) {
+    console.warn(
+      "No schema for content type; raw transformed value:",
+      outcome.deserialized,
+    );
+  }
+}
+```
+
+### Deserializer Map
+
+`parse(deserializerMap?)` accepts an object whose keys are lower‑cased content types (e.g. `"application/xml"`, `"application/vnd.acme+json"`, `"application/octet-stream"`). Each value is a function:
+
+```ts
+type Deserializer = (data: unknown, contentType?: string) => unknown;
+```
+
+If a matching key is present, the raw body (already converted to `json()`, `text()`, `blob()`, `formData()`, or `arrayBuffer()` depending on content type heuristics) is passed to your function. Whatever you return becomes the input to schema validation (if a schema for that content type exists).
+
+### Returned Object Shapes
+
+The result of `parse()` is a discriminated object you can pattern match on:
+
+| Scenario                              | Shape                                                                       |
+| ------------------------------------- | --------------------------------------------------------------------------- |
+| Schema + validation success           | `{ contentType, parsed }`                                                   |
+| Schema + validation failure           | `{ contentType, error }`                                                    |
+| Schema present but deserializer threw | `{ contentType, deserializationError }`                                     |
+| No schema for content type            | `{ contentType, missingSchema: true, deserialized, deserializationError? }` |
+
+Notes:
+
+- If the deserializer throws, validation is skipped (you get `deserializationError`).
+- If no schema exists, the transformed value is returned under `deserialized` and flagged with `missingSchema: true`.
+- Content type normalization strips any charset parameters (e.g. `application/json; charset=utf-8` → `application/json`).
+
+### Common Patterns
+
+1. XML → JS:
+
+```ts
+const outcome = (res as any).parse({
+  "application/xml": (xml: unknown) => fastXmlParser.parse(xml as string),
+});
+```
+
+2. Binary metadata:
+
+```ts
+const outcome = (res as any).parse({
+  "application/octet-stream": (b: unknown) => ({ size: (b as Blob).size }),
+});
+```
+
+3. Vendor JSON normalization:
+
+```ts
+const outcome = (res as any).parse({
+  "application/vnd.custom+json": (data: any) => ({
+    ...data,
+    id: String(data.id).toUpperCase(),
+  }),
+});
+```
+
+### Error Handling Summary
+
+| Field                  | Meaning                                             |
+| ---------------------- | --------------------------------------------------- |
+| `parsed`               | Successfully deserialized and schema-validated data |
+| `error`                | Zod validation error object (`ZodError`)            |
+| `deserializationError` | Exception thrown by your custom deserializer        |
+| `missingSchema`        | No schema was generated for this content type       |
+| `deserialized`         | Transformed value when no schema exists             |
+
+### Best Practices
+
+- Keep deserializers pure & fast—avoid performing network calls
+- Return plain JS objects ready for validation; do not mutate globals
+- Prefer adding schemas in the spec when possible (better type safety)
+- Log or surface `deserializationError` for observability
 
 ## Handling Multiple Content Types (Request & Response)
 
