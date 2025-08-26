@@ -88,7 +88,7 @@ export function extractOperationMetadata(
     bodyInfo.bodyTypeInfo,
     operationSecurityHeaders,
     bodyInfo.shouldGenerateRequestMap,
-    bodyInfo.shouldGenerateResponseMap,
+    bodyInfo.shouldGenerateResponseMap, // This controls generic params, keep as false for unknown mode
     bodyInfo.requestMapTypeName,
     bodyInfo.responseMapTypeName,
   );
@@ -98,8 +98,8 @@ export function extractOperationMetadata(
   const responseHandlers = generateResponseHandlers(
     operation,
     typeImports,
-    bodyInfo.shouldGenerateResponseMap,
-    bodyInfo.shouldGenerateResponseMap ? bodyInfo.responseMapTypeName : undefined,
+    bodyInfo.shouldExportResponseMap,
+    bodyInfo.shouldExportResponseMap ? bodyInfo.responseMapTypeName : undefined,
   );
 
   /* Security overrides/auth headers */
@@ -192,7 +192,7 @@ export function generateOperationFunction(
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
-    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
+    shouldGenerateResponseMap: metadata.bodyInfo.shouldExportResponseMap, // Use shouldExportResponseMap for type aliases
   });
 
   /* Render the complete function */
@@ -292,7 +292,8 @@ function collectBodyAndContentTypes(
   // A response map of '{}' means the operation has no concrete response content-type mappings.
   // In that case we must NOT generate response content-type generics or attempt indexed lookup.
   // (Previously this produced: TResponseContentType extends keyof {} = "application/json" -> error)
-  const shouldGenerateResponseMap =
+  const shouldGenerateResponseMap = false; // Disable response generics for unknown mode
+  const shouldExportResponseMap =
     !!contentTypeMaps.responseMapType &&
     contentTypeMaps.responseMapType !== "{}";
 
@@ -305,5 +306,6 @@ function collectBodyAndContentTypes(
     responseMapTypeName,
     shouldGenerateRequestMap,
     shouldGenerateResponseMap,
+    shouldExportResponseMap,
   };
 }

@@ -26,18 +26,15 @@ describe("client-generator validation error handling", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      /* Verify that the generated code includes safeParse and error handling */
-      expect(result.responseHandlers[0]).toContain("safeParse(");
-      expect(result.responseHandlers[0]).toContain("if (!parseResult.success)");
+      /* Verify that the generated code uses unknown mode (no validation) */
+      expect(result.responseHandlers[0]).not.toContain("safeParse(");
+      expect(result.responseHandlers[0]).not.toContain("if (!parseResult.success)");
       expect(result.responseHandlers[0]).toContain(
-        "return { status: 200 as const, error: parseResult.error, response }",
-      );
-      expect(result.responseHandlers[0]).toContain(
-        "const data = parseResult.data",
+        "const data = await parseResponseBody(response) as unknown;",
       );
 
-      /* Return type should be ApiResponse with data type only (error handled at top-level) */
-      expect(result.returnType).toBe("ApiResponse<200, User>");
+      /* Return type should be ApiResponse with unknown */
+      expect(result.returnType).toBe("ApiResponse<200, unknown>");
     });
 
     it("should generate handler code for mixed JSON/non-JSON responses with conditional validation", () => {
@@ -61,13 +58,13 @@ describe("client-generator validation error handling", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports, true);
 
-      /* Verify that the generated code includes conditional safeParse logic */
+      /* Verify that the generated code uses unknown mode (no conditional validation) */
       expect(result.responseHandlers[0]).toContain(
-        'finalResponseContentType.includes("json")',
+        "const data = await parseResponseBody(response) as unknown;",
       );
-      expect(result.responseHandlers[0]).toContain("safeParse(");
-      expect(result.responseHandlers[0]).toContain("error: parseResult.error");
-      expect(result.returnType).toBe("ApiResponse<200, JsonData>");
+      expect(result.responseHandlers[0]).not.toContain("safeParse(");
+      expect(result.responseHandlers[0]).not.toContain("error: parseResult.error");
+      expect(result.returnType).toBe("ApiResponse<200, unknown>");
     });
 
     it("should not include parseError for non-JSON responses", () => {
@@ -91,11 +88,11 @@ describe("client-generator validation error handling", () => {
       /* Verify that non-JSON responses don't use safeParse */
       expect(result.responseHandlers[0]).not.toContain("safeParse(");
       expect(result.responseHandlers[0]).not.toContain("error:");
-      expect(result.responseHandlers[0]).toContain("as FileContent");
+      expect(result.responseHandlers[0]).toContain("as unknown");
 
       /* Verify that the return type does NOT include parseError */
       expect(result.returnType).not.toContain("error:");
-      expect(result.returnType).toBe("ApiResponse<200, FileContent>");
+      expect(result.returnType).toBe("ApiResponse<200, unknown>");
     });
 
     it("should handle responses without content correctly", () => {

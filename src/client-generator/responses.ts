@@ -220,8 +220,7 @@ function buildResponseContentTypeMap(
   }
 
   if (
-    statusesWithContent.size === explicitStatuses.length &&
-    explicitStatuses.length > 0
+    statusesWithContent.size > 0
   ) {
     const mappings: string[] = Object.entries(contentTypeToResponses).map(
       ([ct, entries]) => {
@@ -234,7 +233,7 @@ function buildResponseContentTypeMap(
     if (mappings.length > 0) {
       responseMapType = `{
 ${mappings.join("\n")}
-} as const`;
+}`;
     }
   }
 
