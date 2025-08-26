@@ -9,32 +9,41 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const generatedDir = join(__dirname, "generated");
 const operationsIndex = join(generatedDir, "operations", "index.ts");
+const serverOperationsIndex = join(
+  generatedDir,
+  "server-operations",
+  "index.ts",
+);
 const tsconfigPath = join(__dirname, "tsconfig.typecheck.json");
 
-describe("generated client typecheck", () => {
+describe("generated client + server typecheck", () => {
   it("should compile with tsc (noEmit) without type errors", () => {
-    // If the generated client is missing, attempt generation
-    if (!existsSync(operationsIndex)) {
-      const specPath = join(__dirname, "fixtures", "test.yaml");
-      const resultGen = spawnSync(
-        "pnpm",
-        [
-          "start",
-          "generate",
-          "-i",
-          specPath,
-          "-o",
-          generatedDir,
-          "--generate-client",
-        ],
-        { encoding: "utf-8" },
-      );
+    // Ensure latest source changes are reflected in dist (server generator uses dist via CLI)
+    const buildResult = spawnSync("pnpm", ["run", "build"], {
+      encoding: "utf-8",
+    });
+    expect(buildResult.status).toBe(0);
+    // Always regenerate to ensure templates and logic changes are reflected (avoid stale cached output)
+    const specPath = join(__dirname, "fixtures", "test.yaml");
+    const resultGen = spawnSync(
+      "pnpm",
+      [
+        "start",
+        "generate",
+        "-i",
+        specPath,
+        "-o",
+        generatedDir,
+        "--generate-client",
+        "--generate-server",
+      ],
+      { encoding: "utf-8" },
+    );
+    expect(resultGen.status).toBe(0);
 
-      expect(resultGen.status).toBe(0);
-    }
-
-    // Sanity check that generation produced expected entrypoint
+    // Sanity checks that generation produced expected entrypoints
     expect(existsSync(operationsIndex)).toBe(true);
+    expect(existsSync(serverOperationsIndex)).toBe(true);
 
     const result = spawnSync(
       "pnpm",

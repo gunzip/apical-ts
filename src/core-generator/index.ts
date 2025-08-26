@@ -22,6 +22,7 @@ import {
   generateSchemaFile,
 } from "../schema-generator/index.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { generateServerOperations } from "../server-generator/index.js";
 import { convertToOpenAPI31 } from "./converter.js";
 import { parseOpenAPI } from "./parser.js";
 
@@ -48,6 +49,7 @@ export interface GenerationOptions {
    */
   concurrency?: number;
   generateClient: boolean;
+  generateServer?: boolean;
   input: string;
   output: string;
   /**
@@ -66,6 +68,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
   const {
     concurrency = DEFAULT_CONCURRENCY,
     generateClient: genClient,
+    generateServer: genServer = false,
     input,
     output,
     strictValidation = false,
@@ -179,6 +182,11 @@ export async function generate(options: GenerationOptions): Promise<void> {
 
   if (genClient) {
     await generateOperations(openApiDoc, output, concurrency);
+  }
+
+  if (genServer) {
+    await generateServerOperations(openApiDoc, output, concurrency);
+    console.log("✅ Server operations generated successfully");
   }
 
   const packageJsonContent = {

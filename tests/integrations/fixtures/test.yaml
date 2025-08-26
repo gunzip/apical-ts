@@ -256,6 +256,7 @@ paths:
           required: true
           schema:
             type: string
+            minLength: 5
         - name: foo-bar
           in: query
           schema:
@@ -937,6 +938,7 @@ components:
       in: query
       schema:
         type: string
+        minLength: 10
     RequiredRequestId:
       name: request-id
       in: query
