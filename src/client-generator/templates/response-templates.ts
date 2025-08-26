@@ -18,13 +18,13 @@ export function renderApiResponseType(
 export function renderParseExpression(
   responseInfo: ResponseInfo,
   config: {
+    forceUnknownMode?: boolean;
     hasResponseContentTypeMap: boolean;
     statusCode: string;
     typeName: string;
-    forceUnknownMode?: boolean;
   },
 ): string {
-  const { statusCode, typeName, forceUnknownMode = true } = config;
+  const { forceUnknownMode = true, statusCode, typeName } = config;
   const { parsingStrategy } = responseInfo;
 
   if (!responseInfo.hasSchema) {
@@ -89,11 +89,12 @@ export function renderResponseHandler(
       .join("\n");
 
     /* Add parse method if we have a schema and response map */
-    const parseMethod = responseInfo.hasSchema && responseMapName
-      ? `,
+    const parseMethod =
+      responseInfo.hasSchema && responseMapName
+        ? `,
         parse: () =>
           parseApiResponseUnknownData(response, data, ${responseMapName}),`
-      : "";
+        : "";
 
     return `    case ${statusCode}: {
 ${indentedParseCode}
@@ -109,21 +110,25 @@ ${indentedParseCode}
  * Renders the complete response handlers array as switch-case statements
  */
 export function renderResponseHandlers(
-  responses: ResponseInfo[], 
-  responseMapName?: string
+  responses: ResponseInfo[],
+  responseMapName?: string,
 ): string[] {
   const handlers: string[] = [];
 
   for (const responseInfo of responses) {
     const parseExpression = renderParseExpression(responseInfo, {
+      forceUnknownMode: true,
       hasResponseContentTypeMap:
         responseInfo.parsingStrategy.requiresRuntimeContentTypeCheck,
       statusCode: responseInfo.statusCode,
       typeName: responseInfo.typeName || "",
-      forceUnknownMode: true,
     });
 
-    const handler = renderResponseHandler(responseInfo, parseExpression, responseMapName);
+    const handler = renderResponseHandler(
+      responseInfo,
+      parseExpression,
+      responseMapName,
+    );
     handlers.push(handler);
   }
 

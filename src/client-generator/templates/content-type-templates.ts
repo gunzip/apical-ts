@@ -1,9 +1,9 @@
 /* Content type handler configurations and template functions */
 
-export type ContentTypeHandler = {
+export interface ContentTypeHandler {
   bodyContentCode: string;
   contentTypeHeaderCode: string;
-};
+}
 
 /*
  * Configuration mapping for content type handlers.

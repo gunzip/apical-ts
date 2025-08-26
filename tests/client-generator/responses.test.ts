@@ -260,9 +260,7 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe(
-        "ApiResponse<200, unknown>",
-      );
+      expect(result.returnType).toBe("ApiResponse<200, unknown>");
       expect(typeImports.has("UserProfileData200Response")).toBe(true);
     });
 
@@ -423,9 +421,7 @@ describe("client-generator responses", () => {
       expect(result.requestMapType).toBe("{}");
       expect(result.requestContentTypeCount).toBe(0);
       expect(result.responseContentTypeCount).toBe(1);
-      expect(result.responseMapType).toContain(
-        '"application/json": User,',
-      );
+      expect(result.responseMapType).toContain('"application/json": User,');
     });
 
     it("should handle operation with no responses", () => {

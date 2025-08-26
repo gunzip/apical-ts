@@ -21,7 +21,7 @@ import { generatePathInterpolation } from "./utils.js";
 /**
  * Options accepted by generateFunctionBody (collapsed from the previous long positional argument list).
  */
-export type GenerateFunctionBodyOptions = {
+export interface GenerateFunctionBodyOptions {
   authHeaders?: string[];
   contentTypeMaps: ContentTypeMaps;
   hasBody: boolean;
@@ -35,7 +35,7 @@ export type GenerateFunctionBodyOptions = {
   responseHandlers: string[];
   shouldGenerateRequestMap: boolean;
   shouldGenerateResponseMap: boolean;
-};
+}
 
 /**
  * Generates the function body for an operation with support for dynamic content types.

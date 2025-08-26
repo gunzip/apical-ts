@@ -5,25 +5,25 @@ import type { getOperationSecuritySchemes } from "../security.js";
 
 /* TypeScript rendering functions for operation code generation */
 
-export type ContentTypeMapsConfig = {
+export interface ContentTypeMapsConfig {
   contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
   requestMapTypeName: string;
   responseMapTypeName: string;
   shouldGenerateRequestMap: boolean;
   shouldGenerateResponseMap: boolean;
-};
+}
 
 export type GenericParamsConfig = ContentTypeMapsConfig & {
   initialReturnType: string;
 };
 
-export type GenericParamsResult = {
+export interface GenericParamsResult {
   genericParams: string;
   updatedReturnType: string;
-};
+}
 
 /* Renders the complete TypeScript function code from structured metadata */
-export type OperationFunctionRenderConfig = {
+export interface OperationFunctionRenderConfig {
   functionBodyCode: string;
   functionName: string;
   genericParams: string;
@@ -31,10 +31,10 @@ export type OperationFunctionRenderConfig = {
   summary: string;
   typeAliases: string;
   updatedReturnType: string;
-};
+}
 
 /* Data structure representing operation metadata extracted from OpenAPI specification */
-export type OperationMetadata = {
+export interface OperationMetadata {
   authHeaders: string[];
   bodyInfo: ContentTypeMapsConfig & {
     bodyTypeInfo: ReturnType<typeof resolveRequestBodyType> | undefined;
@@ -58,12 +58,12 @@ export type OperationMetadata = {
   };
   summary: string;
   typeImports: Set<string>;
-};
+}
 
-export type ParameterDeclarationConfig = {
+export interface ParameterDeclarationConfig {
   destructuredParams: string;
   paramsInterface: string;
-};
+}
 
 export type TypeAliasesConfig = ContentTypeMapsConfig;
 

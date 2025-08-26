@@ -35,10 +35,10 @@ import {
 } from "./templates/operation-templates.js";
 
 /* Result of generating a function with imports */
-export type GeneratedFunction = {
+export interface GeneratedFunction {
   functionCode: string;
   typeImports: Set<string>;
-};
+}
 
 /**
  * extractOperationMetadata
@@ -304,8 +304,8 @@ function collectBodyAndContentTypes(
     requestContentTypes,
     requestMapTypeName,
     responseMapTypeName,
+    shouldExportResponseMap,
     shouldGenerateRequestMap,
     shouldGenerateResponseMap,
-    shouldExportResponseMap,
   };
 }

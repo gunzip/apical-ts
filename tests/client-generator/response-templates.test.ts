@@ -83,8 +83,12 @@ describe("response-templates", () => {
         hasResponseContentTypeMap: true,
       });
 
-      expect(result).toContain("const data = await parseResponseBody(response) as unknown;");
-      expect(result).not.toContain('if (finalResponseContentType.includes("json")');
+      expect(result).toContain(
+        "const data = await parseResponseBody(response) as unknown;",
+      );
+      expect(result).not.toContain(
+        'if (finalResponseContentType.includes("json")',
+      );
       expect(result).not.toContain(
         "Data.safeParse(await parseResponseBody(response))",
       );

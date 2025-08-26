@@ -3,18 +3,18 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 import { handleExtensibleEnum, handleRegularEnum } from "./enum-handlers.js";
 import { addDefaultValue } from "./utils.js";
 
-type ZodSchemaCodeOptions = {
+interface ZodSchemaCodeOptions {
   imports?: Set<string>;
   isTopLevel?: boolean;
   strictValidation?: boolean;
-};
+}
 
 // Import from schema-converter to avoid circular dependencies
-type ZodSchemaResult = {
+interface ZodSchemaResult {
   code: string;
   extensibleEnumValues?: unknown[];
   imports: Set<string>;
-};
+}
 
 /**
  * Handle array type conversion

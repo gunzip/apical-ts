@@ -8,11 +8,11 @@ export type OpenAPISchema = ReferenceObject | SchemaObject;
 /**
  * Options for zodSchemaToCode function
  */
-export type ZodSchemaCodeOptions = {
+export interface ZodSchemaCodeOptions {
   imports?: Set<string>;
   isTopLevel?: boolean;
   strictValidation?: boolean;
-};
+}
 
 /**
  * Result of converting an OpenAPI schema to Zod code
@@ -25,11 +25,11 @@ export type ZodSchemaCodeOptions = {
  * };
  * ```
  */
-export type ZodSchemaResult = {
+export interface ZodSchemaResult {
   code: string;
   extensibleEnumValues?: unknown[];
   imports: Set<string>;
-};
+}
 import { isSchemaObject } from "openapi3-ts/oas31";
 
 import { handleRegularEnum } from "./enum-handlers.js";

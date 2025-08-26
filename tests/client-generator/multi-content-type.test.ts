@@ -97,7 +97,7 @@ describe("Multi-content-type operation function generation", () => {
       'TRequestContentType extends keyof PetFindByStatusRequestMap = "application/json"',
     );
     expect(result.functionCode).not.toContain(
-      'TResponseContentType extends keyof PetFindByStatusResponseMap =',
+      "TResponseContentType extends keyof PetFindByStatusResponseMap =",
     );
 
     // Check parameter type uses generic and includes contentType in first parameter

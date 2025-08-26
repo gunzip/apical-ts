@@ -18,7 +18,7 @@ import {
 /**
  * Result of generating content type maps
  */
-export type ContentTypeMaps = {
+export interface ContentTypeMaps {
   defaultRequestContentType: null | string;
   defaultResponseContentType: null | string;
   requestContentTypeCount: number;
@@ -26,24 +26,24 @@ export type ContentTypeMaps = {
   responseContentTypeCount: number;
   responseMapType: string;
   typeImports: Set<string>;
-};
+}
 
 /**
  * Result of response handler generation
  */
-export type ResponseHandlerResult = {
+export interface ResponseHandlerResult {
   responseHandlers: string[];
   returnType: string;
-};
+}
 
 /**
  * Information about response types and handlers
  */
-export type ResponseTypeInfo = {
+export interface ResponseTypeInfo {
   responseHandlers: string[];
   typeImports: Set<string>;
   typeName: null | string;
-};
+}
 
 /*
  * Generates TypeScript type maps for request and response content types.
@@ -95,7 +95,10 @@ export function generateResponseHandlers(
   });
 
   /* Generate response handlers using templates */
-  const responseHandlers = renderResponseHandlers(analysis.responses, responseMapName);
+  const responseHandlers = renderResponseHandlers(
+    analysis.responses,
+    responseMapName,
+  );
 
   /* Generate return type using templates */
   const returnType = renderUnionType(
@@ -191,9 +194,6 @@ function buildResponseContentTypeMap(
     };
   }
 
-  const explicitStatuses = Object.keys(operation.responses || {}).filter(
-    (c) => c !== "default",
-  );
   const contentTypeToResponses: Record<
     string,
     { status: string; typeName: string }[]
@@ -219,9 +219,7 @@ function buildResponseContentTypeMap(
     }
   }
 
-  if (
-    statusesWithContent.size > 0
-  ) {
+  if (statusesWithContent.size > 0) {
     const mappings: string[] = Object.entries(contentTypeToResponses).map(
       ([ct, entries]) => {
         /* For unknown mode, map content types to schema objects, not ApiResponse types */

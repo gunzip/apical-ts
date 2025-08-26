@@ -5,9 +5,9 @@ import { addDefaultValue } from "./utils.js";
 /**
  * Options for object type generation
  */
-type ObjectTypeOptions = {
+interface ObjectTypeOptions {
   strictValidation?: boolean;
-};
+}
 
 type ZodSchemaCodeOptions = ObjectTypeOptions & {
   imports?: Set<string>;
@@ -15,11 +15,11 @@ type ZodSchemaCodeOptions = ObjectTypeOptions & {
 };
 
 // Import from schema-converter to avoid circular dependencies
-type ZodSchemaResult = {
+interface ZodSchemaResult {
   code: string;
   extensibleEnumValues?: unknown[];
   imports: Set<string>;
-};
+}
 
 /**
  * Handle object type conversion

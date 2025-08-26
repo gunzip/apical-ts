@@ -7,17 +7,17 @@ import { zodSchemaToCode } from "./schema-converter.js";
 /**
  * Schema file generation result
  */
-export type SchemaFileResult = {
+export interface SchemaFileResult {
   content: string;
   fileName: string;
-};
+}
 
 /**
  * Options for schema file generation
  */
-export type SchemaGenerationOptions = {
+export interface SchemaGenerationOptions {
   strictValidation?: boolean;
-};
+}
 
 /**
  * Generates file content for a request schema

@@ -28,7 +28,9 @@ describe("client-generator validation error handling", () => {
 
       /* Verify that the generated code uses unknown mode (no validation) */
       expect(result.responseHandlers[0]).not.toContain("safeParse(");
-      expect(result.responseHandlers[0]).not.toContain("if (!parseResult.success)");
+      expect(result.responseHandlers[0]).not.toContain(
+        "if (!parseResult.success)",
+      );
       expect(result.responseHandlers[0]).toContain(
         "const data = await parseResponseBody(response) as unknown;",
       );
@@ -63,7 +65,9 @@ describe("client-generator validation error handling", () => {
         "const data = await parseResponseBody(response) as unknown;",
       );
       expect(result.responseHandlers[0]).not.toContain("safeParse(");
-      expect(result.responseHandlers[0]).not.toContain("error: parseResult.error");
+      expect(result.responseHandlers[0]).not.toContain(
+        "error: parseResult.error",
+      );
       expect(result.returnType).toBe("ApiResponse<200, unknown>");
     });
 

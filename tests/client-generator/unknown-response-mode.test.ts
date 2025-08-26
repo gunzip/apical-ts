@@ -27,7 +27,9 @@ describe("unknown response mode", () => {
         forceUnknownMode: true,
       });
 
-      expect(result).toBe("const data = await parseResponseBody(response) as unknown;");
+      expect(result).toBe(
+        "const data = await parseResponseBody(response) as unknown;",
+      );
     });
 
     it("should generate undefined for response without schema", () => {
@@ -85,16 +87,22 @@ describe("unknown response mode", () => {
 
       /* Verify response handler includes parse method */
       expect(result.responseHandlers[0]).toContain("parse: () =>");
-      expect(result.responseHandlers[0]).toContain("parseApiResponseUnknownData(response, data, GetUserResponseMap)");
-      
+      expect(result.responseHandlers[0]).toContain(
+        "parseApiResponseUnknownData(response, data, GetUserResponseMap)",
+      );
+
       /* Verify unknown parsing is used */
-      expect(result.responseHandlers[0]).toContain("const data = await parseResponseBody(response) as unknown;");
-      
+      expect(result.responseHandlers[0]).toContain(
+        "const data = await parseResponseBody(response) as unknown;",
+      );
+
       /* Verify no Zod validation */
       expect(result.responseHandlers[0]).not.toContain("safeParse");
-      
+
       /* Verify return type uses unknown for responses with content and void for others */
-      expect(result.returnType).toBe("ApiResponse<200, unknown> | ApiResponse<404, void>");
+      expect(result.returnType).toBe(
+        "ApiResponse<200, unknown> | ApiResponse<404, void>",
+      );
     });
 
     it("should not add parse method for responses without schemas", () => {
@@ -112,7 +120,9 @@ describe("unknown response mode", () => {
 
       /* Verify no parse method is added */
       expect(result.responseHandlers[0]).not.toContain("parse: () =>");
-      expect(result.responseHandlers[0]).not.toContain("parseApiResponseUnknownData");
+      expect(result.responseHandlers[0]).not.toContain(
+        "parseApiResponseUnknownData",
+      );
     });
 
     it("should handle multiple content types with schema map", () => {
@@ -147,7 +157,9 @@ describe("unknown response mode", () => {
 
       /* Verify parse method is included */
       expect(result.responseHandlers[0]).toContain("parse: () =>");
-      expect(result.responseHandlers[0]).toContain("parseApiResponseUnknownData(response, data, GetPetResponseMap)");
+      expect(result.responseHandlers[0]).toContain(
+        "parseApiResponseUnknownData(response, data, GetPetResponseMap)",
+      );
     });
   });
 });
