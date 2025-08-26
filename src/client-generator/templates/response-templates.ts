@@ -92,11 +92,18 @@ export function renderResponseHandler(
       .join("\n");
 
     /* Add parse method if we have a schema and response map */
+    /* If we have a response map, derive the per-operation deserializer map type name.
+     * Convention: <OperationName>ResponseMap => <OperationName>DeserializerMap
+     */
+    const deserializerMapTypeName = responseMapName
+      ? responseMapName.replace(/Map$/u, "DeserializerMap")
+      : undefined;
+
     const parseMethod =
       responseInfo.hasSchema && responseMapName
         ? `,
-        parse: () =>
-          parseApiResponseUnknownData(response, data, ${responseMapName}),`
+        parse: (deserializerMap?: ${deserializerMapTypeName}) =>
+          parseApiResponseUnknownData(response, data, ${responseMapName}, deserializerMap as import("./config.js").DeserializerMap),`
         : "";
 
     return `    case ${statusCode}: {

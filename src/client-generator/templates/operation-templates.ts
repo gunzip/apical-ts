@@ -134,6 +134,15 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
       typeAliases += `export const ${config.responseMapTypeName} = ${responseMapRuntime} as const;\n`;
     }
     typeAliases += `export type ${config.responseMapTypeName} = ${responseMapRuntime};\n\n`;
+    /* Emit a narrowed DeserializerMap type for this operation.
+     * If we have a non-empty response map constant we can use its keys directly via keyof typeof <Map>.
+     * Otherwise fall back to a generic string index (keeps backwards compatibility).
+     */
+    const perOpDeserializerMap =
+      responseMapRuntime !== "{}"
+        ? `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = Partial<Record<keyof typeof ${config.responseMapTypeName}, import('./config.js').Deserializer>>;\n\n`
+        : `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = import('./config.js').DeserializerMap;\n\n`;
+    typeAliases += perOpDeserializerMap;
   }
   return typeAliases;
 }
