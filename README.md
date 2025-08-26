@@ -197,7 +197,7 @@ const newPet = await client.createPet({
 Each operation returns a discriminated union of possible responses containing the raw (unvalidated) response body in `data`. Validation is opt-in. Example:
 
 ```ts
-const result = await getPetById({ petId: "123" }, apiConfig);
+const result = await getPetById({ petId: "123" });
 
 if (result.status === 200) {
   // result.data is the RAW response body (unvalidated)
@@ -228,7 +228,7 @@ All responses not handled by the union type throw a typed error:
 
 ```ts
 try {
-  const result = await getPetById({ petId: "notfound" }, apiConfig);
+  const result = await getPetById({ petId: "notfound" });
   // handle result as above
 } catch (err) {
   if (err instanceof ApiError) {
@@ -246,7 +246,7 @@ try {
 Operations return raw data by default (no automatic Zod parsing). To perform runtime validation you must explicitly call the response object's `parse(deserializerMap?)` method. Validation errors are reported in the returned object (they do NOT throw) via an `error` property.
 
 ```ts
-const result = await getUserProfile({ userId: "123" }, apiConfig);
+const result = await getUserProfile({ userId: "123" });
 
 if (result.status === 200) {
   const outcome = result.parse();
@@ -284,7 +284,7 @@ if (result.status === 200) {
 Non-JSON responses (like `text/plain`, `application/octet-stream`) are still left raw unless you supply a custom deserializer in `parse()`:
 
 ```ts
-const result = await downloadFile({ fileId: "123" }, apiConfig);
+const result = await downloadFile({ fileId: "123" });
 if (result.status === 200) {
   const outcome = result.parse({
     "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
