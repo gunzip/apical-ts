@@ -9,7 +9,6 @@ import type {
 import assert from "assert";
 
 import type { OperationMetadata } from "./templates/operation-templates.js";
-import type { ResponseHandlerResult } from "./responses.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateFunctionBody } from "./code-generation.js";
@@ -180,25 +179,28 @@ export function generateOperationFunction(
   /* Compute generic parameters and adjust return type if response map present */
   const { genericParams, updatedReturnType } = buildGenericParams({
     contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+    discriminatedUnionTypeName:
+      metadata.responseHandlers.discriminatedUnionTypeName,
     initialReturnType: metadata.responseHandlers.returnType,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
-    discriminatedUnionTypeName: metadata.responseHandlers.discriminatedUnionTypeName,
   });
 
   /* Emit request/response map type aliases (only when non-empty / applicable) */
   const typeAliases = buildTypeAliases({
     contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+    discriminatedUnionTypeDefinition:
+      metadata.responseHandlers.discriminatedUnionTypeDefinition,
+    discriminatedUnionTypeName:
+      metadata.responseHandlers.discriminatedUnionTypeName,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
+    responseMapName: metadata.responseHandlers.responseMapName,
+    responseMapType: metadata.responseHandlers.responseMapType,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap, // Use shouldGenerateResponseMap for type aliases
-    discriminatedUnionTypeName: metadata.responseHandlers.discriminatedUnionTypeName,
-    discriminatedUnionTypeDefinition: metadata.responseHandlers.discriminatedUnionTypeDefinition,
-    responseMapName: metadata.responseHandlers.responseMapName,
-    responseMapType: metadata.responseHandlers.responseMapType,
   });
 
   /* Render the complete function */

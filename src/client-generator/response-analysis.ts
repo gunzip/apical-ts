@@ -14,8 +14,8 @@ import type {
 } from "./models/response-models.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { getResponseContentType } from "./utils.js";
 import { generateDiscriminatedUnionTypes } from "./discriminated-union-generator.js";
+import { getResponseContentType } from "./utils.js";
 
 /*
  * Analyzes the content type structure of a response
@@ -92,12 +92,13 @@ export function analyzeResponseStructure(
 
   return {
     defaultReturnType: "ApiResponse<number, unknown>",
-    responses,
-    unionTypes,
+    discriminatedUnionTypeDefinition:
+      discriminatedUnionResult?.unionTypeDefinition,
     discriminatedUnionTypeName: discriminatedUnionResult?.unionTypeName,
-    discriminatedUnionTypeDefinition: discriminatedUnionResult?.unionTypeDefinition,
     responseMapName: discriminatedUnionResult?.responseMapName,
     responseMapType: discriminatedUnionResult?.responseMapType,
+    responses,
+    unionTypes,
   };
 }
 

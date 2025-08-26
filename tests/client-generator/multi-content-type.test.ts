@@ -113,7 +113,7 @@ describe("Multi-content-type operation function generation", () => {
     // Check NO options parameter (contentType should be in first parameter now)
     expect(result.functionCode).not.toContain("options?: {");
 
-    // Check return type uses discriminated union response types  
+    // Check return type uses discriminated union response types
     expect(result.functionCode).toContain(
       "Promise<ApiResponse<200, unknown> | ApiResponse<404, unknown>>",
     );

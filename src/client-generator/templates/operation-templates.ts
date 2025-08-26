@@ -1,6 +1,9 @@
 import type { extractParameterGroups } from "../parameters.js";
 import type { resolveRequestBodyType } from "../request-body.js";
-import type { generateContentTypeMaps, ResponseHandlerResult } from "../responses.js";
+import type {
+  generateContentTypeMaps,
+  ResponseHandlerResult,
+} from "../responses.js";
 import type { getOperationSecuritySchemes } from "../security.js";
 
 /* TypeScript rendering functions for operation code generation */
@@ -14,8 +17,8 @@ export interface ContentTypeMapsConfig {
 }
 
 export type GenericParamsConfig = ContentTypeMapsConfig & {
-  initialReturnType: string;
   discriminatedUnionTypeName?: string;
+  initialReturnType: string;
 };
 
 export interface GenericParamsResult {
@@ -64,8 +67,8 @@ export interface ParameterDeclarationConfig {
 }
 
 export type TypeAliasesConfig = ContentTypeMapsConfig & {
-  discriminatedUnionTypeName?: string;
   discriminatedUnionTypeDefinition?: string;
+  discriminatedUnionTypeName?: string;
   responseMapName?: string;
   responseMapType?: string;
 };
@@ -79,7 +82,7 @@ export function buildGenericParams(
   config: GenericParamsConfig,
 ): GenericParamsResult {
   let genericParams = "";
-  let updatedReturnType = config.initialReturnType;
+  const updatedReturnType = config.initialReturnType;
 
   if (config.shouldGenerateRequestMap || config.shouldGenerateResponseMap) {
     const genericParts: string[] = [];
@@ -123,14 +126,14 @@ export function buildParameterDeclaration(
  */
 export function buildTypeAliases(config: TypeAliasesConfig): string {
   let typeAliases = "";
-  
+
   /* Add discriminated union response type if available */
   if (config.discriminatedUnionTypeDefinition) {
     typeAliases += `${config.discriminatedUnionTypeDefinition}\n\n`;
   }
-  
+
   /* Don't add discriminated union response map if we're already generating the normal response map to avoid duplicates */
-  
+
   if (config.shouldGenerateRequestMap) {
     typeAliases += `export type ${config.requestMapTypeName} = ${config.contentTypeMaps.requestMapType};\n\n`;
   }

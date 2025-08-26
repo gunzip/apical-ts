@@ -41,7 +41,9 @@ describe("discriminated union response types", () => {
       /* Should include all content type pairs */
       expect(result.unionTypeDefinition).toContain("application/json");
       expect(result.unionTypeDefinition).toContain("application/xml");
-      expect(result.unionTypeDefinition).toContain("application/vnd.custom+json");
+      expect(result.unionTypeDefinition).toContain(
+        "application/vnd.custom+json",
+      );
 
       /* Should include status and contentType fields */
       expect(result.unionTypeDefinition).toContain("status: 200");
@@ -49,7 +51,9 @@ describe("discriminated union response types", () => {
       expect(result.unionTypeDefinition).toContain("data:");
 
       /* Should use z.infer for type inference */
-      expect(result.unionTypeDefinition).toContain("import(\"zod\").infer<typeof");
+      expect(result.unionTypeDefinition).toContain(
+        'import("zod").infer<typeof',
+      );
 
       /* Should generate response map */
       expect(result.responseMapName).toBe("TestMultiContentTypesResponseMap");
@@ -122,7 +126,9 @@ describe("discriminated union response types", () => {
       });
 
       /* Should include discriminated union information */
-      expect(result.discriminatedUnionTypeName).toBe("TestMultiContentTypesResponse");
+      expect(result.discriminatedUnionTypeName).toBe(
+        "TestMultiContentTypesResponse",
+      );
       expect(result.discriminatedUnionTypeDefinition).toBeTruthy();
       expect(result.responseMapName).toBe("TestMultiContentTypesResponseMap");
       expect(result.responseMapType).toBeTruthy();
@@ -194,18 +200,22 @@ describe("discriminated union response types", () => {
       );
 
       /* Should include discriminated union information */
-      expect(result.discriminatedUnionTypeName).toBe("TestMultiContentTypesResponse");
+      expect(result.discriminatedUnionTypeName).toBe(
+        "TestMultiContentTypesResponse",
+      );
       expect(result.discriminatedUnionTypeDefinition).toBeTruthy();
       expect(result.responseMapName).toBe("TestMultiContentTypesResponseMap");
       expect(result.responseMapType).toBeTruthy();
 
       /* Should generate response handlers */
       expect(result.responseHandlers).toHaveLength(1);
-      
+
       /* Should include parse method in handler */
       expect(result.responseHandlers[0]).toContain("parse:");
-      expect(result.responseHandlers[0]).toContain("parseApiResponseUnknownData");
-      
+      expect(result.responseHandlers[0]).toContain(
+        "parseApiResponseUnknownData",
+      );
+
       /* Return type should still be ApiResponse for backward compatibility */
       expect(result.returnType).toContain("ApiResponse<200, unknown>");
     });

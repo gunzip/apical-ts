@@ -34,18 +34,18 @@ export interface ParsingStrategy {
 export interface ResponseAnalysis {
   /* Default return type if no responses found */
   defaultReturnType: string;
-  /* Array of individual response type information */
-  responses: ResponseInfo[];
-  /* Union type components for the return type */
-  unionTypes: string[];
-  /* Discriminated union type name (if generated) */
-  discriminatedUnionTypeName?: string;
   /* Discriminated union type definition */
   discriminatedUnionTypeDefinition?: string;
+  /* Discriminated union type name (if generated) */
+  discriminatedUnionTypeName?: string;
   /* Response map for parsing */
   responseMapName?: string;
   /* Response map type definition */
   responseMapType?: string;
+  /* Array of individual response type information */
+  responses: ResponseInfo[];
+  /* Union type components for the return type */
+  unionTypes: string[];
 }
 
 /*

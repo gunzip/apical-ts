@@ -32,12 +32,12 @@ export interface ContentTypeMaps {
  * Result of response handler generation
  */
 export interface ResponseHandlerResult {
-  responseHandlers: string[];
-  returnType: string;
-  discriminatedUnionTypeName?: string;
   discriminatedUnionTypeDefinition?: string;
+  discriminatedUnionTypeName?: string;
+  responseHandlers: string[];
   responseMapName?: string;
   responseMapType?: string;
+  returnType: string;
 }
 
 /**
@@ -110,13 +110,13 @@ export function generateResponseHandlers(
     analysis.defaultReturnType,
   );
 
-  return { 
-    responseHandlers, 
-    returnType,
-    discriminatedUnionTypeName: analysis.discriminatedUnionTypeName,
+  return {
     discriminatedUnionTypeDefinition: analysis.discriminatedUnionTypeDefinition,
+    discriminatedUnionTypeName: analysis.discriminatedUnionTypeName,
+    responseHandlers,
     responseMapName: analysis.responseMapName,
     responseMapType: analysis.responseMapType,
+    returnType,
   };
 }
 
