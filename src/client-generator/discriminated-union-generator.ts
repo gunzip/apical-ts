@@ -70,7 +70,7 @@ export function generateDiscriminatedUnionFromConfig(
     } else {
       /* Response with content */
       unionComponents.push(
-        `{ status: ${responseType.status}; contentType: "${responseType.contentType}"; data: import("zod").infer<typeof ${responseType.dataType}> }`,
+        `{ status: ${responseType.status}; contentType: "${responseType.contentType}"; data: ${responseType.dataType} }`,
       );
 
       /* Add to response map */

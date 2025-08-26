@@ -123,13 +123,13 @@ describe("Multi-content-type operation function generation", () => {
       "export type PetFindByStatusResponse =",
     );
     expect(result.functionCode).toContain(
-      '{ status: 200; contentType: "application/json"; data: import("zod").infer<typeof PetFindByStatus200Response> }',
+      '{ status: 200; contentType: "application/json"; data: PetFindByStatus200Response }',
     );
     expect(result.functionCode).toContain(
-      '{ status: 200; contentType: "application/xml"; data: import("zod").infer<typeof PetFindByStatus200Response> }',
+      '{ status: 200; contentType: "application/xml"; data: PetFindByStatus200Response }',
     );
     expect(result.functionCode).toContain(
-      '{ status: 404; contentType: "text/plain"; data: import("zod").infer<typeof PetFindByStatus404Response> }',
+      '{ status: 404; contentType: "text/plain"; data: PetFindByStatus404Response }',
     );
 
     // Check dynamic content type handling looks for contentType in first parameter

@@ -50,10 +50,8 @@ describe("discriminated union response types", () => {
       expect(result.unionTypeDefinition).toContain("contentType:");
       expect(result.unionTypeDefinition).toContain("data:");
 
-      /* Should use z.infer for type inference */
-      expect(result.unionTypeDefinition).toContain(
-        'import("zod").infer<typeof',
-      );
+      /* Should use direct type reference */
+      expect(result.unionTypeDefinition).toContain("data: NewModel");
 
       /* Should generate response map */
       expect(result.responseMapName).toBe("TestMultiContentTypesResponseMap");
