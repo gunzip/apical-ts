@@ -44,8 +44,8 @@ describe("server-generator operation wrapper", () => {
 
     expect(result.wrapperCode).toContain("testSimpleQueryWrapper");
     expect(result.wrapperCode).toContain("testSimpleQueryQuerySchema");
-    expect(result.wrapperCode).toContain("query1: z.string()");
-    expect(result.wrapperCode).toContain("query2: z.string()");
+    expect(result.wrapperCode).toContain('"query1": z.string()');
+    expect(result.wrapperCode).toContain('"query2": z.string()');
     expect(result.wrapperCode).toContain('type: "query_error"');
     expect(result.wrapperCode).toContain('type: "path_error"');
     expect(result.wrapperCode).toContain('type: "headers_error"');
@@ -82,7 +82,7 @@ describe("server-generator operation wrapper", () => {
     );
 
     expect(result.wrapperCode).toContain("testWithPathPathSchema");
-    expect(result.wrapperCode).toContain("id: z.string()");
+    expect(result.wrapperCode).toContain('"id": z.string()');
     expect(result.wrapperCode).toContain("pathParse.data");
   });
 

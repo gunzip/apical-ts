@@ -64,8 +64,8 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain("petFindByStatusHandler");
     expect(result.wrapperCode).toContain("petFindByStatusQuerySchema");
     expect(result.wrapperCode).toContain("petFindByStatusPathSchema");
-    expect(result.wrapperCode).toContain("status: z.string()");
-    expect(result.wrapperCode).toContain("petId: z.string()");
+    expect(result.wrapperCode).toContain('"status": z.string()');
+    expect(result.wrapperCode).toContain('"petId": z.string()');
 
     /* Verify validation error types */
     expect(result.wrapperCode).toContain("query_error");
