@@ -36,6 +36,9 @@ export function renderParseExpression(
     return "const data = await parseResponseBody(response) as unknown;";
   }
 
+  /* The following code is currently unreachable as forceUnknownMode is always true */
+  /* We keep this for future reference, since we may want to enable it using a config option */
+
   /* Handle mixed content types with runtime checking */
   if (
     parsingStrategy.requiresRuntimeContentTypeCheck &&
