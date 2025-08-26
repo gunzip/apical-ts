@@ -16,6 +16,7 @@ import path from "path";
 
 import { generateOperations } from "../client-generator/index.js";
 import { applyGeneratedOperationIds } from "../operation-id-generator/index.js";
+import { generateServerOperations } from "../server-generator/index.js";
 import {
   generateRequestSchemaFile,
   generateResponseSchemaFile,
@@ -48,6 +49,7 @@ export interface GenerationOptions {
    */
   concurrency?: number;
   generateClient: boolean;
+  generateServer?: boolean;
   input: string;
   output: string;
   /**
@@ -66,6 +68,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
   const {
     concurrency = DEFAULT_CONCURRENCY,
     generateClient: genClient,
+    generateServer: genServer = false,
     input,
     output,
     strictValidation = false,
@@ -179,6 +182,11 @@ export async function generate(options: GenerationOptions): Promise<void> {
 
   if (genClient) {
     await generateOperations(openApiDoc, output, concurrency);
+  }
+
+  if (genServer) {
+    await generateServerOperations(openApiDoc, output, concurrency);
+    console.log("✅ Server operations generated successfully");
   }
 
   const packageJsonContent = {
