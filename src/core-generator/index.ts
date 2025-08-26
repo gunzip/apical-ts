@@ -16,13 +16,13 @@ import path from "path";
 
 import { generateOperations } from "../client-generator/index.js";
 import { applyGeneratedOperationIds } from "../operation-id-generator/index.js";
-import { generateServerOperations } from "../server-generator/index.js";
 import {
   generateRequestSchemaFile,
   generateResponseSchemaFile,
   generateSchemaFile,
 } from "../schema-generator/index.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { generateServerOperations } from "../server-generator/index.js";
 import { convertToOpenAPI31 } from "./converter.js";
 import { parseOpenAPI } from "./parser.js";
 

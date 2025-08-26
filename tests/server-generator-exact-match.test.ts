@@ -70,15 +70,23 @@ describe("server-generator - problem statement validation", () => {
     );
 
     /* Verify validation sequence: query → path → headers → body */
-    const validationPattern = 
+    const validationPattern =
       /queryParse = .*safeParse\(req\.query\)[\s\S]*pathParse = .*safeParse\(req\.path\)[\s\S]*headersParse = .*safeParse\(req\.headers\)[\s\S]*bodyParse = .*safeParse/;
     expect(result.wrapperCode).toMatch(validationPattern);
 
     /* Verify error handling with correct error types */
-    expect(result.wrapperCode).toMatch(/return handler\(\{ type: "query_error", error: queryParse\.error \}\)/);
-    expect(result.wrapperCode).toMatch(/return handler\(\{ type: "path_error", error: pathParse\.error \}\)/);
-    expect(result.wrapperCode).toMatch(/return handler\(\{ type: "headers_error", error: headersParse\.error \}\)/);
-    expect(result.wrapperCode).toMatch(/return handler\(\{ type: "body_error", error: bodyParse\.error \}\)/);
+    expect(result.wrapperCode).toMatch(
+      /return handler\(\{ type: "query_error", error: queryParse\.error \}\)/,
+    );
+    expect(result.wrapperCode).toMatch(
+      /return handler\(\{ type: "path_error", error: pathParse\.error \}\)/,
+    );
+    expect(result.wrapperCode).toMatch(
+      /return handler\(\{ type: "headers_error", error: headersParse\.error \}\)/,
+    );
+    expect(result.wrapperCode).toMatch(
+      /return handler\(\{ type: "body_error", error: bodyParse\.error \}\)/,
+    );
 
     /* Verify success handler call with all parameters */
     expect(result.wrapperCode).toMatch(
@@ -91,8 +99,12 @@ describe("server-generator - problem statement validation", () => {
     expect(result.wrapperCode).toContain("petFindByStatusHandler");
 
     /* Verify response type discriminated by status and contentType */
-    expect(result.wrapperCode).toMatch(/status: 200.*contentType: "application\/json"/);
-    expect(result.wrapperCode).toMatch(/status: 404.*contentType: "text\/plain"/);
+    expect(result.wrapperCode).toMatch(
+      /status: 200.*contentType: "application\/json"/,
+    );
+    expect(result.wrapperCode).toMatch(
+      /status: 404.*contentType: "text\/plain"/,
+    );
 
     /* Verify handler type includes both success and error cases */
     expect(result.wrapperCode).toMatch(
@@ -122,7 +134,9 @@ describe("server-generator - problem statement validation", () => {
     expect(result.wrapperCode).toContain("return async (req:");
 
     /* Function returns another function that takes req parameter */
-    expect(result.wrapperCode).toMatch(/return async \(req: \{[^}]+\}\): Promise<[^>]+>/);
+    expect(result.wrapperCode).toMatch(
+      /return async \(req: \{[^}]+\}\): Promise<[^>]+>/,
+    );
   });
 
   it("should handle missing parameters gracefully with empty schemas", () => {
@@ -144,11 +158,19 @@ describe("server-generator - problem statement validation", () => {
     /* Should generate empty schemas for missing parameters */
     expect(result.wrapperCode).toContain("noParamsQuerySchema = z.object({})");
     expect(result.wrapperCode).toContain("noParamsPathSchema = z.object({})");
-    expect(result.wrapperCode).toContain("noParamsHeadersSchema = z.object({})");
+    expect(result.wrapperCode).toContain(
+      "noParamsHeadersSchema = z.object({})",
+    );
 
     /* Should still perform validation even with empty schemas */
-    expect(result.wrapperCode).toContain("queryParse = noParamsQuerySchema.safeParse(req.query)");
-    expect(result.wrapperCode).toContain("pathParse = noParamsPathSchema.safeParse(req.path)");
-    expect(result.wrapperCode).toContain("headersParse = noParamsHeadersSchema.safeParse(req.headers)");
+    expect(result.wrapperCode).toContain(
+      "queryParse = noParamsQuerySchema.safeParse(req.query)",
+    );
+    expect(result.wrapperCode).toContain(
+      "pathParse = noParamsPathSchema.safeParse(req.path)",
+    );
+    expect(result.wrapperCode).toContain(
+      "headersParse = noParamsHeadersSchema.safeParse(req.headers)",
+    );
   });
 });

@@ -15,7 +15,7 @@ describe("server-generator operation wrapper", () => {
         },
         {
           name: "query2",
-          in: "query", 
+          in: "query",
           required: false,
           schema: { type: "string" },
         },
@@ -46,11 +46,11 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("testSimpleQueryQuerySchema");
     expect(result.wrapperCode).toContain("query1: z.string()");
     expect(result.wrapperCode).toContain("query2: z.string()");
-    expect(result.wrapperCode).toContain("type: \"query_error\"");
-    expect(result.wrapperCode).toContain("type: \"path_error\"");
-    expect(result.wrapperCode).toContain("type: \"headers_error\"");
-    expect(result.wrapperCode).toContain("type: \"body_error\"");
-    expect(result.wrapperCode).toContain("type: \"ok\"");
+    expect(result.wrapperCode).toContain('type: "query_error"');
+    expect(result.wrapperCode).toContain('type: "path_error"');
+    expect(result.wrapperCode).toContain('type: "headers_error"');
+    expect(result.wrapperCode).toContain('type: "body_error"');
+    expect(result.wrapperCode).toContain('type: "ok"');
   });
 
   it("should generate wrapper with path parameters", () => {

@@ -16,34 +16,6 @@ export async function createServerOperationsDirectory(
 }
 
 /**
- * Writes a server operation wrapper file
- */
-export async function writeServerOperationFile(
-  operationId: string,
-  wrapperCode: string,
-  typeImports: Set<string>,
-  serverOperationsDir: string,
-): Promise<void> {
-  /* Add schema imports */
-  const imports = Array.from(typeImports)
-    .map((imp) => `import { ${imp} } from "../schemas/${imp}.js";`)
-    .join("\n");
-
-  const fullCode = imports ? `${imports}\n\n${wrapperCode}` : wrapperCode;
-
-  /* Format with Prettier */
-  const formatted = await prettier.format(fullCode, {
-    parser: "typescript",
-    semi: true,
-    singleQuote: false,
-    trailingComma: "all",
-  });
-
-  const filePath = path.join(serverOperationsDir, `${operationId}.ts`);
-  await fs.writeFile(filePath, formatted);
-}
-
-/**
  * Writes server operations index file
  */
 export async function writeServerIndexFile(
@@ -77,5 +49,33 @@ ${operations
   });
 
   const filePath = path.join(serverOperationsDir, "index.ts");
+  await fs.writeFile(filePath, formatted);
+}
+
+/**
+ * Writes a server operation wrapper file
+ */
+export async function writeServerOperationFile(
+  operationId: string,
+  wrapperCode: string,
+  typeImports: Set<string>,
+  serverOperationsDir: string,
+): Promise<void> {
+  /* Add schema imports */
+  const imports = Array.from(typeImports)
+    .map((imp) => `import { ${imp} } from "../schemas/${imp}.js";`)
+    .join("\n");
+
+  const fullCode = imports ? `${imports}\n\n${wrapperCode}` : wrapperCode;
+
+  /* Format with Prettier */
+  const formatted = await prettier.format(fullCode, {
+    parser: "typescript",
+    semi: true,
+    singleQuote: false,
+    trailingComma: "all",
+  });
+
+  const filePath = path.join(serverOperationsDir, `${operationId}.ts`);
   await fs.writeFile(filePath, formatted);
 }

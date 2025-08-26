@@ -54,7 +54,7 @@ async function processServerOperations(
     pathLevelParameters,
   } of operations) {
     const promise = limit(async () => {
-      const { wrapperCode, typeImports } = generateServerOperationWrapper(
+      const { typeImports, wrapperCode } = generateServerOperationWrapper(
         pathKey,
         method,
         operation,

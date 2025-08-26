@@ -66,25 +66,25 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain("petFindByStatusPathSchema");
     expect(result.wrapperCode).toContain("status: z.string()");
     expect(result.wrapperCode).toContain("petId: z.string()");
-    
+
     /* Verify validation error types */
     expect(result.wrapperCode).toContain("query_error");
     expect(result.wrapperCode).toContain("path_error");
     expect(result.wrapperCode).toContain("headers_error");
     expect(result.wrapperCode).toContain("body_error");
-    
+
     /* Verify response types */
     expect(result.wrapperCode).toContain("status: 200");
     expect(result.wrapperCode).toContain("status: 404");
     expect(result.wrapperCode).toContain("application/json");
     expect(result.wrapperCode).toContain("text/plain");
-    
+
     /* Verify validation logic sequence */
     expect(result.wrapperCode).toContain("queryParse.success");
     expect(result.wrapperCode).toContain("pathParse.success");
     expect(result.wrapperCode).toContain("headersParse.success");
     expect(result.wrapperCode).toContain("bodyParse.success");
-    
+
     /* Verify success handler call */
     expect(result.wrapperCode).toContain('type: "ok"');
     expect(result.wrapperCode).toContain("value: {");
@@ -135,7 +135,9 @@ describe("server-generator comprehensive validation", () => {
 
     /* Should include handler type with discriminated union */
     expect(result.wrapperCode).toContain("testOperationHandler");
-    expect(result.wrapperCode).toContain('{ type: "ok"; value: testOperationParsedParams }');
+    expect(result.wrapperCode).toContain(
+      '{ type: "ok"; value: testOperationParsedParams }',
+    );
     expect(result.wrapperCode).toContain("testOperationValidationError");
   });
 });
