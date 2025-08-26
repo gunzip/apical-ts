@@ -27,7 +27,7 @@ jobs:
         run: pnpm run build
 
       - name: Generate integration test client
-        run: pnpm start generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client
+        run: pnpm start generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client --generate-server
 
       - name: Run format check
         run: pnpm format:check

@@ -1,6 +1,9 @@
 import type { extractParameterGroups } from "../parameters.js";
 import type { resolveRequestBodyType } from "../request-body.js";
-import type { generateContentTypeMaps } from "../responses.js";
+import type {
+  generateContentTypeMaps,
+  ResponseHandlerResult,
+} from "../responses.js";
 import type { getOperationSecuritySchemes } from "../security.js";
 
 /* TypeScript rendering functions for operation code generation */
@@ -14,6 +17,7 @@ export interface ContentTypeMapsConfig {
 }
 
 export type GenericParamsConfig = ContentTypeMapsConfig & {
+  discriminatedUnionTypeName?: string;
   initialReturnType: string;
 };
 
@@ -52,10 +56,7 @@ export interface OperationMetadata {
     destructuredParams: string;
     paramsInterface: string;
   };
-  responseHandlers: {
-    responseHandlers: string[];
-    returnType: string;
-  };
+  responseHandlers: ResponseHandlerResult;
   summary: string;
   typeImports: Set<string>;
 }
@@ -65,7 +66,12 @@ export interface ParameterDeclarationConfig {
   paramsInterface: string;
 }
 
-export type TypeAliasesConfig = ContentTypeMapsConfig;
+export type TypeAliasesConfig = ContentTypeMapsConfig & {
+  discriminatedUnionTypeDefinition?: string;
+  discriminatedUnionTypeName?: string;
+  responseMapName?: string;
+  responseMapType?: string;
+};
 
 /*
  * Creates generic parameter list for request/response content-type selection.
@@ -120,6 +126,14 @@ export function buildParameterDeclaration(
  */
 export function buildTypeAliases(config: TypeAliasesConfig): string {
   let typeAliases = "";
+
+  /* Add discriminated union response type if available */
+  if (config.discriminatedUnionTypeDefinition) {
+    typeAliases += `${config.discriminatedUnionTypeDefinition}\n\n`;
+  }
+
+  /* Don't add discriminated union response map if we're already generating the normal response map to avoid duplicates */
+
   if (config.shouldGenerateRequestMap) {
     typeAliases += `export type ${config.requestMapTypeName} = ${config.contentTypeMaps.requestMapType};\n\n`;
   }

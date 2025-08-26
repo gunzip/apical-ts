@@ -113,9 +113,23 @@ describe("Multi-content-type operation function generation", () => {
     // Check NO options parameter (contentType should be in first parameter now)
     expect(result.functionCode).not.toContain("options?: {");
 
-    // Check return type uses fixed ApiResponse union in unknown mode
+    // Check return type uses discriminated union response types
     expect(result.functionCode).toContain(
       "Promise<ApiResponse<200, unknown> | ApiResponse<404, unknown>>",
+    );
+
+    // Check discriminated union type definition is generated
+    expect(result.functionCode).toContain(
+      "export type PetFindByStatusResponse =",
+    );
+    expect(result.functionCode).toContain(
+      '{ status: 200; contentType: "application/json"; data: PetFindByStatus200Response }',
+    );
+    expect(result.functionCode).toContain(
+      '{ status: 200; contentType: "application/xml"; data: PetFindByStatus200Response }',
+    );
+    expect(result.functionCode).toContain(
+      '{ status: 404; contentType: "text/plain"; data: PetFindByStatus404Response }',
     );
 
     // Check dynamic content type handling looks for contentType in first parameter
