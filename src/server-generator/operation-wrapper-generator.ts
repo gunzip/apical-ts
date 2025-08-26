@@ -37,6 +37,7 @@ export interface ServerOperationMetadata {
     shouldGenerateResponseMap: boolean;
   };
   functionName: string;
+  operation: OperationObject;
   operationId: string;
   parameterGroups: ReturnType<typeof extractParameterGroups>;
   summary?: string;
@@ -98,6 +99,7 @@ export function extractServerOperationMetadata(
       shouldGenerateResponseMap,
     },
     functionName,
+    operation,
     operationId,
     parameterGroups,
     summary: operation.summary?.trim(),

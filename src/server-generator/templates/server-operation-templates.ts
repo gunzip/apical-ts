@@ -47,21 +47,51 @@ export function buildServerResponseMap(
   typeImports: Set<string>,
 ): string {
   const { contentTypeMaps } = metadata.bodyInfo;
+  const { operation } = metadata;
+  const operationId = sanitizeIdentifier(metadata.operationId);
+  const responseTypeName = `${operationId}Response`;
 
   /* Add imports for response schemas */
   contentTypeMaps.typeImports.forEach((imp) => typeImports.add(imp));
 
-  /* Build response union type */
+  /* Build response union from actual operation responses */
   const responseEntries: string[] = [];
   
-  // We need to extract response information from the operation
-  // For now, create a placeholder - this will be enhanced
-  const operationId = sanitizeIdentifier(metadata.operationId);
-  const responseTypeName = `${operationId}Response`;
+  if (operation.responses) {
+    for (const [statusCode, response] of Object.entries(operation.responses)) {
+      if (statusCode === "default") continue;
+      
+      /* Handle reference objects vs direct response objects */
+      if ("$ref" in response) {
+        /* Skip reference responses for now */
+        continue;
+      }
+      
+      const responseObj = response;
+      
+      if (responseObj.content) {
+        /* Handle responses with content */
+        for (const [contentType, mediaType] of Object.entries(responseObj.content)) {
+          if (mediaType.schema) {
+            /* For now, use 'unknown' for response data - this could be enhanced later */
+            responseEntries.push(`  | { status: ${statusCode}; contentType: "${contentType}"; data: unknown }`);
+          } else {
+            responseEntries.push(`  | { status: ${statusCode}; contentType: "${contentType}"; data: unknown }`);
+          }
+        }
+      } else {
+        /* Handle responses without content (empty responses) */
+        responseEntries.push(`  | { status: ${statusCode}; contentType: "text/plain"; data: string }`);
+      }
+    }
+  }
   
-  return `export type ${responseTypeName} = 
-  | { status: 200; contentType: "application/json"; data: unknown }
-  | { status: 404; contentType: "text/plain"; data: string };`;
+  /* Default fallback if no responses found */
+  if (responseEntries.length === 0) {
+    responseEntries.push(`  | { status: 200; contentType: "application/json"; data: unknown }`);
+  }
+  
+  return `export type ${responseTypeName} =${responseEntries.join("\n")};`;
 }
 
 /**
