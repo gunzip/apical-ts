@@ -140,7 +140,7 @@ export function configureOperations<T extends Record<string, Operation>>(
 ): {
   [K in keyof T]: (params: Parameters<T[K]>[0]) => ReturnType<T[K]>;
 } {
-  const bound: Partial<Record<keyof T, (params: unknown) => ReturnType<T[keyof T]>>> = {};
+  const bound: Partial<Record<keyof T, (params: unknown) => Promise<unknown>>> = {};
   for (const key in operations) {
     if (typeof operations[key] === 'function') {
       bound[key] = (params: unknown) => operations[key](params, config);
