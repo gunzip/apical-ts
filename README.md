@@ -24,7 +24,8 @@ See [supported features](#features) for more information.
     - [Call Operations](#call-operations)
   - [Binding Configuration to All Operations](#binding-configuration-to-all-operations)
   - [Response Handling](#response-handling)
-  - [Validation Error Handling](#validation-error-handling)
+  - [Exception Handling](#exception-handling)
+  - [Validation \& Error Handling (Opt-In)](#validation--error-handling-opt-in)
   - [Custom Response Deserialization](#custom-response-deserialization)
     - [Why use `parse()`?](#why-use-parse)
     - [Basic Usage](#basic-usage)
@@ -193,14 +194,14 @@ const newPet = await client.createPet({
 
 ## Response Handling
 
-Each operation returns a discriminated union of possible responses, e.g.:
+Each operation returns a discriminated union of possible responses containing the raw (unvalidated) response body in `data`. Validation is opt-in. Example:
 
-````ts
+```ts
 const result = await getPetById({ petId: "123" }, apiConfig);
 
 if (result.status === 200) {
-  // result.data is the parsed/validated response body
-  console.log("Pet:", result.data);
+  // result.data is the RAW response body (unvalidated)
+  console.log("Pet (raw):", result.data);
 } else if (result.status === 404) {
   // Not found
   console.warn("Pet not found");
@@ -212,8 +213,14 @@ if (result.status === 200) {
 // Or use the helper:
 import { isSuccessResponse } from "./generated/operations/index.js";
 if (isSuccessResponse(result)) {
-  // result.data is typed
+  // result.data is raw; to validate invoke result.parse()
+  // result.parse() is only valued when a schema is defined for the response content type
+  const validated = result.parse();
+  if (validated.parsed) {
+    console.log("Validated Pet:", validated.parsed);
+  }
 }
+```
 
 ## Exception Handling
 
@@ -232,30 +239,30 @@ try {
     throw err; // rethrow unknown errors
   }
 }
-````
+```
 
-## Validation Error Handling
+## Validation & Error Handling (Opt-In)
 
-When operations return JSON responses with Zod schemas, the generated client uses `safeParse()` for graceful validation error handling. Instead of throwing exceptions, validation failures return a structured error object with a top-level `error` property:
+Operations return raw data by default (no automatic Zod parsing). To perform runtime validation you must explicitly call the response object's `parse(deserializerMap?)` method. Validation errors are reported in the returned object (they do NOT throw) via an `error` property.
 
 ```ts
 const result = await getUserProfile({ userId: "123" }, apiConfig);
 
 if (result.status === 200) {
-  if ("error" in result) {
-    console.error("Response validation failed:", result.error);
-    result.error.issues.forEach((issue) => {
-      console.log(`Field ${issue.path.join(".")}: ${issue.message}`);
-    });
+  const outcome = result.parse();
+  if (outcome && "parsed" in outcome) {
+    console.log("User:", outcome.parsed.name, outcome.parsed.email);
+  } else if (outcome && "error" in outcome) {
+    console.error("Response validation failed:", outcome.error);
   } else {
-    console.log("User:", result.data.name, result.data.email);
+    console.log("User (raw, unvalidated):", result.data);
   }
 } else if (result.status === 404) {
   console.warn("User not found");
 }
 ```
 
-For operations with mixed content types, validation only applies to JSON responses:
+For operations with mixed content types, validation only applies when you call `parse()` and a schema exists for the selected content type:
 
 ```ts
 const result = await getDocument(
@@ -267,21 +274,24 @@ const result = await getDocument(
 );
 
 if (result.status === 200) {
-  if ("error" in result) {
-    console.error("JSON parsing failed:", result.error);
-  } else {
-    console.log("Document:", result.data);
+  const outcome = result.parse();
+  if (outcome && "parsed" in outcome) {
+    console.log("Document:", outcome.parsed);
   }
 }
 ```
 
-Non-JSON responses (like `text/plain`, `application/octet-stream`) don't use Zod validation and therefore never include `parseError`:
+Non-JSON responses (like `text/plain`, `application/octet-stream`) are still left raw unless you supply a custom deserializer in `parse()`:
 
 ```ts
 const result = await downloadFile({ fileId: "123" }, apiConfig);
-
-if (result.status === 200 && "data" in result) {
-  console.log("Downloaded file size:", (result.data as any).length);
+if (result.status === 200) {
+  const outcome = result.parse({
+    "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
+  });
+  if (outcome && "parsed" in outcome) {
+    console.log("Downloaded file size:", outcome.parsed.size);
+  }
 }
 ```
 
@@ -359,7 +369,7 @@ Notes:
 1. XML → JS:
 
 ```ts
-const outcome = (res as any).parse({
+const outcome = res.parse({
   "application/xml": (xml: unknown) => fastXmlParser.parse(xml as string),
 });
 ```
@@ -367,7 +377,7 @@ const outcome = (res as any).parse({
 2. Binary metadata:
 
 ```ts
-const outcome = (res as any).parse({
+const outcome = res.parse({
   "application/octet-stream": (b: unknown) => ({ size: (b as Blob).size }),
 });
 ```
@@ -375,7 +385,7 @@ const outcome = (res as any).parse({
 3. Vendor JSON normalization:
 
 ```ts
-const outcome = (res as any).parse({
+const outcome = res.parse({
   "application/vnd.custom+json": (data: any) => ({
     ...data,
     id: String(data.id).toUpperCase(),
@@ -510,7 +520,7 @@ if (!result.success) {
 
 - 🚀 **Multi-version support**: Accepts OpenAPI 2.0 (Swagger), 3.0.x, and 3.1.x specifications
 - 🛠️ **Operation-based client generation**: Generates one function per operation, with strong typing and per-operation configuration—no need for blacklisting operations you don't need!
-- 🛡️ **Zod v4 runtime validation**: Validates all response payloads at runtime
+- 🛡️ **Zod v4 runtime validation (opt-in)**: Invoke `response.parse()` to validate payloads without throwing on validation errors
 - 📦 **Small footprint**: Generates each operation and schema/type in its own file for maximum tree-shaking and modularity
 - 🚀 **Fast code generation**: Optimized for quick generation times, even with large specs, sync types and changes in real-time
 - 🔒 **Type-safe configuration**: Immutable global defaults, with the ability to override config per operation
@@ -566,3 +576,7 @@ Here is a comparison of the key features and limitations of each library.
 | **Per-operation overrides**                   |                     ✅                      |                              ✅                               |           ❌           |
 | **File upload support**                       |                     ✅                      |                              ✅                               |           ✅           |
 | **Server-side usage**                         |                     ✅                      |                              ✅                               |           ✅           |
+
+```
+
+```
