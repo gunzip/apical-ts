@@ -91,7 +91,7 @@ export function generateDiscriminatedUnionFromConfig(
     } else {
       /* Response with content */
       unionComponents.push(
-        `{ status: ${responseType.status}; contentType: "${responseType.contentType}"; data: z.infer<typeof ${responseType.dataType}> }`
+        `{ status: ${responseType.status}; contentType: "${responseType.contentType}"; data: import("zod").infer<typeof ${responseType.dataType}> }`
       );
       
       /* Add to response map */
@@ -109,10 +109,7 @@ export function generateDiscriminatedUnionFromConfig(
     ? `export const ${responseMapName} = {\n${responseMapEntries.join("\n")}\n} as const;`
     : `export const ${responseMapName} = {} as const;`;
   
-  /* Add z import if we have schema types */
-  if (responseTypes.some(rt => rt.contentType !== "")) {
-    typeImports.add("z");
-  }
+  /* Remove z import since we're using import qualifier */
   
   return {
     unionTypeName,

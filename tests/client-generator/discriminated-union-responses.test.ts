@@ -49,14 +49,14 @@ describe("discriminated union response types", () => {
       expect(result.unionTypeDefinition).toContain("data:");
 
       /* Should use z.infer for type inference */
-      expect(result.unionTypeDefinition).toContain("z.infer<typeof");
+      expect(result.unionTypeDefinition).toContain("import(\"zod\").infer<typeof");
 
       /* Should generate response map */
       expect(result.responseMapName).toBe("TestMultiContentTypesResponseMap");
       expect(result.responseMapType).toContain("NewModel");
 
-      /* Should add z import */
-      expect(typeImports.has("z")).toBe(true);
+      /* Should not add z import since we use import qualifier */
+      expect(typeImports.has("z")).toBe(false);
     });
 
     it("should handle void responses correctly", () => {

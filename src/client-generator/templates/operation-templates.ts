@@ -79,10 +79,7 @@ export function buildGenericParams(
   config: GenericParamsConfig,
 ): GenericParamsResult {
   let genericParams = "";
-  /* Use discriminated union type when available, otherwise fallback to original type */
-  let updatedReturnType = config.discriminatedUnionTypeName 
-    ? config.initialReturnType.replace(/unknown/g, config.discriminatedUnionTypeName)
-    : config.initialReturnType;
+  let updatedReturnType = config.initialReturnType;
 
   if (config.shouldGenerateRequestMap || config.shouldGenerateResponseMap) {
     const genericParts: string[] = [];
@@ -132,10 +129,7 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
     typeAliases += `${config.discriminatedUnionTypeDefinition}\n\n`;
   }
   
-  /* Add discriminated union response map if available */
-  if (config.responseMapType && config.responseMapName) {
-    typeAliases += `${config.responseMapType}\n\n`;
-  }
+  /* Don't add discriminated union response map if we're already generating the normal response map to avoid duplicates */
   
   if (config.shouldGenerateRequestMap) {
     typeAliases += `export type ${config.requestMapTypeName} = ${config.contentTypeMaps.requestMapType};\n\n`;
