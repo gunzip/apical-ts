@@ -292,7 +292,13 @@ function collectBodyAndContentTypes(
   // A response map of '{}' means the operation has no concrete response content-type mappings.
   // In that case we must NOT generate response content-type generics or attempt indexed lookup.
   // (Previously this produced: TResponseContentType extends keyof {} = "application/json" -> error)
-  const shouldGenerateResponseMap = false; // Disable response generics for unknown mode
+  // Generate response map generics when we actually have concrete mappings.
+  // We still operate in "unknown" validation mode (parsing occurs lazily or via parse())
+  // but we need the ability to negotiate content types via Accept header for integration tests
+  // (e.g., multi-content-types selecting vendor or xml responses).
+  const shouldGenerateResponseMap = !!(
+    contentTypeMaps.responseMapType && contentTypeMaps.responseMapType !== "{}"
+  );
   const shouldExportResponseMap =
     !!contentTypeMaps.responseMapType &&
     contentTypeMaps.responseMapType !== "{}";

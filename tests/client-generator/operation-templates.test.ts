@@ -64,7 +64,7 @@ describe("operation-templates", () => {
       expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
 
-    it("should generate response map generic params only", () => {
+    it("should generate response map generic params only (return type stays ApiResponse)", () => {
       const config: GenericParamsConfig = {
         shouldGenerateRequestMap: false,
         shouldGenerateResponseMap: true,
@@ -88,12 +88,10 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         '<TResponseContentType extends keyof TestResponseMap = "application/json">',
       );
-      expect(result.updatedReturnType).toBe(
-        "TestResponseMap[TResponseContentType]",
-      );
+      expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
 
-    it("should generate both request and response map generic params", () => {
+    it("should generate both request and response map generic params (return type stays ApiResponse)", () => {
       const config: GenericParamsConfig = {
         shouldGenerateRequestMap: true,
         shouldGenerateResponseMap: true,
@@ -118,12 +116,10 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         '<TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends keyof TestResponseMap = "application/xml">',
       );
-      expect(result.updatedReturnType).toBe(
-        "TestResponseMap[TResponseContentType]",
-      );
+      expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
 
-    it("should fallback to application/json when no default content type", () => {
+    it("should fallback to application/json when no default content type (return type stays ApiResponse)", () => {
       const config: GenericParamsConfig = {
         shouldGenerateRequestMap: true,
         shouldGenerateResponseMap: true,
@@ -146,9 +142,7 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         '<TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends keyof TestResponseMap = "application/json">',
       );
-      expect(result.updatedReturnType).toBe(
-        "TestResponseMap[TResponseContentType]",
-      );
+      expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
   });
 
@@ -191,7 +185,7 @@ describe("operation-templates", () => {
   });
 
   describe("buildTypeAliases", () => {
-    it("should build both request and response type aliases", () => {
+    it("should build both request and response type aliases (runtime const included)", () => {
       const config: TypeAliasesConfig = {
         shouldGenerateRequestMap: true,
         shouldGenerateResponseMap: true,
@@ -214,6 +208,7 @@ describe("operation-templates", () => {
 
       expect(result).toBe(
         "export type TestRequestMap = { 'application/json': User; 'application/xml': string; };\n\n" +
+          "export const TestResponseMap = { 'application/json': User; 'text/plain': string; } as const;\n" +
           "export type TestResponseMap = { 'application/json': User; 'text/plain': string; };\n\n",
       );
     });
@@ -230,7 +225,7 @@ describe("operation-templates", () => {
           requestContentTypeCount: 1,
           requestMapType: "{ 'application/json': User; }",
           responseContentTypeCount: 0,
-          responseMapType: null,
+          responseMapType: "{}",
           typeImports: new Set(),
         },
       };
@@ -238,11 +233,12 @@ describe("operation-templates", () => {
       const result = buildTypeAliases(config);
 
       expect(result).toBe(
-        "export type TestRequestMap = { 'application/json': User; };\n\n",
+        "export type TestRequestMap = { 'application/json': User; };\n\n" +
+          "export type TestResponseMap = {};\n\n",
       );
     });
 
-    it("should build only response type alias", () => {
+    it("should build only response type alias (runtime const included)", () => {
       const config: TypeAliasesConfig = {
         shouldGenerateRequestMap: false,
         shouldGenerateResponseMap: true,
@@ -262,7 +258,8 @@ describe("operation-templates", () => {
       const result = buildTypeAliases(config);
 
       expect(result).toBe(
-        "export type TestResponseMap = { 'application/json': User; };\n\n",
+        "export const TestResponseMap = { 'application/json': User; } as const;\n" +
+          "export type TestResponseMap = { 'application/json': User; };\n\n",
       );
     });
 

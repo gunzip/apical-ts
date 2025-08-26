@@ -76,7 +76,7 @@ export function buildGenericParams(
   config: GenericParamsConfig,
 ): GenericParamsResult {
   let genericParams = "";
-  let updatedReturnType = config.initialReturnType;
+  const updatedReturnType = config.initialReturnType;
 
   if (config.shouldGenerateRequestMap || config.shouldGenerateResponseMap) {
     const genericParts: string[] = [];
@@ -96,9 +96,6 @@ export function buildGenericParams(
     }
     if (genericParts.length > 0) {
       genericParams = `<${genericParts.join(", ")}>`;
-      if (config.shouldGenerateResponseMap) {
-        updatedReturnType = `${config.responseMapTypeName}[TResponseContentType]`;
-      }
     }
   }
   return { genericParams, updatedReturnType };
@@ -131,7 +128,12 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
     config.shouldGenerateResponseMap ||
     config.contentTypeMaps.responseMapType
   ) {
-    typeAliases += `export type ${config.responseMapTypeName} = ${config.contentTypeMaps.responseMapType || "{}"};\n\n`;
+    const responseMapRuntime = config.contentTypeMaps.responseMapType || "{}";
+    // Emit runtime object (only if non-empty) + type alias
+    if (responseMapRuntime !== "{}") {
+      typeAliases += `export const ${config.responseMapTypeName} = ${responseMapRuntime} as const;\n`;
+    }
+    typeAliases += `export type ${config.responseMapTypeName} = ${responseMapRuntime};\n\n`;
   }
   return typeAliases;
 }

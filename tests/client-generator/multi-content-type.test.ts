@@ -96,7 +96,8 @@ describe("Multi-content-type operation function generation", () => {
     expect(result.functionCode).toContain(
       'TRequestContentType extends keyof PetFindByStatusRequestMap = "application/json"',
     );
-    expect(result.functionCode).not.toContain(
+    // Response generic now present to allow Accept header negotiation
+    expect(result.functionCode).toContain(
       "TResponseContentType extends keyof PetFindByStatusResponseMap =",
     );
 
@@ -104,8 +105,9 @@ describe("Multi-content-type operation function generation", () => {
     expect(result.functionCode).toContain(
       "body: PetFindByStatusRequestMap[TRequestContentType];",
     );
+    // contentType now supports both request and response overrides
     expect(result.functionCode).toContain(
-      "contentType?: { request?: TRequestContentType }",
+      "contentType?: { request?: TRequestContentType; response?: TResponseContentType }",
     );
 
     // Check NO options parameter (contentType should be in first parameter now)
@@ -121,7 +123,8 @@ describe("Multi-content-type operation function generation", () => {
       'const finalRequestContentType = contentType?.request || "application/json";',
     );
     expect(result.functionCode).toContain("switch (finalRequestContentType)");
-    expect(result.functionCode).not.toContain(
+    // Accept header now emitted for response negotiation
+    expect(result.functionCode).toContain(
       '"Accept": contentType?.response || "application/json",',
     );
 
@@ -176,9 +179,9 @@ describe("Multi-content-type operation function generation", () => {
     // Should have generic parameters
     expect(result.functionCode).toContain("export async function getUser<");
 
-    // Should include contentType parameter in first parameter (only request in unknown mode)
+    // Should include contentType parameter with request & response in unknown mode
     expect(result.functionCode).toContain(
-      "contentType?: { request?: TRequestContentType }",
+      "contentType?: { request?: TRequestContentType; response?: TResponseContentType }",
     );
   });
 
@@ -219,20 +222,15 @@ describe("Multi-content-type operation function generation", () => {
       "export type GetUserByIdRequestMap",
     );
 
-    // Should have no generic parameters for response in unknown mode
-    expect(result.functionCode).toContain("export async function getUserById(");
-    expect(result.functionCode).not.toContain(
+    // Should have generic parameter for response (no request body)
+    expect(result.functionCode).toContain(
       "TResponseContentType extends keyof GetUserByIdResponseMap",
     );
-    expect(result.functionCode).not.toContain("TRequestContentType");
-
-    // Should not include contentType parameter for response in unknown mode
-    expect(result.functionCode).not.toContain(
+    // Should include contentType with response override only
+    expect(result.functionCode).toContain(
       "contentType?: { response?: TResponseContentType }",
     );
-    expect(result.functionCode).not.toContain("request?: TRequestContentType");
-
-    // Should not have proper headers with contentType reference in unknown mode
-    expect(result.functionCode).not.toContain("contentType?.response");
+    // Accept header emitted
+    expect(result.functionCode).toContain("contentType?.response");
   });
 });
