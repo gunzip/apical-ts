@@ -209,7 +209,8 @@ describe("operation-templates", () => {
       expect(result).toBe(
         "export type TestRequestMap = { 'application/json': User; 'application/xml': string; };\n\n" +
           "export const TestResponseMap = { 'application/json': User; 'text/plain': string; } as const;\n" +
-          "export type TestResponseMap = { 'application/json': User; 'text/plain': string; };\n\n",
+          "export type TestResponseMap = { 'application/json': User; 'text/plain': string; };\n\n" +
+          "export type TestResponseDeserializerMap = Partial<Record<keyof typeof TestResponseMap, import('./config.js').Deserializer>>;\n\n",
       );
     });
 
@@ -234,7 +235,8 @@ describe("operation-templates", () => {
 
       expect(result).toBe(
         "export type TestRequestMap = { 'application/json': User; };\n\n" +
-          "export type TestResponseMap = {};\n\n",
+          "export type TestResponseMap = {};\n\n" +
+          "export type TestResponseDeserializerMap = import('./config.js').DeserializerMap;\n\n",
       );
     });
 
@@ -259,7 +261,8 @@ describe("operation-templates", () => {
 
       expect(result).toBe(
         "export const TestResponseMap = { 'application/json': User; } as const;\n" +
-          "export type TestResponseMap = { 'application/json': User; };\n\n",
+          "export type TestResponseMap = { 'application/json': User; };\n\n" +
+          "export type TestResponseDeserializerMap = Partial<Record<keyof typeof TestResponseMap, import('./config.js').Deserializer>>;\n\n",
       );
     });
 
@@ -282,7 +285,10 @@ describe("operation-templates", () => {
 
       const result = buildTypeAliases(config);
 
-      expect(result).toBe("export type TestResponseMap = {};\n\n");
+      expect(result).toBe(
+        "export type TestResponseMap = {};\n\n" +
+          "export type TestResponseDeserializerMap = import('./config.js').DeserializerMap;\n\n",
+      );
     });
   });
 

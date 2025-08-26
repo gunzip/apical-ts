@@ -289,12 +289,15 @@ export function parseApiResponseUnknownData<
   
   const schema = schemaMap[contentType];
   if (!schema || typeof schema.safeParse !== "function") {
-    return {
+    const base: any = {
       contentType,
       missingSchema: true,
       deserialized: deserializedData,
-      ...(deserializationError && { deserializationError }),
     };
+    if (deserializationError) {
+      base.deserializationError = deserializationError;
+    }
+    return base;
   }
   
   /* Only proceed with Zod validation if deserialization succeeded */

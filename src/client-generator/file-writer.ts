@@ -30,7 +30,7 @@ export async function writeConfigFile(
   operationsDir: string,
 ): Promise<void> {
   const configContent = generateConfigTypes(authHeaders, serverUrls);
-  const configPath = path.join(operationsDir, "config.ts");
+  const configPath = path.join(operationsDir, "config.js");
   await writeFormattedFile(configPath, configContent);
 }
 
