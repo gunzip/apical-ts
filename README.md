@@ -1,5 +1,7 @@
 # OpenAPI TypeScript Generator
 
+> **Disclaimer:** This project is **experimental** and currently in an early stage. Breaking changes may occur at any time. The first stable release will be version **0.1.0**.
+
 ✨ Effortlessly turn your OpenAPI specifications into fully-typed Zod v4 schemas—ready for runtime (client or server) validation and TypeScript development.
 
 🤖 Need a client? Instantly generate a type-safe, operation-based REST API client alongside your schemas.
