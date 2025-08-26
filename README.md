@@ -24,7 +24,6 @@ See [supported features](#features) for more information.
     - [Call Operations](#call-operations)
   - [Binding Configuration to All Operations](#binding-configuration-to-all-operations)
   - [Response Handling](#response-handling)
-  - [Exception Handling](#exception-handling)
   - [Validation Error Handling](#validation-error-handling)
   - [Custom Response Deserialization](#custom-response-deserialization)
     - [Why use `parse()`?](#why-use-parse)
@@ -196,7 +195,7 @@ const newPet = await client.createPet({
 
 Each operation returns a discriminated union of possible responses, e.g.:
 
-```ts
+````ts
 const result = await getPetById({ petId: "123" }, apiConfig);
 
 if (result.status === 200) {
@@ -216,15 +215,6 @@ if (isSuccessResponse(result)) {
   // result.data is typed
 }
 
-// Or handle all cases with the provided utility method:
-import { handleResponse } from "./generated/operations/index.js";
-handleResponse(result, {
-  200: (data) => console.log("Pet:", data),
-  404: () => console.warn("Not found"),
-  default: (res) => console.error("Other status", res.status),
-});
-```
-
 ## Exception Handling
 
 All responses not handled by the union type throw a typed error:
@@ -242,7 +232,7 @@ try {
     throw err; // rethrow unknown errors
   }
 }
-```
+````
 
 ## Validation Error Handling
 

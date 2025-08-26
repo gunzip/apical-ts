@@ -190,7 +190,6 @@ describe("client-generator config-templates", () => {
       const result = renderUtilityFunctions();
 
       expect(result).toContain("export function isStatus");
-      expect(result).toContain("export function handleResponse");
       expect(result).toContain("export async function parseResponseBody");
       expect(result).toContain("application/json");
     });
