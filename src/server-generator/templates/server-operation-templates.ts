@@ -202,26 +202,6 @@ function renderParameterSchemas(
       zodCode = `${zodCode}.optional()`;
     }
 
-    return `${sanitizeIdentifier(name)}: ${zodCode}`;
-  };
-
-  const buildHeaderProp = (name: string, param: ParameterObject): string => {
-    const schema = param.schema as ReferenceObject | SchemaObject | undefined;
-    const isRequired = param.required === true;
-
-    let zodCode: string;
-    if (schema) {
-      const result = zodSchemaToCode(schema, { imports: typeImports });
-      zodCode = result.code;
-    } else {
-      zodCode = "z.string()";
-    }
-
-    /* Make parameter optional if not explicitly required */
-    if (!isRequired) {
-      zodCode = `${zodCode}.optional()`;
-    }
-
     return `"${name}": ${zodCode}`;
   };
 
@@ -264,7 +244,7 @@ function renderParameterSchemas(
   /* Headers schema */
   if (parameterGroups.headerParams.length > 0) {
     const headerProps = parameterGroups.headerParams
-      .map((p) => buildHeaderProp(p.name, p))
+      .map((p) => buildProp(p.name, p))
       .join(", ");
     schemas.push(
       `const ${sanitizedId}HeadersSchema = z.object({ ${headerProps} });`,
