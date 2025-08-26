@@ -1,9 +1,16 @@
+import type {
+  ParameterObject,
+  ReferenceObject,
+  SchemaObject,
+} from "openapi3-ts/oas31";
+
 import type { ParameterGroups } from "../../client-generator/parameters.js";
 import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
 
 import { extractResponseContentTypes } from "../../client-generator/operation-extractor.js";
 import { resolveSchemaTypeName } from "../../client-generator/responses.js";
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
+import { zodSchemaToCode } from "../../schema-generator/zod-schema-generator.js";
 
 /**
  * Template parameters for server operation wrapper generation
@@ -101,7 +108,11 @@ export function renderServerOperationWrapper(
   } = params;
 
   const sanitizedId = sanitizeIdentifier(operationId);
-  const parameterSchemas = renderParameterSchemas(operationId, parameterGroups);
+  const parameterSchemas = renderParameterSchemas(
+    operationId,
+    parameterGroups,
+    params.typeImports,
+  );
   const validationLogic = renderValidationLogic(
     operationId,
     requestMapTypeName,
@@ -168,14 +179,34 @@ ${validationLogic}
 function renderParameterSchemas(
   operationId: string,
   parameterGroups: ParameterGroups,
+  typeImports: Set<string>,
 ): string {
   const schemas: string[] = [];
   const sanitizedId = sanitizeIdentifier(operationId);
 
+  /* Helper to build property entry using zodSchemaToCode; fallback to z.string() */
+  const buildProp = (name: string, param: ParameterObject): string => {
+    const schema = param.schema as ReferenceObject | SchemaObject | undefined;
+    if (schema) {
+      const result = zodSchemaToCode(schema, { imports: typeImports });
+      return `${sanitizeIdentifier(name)}: ${result.code}`;
+    }
+    return `${sanitizeIdentifier(name)}: z.string()`;
+  };
+
+  const buildHeaderProp = (name: string, param: ParameterObject): string => {
+    const schema = param.schema as ReferenceObject | SchemaObject | undefined;
+    if (schema) {
+      const result = zodSchemaToCode(schema, { imports: typeImports });
+      return `"${name}": ${result.code}`;
+    }
+    return `"${name}": z.string()`;
+  };
+
   /* Query schema */
   if (parameterGroups.queryParams.length > 0) {
     const queryProps = parameterGroups.queryParams
-      .map((p) => `${sanitizeIdentifier(p.name)}: z.string()`)
+      .map((p) => buildProp(p.name, p))
       .join(", ");
     schemas.push(
       `const ${sanitizedId}QuerySchema = z.object({ ${queryProps} });`,
@@ -193,7 +224,7 @@ function renderParameterSchemas(
   /* Path schema */
   if (parameterGroups.pathParams.length > 0) {
     const pathProps = parameterGroups.pathParams
-      .map((p) => `${sanitizeIdentifier(p.name)}: z.string()`)
+      .map((p) => buildProp(p.name, p))
       .join(", ");
     schemas.push(
       `const ${sanitizedId}PathSchema = z.object({ ${pathProps} });`,
@@ -211,7 +242,7 @@ function renderParameterSchemas(
   /* Headers schema */
   if (parameterGroups.headerParams.length > 0) {
     const headerProps = parameterGroups.headerParams
-      .map((p) => `"${p.name}": z.string()`)
+      .map((p) => buildHeaderProp(p.name, p))
       .join(", ");
     schemas.push(
       `const ${sanitizedId}HeadersSchema = z.object({ ${headerProps} });`,
