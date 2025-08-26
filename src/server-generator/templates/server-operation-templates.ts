@@ -187,20 +187,42 @@ function renderParameterSchemas(
   /* Helper to build property entry using zodSchemaToCode; fallback to z.string() */
   const buildProp = (name: string, param: ParameterObject): string => {
     const schema = param.schema as ReferenceObject | SchemaObject | undefined;
+    const isRequired = param.required === true;
+
+    let zodCode: string;
     if (schema) {
       const result = zodSchemaToCode(schema, { imports: typeImports });
-      return `${sanitizeIdentifier(name)}: ${result.code}`;
+      zodCode = result.code;
+    } else {
+      zodCode = "z.string()";
     }
-    return `${sanitizeIdentifier(name)}: z.string()`;
+
+    /* Make parameter optional if not explicitly required */
+    if (!isRequired) {
+      zodCode = `${zodCode}.optional()`;
+    }
+
+    return `${sanitizeIdentifier(name)}: ${zodCode}`;
   };
 
   const buildHeaderProp = (name: string, param: ParameterObject): string => {
     const schema = param.schema as ReferenceObject | SchemaObject | undefined;
+    const isRequired = param.required === true;
+
+    let zodCode: string;
     if (schema) {
       const result = zodSchemaToCode(schema, { imports: typeImports });
-      return `"${name}": ${result.code}`;
+      zodCode = result.code;
+    } else {
+      zodCode = "z.string()";
     }
-    return `"${name}": z.string()`;
+
+    /* Make parameter optional if not explicitly required */
+    if (!isRequired) {
+      zodCode = `${zodCode}.optional()`;
+    }
+
+    return `"${name}": ${zodCode}`;
   };
 
   /* Query schema */

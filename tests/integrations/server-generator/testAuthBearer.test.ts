@@ -166,14 +166,16 @@ describe("testAuthBearer operation integration tests", () => {
     expect(response.status).toBe(400);
   });
 
-  it.skip("should work with minimal required parameters (working around Zod schema requirements)", async () => {
+  it("should work with minimal required parameters (optional parameters are truly optional)", async () => {
     // Arrange
-    // Note: The generated Zod schema treats all parameters as required,
-    // but we can test with empty strings for optional parameters
+    // Note: After fixing the bug, optional parameters are now properly optional
     const handler: testAuthBearerHandler = async (params) => {
       if (params.type === "ok") {
         // Only qr should be required according to OpenAPI spec
         expect(params.value.query.qr).toBe("required-only");
+        // Optional parameters should be undefined when not provided
+        expect(params.value.query.qo).toBeUndefined();
+        expect(params.value.query.cursor).toBeUndefined();
 
         return {
           status: 200,
@@ -193,14 +195,12 @@ describe("testAuthBearer operation integration tests", () => {
     );
 
     // Act: Request with only the required parameter
-    // Note: Due to Zod schema generation treating optional params as required,
-    // we need to provide empty strings for optional parameters
+    // Optional parameters can be omitted entirely
     const response = await supertest(app)
       .get("/test-auth-bearer")
       .query({
         qr: "required-only",
-        qo: "", // Optional parameter, but Zod requires it
-        cursor: "", // Optional parameter, but Zod requires it
+        // qo and cursor are optional and can be omitted
       })
       .set("Authorization", "Bearer test-token");
 
