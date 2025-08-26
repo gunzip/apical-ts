@@ -69,13 +69,11 @@ export function analyzeResponseStructure(
 
       responses.push(responseInfo);
 
-      /* Build union type component */
-      if (responseInfo.hasSchema && responseInfo.typeName) {
-        unionTypes.push(`ApiResponse<${code}, ${responseInfo.typeName}>`);
+      /* Build union type component - always use unknown for responses with schemas */
+      if (responseInfo.hasSchema) {
+        unionTypes.push(`ApiResponse<${code}, unknown>`);
       } else {
-        const dataType =
-          responseInfo.typeName ||
-          (responseInfo.contentType ? "unknown" : "void");
+        const dataType = responseInfo.contentType ? "unknown" : "void";
         unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
       }
     }

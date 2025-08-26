@@ -153,7 +153,7 @@ describe("extractOperationMetadata", () => {
 
     /* Body info should reflect no request body */
     expect(metadata.bodyInfo.shouldGenerateRequestMap).toBe(false);
-    /* Response map should be generated when responses contain content */
+    /* Response map should be generated when responses contain content, but response generics disabled in unknown mode */
     expect(metadata.bodyInfo.shouldGenerateResponseMap).toBe(true);
     expect(metadata.bodyInfo.requestContentTypes).toEqual([]);
     expect(metadata.bodyInfo.bodyTypeInfo).toBeUndefined();

@@ -2,22 +2,22 @@ import type { ContentTypeMaps } from "../responses.js";
 
 /* Function body structure analysis and template rendering */
 
-export type FunctionBodyStructure = {
+export interface FunctionBodyStructure {
   acceptHeaderLogic: string;
   bodyContentCode: string;
   contentTypeHeaderCode: string;
   contentTypeLogic: string;
   headersContent: string;
-};
+}
 
-export type HeaderConfiguration = {
+export interface HeaderConfiguration {
   acceptHeaderLogic: string;
   authHeaders?: string[];
   contentTypeHeaderCode: string;
   overridesSecurity?: boolean;
   shouldGenerateRequestMap: boolean;
   shouldGenerateResponseMap: boolean;
-};
+}
 
 /*
  * Determines the structure and components needed for the function body.

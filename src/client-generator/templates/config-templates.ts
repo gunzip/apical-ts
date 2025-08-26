@@ -24,11 +24,13 @@ export type ApiResponse<S extends number, T> =
       readonly status: S;
       readonly data: T;
       readonly response: Response;
+      readonly parse?: () => any;
     }
   | {
       readonly status: S;
       readonly error: import("zod").ZodError;
       readonly response: Response;
+      readonly parse?: () => any;
     };`;
 }
 
@@ -247,5 +249,43 @@ export async function parseResponseBody(response: Response): Promise<unknown | B
     return response.text().catch(() => null);
   }
   return response.text().catch(() => null);
+}
+
+/* Normalize Content-Type header */
+export function getResponseContentType(response: Response): string {
+  const raw = response.headers.get("content-type");
+  return raw ? raw.split(";")[0].trim().toLowerCase() : "";
+}
+
+/* Generic parser for unknown data + schema map */
+export function parseApiResponseUnknownData<
+  TSchemaMap extends Record<
+    string,
+    { safeParse?: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }
+  >
+>(
+  response: Response,
+  data: unknown,
+  schemaMap: TSchemaMap,
+) {
+  const contentType = getResponseContentType(response);
+  const schema = schemaMap[contentType];
+  if (!schema || typeof schema.safeParse !== "function") {
+    return {
+      contentType,
+      missingSchema: true,
+    };
+  }
+  const result = schema.safeParse(data);
+  if (result.success) {
+    return {
+      contentType,
+      parsed: result.data,
+    };
+  }
+  return {
+    contentType,
+    error: result.error,
+  };
 }`;
 }

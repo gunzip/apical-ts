@@ -6,7 +6,7 @@ import type { SecurityHeader } from "../security.js";
 /**
  * Analyzed parameter information for template generation
  */
-export type ParameterAnalysis = {
+export interface ParameterAnalysis {
   headerProperties: {
     isRequired: boolean;
     name: string;
@@ -22,30 +22,30 @@ export type ParameterAnalysis = {
     varName: string;
   }[];
   structure: ParameterStructure;
-};
+}
 
 /**
  * Grouped parameters by their location
  */
-export type ParameterGroups = {
+export interface ParameterGroups {
   headerParams: ParameterObject[];
   pathParams: ParameterObject[];
   queryParams: ParameterObject[];
-};
+}
 
 /**
  * Configuration for parameter optionality rules
  */
-export type ParameterOptionalityRules = {
+export interface ParameterOptionalityRules {
   isBodyOptional: boolean;
   isHeadersOptional: boolean;
   isQueryOptional: boolean;
-};
+}
 
 /**
  * Parameter structure information for interface and destructuring generation
  */
-export type ParameterStructure = {
+export interface ParameterStructure {
   bodyTypeInfo?: RequestBodyTypeInfo;
   hasBody: boolean;
   hasRequestMap: boolean;
@@ -53,16 +53,16 @@ export type ParameterStructure = {
   processed: ProcessedParameterGroup;
   requestMapTypeName?: string;
   responseMapTypeName?: string;
-};
+}
 
 /**
  * Processed parameter groups with security information
  */
-export type ProcessedParameterGroup = {
+export interface ProcessedParameterGroup {
   headerParams: ParameterObject[];
   isHeadersOptional: boolean;
   isQueryOptional: boolean;
   pathParams: ParameterObject[];
   queryParams: ParameterObject[];
   securityHeaders: SecurityHeader[];
-};
+}

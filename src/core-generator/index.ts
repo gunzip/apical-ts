@@ -41,7 +41,7 @@ const DEFAULT_CONCURRENCY = 10;
  * };
  * ```
  */
-export type GenerationOptions = {
+export interface GenerationOptions {
   /**
    * The maximum number of parallel tasks to run during generation.
    * @default 10
@@ -57,7 +57,7 @@ export type GenerationOptions = {
    * @default false
    */
   strictValidation?: boolean;
-};
+}
 
 /**
  * Generates TypeScript schemas and optional API client from OpenAPI specification

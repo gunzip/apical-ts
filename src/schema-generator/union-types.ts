@@ -5,28 +5,28 @@ import { mergeImports } from "./utils.js";
 /**
  * Discriminator configuration for discriminated unions
  */
-export type DiscriminatorConfig = {
+export interface DiscriminatorConfig {
   mapping?: Record<string, string>;
   propertyName: string;
-};
+}
 
 /**
  * Union handling types
  */
 export type UnionType = "anyOf" | "oneOf";
 
-type ZodSchemaCodeOptions = {
+interface ZodSchemaCodeOptions {
   imports?: Set<string>;
   isTopLevel?: boolean;
   strictValidation?: boolean;
-};
+}
 
 // Import from schema-converter to avoid circular dependencies
-type ZodSchemaResult = {
+interface ZodSchemaResult {
   code: string;
   extensibleEnumValues?: unknown[];
   imports: Set<string>;
-};
+}
 
 /**
  * Handle allOf schema composition

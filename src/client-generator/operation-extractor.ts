@@ -13,37 +13,37 @@ import assert from "assert";
 /**
  * Content type mapping with schema information
  */
-export type ContentTypeMapping = {
+export interface ContentTypeMapping {
   contentType: string;
   schema: SchemaObject | { $ref: string };
-};
+}
 
 /**
  * Metadata for an OpenAPI operation
  */
-export type OperationMetadata = {
+export interface OperationMetadata {
   method: string;
   operation: OperationObject;
   operationId: string;
   pathKey: string;
   pathLevelParameters: (ParameterObject | ReferenceObject)[];
-};
+}
 
 /**
  * Request body content types for an operation
  */
-export type RequestContentTypes = {
+export interface RequestContentTypes {
   contentTypes: ContentTypeMapping[];
   isRequired: boolean;
-};
+}
 
 /**
  * Response content types for a specific status code
  */
-export type ResponseContentTypes = {
+export interface ResponseContentTypes {
   contentTypes: ContentTypeMapping[];
   statusCode: string;
-};
+}
 
 /**
  * Extracts all operations from the OpenAPI document

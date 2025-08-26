@@ -3,11 +3,11 @@ import type { ReferenceObject } from "openapi3-ts/oas31";
 import { sanitizeIdentifier } from "./utils.js";
 
 // Import from schema-converter to avoid circular dependencies
-type ZodSchemaResult = {
+interface ZodSchemaResult {
   code: string;
   extensibleEnumValues?: unknown[];
   imports: Set<string>;
-};
+}
 
 /**
  * Handle $ref references

@@ -5,10 +5,10 @@ import { addDefaultValue } from "./utils.js";
 /**
  * Result of handling extensible enum
  */
-export type ExtensibleEnumResult = {
+export interface ExtensibleEnumResult {
   code: string;
   enumValues: unknown[];
-};
+}
 
 /**
  * Handles x-extensible-enum for string schemas

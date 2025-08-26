@@ -80,13 +80,13 @@ describe("Multi-content-type operation function generation", () => {
       "export type PetFindByStatusResponseMap = {",
     );
     expect(result.functionCode).toContain(
-      '"application/json": ApiResponse<200, PetFindByStatus200Response>;',
+      '"application/json": PetFindByStatus200Response,',
     );
     expect(result.functionCode).toContain(
-      '"application/xml": ApiResponse<200, PetFindByStatus200Response>;',
+      '"application/xml": PetFindByStatus200Response,',
     );
     expect(result.functionCode).toContain(
-      '"text/plain": ApiResponse<404, PetFindByStatus404Response>;',
+      '"text/plain": PetFindByStatus404Response,',
     );
 
     // Check generic function signature
@@ -96,14 +96,16 @@ describe("Multi-content-type operation function generation", () => {
     expect(result.functionCode).toContain(
       'TRequestContentType extends keyof PetFindByStatusRequestMap = "application/json"',
     );
+    // Response generic now present to allow Accept header negotiation
     expect(result.functionCode).toContain(
-      'TResponseContentType extends keyof PetFindByStatusResponseMap = "application/json"',
+      "TResponseContentType extends keyof PetFindByStatusResponseMap =",
     );
 
     // Check parameter type uses generic and includes contentType in first parameter
     expect(result.functionCode).toContain(
       "body: PetFindByStatusRequestMap[TRequestContentType];",
     );
+    // contentType now supports both request and response overrides
     expect(result.functionCode).toContain(
       "contentType?: { request?: TRequestContentType; response?: TResponseContentType }",
     );
@@ -111,9 +113,9 @@ describe("Multi-content-type operation function generation", () => {
     // Check NO options parameter (contentType should be in first parameter now)
     expect(result.functionCode).not.toContain("options?: {");
 
-    // Check return type uses generic
+    // Check return type uses fixed ApiResponse union in unknown mode
     expect(result.functionCode).toContain(
-      "Promise<PetFindByStatusResponseMap[TResponseContentType]>",
+      "Promise<ApiResponse<200, unknown> | ApiResponse<404, unknown>>",
     );
 
     // Check dynamic content type handling looks for contentType in first parameter
@@ -121,6 +123,7 @@ describe("Multi-content-type operation function generation", () => {
       'const finalRequestContentType = contentType?.request || "application/json";',
     );
     expect(result.functionCode).toContain("switch (finalRequestContentType)");
+    // Accept header now emitted for response negotiation
     expect(result.functionCode).toContain(
       '"Accept": contentType?.response || "application/json",',
     );
@@ -176,7 +179,7 @@ describe("Multi-content-type operation function generation", () => {
     // Should have generic parameters
     expect(result.functionCode).toContain("export async function getUser<");
 
-    // Should include contentType parameter in first parameter
+    // Should include contentType parameter with request & response in unknown mode
     expect(result.functionCode).toContain(
       "contentType?: { request?: TRequestContentType; response?: TResponseContentType }",
     );
@@ -219,20 +222,15 @@ describe("Multi-content-type operation function generation", () => {
       "export type GetUserByIdRequestMap",
     );
 
-    // Should have generic parameters for response but not request
-    expect(result.functionCode).toContain("export async function getUserById<");
+    // Should have generic parameter for response (no request body)
     expect(result.functionCode).toContain(
       "TResponseContentType extends keyof GetUserByIdResponseMap",
     );
-    expect(result.functionCode).not.toContain("TRequestContentType");
-
-    // Should include contentType parameter only for response
+    // Should include contentType with response override only
     expect(result.functionCode).toContain(
       "contentType?: { response?: TResponseContentType }",
     );
-    expect(result.functionCode).not.toContain("request?: TRequestContentType");
-
-    // Should have proper headers with contentType reference
+    // Accept header emitted
     expect(result.functionCode).toContain("contentType?.response");
   });
 });

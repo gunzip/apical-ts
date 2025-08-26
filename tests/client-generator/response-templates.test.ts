@@ -31,13 +31,13 @@ describe("response-templates", () => {
       });
 
       expect(result).toContain(
-        "User.safeParse(await parseResponseBody(response))",
+        "const data = await parseResponseBody(response) as unknown;",
       );
-      expect(result).toContain("if (!parseResult.success)");
-      expect(result).toContain(
+      expect(result).not.toContain("if (!parseResult.success)");
+      expect(result).not.toContain(
         "return { status: 200 as const, error: parseResult.error, response }",
       );
-      expect(result).toContain("const data = parseResult.data;");
+      expect(result).not.toContain("const data = parseResult.data;");
     });
 
     it("should render non-JSON expression without validation", () => {
@@ -60,7 +60,7 @@ describe("response-templates", () => {
       });
 
       expect(result).toBe(
-        "const data = await parseResponseBody(response) as FileContent;",
+        "const data = await parseResponseBody(response) as unknown;",
       );
     });
 
@@ -83,13 +83,17 @@ describe("response-templates", () => {
         hasResponseContentTypeMap: true,
       });
 
-      expect(result).toContain("let data: Data;");
-      expect(result).toContain('if (finalResponseContentType.includes("json")');
       expect(result).toContain(
+        "const data = await parseResponseBody(response) as unknown;",
+      );
+      expect(result).not.toContain(
+        'if (finalResponseContentType.includes("json")',
+      );
+      expect(result).not.toContain(
         "Data.safeParse(await parseResponseBody(response))",
       );
-      expect(result).toContain("} else {");
-      expect(result).toContain(
+      expect(result).not.toContain("} else {");
+      expect(result).not.toContain(
         "data = await parseResponseBody(response) as Data;",
       );
     });
@@ -220,7 +224,7 @@ describe("response-templates", () => {
 
       expect(result).toHaveLength(2);
       expect(result[0]).toContain("case 200:");
-      expect(result[0]).toContain("User.safeParse");
+      expect(result[0]).toContain("as unknown");
       expect(result[1]).toContain("case 404:");
       expect(result[1]).toContain("data: undefined");
     });
