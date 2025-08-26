@@ -6,11 +6,11 @@ import type {
 } from "openapi3-ts/oas31";
 
 import assert from "assert";
-import { isReferenceObject } from "openapi3-ts/oas31";
 
-import { extractParameterGroups } from "../client-generator/parameters.js";
-import { resolveRequestBodyType } from "../client-generator/request-body.js";
-import { generateContentTypeMaps } from "../client-generator/responses.js";
+import { extractOperationMetadata } from "../client-generator/operation-function-generator.js";
+import { extractParameterGroups } from "../client-generator/parameters.js"; /* Kept for ServerOperationMetadata type compatibility */
+import { resolveRequestBodyType } from "../client-generator/request-body.js"; /* Kept for ServerOperationMetadata type compatibility */
+import { generateContentTypeMaps } from "../client-generator/responses.js"; /* Kept for ServerOperationMetadata type compatibility */
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import {
   buildServerRequestMap,
@@ -57,30 +57,22 @@ export function extractServerOperationMetadata(
   assert(operation.operationId, "Operation ID is required");
   const operationId = operation.operationId;
   const functionName = `${sanitizeIdentifier(operationId)}Wrapper`;
-
-  /* Extract parameter groups */
-  const parameterGroups = extractParameterGroups(
+  /* Reuse client extraction logic to avoid duplication */
+  const clientMeta = extractOperationMetadata(
+    pathKey,
+    method,
     operation,
     pathLevelParameters,
     doc,
   );
 
-  /* Resolve request body information */
-  let bodyTypeInfo: ReturnType<typeof resolveRequestBodyType> | undefined;
-  let hasBody = false;
+  /* Server wrappers have slightly different heuristics:
+     - Only emit request/response maps when there is more than one content type.
+       (The client generator may still emit maps for a single entry for generic negotiation.) */
+  const contentTypeMaps = clientMeta.bodyInfo.contentTypeMaps;
+  const hasBody = clientMeta.hasBody;
+  const bodyTypeInfo = clientMeta.bodyInfo.bodyTypeInfo;
 
-  if (operation.requestBody) {
-    const rbCandidate = operation.requestBody;
-    if (rbCandidate && !isReferenceObject(rbCandidate)) {
-      bodyTypeInfo = resolveRequestBodyType(rbCandidate, operationId);
-    }
-    hasBody = true;
-  }
-
-  /* Generate content type maps for request and response */
-  const contentTypeMaps = generateContentTypeMaps(operation);
-
-  /* Determine if we should generate request/response maps */
   const shouldGenerateRequestMap = contentTypeMaps.requestContentTypeCount > 1;
   const shouldGenerateResponseMap =
     contentTypeMaps.responseContentTypeCount > 1;
@@ -91,6 +83,8 @@ export function extractServerOperationMetadata(
   const responseMapTypeName = shouldGenerateResponseMap
     ? `${sanitizeIdentifier(operationId)}ResponseMap`
     : undefined;
+
+  const parameterGroups = clientMeta.parameterGroups;
 
   return {
     bodyInfo: {
