@@ -131,7 +131,7 @@ export class ApiError extends Error {
  */
 export function renderOperationUtilities(): string {
   return `/* Utility types for operation binding */
-type Operation = (params: unknown, config?: GlobalConfig) => Promise<unknown>;
+type Operation = (params: any, config?: GlobalConfig) => Promise<unknown>;
 
 /* Bind all operations with a specific config */
 export function configureOperations<T extends Record<string, Operation>>(

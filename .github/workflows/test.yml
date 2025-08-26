@@ -26,7 +26,7 @@ jobs:
       - name: Build project
         run: pnpm run build
 
-      - name: Generate integration test client
+      - name: Generate integration test client and server
         run: pnpm start generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client --generate-server
 
       - name: Run format check
