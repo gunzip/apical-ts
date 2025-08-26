@@ -86,9 +86,11 @@ describe("unknown response mode", () => {
       );
 
       /* Verify response handler includes parse method */
-      expect(result.responseHandlers[0]).toContain("parse: () =>");
       expect(result.responseHandlers[0]).toContain(
-        "parseApiResponseUnknownData(response, data, GetUserResponseMap)",
+        'parse: (deserializerMap?: import("../config.js").DeserializerMap) =>',
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "parseApiResponseUnknownData(response, data, GetUserResponseMap, deserializerMap)",
       );
 
       /* Verify unknown parsing is used */
@@ -156,9 +158,11 @@ describe("unknown response mode", () => {
       );
 
       /* Verify parse method is included */
-      expect(result.responseHandlers[0]).toContain("parse: () =>");
       expect(result.responseHandlers[0]).toContain(
-        "parseApiResponseUnknownData(response, data, GetPetResponseMap)",
+        'parse: (deserializerMap?: import("../config.js").DeserializerMap) =>',
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "parseApiResponseUnknownData(response, data, GetPetResponseMap, deserializerMap)",
       );
     });
   });

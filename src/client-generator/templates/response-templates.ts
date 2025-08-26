@@ -95,8 +95,8 @@ export function renderResponseHandler(
     const parseMethod =
       responseInfo.hasSchema && responseMapName
         ? `,
-        parse: () =>
-          parseApiResponseUnknownData(response, data, ${responseMapName}),`
+        parse: (deserializerMap?: import("../config.js").DeserializerMap) =>
+          parseApiResponseUnknownData(response, data, ${responseMapName}, deserializerMap),`
         : "";
 
     return `    case ${statusCode}: {

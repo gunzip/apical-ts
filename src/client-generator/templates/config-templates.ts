@@ -257,7 +257,11 @@ export function getResponseContentType(response: Response): string {
   return raw ? raw.split(";")[0].trim().toLowerCase() : "";
 }
 
-/* Generic parser for unknown data + schema map */
+/* Type definitions for pluggable deserialization */
+export type Deserializer = (data: unknown, contentType?: string) => unknown;
+export type DeserializerMap = Record<string, Deserializer>;
+
+/* Generic parser for unknown data + schema map with optional deserialization */
 export function parseApiResponseUnknownData<
   TSchemaMap extends Record<
     string,
@@ -267,16 +271,41 @@ export function parseApiResponseUnknownData<
   response: Response,
   data: unknown,
   schemaMap: TSchemaMap,
+  deserializerMap?: DeserializerMap,
 ) {
   const contentType = getResponseContentType(response);
+  
+  /* Apply custom deserializer if provided */
+  let deserializedData = data;
+  let deserializationError: unknown = undefined;
+  
+  if (deserializerMap && deserializerMap[contentType]) {
+    try {
+      deserializedData = deserializerMap[contentType](data, contentType);
+    } catch (error) {
+      deserializationError = error;
+    }
+  }
+  
   const schema = schemaMap[contentType];
   if (!schema || typeof schema.safeParse !== "function") {
     return {
       contentType,
       missingSchema: true,
+      deserialized: deserializedData,
+      ...(deserializationError && { deserializationError }),
     };
   }
-  const result = schema.safeParse(data);
+  
+  /* Only proceed with Zod validation if deserialization succeeded */
+  if (deserializationError) {
+    return {
+      contentType,
+      deserializationError,
+    };
+  }
+  
+  const result = schema.safeParse(deserializedData);
   if (result.success) {
     return {
       contentType,
