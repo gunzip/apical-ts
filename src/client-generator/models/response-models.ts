@@ -38,6 +38,14 @@ export interface ResponseAnalysis {
   responses: ResponseInfo[];
   /* Union type components for the return type */
   unionTypes: string[];
+  /* Discriminated union type name (if generated) */
+  discriminatedUnionTypeName?: string;
+  /* Discriminated union type definition */
+  discriminatedUnionTypeDefinition?: string;
+  /* Response map for parsing */
+  responseMapName?: string;
+  /* Response map type definition */
+  responseMapType?: string;
 }
 
 /*

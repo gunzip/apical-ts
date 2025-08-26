@@ -24,13 +24,13 @@ export type ApiResponse<S extends number, T> =
       readonly status: S;
       readonly data: T;
       readonly response: Response;
-      readonly parse?: () => any;
+      readonly parse?: () => ReturnType<typeof parseApiResponseUnknownData>;
     }
   | {
       readonly status: S;
       readonly error: import("zod").ZodError;
       readonly response: Response;
-      readonly parse?: () => any;
+      readonly parse?: () => ReturnType<typeof parseApiResponseUnknownData>;
     };`;
 }
 
@@ -131,7 +131,7 @@ export class ApiError extends Error {
  */
 export function renderOperationUtilities(): string {
   return `/* Utility types for operation binding */
-type Operation = (params: any, config?: GlobalConfig) => Promise<any>;
+type Operation = (params: unknown, config?: GlobalConfig) => Promise<unknown>;
 
 /* Bind all operations with a specific config */
 export function configureOperations<T extends Record<string, Operation>>(
@@ -140,13 +140,15 @@ export function configureOperations<T extends Record<string, Operation>>(
 ): {
   [K in keyof T]: (params: Parameters<T[K]>[0]) => ReturnType<T[K]>;
 } {
-  const bound: Partial<Record<keyof T, any>> = {};
+  const bound: Partial<Record<keyof T, (params: unknown) => ReturnType<T[keyof T]>>> = {};
   for (const key in operations) {
     if (typeof operations[key] === 'function') {
-      bound[key] = (params: any) => operations[key](params, config);
+      bound[key] = (params: unknown) => operations[key](params, config);
     }
   }
-  return bound as any;
+  return bound as {
+    [K in keyof T]: (params: Parameters<T[K]>[0]) => ReturnType<T[K]>;
+  };
 }`;
 }
 
@@ -174,7 +176,7 @@ export function isErrorResponse<T>(
 export function renderUtilityFunctions(): string {
   return `/* Type-safe status checking function */
 export function isStatus<
-  TResponse extends ApiResponse<number, any>,
+  TResponse extends ApiResponse<number, unknown>,
   S extends TResponse['status']
 >(
   result: TResponse,
@@ -184,11 +186,11 @@ export function isStatus<
 }
 
 /* Utility function to handle response with exhaustive type checking */
-export function handleResponse<T extends ApiResponse<number, any>>(
+export function handleResponse<T extends ApiResponse<number, unknown>>(
   result: T,
   handlers: {
     [K in T['status']]?: (
-      payload: Extract<Extract<T, { status: K }>, { data: any }> extends infer R
+      payload: Extract<Extract<T, { status: K }>, { data: unknown }> extends infer R
         ? R extends { data: infer D }
           ? D
           : never
@@ -212,7 +214,8 @@ export function handleResponse<T extends ApiResponse<number, any>>(
   }
   const handler = handlers[result.status as keyof typeof handlers];
   if (handler && 'data' in result) {
-    (handler as any)(result.data, result);
+    /* Use type assertion here as TypeScript can't infer the exact type */
+    (handler as (payload: unknown, full: T) => void)(result.data, result);
   } else if (handlers.default) {
     handlers.default(result);
   }
@@ -261,11 +264,39 @@ export function getResponseContentType(response: Response): string {
 export type Deserializer = (data: unknown, contentType?: string) => unknown;
 export type DeserializerMap = Record<string, Deserializer>;
 
-/* Generic parser for unknown data + schema map with optional deserialization */
+/* Overload without deserializerMap */
+export function parseApiResponseUnknownData<
+  TSchemaMap extends Record<string, { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }>
+>(
+  response: Response,
+  data: unknown,
+  schemaMap: TSchemaMap,
+): (
+  | { [K in keyof TSchemaMap]: { contentType: K; parsed: import("zod").infer<TSchemaMap[K]> } }[keyof TSchemaMap]
+  | { contentType: string; error: unknown }
+  | { contentType: string; missingSchema: true; deserialized: unknown }
+);
+
+/* Overload with deserializerMap */
+export function parseApiResponseUnknownData<
+  TSchemaMap extends Record<string, { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }>
+>(
+  response: Response,
+  data: unknown,
+  schemaMap: TSchemaMap,
+  deserializerMap: DeserializerMap,
+): (
+  | { [K in keyof TSchemaMap]: { contentType: K; parsed: import("zod").infer<TSchemaMap[K]> } }[keyof TSchemaMap]
+  | { contentType: string; error: unknown }
+  | { contentType: string; missingSchema: true; deserialized: unknown }
+  | { contentType: string; deserializationError: unknown }
+);
+
+/* Implementation */
 export function parseApiResponseUnknownData<
   TSchemaMap extends Record<
     string,
-    { safeParse?: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }
+    { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }
   >
 >(
   response: Response,
@@ -289,13 +320,16 @@ export function parseApiResponseUnknownData<
   
   const schema = schemaMap[contentType];
   if (!schema || typeof schema.safeParse !== "function") {
-    const base: any = {
+    const base = {
       contentType,
-      missingSchema: true,
+      missingSchema: true as const,
       deserialized: deserializedData,
     };
     if (deserializationError) {
-      base.deserializationError = deserializationError;
+      return {
+        ...base,
+        deserializationError,
+      };
     }
     return base;
   }

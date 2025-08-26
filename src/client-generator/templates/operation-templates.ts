@@ -1,6 +1,6 @@
 import type { extractParameterGroups } from "../parameters.js";
 import type { resolveRequestBodyType } from "../request-body.js";
-import type { generateContentTypeMaps } from "../responses.js";
+import type { generateContentTypeMaps, ResponseHandlerResult } from "../responses.js";
 import type { getOperationSecuritySchemes } from "../security.js";
 
 /* TypeScript rendering functions for operation code generation */
@@ -15,6 +15,7 @@ export interface ContentTypeMapsConfig {
 
 export type GenericParamsConfig = ContentTypeMapsConfig & {
   initialReturnType: string;
+  discriminatedUnionTypeName?: string;
 };
 
 export interface GenericParamsResult {
@@ -52,10 +53,7 @@ export interface OperationMetadata {
     destructuredParams: string;
     paramsInterface: string;
   };
-  responseHandlers: {
-    responseHandlers: string[];
-    returnType: string;
-  };
+  responseHandlers: ResponseHandlerResult;
   summary: string;
   typeImports: Set<string>;
 }
@@ -65,7 +63,12 @@ export interface ParameterDeclarationConfig {
   paramsInterface: string;
 }
 
-export type TypeAliasesConfig = ContentTypeMapsConfig;
+export type TypeAliasesConfig = ContentTypeMapsConfig & {
+  discriminatedUnionTypeName?: string;
+  discriminatedUnionTypeDefinition?: string;
+  responseMapName?: string;
+  responseMapType?: string;
+};
 
 /*
  * Creates generic parameter list for request/response content-type selection.
@@ -76,7 +79,10 @@ export function buildGenericParams(
   config: GenericParamsConfig,
 ): GenericParamsResult {
   let genericParams = "";
-  const updatedReturnType = config.initialReturnType;
+  /* Use discriminated union type when available, otherwise fallback to original type */
+  let updatedReturnType = config.discriminatedUnionTypeName 
+    ? config.initialReturnType.replace(/unknown/g, config.discriminatedUnionTypeName)
+    : config.initialReturnType;
 
   if (config.shouldGenerateRequestMap || config.shouldGenerateResponseMap) {
     const genericParts: string[] = [];
@@ -120,6 +126,17 @@ export function buildParameterDeclaration(
  */
 export function buildTypeAliases(config: TypeAliasesConfig): string {
   let typeAliases = "";
+  
+  /* Add discriminated union response type if available */
+  if (config.discriminatedUnionTypeDefinition) {
+    typeAliases += `${config.discriminatedUnionTypeDefinition}\n\n`;
+  }
+  
+  /* Add discriminated union response map if available */
+  if (config.responseMapType && config.responseMapName) {
+    typeAliases += `${config.responseMapType}\n\n`;
+  }
+  
   if (config.shouldGenerateRequestMap) {
     typeAliases += `export type ${config.requestMapTypeName} = ${config.contentTypeMaps.requestMapType};\n\n`;
   }

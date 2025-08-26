@@ -15,6 +15,7 @@ import type {
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { getResponseContentType } from "./utils.js";
+import { generateDiscriminatedUnionTypes } from "./discriminated-union-generator.js";
 
 /*
  * Analyzes the content type structure of a response
@@ -69,7 +70,7 @@ export function analyzeResponseStructure(
 
       responses.push(responseInfo);
 
-      /* Build union type component - always use unknown for responses with schemas */
+      /* Build union type component - use discriminated union type when available */
       if (responseInfo.hasSchema) {
         unionTypes.push(`ApiResponse<${code}, unknown>`);
       } else {
@@ -79,10 +80,24 @@ export function analyzeResponseStructure(
     }
   }
 
+  /* Generate discriminated union types if operation has an operationId */
+  let discriminatedUnionResult;
+  if (operation.operationId) {
+    discriminatedUnionResult = generateDiscriminatedUnionTypes(
+      operation,
+      operation.operationId,
+      typeImports,
+    );
+  }
+
   return {
     defaultReturnType: "ApiResponse<number, unknown>",
     responses,
     unionTypes,
+    discriminatedUnionTypeName: discriminatedUnionResult?.unionTypeName,
+    discriminatedUnionTypeDefinition: discriminatedUnionResult?.unionTypeDefinition,
+    responseMapName: discriminatedUnionResult?.responseMapName,
+    responseMapType: discriminatedUnionResult?.responseMapType,
   };
 }
 
