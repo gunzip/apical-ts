@@ -4,7 +4,9 @@
 
 ✨ Effortlessly turn your OpenAPI specifications into fully-typed Zod v4 schemas—ready for runtime (client or server) validation and TypeScript development.
 
-🤖 Need a client? Instantly generate a type-safe, operation-based REST API client alongside your schemas.
+Need a client? Instantly generate a type-safe, low-footprint, operation-based REST API client alongside your schemas.
+
+Need to validate server requests and return typed responses? We've got you covered with built-in support for request and response validation using Zod schemas.
 
 Why choose this generator against alternatives? See [comparison](#comparison-with-alternative-libraries) for more details.
 
@@ -131,8 +133,8 @@ await generate({
 
 The generator creates:
 
-- **`client/index.ts`** - Configuration types, immutable global config, and operation exports
-- **`client/`** - Individual operation functions
+- **`server/`** - Typed handler wrappers
+- **`client/`** - Individual operation functions for each API endpoint
 - **`schemas/`** - Zod schemas and TypeScript types
 
 # Client Generation
@@ -234,7 +236,7 @@ if (isSuccessResponse(result)) {
 
 ## Exception Handling
 
-All responses not handled by the union type throw a typed error:
+All responses not present in the OpenAPI specs throw an `UnexpectedResponseError` error:
 
 ```ts
 try {

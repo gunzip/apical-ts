@@ -17,13 +17,12 @@ export function buildOperationFileContent(
  *
  * @example
  * ```javascript
- * const typeImports = new Set(['User', 'Pet', 'ApiError']);
+ * const typeImports = new Set(['User', 'Pet']);
  * const imports = buildOperationImports(typeImports);
  * // Result: [
  * //   "import { globalConfig, GlobalConfig, ApiResponse, parseResponseBody, UnexpectedResponseError } from './config.js';",
  * //   "import { User } from '../schemas/User.js';",
  * //   "import { Pet } from '../schemas/Pet.js';",
- * //   "import { ApiError } from '../schemas/ApiError.js';"
  * // ]
  * ```
  */

@@ -179,7 +179,6 @@ describe("client-generator config-templates", () => {
       expect(result).toContain(
         "export class UnexpectedResponseError extends Error",
       );
-      expect(result).toContain("export class ApiError extends Error");
       expect(result).toContain("status: number;");
       expect(result).toContain("data: unknown;");
     });

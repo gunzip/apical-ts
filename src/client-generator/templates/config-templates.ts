@@ -140,19 +140,6 @@ export class UnexpectedResponseError extends Error {
     this.data = data;
     this.response = response;
   }
-}
-
-/* ApiError class for backwards compatibility */
-export class ApiError extends Error {
-  status: number;
-  body: unknown;
-  headers: Headers;
-  constructor(status: number, body: unknown, headers: Headers) {
-  super('API Error: ' + status);
-    this.status = status;
-    this.body = body;
-    this.headers = headers;
-  }
 }`;
 }
 
