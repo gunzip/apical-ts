@@ -45,15 +45,14 @@ type ResponseModelsForStatus<
  */
 export type ApiResponseWithParse<
   S extends number,
-  Map extends Record<string, Record<string, any>>,
-  Status extends keyof Map & string = keyof Map & string
-> = S extends Status ? {
+  Map extends Record<string, Record<string, any>>
+> = \`\${S}\` extends keyof Map ? {
   readonly status: S;
   readonly data: unknown;
   readonly response: Response;
   readonly parse: (
     deserializerMap?: Partial<Record<keyof Map, Deserializer>>
-  ) => ResponseModelsForStatus<Map, S>;
+  ) => ReturnType<typeof parseApiResponseUnknownData>;
 } : never;`;
 }
 
