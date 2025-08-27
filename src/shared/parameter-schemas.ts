@@ -156,7 +156,9 @@ export function generateParameterSchemas(
     const queryProps = parameterGroups.queryParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
-    schemas.push(`const ${querySchemaName} = ${objectMethod}({ ${queryProps} });`);
+    schemas.push(
+      `const ${querySchemaName} = ${objectMethod}({ ${queryProps} });`,
+    );
   } else {
     schemas.push(`const ${querySchemaName} = ${objectMethod}({});`);
   }
@@ -170,7 +172,9 @@ export function generateParameterSchemas(
     const pathProps = parameterGroups.pathParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
-    schemas.push(`const ${pathSchemaName} = ${objectMethod}({ ${pathProps} });`);
+    schemas.push(
+      `const ${pathSchemaName} = ${objectMethod}({ ${pathProps} });`,
+    );
   } else {
     schemas.push(`const ${pathSchemaName} = ${objectMethod}({});`);
   }
@@ -184,7 +188,9 @@ export function generateParameterSchemas(
     const headerProps = parameterGroups.headerParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
-    schemas.push(`const ${headersSchemaName} = ${objectMethod}({ ${headerProps} });`);
+    schemas.push(
+      `const ${headersSchemaName} = ${objectMethod}({ ${headerProps} });`,
+    );
   } else {
     schemas.push(`const ${headersSchemaName} = ${objectMethod}({});`);
   }
