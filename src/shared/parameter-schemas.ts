@@ -147,6 +147,8 @@ export function generateParameterSchemas(
 
   /* Determine object method based on strict validation setting */
   const objectMethod = strictValidation ? "z.strictObject" : "z.object";
+  /* Headers should never use strict validation due to standard HTTP headers */
+  const headerObjectMethod = "z.object";
 
   /* Query schema */
   const querySchemaName = `${sanitizedId}QuerySchema`;
@@ -189,10 +191,10 @@ export function generateParameterSchemas(
       .map((p) => buildProp(p.name, p))
       .join(", ");
     schemas.push(
-      `const ${headersSchemaName} = ${objectMethod}({ ${headerProps} });`,
+      `const ${headersSchemaName} = ${headerObjectMethod}({ ${headerProps} });`,
     );
   } else {
-    schemas.push(`const ${headersSchemaName} = ${objectMethod}({});`);
+    schemas.push(`const ${headersSchemaName} = ${headerObjectMethod}({});`);
   }
   schemas.push(
     `type ${headersTypeName} = z.infer<typeof ${headersSchemaName}>;`,

@@ -115,9 +115,9 @@ describe("server-generator operation wrapper", () => {
       doc as any,
     );
 
-    /* Verify that object schemas use z.strictObject for strict validation */
+    /* Verify that query and path schemas use z.strictObject, but headers use z.object */
     expect(result.wrapperCode).toContain("z.strictObject(");
-    expect(result.wrapperCode).not.toContain("z.object(");
+    expect(result.wrapperCode).toContain("z.object("); // Headers still use z.object
   });
 
   it("should use strict validation for request body when using schema.strict() method", () => {
@@ -165,8 +165,15 @@ describe("server-generator operation wrapper", () => {
       doc as any,
     );
 
-    /* Verify that request body validation uses .strict() method */
-    expect(result.wrapperCode).toContain("schema.strict().safeParse(req.body)");
+    /* Verify that request body validation uses .strict() method conditionally */
+    expect(result.wrapperCode).toContain("let finalSchema = schema;");
+    expect(result.wrapperCode).toContain(
+      "if ('strict' in schema && typeof schema.strict === 'function')",
+    );
+    expect(result.wrapperCode).toContain("finalSchema = schema.strict();");
+    expect(result.wrapperCode).toContain(
+      "const bodyParse = finalSchema.safeParse(req.body)",
+    );
     expect(result.wrapperCode).toContain("testStrictBodyValidationWrapper");
     expect(result.wrapperCode).toContain("body_error");
     expect(result.wrapperCode).toContain("parsedBody");

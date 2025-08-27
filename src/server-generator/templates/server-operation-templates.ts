@@ -204,7 +204,11 @@ function renderValidationLogic(
     const mapRef = ${requestMapTypeName} as Record<string, z.ZodTypeAny | undefined>;
     const schema = mapRef[req.contentType as string];
     if (schema) {
-      const bodyParse = schema.strict().safeParse(req.body);
+      let finalSchema = schema;
+      if ('strict' in schema && typeof schema.strict === 'function') {
+        finalSchema = schema.strict();
+      }
+      const bodyParse = finalSchema.safeParse(req.body);
       if (!bodyParse.success) return handler({ type: "body_error", error: bodyParse.error });
       parsedBody = bodyParse.data as ${bodyType};
     } else {
