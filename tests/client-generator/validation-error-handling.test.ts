@@ -36,7 +36,9 @@ describe("client-generator validation error handling", () => {
       );
 
       /* Return type should be ApiResponseWithParse with precise typing */
-      expect(result.returnType).toBe("ApiResponseWithParse<200, typeof GetUserResponseMap>");
+      expect(result.returnType).toBe(
+        "ApiResponseWithParse<200, typeof GetUserResponseMap>",
+      );
     });
 
     it("should generate handler code for mixed JSON/non-JSON responses with conditional validation", () => {
@@ -68,7 +70,9 @@ describe("client-generator validation error handling", () => {
       expect(result.responseHandlers[0]).not.toContain(
         "error: parseResult.error",
       );
-      expect(result.returnType).toBe("ApiResponseWithParse<200, typeof GetDataResponseMap>");
+      expect(result.returnType).toBe(
+        "ApiResponseWithParse<200, typeof GetDataResponseMap>",
+      );
     });
 
     it("should not include parseError for non-JSON responses", () => {
@@ -96,7 +100,9 @@ describe("client-generator validation error handling", () => {
 
       /* Verify that the return type does NOT include parseError */
       expect(result.returnType).not.toContain("error:");
-      expect(result.returnType).toBe("ApiResponseWithParse<200, typeof DownloadFileResponseMap>");
+      expect(result.returnType).toBe(
+        "ApiResponseWithParse<200, typeof DownloadFileResponseMap>",
+      );
     });
 
     it("should handle responses without content correctly", () => {
