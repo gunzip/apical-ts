@@ -138,7 +138,7 @@ ${validationLogic}
 }`;
 
   const routeFunction = `export function route() {
-  return { path: "${pathKey}", method: "${method}" };
+  return { path: "${pathKey}", method: "${method}" } as const;
 }`;
 
   /* Combine all parts */

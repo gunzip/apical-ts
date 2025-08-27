@@ -4,7 +4,6 @@ import express from "express";
 import {
   findPetsByStatusWrapper,
   type findPetsByStatusHandler,
-  route as findPetsByStatusRoute,
 } from "../generated/server/findPetsByStatus.js";
 import {
   getPetByIdWrapper,
@@ -17,8 +16,8 @@ import {
   route as getInventoryRoute,
 } from "../generated/server/getInventory.js";
 import {
+  createExpressAdapter,
   extractRequestParams,
-  sendWrapperResponse,
 } from "./express-adapter.js";
 
 const app = express();
@@ -147,45 +146,28 @@ const getInventoryHandler: getInventoryHandler = async (params) => {
 
 /* Method 1: Manual setup with extractRequestParams and sendWrapperResponse */
 app.get("/pet/findByStatus", async (req, res) => {
-  const params = extractRequestParams(req);
-  const wrappedHandler = findPetsByStatusWrapper(findPetsByStatusHandler);
-  const result = await wrappedHandler(params);
-  sendWrapperResponse(res, result);
+  // Get wrapped handler in order to validate request and response
+  const result = await findPetsByStatusWrapper(findPetsByStatusHandler)(
+    extractRequestParams(req),
+  );
+  // Return express response
+  res.status(result.status).type(result.contentType).send(result.data);
 });
 
-/* Method 2: More concise setup using the route info */
-const setupRoute = (
-  wrapper: any,
-  routeInfo: { path: string; method: string },
-  handler: any,
-) => {
-  const expressPath = routeInfo.path.replace(
-    /{([^}]+)}/g,
-    ":$1",
-  ); /* Convert {petId} to :petId */
-  const method = routeInfo.method.toLowerCase() as keyof typeof app;
-
-  if (typeof app[method] === "function") {
-    (app[method] as any)(
-      expressPath,
-      async (req: express.Request, res: express.Response) => {
-        try {
-          const params = extractRequestParams(req);
-          const wrappedHandler = wrapper(handler);
-          const result = await wrappedHandler(params);
-          sendWrapperResponse(res, result);
-        } catch (error) {
-          console.error("Error in route handler:", error);
-          res.status(500).json({ error: "Internal server error" });
-        }
-      },
-    );
-  }
-};
-
 /* Setup routes using the helper function */
-setupRoute(getPetByIdWrapper, getPetByIdRoute(), getPetByIdHandler);
-setupRoute(getInventoryWrapper, getInventoryRoute(), getInventoryHandler);
+createExpressAdapter(
+  app,
+  getPetByIdWrapper,
+  getPetByIdRoute(),
+  getPetByIdHandler,
+);
+
+createExpressAdapter(
+  app,
+  getInventoryWrapper,
+  getInventoryRoute(),
+  getInventoryHandler,
+);
 
 /* Health check endpoint */
 app.get("/health", (req, res) => {
