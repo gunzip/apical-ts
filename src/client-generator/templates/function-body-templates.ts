@@ -46,9 +46,6 @@ export function determineFunctionBodyStructure(
     const defaultRespValue =
       contentTypeMaps.defaultResponseContentType || "application/json";
     acceptHeaderLogic = `    "Accept": contentType?.response || "${defaultRespValue}",`;
-    contentTypeLogic += `  const finalResponseContentType = contentType?.response || "${defaultRespValue}";\n`;
-  } else {
-    contentTypeLogic += `  const finalResponseContentType = "";\n`;
   }
 
   return {

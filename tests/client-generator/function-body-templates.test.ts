@@ -33,9 +33,6 @@ describe("function-body-templates", () => {
       expect(result.contentTypeLogic).toContain(
         'const finalRequestContentType = contentType?.request || "application/json";',
       );
-      expect(result.contentTypeLogic).toContain(
-        'const finalResponseContentType = "";',
-      );
       expect(result.acceptHeaderLogic).toBe("");
     });
 
@@ -58,9 +55,6 @@ describe("function-body-templates", () => {
         true,
       );
 
-      expect(result.contentTypeLogic).toContain(
-        'const finalResponseContentType = contentType?.response || "application/xml";',
-      );
       expect(result.acceptHeaderLogic).toBe(
         '    "Accept": contentType?.response || "application/xml",',
       );
@@ -87,9 +81,6 @@ describe("function-body-templates", () => {
 
       expect(result.contentTypeLogic).toContain(
         'const finalRequestContentType = contentType?.request || "application/json";',
-      );
-      expect(result.contentTypeLogic).toContain(
-        'const finalResponseContentType = contentType?.response || "application/xml";',
       );
       expect(result.acceptHeaderLogic).toBe(
         '    "Accept": contentType?.response || "application/xml",',
