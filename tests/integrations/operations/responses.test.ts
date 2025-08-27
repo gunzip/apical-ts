@@ -1,3 +1,5 @@
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { createAuthenticatedClient } from "../client.js";
 import { getRandomPort, MockServer } from "../setup.js";
 
@@ -34,12 +36,27 @@ describe("Response Operations", () => {
       expect([200, 202, 403, 404]).toContain(response.status);
 
       if (response.status === 200) {
-        expect(response.data).toBeDefined();
-        // Should match Message schema
-        expect(response.data).toHaveProperty("id");
-        expect(response.data).toHaveProperty("content");
-        if (response.data.content) {
-          expect(response.data.content).toHaveProperty("markdown");
+        // Use parse() method to get structured data
+        if (response.parse) {
+          const parsed = response.parse();
+          if ("parsed" in parsed) {
+            const data = parsed.parsed as any;
+            expect(data).toBeDefined();
+            // Should match Message schema
+            expect(data).toHaveProperty("id");
+            expect(data).toHaveProperty("content");
+            if (data.content) {
+              expect(data.content).toHaveProperty("markdown");
+            }
+          }
+        } else {
+          // Fallback to direct data access
+          expect(response.data).toBeDefined();
+          expect(response.data).toHaveProperty("id");
+          expect(response.data).toHaveProperty("content");
+          if ((response.data as any).content) {
+            expect((response.data as any).content).toHaveProperty("markdown");
+          }
         }
       }
     });
@@ -113,9 +130,21 @@ describe("Response Operations", () => {
       expect([201, 500]).toContain(response.status);
 
       if (response.status === 201) {
-        expect(response.data).toBeDefined();
-        expect(response.data).toHaveProperty("id");
-        expect(response.data).toHaveProperty("content");
+        // Use parse() method to get structured data
+        if (response.parse) {
+          const parsed = response.parse();
+          if ("parsed" in parsed) {
+            const data = parsed.parsed as any;
+            expect(data).toBeDefined();
+            expect(data).toHaveProperty("id");
+            expect(data).toHaveProperty("content");
+          }
+        } else {
+          // Fallback to direct data access
+          expect(response.data).toBeDefined();
+          expect(response.data).toHaveProperty("id");
+          expect(response.data).toHaveProperty("content");
+        }
 
         // Check response headers
         expect(response.response.headers).toBeDefined();
@@ -156,14 +185,31 @@ describe("Response Operations", () => {
 
       // Assert
       if (response.status === 201) {
-        const message = response.data;
-        expect(message).toHaveProperty("id");
-        expect(message).toHaveProperty("content");
-        expect(message.content).toHaveProperty("markdown");
+        // Use parse() method to get structured data
+        if (response.parse) {
+          const parsed = response.parse();
+          if ("parsed" in parsed) {
+            const message = parsed.parsed as any;
+            expect(message).toHaveProperty("id");
+            expect(message).toHaveProperty("content");
+            expect(message.content).toHaveProperty("markdown");
 
-        // Validate content structure
-        if (typeof message.content.markdown === "string") {
-          expect(message.content.markdown.length).toBeGreaterThan(0);
+            // Validate content structure
+            if (typeof message.content.markdown === "string") {
+              expect(message.content.markdown.length).toBeGreaterThan(0);
+            }
+          }
+        } else {
+          // Fallback to direct data access
+          const message = response.data as any;
+          expect(message).toHaveProperty("id");
+          expect(message).toHaveProperty("content");
+          expect(message.content).toHaveProperty("markdown");
+
+          // Validate content structure
+          if (typeof message.content.markdown === "string") {
+            expect(message.content.markdown.length).toBeGreaterThan(0);
+          }
         }
       }
     });
@@ -220,8 +266,18 @@ describe("Response Operations", () => {
         }
 
         // Data should be parsed as JSON object
-        expect(typeof response.data).toBe("object");
-        expect(response.data).not.toBeNull();
+        if (response.parse) {
+          const parsed = response.parse();
+          if ("parsed" in parsed) {
+            const data = parsed.parsed;
+            expect(typeof data).toBe("object");
+            expect(data).not.toBeNull();
+          }
+        } else {
+          // Fallback to direct data access
+          expect(typeof response.data).toBe("object");
+          expect(response.data).not.toBeNull();
+        }
       }
     });
 

@@ -107,7 +107,7 @@ export function renderResponseHandler(
       responseInfo.hasSchema && responseMapName
         ? `,
         parse: (deserializerMap?: ${deserializerMapTypeName}) =>
-          parseApiResponseUnknownData(response, data, ${responseMapName}["${statusCode}"], deserializerMap as import("./config.js").DeserializerMap),`
+          parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], deserializerMap as import("./config.js").DeserializerMap),`
         : "";
 
     return `    case ${statusCode}: {

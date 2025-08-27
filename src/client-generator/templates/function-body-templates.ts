@@ -114,11 +114,22 @@ ${headersContent}
     }
   });
 
+  /*
+   * The response body is consumed immediately to prevent holding onto the raw
+   * response stream. A new, lightweight response object is created with only
+   * the necessary properties, and headers are copied to a Map to break the
+   * reference to the original response object.
+   */
+  const data = await parseResponseBody(response);
+  const minimalResponse = {
+    status: response.status,
+    headers: new Map(response.headers.entries()),
+  };
+
   switch (response.status) {
 ${responseHandlers.join("\n")}
     default: {
       // Throw UnexpectedResponseError for undefined status codes
-      const data = await parseResponseBody(response);
       throw new UnexpectedResponseError(response.status, data, response);
     }
   }`;

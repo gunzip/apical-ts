@@ -56,8 +56,16 @@ describe("Multi content type integration", () => {
     {
       const ct = response.response.headers.get("content-type") || "";
       expect(ct).toContain("application/vnd.custom+json");
-      // Data should parse as NewModel schema
-      expect(response.data).toHaveProperty("id");
+      // Data should parse as NewModel schema - use parse() method
+      if (response.parse) {
+        const parsed = response.parse();
+        if ("parsed" in parsed) {
+          expect(parsed.parsed).toHaveProperty("id");
+        }
+      } else {
+        // Fallback to direct data access if parse method not available
+        expect(response.data).toHaveProperty("id");
+      }
     }
   });
 

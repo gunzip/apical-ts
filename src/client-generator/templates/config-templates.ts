@@ -79,7 +79,15 @@ export function renderConfigImplementation(config: ConfigStructure): string {
 export const globalConfig: GlobalConfig = {
   baseURL: '${server.defaultBaseURL}',
   fetch: fetch,
-  headers: {}
+  headers: {},
+};
+
+/* A minimal, serializable representation of a fetch Response */
+export type MinimalResponse = {
+  readonly status: number;
+  readonly headers: {
+    get(name: string): string | null | undefined;
+  };
 };`;
 }
 
@@ -277,7 +285,7 @@ export async function parseResponseBody(response: Response): Promise<unknown | B
 }
 
 /* Normalize Content-Type header */
-export function getResponseContentType(response: Response): string {
+export function getResponseContentType(response: MinimalResponse): string {
   const raw = response.headers.get("content-type");
   return raw ? raw.split(";")[0].trim().toLowerCase() : "";
 }
@@ -290,7 +298,7 @@ export type DeserializerMap = Record<string, Deserializer>;
 export function parseApiResponseUnknownData<
   TSchemaMap extends Record<string, { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }>
 >(
-  response: Response,
+  response: MinimalResponse,
   data: unknown,
   schemaMap: TSchemaMap,
 ): (
@@ -303,7 +311,7 @@ export function parseApiResponseUnknownData<
 export function parseApiResponseUnknownData<
   TSchemaMap extends Record<string, { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }>
 >(
-  response: Response,
+  response: MinimalResponse,
   data: unknown,
   schemaMap: TSchemaMap,
   deserializerMap: DeserializerMap,
@@ -321,7 +329,7 @@ export function parseApiResponseUnknownData<
     { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }
   >
 >(
-  response: Response,
+  response: MinimalResponse,
   data: unknown,
   schemaMap: TSchemaMap,
   deserializerMap?: DeserializerMap,
