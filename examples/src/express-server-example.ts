@@ -16,7 +16,10 @@ import {
   type getInventoryHandler,
   route as getInventoryRoute,
 } from "../generated/server/getInventory.js";
-import { extractRequestParams, sendWrapperResponse } from "./express-adapter.js";
+import {
+  extractRequestParams,
+  sendWrapperResponse,
+} from "./express-adapter.js";
 
 const app = express();
 const PORT = 3000;
@@ -154,21 +157,27 @@ const setupRoute = (
   routeInfo: { path: string; method: string },
   handler: any,
 ) => {
-  const expressPath = routeInfo.path.replace(/{([^}]+)}/g, ":$1"); /* Convert {petId} to :petId */
+  const expressPath = routeInfo.path.replace(
+    /{([^}]+)}/g,
+    ":$1",
+  ); /* Convert {petId} to :petId */
   const method = routeInfo.method.toLowerCase() as keyof typeof app;
 
   if (typeof app[method] === "function") {
-    (app[method] as any)(expressPath, async (req: express.Request, res: express.Response) => {
-      try {
-        const params = extractRequestParams(req);
-        const wrappedHandler = wrapper(handler);
-        const result = await wrappedHandler(params);
-        sendWrapperResponse(res, result);
-      } catch (error) {
-        console.error("Error in route handler:", error);
-        res.status(500).json({ error: "Internal server error" });
-      }
-    });
+    (app[method] as any)(
+      expressPath,
+      async (req: express.Request, res: express.Response) => {
+        try {
+          const params = extractRequestParams(req);
+          const wrappedHandler = wrapper(handler);
+          const result = await wrappedHandler(params);
+          sendWrapperResponse(res, result);
+        } catch (error) {
+          console.error("Error in route handler:", error);
+          res.status(500).json({ error: "Internal server error" });
+        }
+      },
+    );
   }
 };
 
@@ -191,7 +200,9 @@ app.listen(PORT, () => {
   console.log(`  GET /health`);
   console.log("");
   console.log("💡 Try these examples:");
-  console.log(`  curl "http://localhost:${PORT}/pet/findByStatus?status=available"`);
+  console.log(
+    `  curl "http://localhost:${PORT}/pet/findByStatus?status=available"`,
+  );
   console.log(`  curl "http://localhost:${PORT}/pet/1"`);
   console.log(`  curl "http://localhost:${PORT}/store/inventory"`);
 });

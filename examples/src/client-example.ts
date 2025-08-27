@@ -13,7 +13,10 @@ const localConfig = {
 
 async function demonstrateClient() {
   console.log("🔌 Starting client demonstration...");
-  console.log("📡 Configured to call local Express server at:", localConfig.baseURL);
+  console.log(
+    "📡 Configured to call local Express server at:",
+    localConfig.baseURL,
+  );
   console.log("");
 
   try {
@@ -28,9 +31,9 @@ async function demonstrateClient() {
 
     if (petsResponse.status === 200) {
       console.log("✅ Found pets:", JSON.stringify(petsResponse.data, null, 2));
-      
+
       /* Parse the response data to get type-safe access */
-      if (petsResponse.parse && typeof petsResponse.parse === 'function') {
+      if (petsResponse.parse && typeof petsResponse.parse === "function") {
         const parseResult = petsResponse.parse();
         if (parseResult.success) {
           console.log("🔍 Parsed data (type-safe):", parseResult.data);
@@ -55,16 +58,16 @@ async function demonstrateClient() {
     const petResponse = await getPetById(
       {
         path: { petId: "1" },
-        headers: { api_key: "demo-api-key" }, /* Provide a demo API key */
+        headers: { api_key: "demo-api-key" } /* Provide a demo API key */,
       },
       localConfig,
     );
 
     if (petResponse.status === 200) {
       console.log("✅ Found pet:", JSON.stringify(petResponse.data, null, 2));
-      
+
       /* Parse the response data */
-      if (petResponse.parse && typeof petResponse.parse === 'function') {
+      if (petResponse.parse && typeof petResponse.parse === "function") {
         const parseResult = petResponse.parse();
         if (parseResult.success) {
           const pet = parseResult.data;
@@ -100,10 +103,16 @@ async function demonstrateClient() {
     );
 
     if (inventoryResponse.status === 200) {
-      console.log("✅ Inventory:", JSON.stringify(inventoryResponse.data, null, 2));
-      
+      console.log(
+        "✅ Inventory:",
+        JSON.stringify(inventoryResponse.data, null, 2),
+      );
+
       /* Parse the response data */
-      if (inventoryResponse.parse && typeof inventoryResponse.parse === 'function') {
+      if (
+        inventoryResponse.parse &&
+        typeof inventoryResponse.parse === "function"
+      ) {
         const parseResult = inventoryResponse.parse();
         if (parseResult.success) {
           const inventory = parseResult.data;
@@ -117,7 +126,7 @@ async function demonstrateClient() {
       } else {
         const inventory = inventoryResponse.data;
         console.log("📦 Inventory summary:");
-        if (inventory && typeof inventory === 'object') {
+        if (inventory && typeof inventory === "object") {
           for (const [status, count] of Object.entries(inventory)) {
             console.log(`  ${status}: ${count}`);
           }
@@ -130,7 +139,9 @@ async function demonstrateClient() {
     console.log("");
 
     /* Example 4: Error handling - try to get non-existent pet */
-    console.log("4️⃣ Testing error handling - getting non-existent pet (ID 999)...");
+    console.log(
+      "4️⃣ Testing error handling - getting non-existent pet (ID 999)...",
+    );
     const nonExistentPetResponse = await getPetById(
       {
         path: { petId: "999" },
@@ -144,10 +155,9 @@ async function demonstrateClient() {
     } else {
       console.log("🤔 Unexpected response:", nonExistentPetResponse.status);
     }
-
   } catch (error) {
     console.error("❌ Error during client demonstration:", error);
-    
+
     /* Check if it's a network error */
     if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
       console.log("");

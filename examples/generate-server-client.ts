@@ -11,7 +11,7 @@ const OUTPUT_DIR = "./generated";
 async function main() {
   try {
     console.log("🚀 Generating server and client code from OpenAPI spec...");
-    
+
     /* Clean up any existing generated code */
     try {
       await fs.rm(OUTPUT_DIR, { recursive: true, force: true });
@@ -26,25 +26,25 @@ async function main() {
       `--input ${OPENAPI_FILE}`,
       `--output ${OUTPUT_DIR}`,
       "--generate-server",
-      "--generate-client"
+      "--generate-client",
     ].join(" ");
 
     console.log("📦 Running:", generateCommand);
-    
-    execSync(generateCommand, { 
-      stdio: "inherit", 
-      cwd: path.join(__dirname, "..") /* Run from project root */
+
+    execSync(generateCommand, {
+      stdio: "inherit",
+      cwd: path.join(__dirname, "..") /* Run from project root */,
     });
 
     console.log("✅ Code generation completed successfully!");
     console.log(`📁 Generated files in: ${OUTPUT_DIR}/`);
-    
+
     /* List the generated structure */
     const generatedContents = await fs.readdir(OUTPUT_DIR);
     console.log("📋 Generated structure:");
     for (const item of generatedContents) {
       console.log(`  - ${item}`);
-      
+
       const itemPath = path.join(OUTPUT_DIR, item);
       const stat = await fs.stat(itemPath);
       if (stat.isDirectory()) {
@@ -57,7 +57,6 @@ async function main() {
         }
       }
     }
-
   } catch (error) {
     console.error("❌ Generation failed:", error);
     process.exit(1);

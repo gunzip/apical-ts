@@ -46,6 +46,7 @@ First, generate the TypeScript code from the OpenAPI specification:
 ```
 
 This script will:
+
 - Clean any existing generated code
 - Run the TypeScript OpenAPI generator with both `--generate-server` and `--generate-client` flags
 - Create the `generated/` directory with schemas, server wrappers, and client functions
@@ -92,6 +93,7 @@ npx tsx src/client-example.ts
 ```
 
 This will demonstrate:
+
 - Finding pets by status with query parameters
 - Getting a specific pet by ID with path parameters
 - Retrieving store inventory
@@ -138,6 +140,7 @@ sendWrapperResponse(res, result);
 Shows two approaches for setting up routes:
 
 **Manual approach:**
+
 ```typescript
 app.get("/pet/findByStatus", async (req, res) => {
   const params = extractRequestParams(req);
@@ -148,6 +151,7 @@ app.get("/pet/findByStatus", async (req, res) => {
 ```
 
 **Helper function approach:**
+
 ```typescript
 setupRoute(getPetByIdWrapper, getPetByIdRoute(), getPetByIdHandler);
 ```
@@ -157,7 +161,7 @@ setupRoute(getPetByIdWrapper, getPetByIdRoute(), getPetByIdHandler);
 The `extractRequestParams` function handles parameter transformation:
 
 - **Query parameters**: Extracted from `req.query`
-- **Path parameters**: Extracted from `req.params` 
+- **Path parameters**: Extracted from `req.params`
 - **Headers**: Extracted from `req.headers`
 - **Body**: Passed through from `req.body`
 - **Content-Type**: Extracted from request headers
@@ -177,10 +181,10 @@ const handler: getPetByIdHandler = async (params) => {
 
   // Access validated parameters
   const { petId } = params.value.path;
-  
+
   // Business logic here
   const pet = findPetById(petId);
-  
+
   if (!pet) {
     return { status: 404, contentType: "", data: void 0 };
   }
@@ -224,6 +228,7 @@ if (response.status === 200) {
 ### Server Wrappers (`generated/server/`)
 
 Each operation generates:
+
 - **Handler type**: `operationNameHandler` - Function signature for your business logic
 - **Wrapper function**: `operationNameWrapper` - Validation and parameter extraction
 - **Route function**: `route()` - Returns path and HTTP method information
@@ -232,6 +237,7 @@ Each operation generates:
 ### Client Functions (`generated/client/`)
 
 Each operation generates:
+
 - **Client function**: Type-safe function for making API calls
 - **Parameter types**: Input validation schemas
 - **Response types**: Discriminated unions matching server responses
@@ -268,14 +274,22 @@ const handler: operationHandler = async (params) => {
   if (params.type === "query_error") {
     // Handle query parameter validation errors
     console.error("Query validation failed:", params.error);
-    return { status: 400, contentType: "application/json", data: { error: "Invalid query parameters" } };
+    return {
+      status: 400,
+      contentType: "application/json",
+      data: { error: "Invalid query parameters" },
+    };
   }
-  
+
   if (params.type === "path_error") {
     // Handle path parameter validation errors
-    return { status: 400, contentType: "application/json", data: { error: "Invalid path parameters" } };
+    return {
+      status: 400,
+      contentType: "application/json",
+      data: { error: "Invalid path parameters" },
+    };
   }
-  
+
   // Handle success case
   // ...
 };
@@ -290,13 +304,13 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
   }
 
   const { petId } = params.value.path;
-  
+
   try {
     const pet = await database.pets.findById(petId);
     if (!pet) {
       return { status: 404, contentType: "", data: void 0 };
     }
-    
+
     return {
       status: 200,
       contentType: "application/json",
@@ -326,12 +340,14 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
 ### Common Patterns
 
 **Converting Express paths to OpenAPI paths:**
+
 ```typescript
 const expressPath = routeInfo.path.replace(/{([^}]+)}/g, ":$1");
 // "/pet/{petId}" becomes "/pet/:petId"
 ```
 
 **Handling optional parameters:**
+
 ```typescript
 if (status !== undefined) {
   url.searchParams.append("status", String(status));
