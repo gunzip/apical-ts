@@ -24,5 +24,16 @@ export type { ResponseMapOptions, ResponseMapResult } from "./response-maps.js";
 
 export { generateResponseMap } from "./response-maps.js";
 
+// Response union generation exports
+export type {
+  ResponseUnionMember,
+  ResponseUnionResult,
+} from "./response-union-generator.js";
+
+export {
+  generateResponseUnion,
+  renderUnionType,
+} from "./response-union-generator.js";
+
 // Common types and interfaces
 export type { ContentTypeMapping, ParameterGroups } from "./types.js";

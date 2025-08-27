@@ -1,10 +1,9 @@
 import type { ParameterGroups } from "../../client-generator/models/parameter-models.js";
 import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
 
-import { extractResponseContentTypes } from "../../client-generator/operation-extractor.js";
-import { resolveSchemaTypeName } from "../../client-generator/responses.js";
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
 import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
+import { generateResponseUnion } from "../../shared/response-union-generator.js";
 
 /**
  * Template parameters for server operation wrapper generation
@@ -52,35 +51,15 @@ export function buildServerResponseMap(
   metadata: ServerOperationMetadata,
   typeImports: Set<string>,
 ): string {
-  const operationId = sanitizeIdentifier(metadata.operationId);
-  const responseTypeName = `${operationId}Response`;
-  const responseEntries: string[] = [];
+  /* Use shared response union generation to ensure consistency with client generator */
+  const result = generateResponseUnion(
+    metadata.operation,
+    metadata.operationId,
+    typeImports,
+  );
 
-  // Reuse client extractor to gather responses with content types
-  const responseGroups = extractResponseContentTypes(metadata.operation);
-
-  for (const group of responseGroups) {
-    for (const mapping of group.contentTypes) {
-      const schemaType = resolveSchemaTypeName(
-        mapping.schema,
-        metadata.operationId,
-        `${group.statusCode}Response`,
-        typeImports,
-      );
-      responseEntries.push(
-        `  | { status: ${group.statusCode}; contentType: "${mapping.contentType}"; data: ${schemaType} }`,
-      );
-    }
-  }
-
-  // Fallback for operations without explicit content
-  if (responseEntries.length === 0) {
-    responseEntries.push(
-      `  | { status: 200; contentType: "application/json"; data: unknown }`,
-    );
-  }
-
-  return `export type ${responseTypeName} =${responseEntries.join("\n")};`;
+  /* Return the union type definition */
+  return result.unionTypeDefinition;
 }
 
 /**

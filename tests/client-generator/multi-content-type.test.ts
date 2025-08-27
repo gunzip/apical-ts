@@ -98,7 +98,7 @@ describe("Multi-content-type operation function generation", () => {
     );
     // Response generic now present to allow Accept header negotiation
     expect(result.functionCode).toContain(
-      "TResponseContentType extends keyof PetFindByStatusResponseMap[keyof PetFindByStatusResponseMap] =",
+      "TResponseContentType extends { [K in keyof PetFindByStatusResponseMap]: keyof PetFindByStatusResponseMap[K]; }[keyof PetFindByStatusResponseMap] =",
     );
 
     // Check parameter type uses generic and includes contentType in first parameter
@@ -238,7 +238,7 @@ describe("Multi-content-type operation function generation", () => {
 
     // Should have generic parameter for response (no request body)
     expect(result.functionCode).toContain(
-      "TResponseContentType extends keyof GetUserByIdResponseMap",
+      "TResponseContentType extends { [K in keyof GetUserByIdResponseMap]: keyof GetUserByIdResponseMap[K]; }[keyof GetUserByIdResponseMap]",
     );
     // Should include contentType with response override only
     expect(result.functionCode).toContain(

@@ -2,6 +2,9 @@
 
 import type { ResponseInfo } from "../models/response-models.js";
 
+/* Import shared response union utilities */
+export { renderUnionType } from "../../shared/response-union-generator.js";
+
 /*
  * Renders an ApiResponse union type component for a response
  */
@@ -144,14 +147,4 @@ export function renderResponseHandlers(
   }
 
   return handlers;
-}
-
-/*
- * Renders a TypeScript union type string from union type components
- */
-export function renderUnionType(
-  unionTypes: string[],
-  defaultType = "ApiResponse<number, unknown>",
-): string {
-  return unionTypes.length > 0 ? unionTypes.join(" | ") : defaultType;
 }

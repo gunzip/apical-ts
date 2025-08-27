@@ -86,7 +86,7 @@ describe("operation-templates", () => {
       const result = buildGenericParams(config);
 
       expect(result.genericParams).toBe(
-        '<TResponseContentType extends keyof TestResponseMap[keyof TestResponseMap] = "application/json">',
+        '<TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/json">',
       );
       expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
@@ -114,7 +114,7 @@ describe("operation-templates", () => {
       const result = buildGenericParams(config);
 
       expect(result.genericParams).toBe(
-        '<TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends keyof TestResponseMap[keyof TestResponseMap] = "application/xml">',
+        '<TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/xml">',
       );
       expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
@@ -140,7 +140,7 @@ describe("operation-templates", () => {
       const result = buildGenericParams(config);
 
       expect(result.genericParams).toBe(
-        '<TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends keyof TestResponseMap[keyof TestResponseMap] = "application/json">',
+        '<TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/json">',
       );
       expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
