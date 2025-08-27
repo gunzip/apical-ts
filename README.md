@@ -131,8 +131,8 @@ await generate({
 
 The generator creates:
 
-- **`operations/index.ts`** - Configuration types, immutable global config, and operation exports
-- **`operations/`** - Individual operation functions
+- **`client/index.ts`** - Configuration types, immutable global config, and operation exports
+- **`client/`** - Individual operation functions
 - **`schemas/`** - Zod schemas and TypeScript types
 
 # Client Generation
@@ -142,7 +142,7 @@ The generator creates:
 ### Define Configuration
 
 ```ts
-import { getPetById, createPet } from "./generated/operations/index.js";
+import { getPetById, createPet } from "./generated/client/index.js";
 
 // You can define your API configuration (all fields required)
 // or just use the default configuration to avoid passing it
@@ -182,8 +182,8 @@ const result = await getPetById({ petId: "123" });
 You can use the `configureOperations` helper to bind a configuration object to all generated operations, so you don't have to pass the config each time:
 
 ```ts
-import * as operations from "./generated/operations/index.js";
-import { configureOperations } from "./generated/operations/index.js";
+import * as operations from "./generated/client/index.js";
+import { configureOperations } from "./generated/client/index.js";
 
 const apiConfig = {
   baseURL: "https://api.example.com/v1",
@@ -221,7 +221,7 @@ if (result.status === 200) {
 }
 
 // Or use the helper:
-import { isSuccessResponse } from "./generated/operations/index.js";
+import { isSuccessResponse } from "./generated/client/index.js";
 if (isSuccessResponse(result)) {
   // result.data is raw; to validate invoke result.parse()
   // result.parse() is only valued when a schema is defined for the response content type
@@ -458,7 +458,7 @@ requestBody:
 The generated operation function will accept a `contentType` object to select the body and/or response format:
 
 ```ts
-import { createPet } from "./generated/operations/index.js";
+import { createPet } from "./generated/client/index.js";
 
 // Send as JSON (default)
 await createPet({
@@ -514,7 +514,7 @@ if (result.status === 200) {
 You can also use the provided helpers to handle all cases:
 
 ```ts
-import { handleResponse } from "./generated/operations/index.js";
+import { handleResponse } from "./generated/client/index.js";
 
 handleResponse(result, {
   200: {
@@ -553,10 +553,10 @@ pnpm start generate \
   --generate-server
 ```
 
-This will create a `server-operations/` directory in your output folder, containing:
+This will create a `server/` directory in your output folder, containing:
 
-- **`server-operations/index.ts`**: Exports the server handler wrappers and types
-- **`server-operations/<operationId>.ts`**: Individual operation handler wrappers
+- **`server/index.ts`**: Exports the server handler wrappers and types
+- **`server/<operationId>.ts`**: Individual operation handler wrappers
 
 ## Using the Wrapper Handler
 
@@ -571,7 +571,7 @@ import express from "express";
 import {
   testAuthBearerWrapper,
   testAuthBearerHandler,
-} from "./generated/server-operations/testAuthBearer.js";
+} from "./generated/server/testAuthBearer.js";
 import { extractRequestParams } from "./test-helpers.js";
 
 const app = express();

@@ -16,7 +16,7 @@ import { generateConfigTypes } from "./config-generator.js";
 export async function createOperationsDirectory(
   outputDir: string,
 ): Promise<string> {
-  const operationsDir = path.join(outputDir, "operations");
+  const operationsDir = path.join(outputDir, "client");
   await fs.mkdir(operationsDir, { recursive: true });
   return operationsDir;
 }

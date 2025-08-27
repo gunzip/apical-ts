@@ -1,8 +1,8 @@
 import {
   configureOperations,
   type GlobalConfig,
-} from "./generated/operations/config";
-import * as operations from "./generated/operations";
+} from "./generated/client/config";
+import * as operations from "./generated/client";
 
 /**
  * Test client configuration

@@ -8,12 +8,8 @@ import { dirname, join } from "node:path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const generatedDir = join(__dirname, "generated");
-const operationsIndex = join(generatedDir, "operations", "index.ts");
-const serverOperationsIndex = join(
-  generatedDir,
-  "server-operations",
-  "index.ts",
-);
+const operationsIndex = join(generatedDir, "client", "index.ts");
+const serverOperationsIndex = join(generatedDir, "server", "index.ts");
 const tsconfigPath = join(__dirname, "tsconfig.typecheck.json");
 
 describe("generated client + server typecheck", () => {

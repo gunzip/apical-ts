@@ -10,7 +10,7 @@ import type { OperationMetadata } from "../client-generator/operation-extractor.
 export async function createServerOperationsDirectory(
   outputDir: string,
 ): Promise<string> {
-  const serverOperationsDir = path.join(outputDir, "server-operations");
+  const serverOperationsDir = path.join(outputDir, "server");
   await fs.mkdir(serverOperationsDir, { recursive: true });
   return serverOperationsDir;
 }

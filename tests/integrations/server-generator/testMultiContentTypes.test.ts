@@ -3,7 +3,7 @@ import supertest from "supertest";
 import {
   testMultiContentTypesWrapper,
   testMultiContentTypesHandler,
-} from "../generated/server-operations/testMultiContentTypes.js";
+} from "../generated/server/testMultiContentTypes.js";
 import { setupTestRoute, mockData } from "./test-helpers.js";
 
 describe("testMultiContentTypes operation integration tests", () => {

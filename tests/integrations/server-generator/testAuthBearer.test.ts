@@ -4,7 +4,7 @@ import supertest from "supertest";
 import {
   testAuthBearerWrapper,
   testAuthBearerHandler,
-} from "../generated/server-operations/testAuthBearer.js";
+} from "../generated/server/testAuthBearer.js";
 import { setupTestRoute, mockData } from "./test-helpers.js";
 
 describe("testAuthBearer operation integration tests", () => {

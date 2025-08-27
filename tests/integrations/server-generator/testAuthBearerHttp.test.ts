@@ -3,7 +3,7 @@ import supertest from "supertest";
 import {
   testAuthBearerHttpWrapper,
   testAuthBearerHttpHandler,
-} from "../generated/server-operations/testAuthBearerHttp.js";
+} from "../generated/server/testAuthBearerHttp.js";
 import { setupTestRoute, mockData } from "./test-helpers.js";
 
 describe("testAuthBearerHttp operation integration tests", () => {
