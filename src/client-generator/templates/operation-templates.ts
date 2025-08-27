@@ -72,7 +72,7 @@ export type TypeAliasesConfig = ContentTypeMapsConfig & {
   discriminatedUnionTypeDefinition?: string;
   discriminatedUnionTypeName?: string;
   /* Parameter schema generation */
-  operationId: string;
+  operationId: string | undefined;
   parameterGroups: ReturnType<typeof extractParameterGroups>;
   responseMapName?: string;
   responseMapType?: string;

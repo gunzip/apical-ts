@@ -196,7 +196,7 @@ export function generateOperationFunction(
     discriminatedUnionTypeName:
       metadata.responseHandlers.discriminatedUnionTypeName,
     /* Parameter schema generation */
-    operationId: metadata.operationId,
+    operationId: operation.operationId,
     parameterGroups: metadata.parameterGroups,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapName: metadata.responseHandlers.responseMapName,
