@@ -87,7 +87,9 @@ export function analyzeResponseStructure(
     /* Use precise ApiResponseWithParse types when response map is available */
     for (const responseInfo of responses) {
       if (responseInfo.hasSchema) {
-        unionTypes.push(`ApiResponseWithParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>`);
+        unionTypes.push(
+          `ApiResponseWithParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>`,
+        );
       } else {
         const dataType = responseInfo.contentType ? "unknown" : "void";
         unionTypes.push(`ApiResponse<${responseInfo.statusCode}, ${dataType}>`);

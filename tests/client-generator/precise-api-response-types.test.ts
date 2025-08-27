@@ -11,7 +11,9 @@ describe("precise ApiResponse types", () => {
 
       /* Should include helper type for extracting models from response maps */
       expect(result).toContain("ResponseModelsForStatus<");
-      expect(result).toContain("Map extends Record<string, Record<string, any>>");
+      expect(result).toContain(
+        "Map extends Record<string, Record<string, any>>",
+      );
       expect(result).toContain("Status extends keyof Map");
       expect(result).toContain("Map[Status][keyof Map[Status]]");
 
@@ -64,8 +66,12 @@ describe("precise ApiResponse types", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       /* Should generate precise ApiResponseWithParse types */
-      expect(result.returnType).toContain("ApiResponseWithParse<200, typeof TestMultiContentTypesResponseMap>");
-      expect(result.returnType).toContain("ApiResponseWithParse<201, typeof TestMultiContentTypesResponseMap>");
+      expect(result.returnType).toContain(
+        "ApiResponseWithParse<200, typeof TestMultiContentTypesResponseMap>",
+      );
+      expect(result.returnType).toContain(
+        "ApiResponseWithParse<201, typeof TestMultiContentTypesResponseMap>",
+      );
 
       /* Should not contain generic ApiResponse types */
       expect(result.returnType).not.toContain("ApiResponse<200, unknown>");
@@ -121,7 +127,9 @@ describe("precise ApiResponse types", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       /* Should use precise type for 200 (has schema) */
-      expect(result.returnType).toContain("ApiResponseWithParse<200, typeof MixedOperationResponseMap>");
+      expect(result.returnType).toContain(
+        "ApiResponseWithParse<200, typeof MixedOperationResponseMap>",
+      );
 
       /* Should use standard type for 204 (no content) */
       expect(result.returnType).toContain("ApiResponse<204, void>");

@@ -214,8 +214,10 @@ describe("discriminated union response types", () => {
         "parseApiResponseUnknownData",
       );
 
-      /* Return type should still be ApiResponse for backward compatibility */
-      expect(result.returnType).toContain("ApiResponse<200, unknown>");
+      /* Return type should use precise ApiResponseWithParse for type safety */
+      expect(result.returnType).toContain(
+        "ApiResponseWithParse<200, typeof TestMultiContentTypesResponseMap>",
+      );
     });
   });
 });
