@@ -31,7 +31,29 @@ export type ApiResponse<S extends number, T> =
       readonly error: import("zod").ZodError;
       readonly response: Response;
       readonly parse?: () => ReturnType<typeof parseApiResponseUnknownData>;
-    };`;
+    };
+
+/* Helper type: union of all models for a given status code */
+type ResponseModelsForStatus<
+  Map extends Record<string, Record<string, any>>,
+  Status extends keyof Map
+> = Map[Status][keyof Map[Status]];
+
+/*
+ * Precise ApiResponse type with always-present, type-safe parse function
+ * Used when response map information is available for type-safe parsing
+ */
+export type ApiResponseWithParse<
+  S extends number,
+  Map extends Record<string, Record<string, any>>
+> = \`\${S}\` extends keyof Map ? {
+  readonly status: S;
+  readonly data: unknown;
+  readonly response: Response;
+  readonly parse: (
+    deserializerMap?: Partial<Record<keyof Map, Deserializer>>
+  ) => ReturnType<typeof parseApiResponseUnknownData>;
+} : never;`;
 }
 
 /*

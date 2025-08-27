@@ -31,7 +31,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, unknown>");
+      expect(result.returnType).toBe(
+        "ApiResponseWithParse<200, typeof GetUserResponseMap>",
+      );
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 200:");
       expect(result.responseHandlers[0]).toContain(
@@ -63,7 +65,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<201, unknown>");
+      expect(result.returnType).toBe(
+        "ApiResponseWithParse<201, typeof CreateUserResponseMap>",
+      );
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 201:");
       expect(result.responseHandlers[0]).toContain(
@@ -99,7 +103,7 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "ApiResponse<200, unknown> | ApiResponse<404, unknown>",
+        "ApiResponseWithParse<200, typeof GetUserResponseMap> | ApiResponseWithParse<404, typeof GetUserResponseMap>",
       );
       expect(result.responseHandlers).toHaveLength(2);
       expect(result.responseHandlers[0]).toContain("case 200:");
@@ -145,7 +149,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, unknown>");
+      expect(result.returnType).toBe(
+        "ApiResponseWithParse<200, typeof DownloadFileResponseMap>",
+      );
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain(
         "await parseResponseBody(response) as unknown",
@@ -260,7 +266,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, unknown>");
+      expect(result.returnType).toBe(
+        "ApiResponseWithParse<200, typeof UserProfileDataResponseMap>",
+      );
       expect(typeImports.has("UserProfileData200Response")).toBe(true);
     });
 
@@ -282,7 +290,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, unknown>");
+      expect(result.returnType).toBe(
+        "ApiResponseWithParse<200, typeof TestOperationResponseMap>",
+      );
       expect(result.responseHandlers[0]).toContain(
         "const data = await parseResponseBody(response) as unknown;",
       );
@@ -311,7 +321,9 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       // Should prefer JSON content type (getResponseContentType logic)
-      expect(result.returnType).toBe("ApiResponse<200, unknown>");
+      expect(result.returnType).toBe(
+        "ApiResponseWithParse<200, typeof TestOperationResponseMap>",
+      );
       expect(result.responseHandlers[0]).toContain(
         "const data = await parseResponseBody(response) as unknown;",
       );

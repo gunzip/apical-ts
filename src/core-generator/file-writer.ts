@@ -29,7 +29,7 @@ export function buildOperationFileContent(
  */
 export function buildOperationImports(typeImports: Set<string>): string[] {
   const imports = [
-    `import { globalConfig, GlobalConfig, ApiResponse, parseResponseBody, UnexpectedResponseError, parseApiResponseUnknownData } from './config.js';`,
+    `import { globalConfig, GlobalConfig, ApiResponse, ApiResponseWithParse, parseResponseBody, UnexpectedResponseError, parseApiResponseUnknownData } from './config.js';`,
   ];
 
   /* Add Zod import if needed for parameter schemas */
