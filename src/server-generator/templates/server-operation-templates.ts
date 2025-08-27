@@ -12,8 +12,12 @@ export interface ServerOperationTemplateParams {
   functionName: string;
   /** True if the operation defines a request body (even if only one content type) */
   hasBody: boolean;
+  /** HTTP method in lowercase (e.g., "get", "post") */
+  method: string;
   operationId: string;
   parameterGroups: ParameterGroups;
+  /** Original OpenAPI path including path parameters (e.g., "/pets/{petId}") */
+  pathKey: string;
   requestMapCode: string;
   requestMapTypeName?: string;
   responseMapCode: string;
@@ -71,8 +75,10 @@ export function renderServerOperationWrapper(
   const {
     functionName,
     hasBody,
+    method,
     operationId,
     parameterGroups,
+    pathKey,
     requestMapCode,
     requestMapTypeName,
     responseMapCode,
@@ -131,6 +137,10 @@ ${validationLogic}
   };
 }`;
 
+  const routeFunction = `export function route() {
+  return { path: "${pathKey}", method: "${method}" };
+}`;
+
   /* Combine all parts */
   const parts = [
     `import { z } from "zod";`,
@@ -141,6 +151,7 @@ ${validationLogic}
     parsedParamsType,
     handlerType,
     wrapperFunction,
+    routeFunction,
   ].filter(Boolean);
 
   return parts.join("\n\n");

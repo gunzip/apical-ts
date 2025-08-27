@@ -136,8 +136,10 @@ export function generateServerOperationWrapper(
   const wrapperCode = renderServerOperationWrapper({
     functionName: metadata.functionName,
     hasBody: metadata.bodyInfo.hasBody,
+    method: method.toLowerCase(),
     operationId: metadata.operationId,
     parameterGroups: metadata.parameterGroups,
+    pathKey,
     requestMapCode,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapCode,
