@@ -9,6 +9,7 @@ import type {
 import {
   renderAuthHeadersType,
   renderConfigImplementation,
+  renderConfigImports,
   renderConfigInterface,
   renderConfigSupport,
 } from "./templates/config-templates.js";
@@ -80,6 +81,7 @@ export function generateConfigTypes(
   const config = determineConfigStructure(authHeaders, serverUrls);
 
   const parts = [
+    renderConfigImports(),
     renderConfigInterface(config),
     "",
     renderAuthHeadersType(config),

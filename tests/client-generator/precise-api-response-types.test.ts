@@ -33,7 +33,7 @@ describe("precise ApiResponse types", () => {
       const result = renderApiResponseTypes();
 
       /* Should use proper deserializer map type */
-      expect(result).toContain("Partial<Record<keyof Map, Deserializer>>");
+      expect(result).toContain("Partial<Record<string, Deserializer>>");
     });
   });
 

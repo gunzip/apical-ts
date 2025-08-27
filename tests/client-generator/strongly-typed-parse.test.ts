@@ -24,7 +24,7 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
       expect(result).toContain("contentType: string; missingSchema: true");
 
       /* Should use z.infer in type definitions */
-      expect(result).toContain('import("zod").infer<TSchemaMap[K]>');
+      expect(result).toContain("z.infer<TSchemaMap[K]>");
     });
 
     it("should include proper overloads for with/without deserializerMap", () => {
@@ -87,7 +87,7 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
       expect(utilityCode).toContain("as const");
 
       /* Should use proper zod types */
-      expect(utilityCode).toContain('import("zod").infer');
+      expect(utilityCode).toContain("z.infer");
     });
 
     it("should have correct constraint on TSchemaMap", () => {
@@ -97,9 +97,7 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
       expect(utilityCode).toContain(
         "TSchemaMap extends Record<string, { safeParse:",
       );
-      expect(utilityCode).toContain(
-        "success: boolean; data?: unknown; error?: unknown",
-      );
+      expect(utilityCode).toContain("z.ZodSafeParseResult<unknown>");
     });
   });
 });

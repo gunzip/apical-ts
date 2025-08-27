@@ -158,7 +158,7 @@ describe("client-generator config-templates", () => {
       expect(result).toContain("export type ApiResponse<S extends number, T>");
       expect(result).toContain("readonly status: S;");
       expect(result).toContain("readonly data: T;");
-      expect(result).toContain('readonly error: import("zod").ZodError;');
+      expect(result).toContain("readonly error: z.ZodError;");
     });
   });
 

@@ -28,7 +28,7 @@ export type ApiResponse<S extends number, T> =
     }
   | {
       readonly status: S;
-      readonly error: import("zod").ZodError;
+      readonly error: z.ZodError;
       readonly response: Response;
       readonly parse?: () => ReturnType<typeof parseApiResponseUnknownData>;
     };
@@ -39,21 +39,40 @@ type ResponseModelsForStatus<
   Status extends keyof Map
 > = Map[Status][keyof Map[Status]];
 
+export type ExtractResponseUnion<
+  TResponseMap,
+  TStatus extends keyof TResponseMap,
+> =
+  TResponseMap[TStatus] extends Record<string, infer TSchema>
+    ? z.infer<TSchema>
+    : never;
+
 /*
  * Precise ApiResponse type with always-present, type-safe parse function
  * Used when response map information is available for type-safe parsing
  */
 export type ApiResponseWithParse<
   S extends number,
-  Map extends Record<string, Record<string, any>>
-> = \`\${S}\` extends keyof Map ? {
+  Map extends Record<string, Record<string, any>>,
+> = {
   readonly status: S;
   readonly data: unknown;
   readonly response: Response;
   readonly parse: (
-    deserializerMap?: Partial<Record<keyof Map, Deserializer>>
-  ) => ReturnType<typeof parseApiResponseUnknownData>;
-} : never;`;
+    deserializerMap?: Partial<Record<string, Deserializer>>,
+  ) => ${"`${S}`"} extends keyof Map
+    ?
+        | {
+            [K in keyof Map[${"`${S}`"}]]: {
+              contentType: K;
+              parsed: ExtractResponseUnion<Map, ${"`${S}`"}>;
+            };
+          }[keyof Map[${"`${S}`"}]]
+        | { contentType: string; error: z.ZodError }
+        | { contentType: string; missingSchema: true; deserialized: unknown }
+        | { contentType: string; deserializationError: unknown }
+    : { contentType: string; error: unknown };
+};`;
 }
 
 /*
@@ -89,6 +108,11 @@ export type MinimalResponse = {
     get(name: string): string | null | undefined;
   };
 };`;
+}
+
+export function renderConfigImports(): string {
+  return `import type { z } from "zod/v4";
+`;
 }
 
 /*
@@ -216,7 +240,7 @@ export function handleResponse<T extends ApiResponse<number, unknown>>(
     ) => void;
   } & {
     default?: (result: T) => void;
-    error?: (error: import('zod').ZodError, full: T) => void;
+    error?: (error: z.ZodError, full: T) => void;
   }
 ): void {
   if ('error' in result) {
@@ -283,28 +307,28 @@ export type DeserializerMap = Record<string, Deserializer>;
 
 /* Overload without deserializerMap */
 export function parseApiResponseUnknownData<
-  TSchemaMap extends Record<string, { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }>
+  TSchemaMap extends Record<string, { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }>
 >(
   response: MinimalResponse,
   data: unknown,
   schemaMap: TSchemaMap,
 ): (
-  | { [K in keyof TSchemaMap]: { contentType: K; parsed: import("zod").infer<TSchemaMap[K]> } }[keyof TSchemaMap]
-  | { contentType: string; error: unknown }
+  | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
+  | { contentType: string; error: z.ZodError }
   | { contentType: string; missingSchema: true; deserialized: unknown }
 );
 
 /* Overload with deserializerMap */
 export function parseApiResponseUnknownData<
-  TSchemaMap extends Record<string, { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }>
+  TSchemaMap extends Record<string, { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }>
 >(
   response: MinimalResponse,
   data: unknown,
   schemaMap: TSchemaMap,
   deserializerMap: DeserializerMap,
 ): (
-  | { [K in keyof TSchemaMap]: { contentType: K; parsed: import("zod").infer<TSchemaMap[K]> } }[keyof TSchemaMap]
-  | { contentType: string; error: unknown }
+  | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
+  | { contentType: string; error: z.ZodError }
   | { contentType: string; missingSchema: true; deserialized: unknown }
   | { contentType: string; deserializationError: unknown }
 );
@@ -313,7 +337,7 @@ export function parseApiResponseUnknownData<
 export function parseApiResponseUnknownData<
   TSchemaMap extends Record<
     string,
-    { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }
+    { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }
   >
 >(
   response: MinimalResponse,
