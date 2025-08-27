@@ -289,8 +289,8 @@ describe("response-analysis", () => {
       expect(result.responses[1].typeName).toBe("Error");
 
       expect(result.unionTypes).toEqual([
-        "ApiResponse<200, unknown>",
-        "ApiResponse<404, unknown>",
+        "ApiResponseWithParse<200, typeof GetUserResponseMap>",
+        "ApiResponseWithParse<404, typeof GetUserResponseMap>",
       ]);
 
       expect(typeImports.has("User")).toBe(true);

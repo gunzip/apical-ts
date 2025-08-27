@@ -49,7 +49,6 @@ export function analyzeResponseStructure(
 ): ResponseAnalysis {
   const { hasResponseContentTypeMap = false, operation, typeImports } = config;
   const responses: ResponseInfo[] = [];
-  const unionTypes: string[] = [];
 
   if (operation.responses) {
     const responseCodes = Object.keys(operation.responses).filter(
@@ -69,14 +68,6 @@ export function analyzeResponseStructure(
       );
 
       responses.push(responseInfo);
-
-      /* Build union type component - use discriminated union type when available */
-      if (responseInfo.hasSchema) {
-        unionTypes.push(`ApiResponse<${code}, unknown>`);
-      } else {
-        const dataType = responseInfo.contentType ? "unknown" : "void";
-        unionTypes.push(`ApiResponse<${code}, ${dataType}>`);
-      }
     }
   }
 
@@ -88,6 +79,30 @@ export function analyzeResponseStructure(
       operation.operationId,
       typeImports,
     );
+  }
+
+  /* Generate union types - use precise types when response map is available */
+  const unionTypes: string[] = [];
+  if (discriminatedUnionResult?.responseMapName) {
+    /* Use precise ApiResponseWithParse types when response map is available */
+    for (const responseInfo of responses) {
+      if (responseInfo.hasSchema) {
+        unionTypes.push(`ApiResponseWithParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>`);
+      } else {
+        const dataType = responseInfo.contentType ? "unknown" : "void";
+        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, ${dataType}>`);
+      }
+    }
+  } else {
+    /* Fallback to standard ApiResponse types */
+    for (const responseInfo of responses) {
+      if (responseInfo.hasSchema) {
+        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, unknown>`);
+      } else {
+        const dataType = responseInfo.contentType ? "unknown" : "void";
+        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, ${dataType}>`);
+      }
+    }
   }
 
   return {
