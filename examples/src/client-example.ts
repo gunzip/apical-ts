@@ -31,25 +31,21 @@ async function demonstrateClient() {
     );
 
     if (petsResponse.status === 200) {
-      console.log("✅ Found pets:", JSON.stringify(petsResponse.data, null, 2));
+      console.log(
+        "✅ Found pets (raw):",
+        JSON.stringify(petsResponse.data, null, 2),
+      );
 
       /* Parse the response data to get type-safe access */
-      if (petsResponse.parse && typeof petsResponse.parse === "function") {
-        const parseResult = petsResponse.parse();
-        if ("parsed" in parseResult) {
-          console.log(
-            "🔍 Parsed data (type-safe):",
-            JSON.stringify(parseResult.parsed, null, 2),
-          );
-          console.log(`📊 Found ${parseResult.parsed.length} pets`);
-        } else if ("error" in parseResult) {
-          console.error("❌ Failed to parse response:", parseResult.error);
-        }
-      } else {
-        console.log("🔍 Response data (raw):", petsResponse.data);
-        if (Array.isArray(petsResponse.data)) {
-          console.log(`📊 Found ${petsResponse.data.length} pets`);
-        }
+      const parseResult = petsResponse.parse();
+      if ("parsed" in parseResult) {
+        console.log(
+          "🔍 Parsed data (type-safe):",
+          JSON.stringify(parseResult.parsed, null, 2),
+        );
+        console.log(`📊 Found ${parseResult.parsed.length} pets`);
+      } else if ("error" in parseResult) {
+        console.error("❌ Failed to parse response:", parseResult.error);
       }
     } else {
       console.error("❌ Failed to find pets:", petsResponse.status);
@@ -71,20 +67,16 @@ async function demonstrateClient() {
       console.log("✅ Found pet:", JSON.stringify(petResponse.data, null, 2));
 
       /* Parse the response data */
-      if (petResponse.parse && typeof petResponse.parse === "function") {
-        const parseResult = petResponse.parse();
-        if ("parsed" in parseResult) {
-          const pet = parseResult.parsed;
-          console.log(`🐕 Pet details: ${pet.name} (${pet.status})`);
-          if (pet.category) {
-            console.log(`🏷️ Category: ${pet.category.name}`);
-          }
-        } else if ("error" in parseResult) {
-          console.error("❌ Failed to parse pet data:", parseResult.error);
+      const parseResult = petResponse.parse();
+      if ("parsed" in parseResult) {
+        const pet = parseResult.parsed;
+        console.log(`🐕 Pet details: ${pet.name} (${pet.status})`);
+        if (pet.category) {
+          console.log(`🏷️ Category: ${pet.category.name}`);
         }
+      } else if ("error" in parseResult) {
+        console.error("❌ Failed to parse pet data:", parseResult.error);
       }
-    } else if (petResponse.status === 404) {
-      console.log("❌ Pet not found");
     } else {
       console.error("❌ Failed to get pet:", petResponse.status);
     }
@@ -107,28 +99,15 @@ async function demonstrateClient() {
       );
 
       /* Parse the response data */
-      if (
-        inventoryResponse.parse &&
-        typeof inventoryResponse.parse === "function"
-      ) {
-        const parseResult = inventoryResponse.parse();
-        if ("parsed" in parseResult) {
-          const inventory = parseResult.parsed;
-          console.log("📦 Inventory summary:");
-          for (const [status, count] of Object.entries(inventory)) {
-            console.log(`  ${status}: ${count}`);
-          }
-        } else if ("error" in parseResult) {
-          console.error("❌ Failed to parse inventory:", parseResult.error);
-        }
-      } else {
-        const inventory = inventoryResponse.data;
+      const parseResult = inventoryResponse.parse();
+      if ("parsed" in parseResult) {
+        const inventory = parseResult.parsed;
         console.log("📦 Inventory summary:");
-        if (inventory && typeof inventory === "object") {
-          for (const [status, count] of Object.entries(inventory)) {
-            console.log(`  ${status}: ${count}`);
-          }
+        for (const [status, count] of Object.entries(inventory)) {
+          console.log(`  ${status}: ${count}`);
         }
+      } else if ("error" in parseResult) {
+        console.error("❌ Failed to parse inventory:", parseResult.error);
       }
     } else {
       console.error("❌ Failed to get inventory:", inventoryResponse.status);
@@ -163,6 +142,25 @@ async function demonstrateClient() {
       console.log("   Please start the server first:");
       console.log("   npx tsx src/express-server-example.ts");
     }
+  }
+
+  /* Example 5: Unexpected - send invalid parameters in getInventory */
+  console.log("5️⃣ Testing error handling - sending invalid parameters...");
+
+  // use native fetch since generated client cannot send invalid parameters
+  const invalidInventoryResponse = await fetch(
+    "http://localhost:3000/store/inventory?invalidParam=invalid",
+    {
+      method: "GET",
+      headers: { foo: "demo-api-key" },
+    },
+  );
+
+  // @ts-ignore
+  if (invalidInventoryResponse.status === 400) {
+    console.log("✅ Correctly received 400 for invalid parameters");
+  } else {
+    console.log("🤔 Unexpected response:", invalidInventoryResponse.status);
   }
 
   console.log("");

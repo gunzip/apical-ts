@@ -121,6 +121,8 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
 };
 
 /* Implementation of getInventory handler */
+/* We disable type checking to allow emitting an unexpected response */
+/* @ts-ignore */
 const getInventoryHandler: getInventoryHandler = async (params) => {
   if (params.type !== "ok") {
     /* Handle validation errors */
