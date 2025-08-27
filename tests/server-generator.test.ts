@@ -166,14 +166,7 @@ describe("server-generator operation wrapper", () => {
     );
 
     /* Verify that request body validation uses .strict() method conditionally */
-    expect(result.wrapperCode).toContain("let finalSchema = schema;");
-    expect(result.wrapperCode).toContain(
-      "if ('strict' in schema && typeof schema.strict === 'function')",
-    );
-    expect(result.wrapperCode).toContain("finalSchema = schema.strict();");
-    expect(result.wrapperCode).toContain(
-      "const bodyParse = finalSchema.safeParse(req.body)",
-    );
+    expect(result.wrapperCode).toContain("schema.strict().safeParse(req.body)");
     expect(result.wrapperCode).toContain("testStrictBodyValidationWrapper");
     expect(result.wrapperCode).toContain("body_error");
     expect(result.wrapperCode).toContain("parsedBody");

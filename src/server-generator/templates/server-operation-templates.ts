@@ -201,14 +201,9 @@ function renderValidationLogic(
     ? `
   let parsedBody: ${bodyType} | undefined = undefined;
   if (req.body !== undefined && req.contentType) {
-    const mapRef = ${requestMapTypeName} as Record<string, z.ZodTypeAny | undefined>;
-    const schema = mapRef[req.contentType as string];
+    const schema = ${requestMapTypeName}[req.contentType];
     if (schema) {
-      let finalSchema = schema;
-      if ('strict' in schema && typeof schema.strict === 'function') {
-        finalSchema = schema.strict();
-      }
-      const bodyParse = finalSchema.safeParse(req.body);
+      const bodyParse = schema.strict().safeParse(req.body);
       if (!bodyParse.success) return handler({ type: "body_error", error: bodyParse.error });
       parsedBody = bodyParse.data as ${bodyType};
     } else {
