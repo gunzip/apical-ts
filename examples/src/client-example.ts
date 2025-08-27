@@ -37,7 +37,10 @@ async function demonstrateClient() {
       if (petsResponse.parse && typeof petsResponse.parse === "function") {
         const parseResult = petsResponse.parse();
         if ("parsed" in parseResult) {
-          console.log("🔍 Parsed data (type-safe):", parseResult.parsed);
+          console.log(
+            "🔍 Parsed data (type-safe):",
+            JSON.stringify(parseResult.parsed, null, 2),
+          );
           console.log(`📊 Found ${parseResult.parsed.length} pets`);
         } else if ("error" in parseResult) {
           console.error("❌ Failed to parse response:", parseResult.error);
