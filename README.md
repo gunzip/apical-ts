@@ -29,7 +29,7 @@ See [supported features](#features) for more information.
   - [Response Handling](#response-handling)
   - [Exception Handling](#exception-handling)
   - [Validation \& Error Handling (Opt-In)](#validation--error-handling-opt-in)
-  - [Why is Parsing Opt-In?](#why-is-parsing-opt-in)
+  - [Why is Runtime Parsing Opt-In?](#why-is-runtime-parsing-opt-in)
   - [Custom Response Deserialization](#custom-response-deserialization)
     - [Why use `parse()`?](#why-use-parse)
     - [Basic Usage](#basic-usage)
@@ -305,11 +305,11 @@ if (result.status === 200) {
 }
 ```
 
-## Why is Parsing Opt-In?
+## Why is Runtime Parsing Opt-In?
 
 TypeScript client generator uses Zod for payload validation and parsing, but we’ve made this feature opt-in rather than mandatory. This design choice provides several key advantages:
 
-- **Integration with Existing Systems**: This approach allows for seamless integration with other validation mechanisms already present in your codebase. If you have existing business logic that handles data validation, you can disable Zod parsing at the client level to avoid redundancy and streamline your data flow.
+- **Integration with Existing Systems**: This approach allows for seamless integration with other validation mechanisms already present in your codebase. If you have existing business logic that handles data validation, disabled runtime parsing at the client level avoids redundancy and streamlines your data flow.
 
 - **Robustness in the Real World**: APIs responses can be unpredictable. You might encounter non-documented fields or slight deviations from the OpenAPI specification. Making validation optional prevents the client from crashing on unexpected—but often harmless—payloads, ensuring your application remains resilient.
 
