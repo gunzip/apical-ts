@@ -1,7 +1,10 @@
 /* eslint-disable no-console */
 /* Minimal client example that calls the Express server using generated client */
 
-import { globalConfig } from "../generated/client/config.js";
+import {
+  configureOperations,
+  globalConfig,
+} from "../generated/client/config.js";
 import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 import { getInventory } from "../generated/client/getInventory.js";
 import { getPetById } from "../generated/client/getPetById.js";
@@ -20,15 +23,21 @@ async function demonstrateClient() {
   );
   console.log("");
 
+  const api = configureOperations(
+    {
+      findPetsByStatus,
+      getInventory,
+      getPetById,
+    },
+    localConfig,
+  );
+
   try {
     /* Example 1: Find pets by status */
     console.log("1️⃣ Finding pets with status 'available'...");
-    const petsResponse = await findPetsByStatus(
-      {
-        query: { status: "available" },
-      },
-      localConfig,
-    );
+    const petsResponse = await api.findPetsByStatus({
+      query: { status: "available" },
+    });
 
     if (petsResponse.status === 200) {
       console.log(
@@ -55,13 +64,10 @@ async function demonstrateClient() {
 
     /* Example 2: Get specific pet by ID */
     console.log("2️⃣ Getting pet with ID 1...");
-    const petResponse = await getPetById(
-      {
-        headers: { api_key: "demo-api-key" } /* Provide a demo API key */,
-        path: { petId: "1" },
-      },
-      localConfig,
-    );
+    const petResponse = await api.getPetById({
+      headers: { api_key: "demo-api-key" } /* Provide a demo API key */,
+      path: { petId: "1" },
+    });
 
     if (petResponse.status === 200) {
       console.log("✅ Found pet:", JSON.stringify(petResponse.data, null, 2));
@@ -85,12 +91,9 @@ async function demonstrateClient() {
 
     /* Example 3: Get inventory */
     console.log("3️⃣ Getting store inventory...");
-    const inventoryResponse = await getInventory(
-      {
-        headers: { api_key: "demo-api-key" },
-      },
-      localConfig,
-    );
+    const inventoryResponse = await api.getInventory({
+      headers: { api_key: "demo-api-key" },
+    });
 
     if (inventoryResponse.status === 200) {
       console.log(
@@ -119,13 +122,10 @@ async function demonstrateClient() {
     console.log(
       "4️⃣ Testing error handling - getting non-existent pet (ID 999)...",
     );
-    const nonExistentPetResponse = await getPetById(
-      {
-        headers: { api_key: "demo-api-key" },
-        path: { petId: "999" },
-      },
-      localConfig,
-    );
+    const nonExistentPetResponse = await api.getPetById({
+      headers: { api_key: "demo-api-key" },
+      path: { petId: "999" },
+    });
 
     if (nonExistentPetResponse.status === 404) {
       console.log("✅ Correctly received 404 for non-existent pet");
