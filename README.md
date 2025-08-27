@@ -21,6 +21,7 @@ See [supported features](#features) for more information.
   - [Supported Input Formats](#supported-input-formats)
   - [Programmatic Usage](#programmatic-usage)
   - [Generated Architecture](#generated-architecture)
+- [Client Generation](#client-generation)
   - [Using the Generated Operations](#using-the-generated-operations)
     - [Define Configuration](#define-configuration)
     - [Call Operations](#call-operations)
@@ -41,7 +42,11 @@ See [supported features](#features) for more information.
     - [Example: Endpoint with Multiple Request Content Types](#example-endpoint-with-multiple-request-content-types)
     - [Example: Endpoint with Multiple Response Content Types](#example-endpoint-with-multiple-response-content-types)
   - [Using Generated Zod Schemas](#using-generated-zod-schemas)
-  - [Features](#features)
+- [Server Generation](#server-generation)
+  - [How to Generate a Server](#how-to-generate-a-server)
+  - [Using the Wrapper Handler](#using-the-wrapper-handler)
+    - [Handler Function Signature](#handler-function-signature)
+    - [Supported Features](#supported-features)
   - [Benefits of Operation-Based Architecture](#benefits-of-operation-based-architecture)
   - [Known Limitations](#known-limitations)
     - [Missing Response Headers Validation](#missing-response-headers-validation)
@@ -129,6 +134,8 @@ The generator creates:
 - **`operations/index.ts`** - Configuration types, immutable global config, and operation exports
 - **`operations/`** - Individual operation functions
 - **`schemas/`** - Zod schemas and TypeScript types
+
+# Client Generation
 
 ## Using the Generated Operations
 
@@ -531,7 +538,97 @@ if (!result.success) {
 }
 ```
 
-## Features
+# Server Generation
+
+The generator can also produce a fully-typed server handler wrapper for your OpenAPI operations. This enables you to build type-safe HTTP servers (e.g., with Express, Fastify, or custom frameworks) that validate requests and responses at runtime using Zod schemas.
+
+## How to Generate a Server
+
+To generate server-side code, use the CLI with the `--generate-server` flag:
+
+```bash
+pnpm start generate \
+  --input ./swagger-2.0.yaml \
+  --output ./generated \
+  --generate-server
+```
+
+This will create a `server-operations/` directory in your output folder, containing:
+
+- **`server-operations/index.ts`**: Exports the server handler wrappers and types
+- **`server-operations/<operationId>.ts`**: Individual operation handler wrappers
+
+## Using the Wrapper Handler
+
+The generated route wrapper is a function that takes a request handler and returns an async function that can be used with any web framework. This allows you to ensure type safety and runtime validation for your request parameters (path, query, headers) and response data.
+
+You are responsible for extracting parameters from the Express request and passing them to the wrapper, then handling the result (status, contentType, data) in your route handler. This allows you to integrate with any web framework and customize error handling as needed.
+
+Example usage with Express and a helper for parameter extraction:
+
+```ts
+import express from "express";
+import {
+  testAuthBearerWrapper,
+  testAuthBearerHandler,
+} from "./generated/server-operations/testAuthBearer.js";
+import { extractRequestParams } from "./test-helpers.js";
+
+const app = express();
+app.use(express.json());
+
+const wrappedHandler = testAuthBearerWrapper(async (params) => {
+  if (params.type === "ok") {
+    // Here you can access validated and typed parameters
+    const { query, path, headers, body } = params.value;
+    // ...
+    doSomethingWithParams(query.someParam);
+    // Here you can return a typed response
+    return {
+      status: 200,
+      contentType: "application/json",
+      data: { message: "Success" },
+    };
+  }
+  // Handle validation errors or other cases
+  return {
+    status: 400,
+    contentType: "application/json",
+    data: { error: "Validation failed" },
+  };
+});
+
+app.get("/test-auth-bearer", async (req, res) => {
+  const result = await wrappedHandler(extractRequestParams(req));
+  // Now result contains the status, contentType, and data
+  res.status(result.status).type(result.contentType).send(result.data);
+});
+
+app.listen(3000);
+```
+
+- The wrapper receives a single params object (containing query, path, headers, body, etc.)
+- You can use a helper like `extractRequestParams` to transform Express request data into the expected format
+- The handler receives validated and typed parameters, or error details if validation fails
+- You control the HTTP response based on the wrapper's result
+
+### Handler Function Signature
+
+The handler you provide to the wrapper receives a single argument:
+
+- For valid requests: `{ type: "ok", value: { query, path, headers, body, ... } }`
+- For validation errors: `{ type: "query_error" | "body_error" | ... , error: ZodError }`
+
+It must return an object with `{ status, contentType, data }`.
+
+### Supported Features
+
+- Request validation (body, query, params) using generated Zod schemas
+- Response validation before sending (if you use the generated types)
+- Automatic error details for validation failures
+- Type-safe handler context
+
+You can use the generated types and schemas for further custom validation or integration with other frameworks.
 
 - 🚀 **Multi-version support**: Accepts OpenAPI 2.0 (Swagger), 3.0.x, and 3.1.x specifications
 - 🛠️ **Operation-based client generation**: Generates one function per operation, with strong typing and per-operation configuration—no need for blacklisting operations you don't need!
@@ -591,7 +688,3 @@ Here is a comparison of the key features and limitations of each library.
 | **Per-operation overrides**                   |                     ✅                      |                              ✅                               |           ❌           |
 | **File upload support**                       |                     ✅                      |                              ✅                               |           ✅           |
 | **Server-side usage**                         |                     ✅                      |                              ✅                               |           ✅           |
-
-```
-
-```
