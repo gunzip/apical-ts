@@ -78,8 +78,13 @@ export function generateFunctionBody({
 
   // Generate body content code if needed
   let bodyContentCode = "";
-  if (shouldGenerateRequestMap && hasBody) {
-    bodyContentCode = renderContentTypeSwitch(requestContentTypes || []);
+  if (hasBody) {
+    if (shouldGenerateRequestMap) {
+      bodyContentCode = renderContentTypeSwitch(requestContentTypes || []);
+    } else {
+      // Single content type operation - generate simple body content
+      bodyContentCode = `  const bodyContent = body ? JSON.stringify(body) : undefined;`;
+    }
   }
 
   // Determine header configuration and render headers object
