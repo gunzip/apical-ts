@@ -18,15 +18,8 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "-vscjava.vscode-java-pack",
-        "-ms-dotnettools.csharp",
-        "-ms-azuretools.vscode-azureterraform",
-        "ms-azuretools.vscode-azure-github-copilot",
-        "ms-vscode.vscode-websearchforcopilot",
-        "azapi-vscode.azapi",
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
-        "arcanis.vscode-zipfs",
         "esbenp.prettier-vscode",
         "EditorConfig.EditorConfig",
         "bruno-api-client.bruno",
