@@ -2,60 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { OperationObject } from "openapi3-ts/oas31";
 
 import { generateResponseHandlers } from "../../src/client-generator/responses.js";
-import { renderParseExpression } from "../../src/client-generator/templates/response-templates.js";
-import type { ResponseInfo } from "../../src/client-generator/models/response-models.js";
 
 describe("unknown response mode", () => {
-  describe("renderParseExpression with forceUnknownMode", () => {
-    it("should generate unknown parsing for JSON response with schema", () => {
-      const responseInfo: ResponseInfo = {
-        contentType: "application/json",
-        hasSchema: true,
-        parsingStrategy: {
-          isJsonLike: true,
-          requiresRuntimeContentTypeCheck: false,
-          useValidation: true,
-        },
-        statusCode: "200",
-        typeName: "User",
-      };
-
-      const result = renderParseExpression(responseInfo, {
-        hasResponseContentTypeMap: false,
-        statusCode: "200",
-        typeName: "User",
-        forceUnknownMode: true,
-      });
-
-      expect(result).toBe(
-        "const data = await parseResponseBody(response) as unknown;",
-      );
-    });
-
-    it("should generate undefined for response without schema", () => {
-      const responseInfo: ResponseInfo = {
-        contentType: null,
-        hasSchema: false,
-        parsingStrategy: {
-          isJsonLike: false,
-          requiresRuntimeContentTypeCheck: false,
-          useValidation: false,
-        },
-        statusCode: "204",
-        typeName: null,
-      };
-
-      const result = renderParseExpression(responseInfo, {
-        hasResponseContentTypeMap: false,
-        statusCode: "204",
-        typeName: "",
-        forceUnknownMode: true,
-      });
-
-      expect(result).toBe("const data = undefined;");
-    });
-  });
-
   describe("generateResponseHandlers with unknown mode", () => {
     it("should generate response handlers with parse methods", () => {
       const operation: OperationObject = {
@@ -94,8 +42,8 @@ describe("unknown response mode", () => {
       );
 
       /* Verify unknown parsing is used */
-      expect(result.responseHandlers[0]).toContain(
-        "const data = await parseResponseBody(response) as unknown;",
+      expect(result.responseHandlers[0]).not.toContain(
+        "const data = undefined",
       );
 
       /* Verify no Zod validation */

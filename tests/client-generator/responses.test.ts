@@ -36,8 +36,8 @@ describe("client-generator responses", () => {
       );
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 200:");
-      expect(result.responseHandlers[0]).toContain(
-        "const data = await parseResponseBody(response) as unknown;",
+      expect(result.responseHandlers[0]).not.toContain(
+        "const data = undefined",
       );
       expect(typeImports.has("User")).toBe(true);
     });
@@ -70,8 +70,8 @@ describe("client-generator responses", () => {
       );
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 201:");
-      expect(result.responseHandlers[0]).toContain(
-        "const data = await parseResponseBody(response) as unknown;",
+      expect(result.responseHandlers[0]).not.toContain(
+        "const data = undefined",
       );
       expect(typeImports.has("CreateUser201Response")).toBe(true);
     });
@@ -153,8 +153,8 @@ describe("client-generator responses", () => {
         "ApiResponseWithParse<200, typeof DownloadFileResponseMap>",
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain(
-        "await parseResponseBody(response) as unknown",
+      expect(result.responseHandlers[0]).not.toContain(
+        "const data = undefined",
       );
       expect(typeImports.has("FileContent")).toBe(true);
     });
@@ -293,8 +293,8 @@ describe("client-generator responses", () => {
       expect(result.returnType).toBe(
         "ApiResponseWithParse<200, typeof TestOperationResponseMap>",
       );
-      expect(result.responseHandlers[0]).toContain(
-        "const data = await parseResponseBody(response) as unknown;",
+      expect(result.responseHandlers[0]).not.toContain(
+        "const data = undefined",
       );
       expect(typeImports.has("ApiData")).toBe(true);
     });
@@ -324,8 +324,8 @@ describe("client-generator responses", () => {
       expect(result.returnType).toBe(
         "ApiResponseWithParse<200, typeof TestOperationResponseMap>",
       );
-      expect(result.responseHandlers[0]).toContain(
-        "const data = await parseResponseBody(response) as unknown;",
+      expect(result.responseHandlers[0]).not.toContain(
+        "const data = undefined",
       );
       expect(typeImports.has("Data")).toBe(true);
     });

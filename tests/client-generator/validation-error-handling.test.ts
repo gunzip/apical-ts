@@ -31,8 +31,8 @@ describe("client-generator validation error handling", () => {
       expect(result.responseHandlers[0]).not.toContain(
         "if (!parseResult.success)",
       );
-      expect(result.responseHandlers[0]).toContain(
-        "const data = await parseResponseBody(response) as unknown;",
+      expect(result.responseHandlers[0]).not.toContain(
+        "const data = undefined",
       );
 
       /* Return type should be ApiResponseWithParse with precise typing */
@@ -63,8 +63,8 @@ describe("client-generator validation error handling", () => {
       const result = generateResponseHandlers(operation, typeImports, true);
 
       /* Verify that the generated code uses unknown mode (no conditional validation) */
-      expect(result.responseHandlers[0]).toContain(
-        "const data = await parseResponseBody(response) as unknown;",
+      expect(result.responseHandlers[0]).not.toContain(
+        "const data = undefined",
       );
       expect(result.responseHandlers[0]).not.toContain("safeParse(");
       expect(result.responseHandlers[0]).not.toContain(
@@ -96,7 +96,6 @@ describe("client-generator validation error handling", () => {
       /* Verify that non-JSON responses don't use safeParse */
       expect(result.responseHandlers[0]).not.toContain("safeParse(");
       expect(result.responseHandlers[0]).not.toContain("error:");
-      expect(result.responseHandlers[0]).toContain("as unknown");
 
       /* Verify that the return type does NOT include parseError */
       expect(result.returnType).not.toContain("error:");

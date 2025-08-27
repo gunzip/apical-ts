@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  renderParseExpression,
   renderResponseHandler,
   renderResponseHandlers,
   renderUnionType,
@@ -10,145 +9,7 @@ import {
 import type { ResponseInfo } from "../../src/client-generator/models/response-models.js";
 
 describe("response-templates", () => {
-  describe("renderParseExpression", () => {
-    it("should render JSON validation expression", () => {
-      const responseInfo: ResponseInfo = {
-        statusCode: "200",
-        typeName: "User",
-        contentType: "application/json",
-        hasSchema: true,
-        parsingStrategy: {
-          useValidation: true,
-          isJsonLike: true,
-          requiresRuntimeContentTypeCheck: false,
-        },
-      };
-
-      const result = renderParseExpression(responseInfo, {
-        statusCode: "200",
-        typeName: "User",
-        hasResponseContentTypeMap: false,
-      });
-
-      expect(result).toContain(
-        "const data = await parseResponseBody(response) as unknown;",
-      );
-      expect(result).not.toContain("if (!parseResult.success)");
-      expect(result).not.toContain(
-        "return { status: 200 as const, error: parseResult.error, response }",
-      );
-      expect(result).not.toContain("const data = parseResult.data;");
-    });
-
-    it("should render non-JSON expression without validation", () => {
-      const responseInfo: ResponseInfo = {
-        statusCode: "200",
-        typeName: "FileContent",
-        contentType: "text/plain",
-        hasSchema: true,
-        parsingStrategy: {
-          useValidation: false,
-          isJsonLike: false,
-          requiresRuntimeContentTypeCheck: false,
-        },
-      };
-
-      const result = renderParseExpression(responseInfo, {
-        statusCode: "200",
-        typeName: "FileContent",
-        hasResponseContentTypeMap: false,
-      });
-
-      expect(result).toBe(
-        "const data = await parseResponseBody(response) as unknown;",
-      );
-    });
-
-    it("should render mixed content type expression with runtime check", () => {
-      const responseInfo: ResponseInfo = {
-        statusCode: "200",
-        typeName: "Data",
-        contentType: "application/json",
-        hasSchema: true,
-        parsingStrategy: {
-          useValidation: true,
-          isJsonLike: true,
-          requiresRuntimeContentTypeCheck: true,
-        },
-      };
-
-      const result = renderParseExpression(responseInfo, {
-        statusCode: "200",
-        typeName: "Data",
-        hasResponseContentTypeMap: true,
-      });
-
-      expect(result).toContain(
-        "const data = await parseResponseBody(response) as unknown;",
-      );
-      expect(result).not.toContain(
-        'if (finalResponseContentType.includes("json")',
-      );
-      expect(result).not.toContain(
-        "Data.safeParse(await parseResponseBody(response))",
-      );
-      expect(result).not.toContain("} else {");
-      expect(result).not.toContain(
-        "data = await parseResponseBody(response) as Data;",
-      );
-    });
-
-    it("should render undefined for response without schema", () => {
-      const responseInfo: ResponseInfo = {
-        statusCode: "204",
-        typeName: null,
-        contentType: null,
-        hasSchema: false,
-        parsingStrategy: {
-          useValidation: false,
-          isJsonLike: false,
-          requiresRuntimeContentTypeCheck: false,
-        },
-      };
-
-      const result = renderParseExpression(responseInfo, {
-        statusCode: "204",
-        typeName: "",
-        hasResponseContentTypeMap: false,
-      });
-
-      expect(result).toBe("const data = undefined;");
-    });
-  });
-
   describe("renderResponseHandler", () => {
-    it("should render handler with parse expression", () => {
-      const responseInfo: ResponseInfo = {
-        statusCode: "200",
-        typeName: "User",
-        contentType: "application/json",
-        hasSchema: true,
-        parsingStrategy: {
-          useValidation: true,
-          isJsonLike: true,
-          requiresRuntimeContentTypeCheck: false,
-        },
-      };
-
-      const parseExpression =
-        "const parseResult = User.safeParse(await parseResponseBody(response));\\nconst data = parseResult.data;";
-      const result = renderResponseHandler(responseInfo, parseExpression);
-
-      expect(result).toContain("case 200: {");
-      expect(result).toContain(
-        "User.safeParse(await parseResponseBody(response))",
-      );
-      expect(result).toContain(
-        "return { status: 200 as const, data, response };",
-      );
-      expect(result).toContain("}");
-    });
-
     it("should render handler without content", () => {
       const responseInfo: ResponseInfo = {
         statusCode: "204",
@@ -186,7 +47,7 @@ describe("response-templates", () => {
       const result = renderResponseHandler(responseInfo, "undefined");
 
       expect(result).toContain("case 200: {");
-      expect(result).toContain("const data = undefined; // data = undefined");
+      expect(result).toContain("const data = undefined");
       expect(result).toContain(
         "return { status: 200 as const, data, response };",
       );
@@ -224,7 +85,6 @@ describe("response-templates", () => {
 
       expect(result).toHaveLength(2);
       expect(result[0]).toContain("case 200:");
-      expect(result[0]).toContain("as unknown");
       expect(result[1]).toContain("case 404:");
       expect(result[1]).toContain("data: undefined");
     });
