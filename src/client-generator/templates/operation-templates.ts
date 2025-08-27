@@ -6,6 +6,8 @@ import type {
 } from "../responses.js";
 import type { getOperationSecuritySchemes } from "../security.js";
 
+import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
+
 /* TypeScript rendering functions for operation code generation */
 
 export interface ContentTypeMapsConfig {
@@ -71,6 +73,11 @@ export type TypeAliasesConfig = ContentTypeMapsConfig & {
   discriminatedUnionTypeName?: string;
   responseMapName?: string;
   responseMapType?: string;
+  /* Parameter schema generation */
+  operationId: string;
+  parameterGroups: ReturnType<typeof extractParameterGroups>;
+  /* Type imports to merge parameter schema imports */
+  typeImports: Set<string>;
 };
 
 /*
@@ -121,11 +128,25 @@ export function buildParameterDeclaration(
 }
 
 /*
- * Emits exported request/response content-type map aliases.
+ * Emits exported request/response content-type map aliases and parameter schemas.
  * Skips each side when no map required (empty object or no body for request).
  */
 export function buildTypeAliases(config: TypeAliasesConfig): string {
   let typeAliases = "";
+
+  /* Generate parameter schemas for client operations (for type-safe input parameters) */
+  if (config.operationId) {
+    const parameterSchemas = generateParameterSchemas(config.operationId, config.parameterGroups, {
+      strictValidation: false,
+    });
+    if (parameterSchemas.schemaCode.trim()) {
+      /* Add Zod import for parameter schemas */
+      config.typeImports.add("z");
+      /* Merge parameter schema imports */
+      parameterSchemas.typeImports.forEach((imp) => config.typeImports.add(imp));
+      typeAliases += `/* Parameter schemas for type-safe inputs */\n${parameterSchemas.schemaCode}\n\n`;
+    }
+  }
 
   /* Add discriminated union response type if available */
   if (config.discriminatedUnionTypeDefinition) {

@@ -201,6 +201,10 @@ export function generateOperationFunction(
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap, // Use shouldGenerateResponseMap for type aliases
+    /* Parameter schema generation */
+    operationId: metadata.operationId,
+    parameterGroups: metadata.parameterGroups,
+    typeImports: metadata.typeImports,
   });
 
   /* Render the complete function */
