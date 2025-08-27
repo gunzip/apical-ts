@@ -48,12 +48,9 @@ See [supported features](#supported-features) for more information.
   - [How to Generate a Server](#how-to-generate-a-server)
   - [Using the Wrapper Handler](#using-the-wrapper-handler)
     - [Handler Function Signature](#handler-function-signature)
-    - [Supported Features](#supported-features)
+- [Supported Features](#supported-features)
   - [Benefits of Operation-Based Architecture](#benefits-of-operation-based-architecture)
-  - [Known Limitations](#known-limitations)
-    - [Missing Response Headers Validation](#missing-response-headers-validation)
-    - [String Constraints on Query and Path Parameters](#string-constraints-on-query-and-path-parameters)
-  - [Comparison with alternative libraries](#comparison-with-alternative-libraries)
+- [Comparison with alternative libraries](#comparison-with-alternative-libraries)
 
 ## Installation
 
@@ -621,7 +618,7 @@ The handler you provide to the wrapper receives a single argument:
 
 It must return an object with `{ status, contentType, data }`.
 
-### Supported Features
+# Supported Features
 
 - Request validation (body, query, params) using generated Zod schemas
 - Response validation before sending (if you use the generated types)
@@ -654,17 +651,7 @@ You can use the generated types and schemas for further custom validation or int
 - **Maintainability**: Each operation in its own file
 - **Testing**: Simple to mock individual operations
 
-## Known Limitations
-
-### Missing Response Headers Validation
-
-- Header defined within responses schemas are currently not verified; a parsed headers object could be added to `ApiResponse` in the future. You can get headers accessing the raw `response` object anyway.
-
-### String Constraints on Query and Path Parameters
-
-- String constraints (e.g., minLength, maxLength, pattern) on query and path parameters are not validated. Should we generate their schemas with Zod as well?
-
-## Comparison with alternative libraries
+# Comparison with alternative libraries
 
 After [evaluating several libraries](https://github.com/gunzip/openapi-generator-benchmark), we found that each has its [strengths and weaknesses](https://pagopa.github.io/dx/blog/typescript-openapi-generators-0.1-alpha), but ultimately, we chose to build this project to address specific needs and use cases.
 
