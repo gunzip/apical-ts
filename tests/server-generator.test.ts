@@ -123,4 +123,125 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("body_error");
     expect(result.wrapperCode).toContain("parsedBody");
   });
+
+  it("should generate route function with correct path and method", () => {
+    const operation = {
+      operationId: "testAuthBearer",
+      parameters: [
+        {
+          name: "userId",
+          in: "path",
+          required: true,
+          schema: { type: "string" },
+        },
+      ],
+      responses: {
+        200: {
+          description: "OK",
+          content: {
+            "application/json": {
+              schema: { type: "string" },
+            },
+          },
+        },
+      },
+    };
+
+    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
+
+    const result = generateServerOperationWrapper(
+      "/auth/{userId}",
+      "GET",
+      operation as any,
+      [],
+      doc as any,
+    );
+
+    expect(result.wrapperCode).toContain("testAuthBearerWrapper");
+    expect(result.wrapperCode).toContain("export function route() {");
+    expect(result.wrapperCode).toContain(
+      'return { path: "/auth/{userId}", method: "get" };',
+    );
+  });
+
+  it("should generate route function for different HTTP methods", () => {
+    const operation = {
+      operationId: "createPet",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        201: {
+          description: "Created",
+        },
+      },
+    };
+
+    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
+
+    const result = generateServerOperationWrapper(
+      "/pets",
+      "POST",
+      operation as any,
+      [],
+      doc as any,
+    );
+
+    expect(result.wrapperCode).toContain("createPetWrapper");
+    expect(result.wrapperCode).toContain("export function route() {");
+    expect(result.wrapperCode).toContain(
+      'return { path: "/pets", method: "post" };',
+    );
+  });
+
+  it("should preserve complex path parameters in route function", () => {
+    const operation = {
+      operationId: "updatePetStatus",
+      parameters: [
+        {
+          name: "petId",
+          in: "path",
+          required: true,
+          schema: { type: "string" },
+        },
+        {
+          name: "statusId",
+          in: "path",
+          required: true,
+          schema: { type: "integer" },
+        },
+      ],
+      responses: {
+        200: {
+          description: "OK",
+        },
+      },
+    };
+
+    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
+
+    const result = generateServerOperationWrapper(
+      "/pets/{petId}/status/{statusId}",
+      "patch",
+      operation as any,
+      [],
+      doc as any,
+    );
+
+    expect(result.wrapperCode).toContain("updatePetStatusWrapper");
+    expect(result.wrapperCode).toContain("export function route() {");
+    expect(result.wrapperCode).toContain(
+      'return { path: "/pets/{petId}/status/{statusId}", method: "patch" };',
+    );
+  });
 });
