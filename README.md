@@ -243,9 +243,7 @@ try {
   const result = await getPetById({ petId: "notfound" });
   // handle result as above
 } catch (err) {
-  if (err instanceof ApiError) {
-    console.error("API error", err.status, err.body);
-  } else if (err instanceof UnexpectedResponseError) {
+  if (err instanceof UnexpectedResponseError) {
     console.error("Unexpected response", err.status, err.data);
   } else {
     throw err; // rethrow unknown errors
