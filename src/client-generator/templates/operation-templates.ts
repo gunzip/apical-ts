@@ -103,9 +103,9 @@ export function buildGenericParams(
     if (config.shouldGenerateResponseMap) {
       const defaultResp =
         config.contentTypeMaps.defaultResponseContentType || "application/json";
-      /* Don't use flattened content types - remove backward compatibility */
+      /* Collect all nested content-type keys from the response map. Using keyof on the union of value objects produces never; mapped type flattens them. */
       genericParts.push(
-        `TResponseContentType extends keyof ${config.responseMapTypeName}[keyof ${config.responseMapTypeName}] = "${defaultResp}"`,
+        `TResponseContentType extends { [K in keyof ${config.responseMapTypeName}]: keyof ${config.responseMapTypeName}[K]; }[keyof ${config.responseMapTypeName}] = "${defaultResp}"`,
       );
     }
     if (genericParts.length > 0) {

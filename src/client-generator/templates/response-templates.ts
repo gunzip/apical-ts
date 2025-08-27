@@ -99,11 +99,12 @@ export function renderResponseHandler(
       ? responseMapName.replace(/Map$/u, "DeserializerMap")
       : undefined;
 
+    /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
     const parseMethod =
       responseInfo.hasSchema && responseMapName
         ? `,
         parse: (deserializerMap?: ${deserializerMapTypeName}) =>
-          parseApiResponseUnknownData(response, data, ${responseMapName}[${statusCode}], deserializerMap as import("./config.js").DeserializerMap),`
+          parseApiResponseUnknownData(response, data, ${responseMapName}["${statusCode}"], deserializerMap as import("./config.js").DeserializerMap),`
         : "";
 
     return `    case ${statusCode}: {
