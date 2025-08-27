@@ -1,6 +1,6 @@
 /* Shared request body mapping logic */
 
-import type { OperationObject } from "openapi3-ts/oas31";
+import type { OperationObject, RequestBodyObject } from "openapi3-ts/oas31";
 import { extractRequestContentTypes } from "../client-generator/operation-extractor.js";
 import { resolveSchemaTypeName } from "../client-generator/responses.js";
 import type { ContentTypeMapping } from "./types.js";
@@ -49,7 +49,9 @@ export function generateRequestBodyMap(
   let shouldGenerateRequestMap = false;
   const contentTypeMappings: ContentTypeMapping[] = [];
 
-  const requestContentTypes = extractRequestContentTypes(operation);
+  const requestContentTypes = operation.requestBody 
+    ? extractRequestContentTypes(operation.requestBody as RequestBodyObject)
+    : null;
   if (!requestContentTypes || requestContentTypes.contentTypes.length === 0) {
     return {
       shouldGenerateRequestMap,
