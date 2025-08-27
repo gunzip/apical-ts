@@ -84,7 +84,7 @@ describe("zodSchemaToCode", () => {
       type: "object",
     };
     const result = zodSchemaToCode(schema);
-    expect(result.code).toContain("looseObject");
+    expect(result.code).toContain("object");
     const zodSchema = evalZod(result.code);
     expect(zodSchema.safeParse({ age: 30, name: "John" }).success).toBe(true);
     expect(zodSchema.safeParse({ age: "30", name: "John" }).success).toBe(
@@ -201,7 +201,7 @@ describe("zodSchemaToCode", () => {
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe(
-      'z.looseObject({"name": z.string().optional()}).default({"name":"default name"})',
+      'z.object({"name": z.string().optional()}).default({"name":"default name"})',
     );
     const zodSchema = evalZod(result.code);
     expect(zodSchema.parse({ name: "test" })).toEqual({ name: "test" });
@@ -233,7 +233,7 @@ describe("zodSchemaToCode", () => {
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe(
-      'z.looseObject({}).catchall(z.array(z.number())).default({"test":[1000]})',
+      'z.object({}).catchall(z.array(z.number())).default({"test":[1000]})',
     );
     const zodSchema = evalZod(result.code);
     expect(zodSchema.parse({ other: [1, 2, 3] })).toEqual({ other: [1, 2, 3] });
@@ -266,7 +266,7 @@ describe("zodSchemaToCode", () => {
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toContain('z.discriminatedUnion("type"');
-    expect(result.code).toContain("z.looseObject");
+    expect(result.code).toContain("z.object");
     const zodSchema = evalZod(result.code);
     expect(zodSchema.safeParse({ radius: 5, type: "circle" }).success).toBe(
       true,

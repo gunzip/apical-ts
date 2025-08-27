@@ -53,7 +53,7 @@ export interface GenerationOptions {
   input: string;
   output: string;
   /**
-   * Use strict object validation (z.object) instead of loose validation (z.looseObject).
+   * Use strict object validation (z.strictObject) instead of loose validation (z.object).
    * When false (default), allows additional properties in objects for client-side flexibility.
    * When true, rejects unknown properties for server-side validation.
    * @default false

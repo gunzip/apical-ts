@@ -54,7 +54,7 @@ export function handleObjectType(
     }
   }
 
-  const objectMethod = strictValidation ? "z.strictObject" : "z.looseObject";
+  const objectMethod = strictValidation ? "z.strictObject" : "z.object";
   let code = `${objectMethod}({${shape.join(", ")}})`;
 
   if (schema.additionalProperties) {
