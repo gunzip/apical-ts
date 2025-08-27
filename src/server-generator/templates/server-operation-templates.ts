@@ -1,9 +1,3 @@
-import type {
-  ParameterObject,
-  ReferenceObject,
-  SchemaObject,
-} from "openapi3-ts/oas31";
-
 import type { ParameterGroups } from "../../client-generator/models/parameter-models.js";
 import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
 
@@ -11,7 +5,6 @@ import { extractResponseContentTypes } from "../../client-generator/operation-ex
 import { resolveSchemaTypeName } from "../../client-generator/responses.js";
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
 import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
-import { generateResponseMap } from "../../shared/response-maps.js";
 
 /**
  * Template parameters for server operation wrapper generation
@@ -186,10 +179,10 @@ function renderParameterSchemas(
   const result = generateParameterSchemas(operationId, parameterGroups, {
     strictValidation: false,
   });
-  
+
   /* Merge type imports */
   result.typeImports.forEach((imp) => typeImports.add(imp));
-  
+
   return result.schemaCode;
 }
 

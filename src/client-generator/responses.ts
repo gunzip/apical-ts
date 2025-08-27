@@ -1,16 +1,12 @@
-import type { OperationObject, RequestBodyObject } from "openapi3-ts/oas31";
+import type { OperationObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { generateResponseMap } from "../shared/response-maps.js";
 import { generateRequestBodyMap } from "../shared/request-body-maps.js";
-import {
-  type ContentTypeMapping,
-  extractRequestContentTypes,
-  extractResponseContentTypes,
-} from "./operation-extractor.js";
+import { generateResponseMap } from "../shared/response-maps.js";
+import { type ContentTypeMapping } from "./operation-extractor.js";
 import { analyzeResponseStructure } from "./response-analysis.js";
 import {
   renderResponseHandlers,
@@ -133,10 +129,10 @@ function buildRequestContentTypeMap(
 ) {
   /* Use shared request body mapping logic */
   const result = generateRequestBodyMap(operation, operationId, typeImports);
-  
+
   /* Merge type imports */
   result.typeImports.forEach((imp) => typeImports.add(imp));
-  
+
   return {
     defaultRequestContentType: result.defaultContentType,
     requestContentTypeCount: result.contentTypeCount,
@@ -147,7 +143,7 @@ function buildRequestContentTypeMap(
 /*
  * Internal helper that aggregates response schema type names with correct structure.
  * Fixed to use status code as primary key: Record<status, Record<contentType, ZodSchema>>
- * 
+ *
  * This function uses the shared response mapping logic to build the correct structure
  * where status code is the primary key, and for each status, a map from content type to schema.
  */
@@ -158,10 +154,10 @@ function buildResponseContentTypeMap(
 ) {
   /* Use shared response mapping logic with correct structure */
   const result = generateResponseMap(operation, operationId, typeImports);
-  
+
   /* Merge type imports */
   result.typeImports.forEach((imp) => typeImports.add(imp));
-  
+
   return {
     defaultResponseContentType: result.defaultContentType,
     responseContentTypeCount: result.contentTypeCount,

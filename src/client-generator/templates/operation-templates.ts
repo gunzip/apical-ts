@@ -71,11 +71,11 @@ export interface ParameterDeclarationConfig {
 export type TypeAliasesConfig = ContentTypeMapsConfig & {
   discriminatedUnionTypeDefinition?: string;
   discriminatedUnionTypeName?: string;
-  responseMapName?: string;
-  responseMapType?: string;
   /* Parameter schema generation */
   operationId: string;
   parameterGroups: ReturnType<typeof extractParameterGroups>;
+  responseMapName?: string;
+  responseMapType?: string;
   /* Type imports to merge parameter schema imports */
   typeImports: Set<string>;
 };
@@ -137,14 +137,20 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
 
   /* Generate parameter schemas for client operations (for type-safe input parameters) */
   if (config.operationId) {
-    const parameterSchemas = generateParameterSchemas(config.operationId, config.parameterGroups, {
-      strictValidation: false,
-    });
+    const parameterSchemas = generateParameterSchemas(
+      config.operationId,
+      config.parameterGroups,
+      {
+        strictValidation: false,
+      },
+    );
     if (parameterSchemas.schemaCode.trim()) {
       /* Add Zod import for parameter schemas */
       config.typeImports.add("z");
       /* Merge parameter schema imports */
-      parameterSchemas.typeImports.forEach((imp) => config.typeImports.add(imp));
+      parameterSchemas.typeImports.forEach((imp) =>
+        config.typeImports.add(imp),
+      );
       typeAliases += `/* Parameter schemas for type-safe inputs */\n${parameterSchemas.schemaCode}\n\n`;
     }
   }
@@ -170,9 +176,7 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
       typeAliases += `export const ${config.responseMapTypeName} = ${responseMapRuntime} as const;\n`;
     }
     typeAliases += `export type ${config.responseMapTypeName} = ${responseMapRuntime};\n\n`;
-    
 
-    
     /* Emit a narrowed DeserializerMap type for this operation.
      * If we have a non-empty response map constant we can use its keys directly via keyof typeof <Map>.
      * Otherwise fall back to a generic string index (keeps backwards compatibility).

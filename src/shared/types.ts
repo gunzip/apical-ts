@@ -1,13 +1,13 @@
 /* Common types shared between client and server generators */
 
-import type { ParameterObject, SchemaObject, ReferenceObject } from "openapi3-ts/oas31";
+import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 /**
  * Represents a content type mapping for requests/responses
  */
 export interface ContentTypeMapping {
   contentType: string;
-  schema: SchemaObject | ReferenceObject;
+  schema: ReferenceObject | SchemaObject;
 }
 
 /**

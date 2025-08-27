@@ -1,9 +1,11 @@
 /* Shared request body mapping logic */
 
 import type { OperationObject, RequestBodyObject } from "openapi3-ts/oas31";
+
+import type { ContentTypeMapping } from "./types.js";
+
 import { extractRequestContentTypes } from "../client-generator/operation-extractor.js";
 import { resolveSchemaTypeName } from "../client-generator/responses.js";
-import type { ContentTypeMapping } from "./types.js";
 
 /**
  * Options for request body map generation
@@ -17,18 +19,18 @@ export interface RequestBodyMapOptions {
  * Result of request body map generation
  */
 export interface RequestBodyMapResult {
-  /* Whether a request map should be generated */
-  shouldGenerateRequestMap: boolean;
-  /* Map from content type to schema type */
-  requestMapType: string;
-  /* Type imports needed */
-  typeImports: Set<string>;
-  /* Default content type if any */
-  defaultContentType: string | null;
   /* Number of content types */
   contentTypeCount: number;
   /* Content type mappings */
   contentTypeMappings: ContentTypeMapping[];
+  /* Default content type if any */
+  defaultContentType: null | string;
+  /* Map from content type to schema type */
+  requestMapType: string;
+  /* Whether a request map should be generated */
+  shouldGenerateRequestMap: boolean;
+  /* Type imports needed */
+  typeImports: Set<string>;
 }
 
 /**
@@ -39,41 +41,38 @@ export function generateRequestBodyMap(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
-  options: RequestBodyMapOptions = {},
 ): RequestBodyMapResult {
-  const { generateTypes = true } = options;
-  
-  let defaultContentType: string | null = null;
+  let defaultContentType: null | string = null;
   let contentTypeCount = 0;
   let requestMapType = "{}";
   let shouldGenerateRequestMap = false;
   const contentTypeMappings: ContentTypeMapping[] = [];
 
-  const requestContentTypes = operation.requestBody 
+  const requestContentTypes = operation.requestBody
     ? extractRequestContentTypes(operation.requestBody as RequestBodyObject)
     : null;
   if (!requestContentTypes || requestContentTypes.contentTypes.length === 0) {
     return {
-      shouldGenerateRequestMap,
-      requestMapType,
-      typeImports: new Set(),
-      defaultContentType,
       contentTypeCount,
       contentTypeMappings,
+      defaultContentType,
+      requestMapType,
+      shouldGenerateRequestMap,
+      typeImports: new Set(),
     };
   }
 
   contentTypeCount = requestContentTypes.contentTypes.length;
   shouldGenerateRequestMap = contentTypeCount > 1;
-  
+
   if (contentTypeCount === 0) {
     return {
-      shouldGenerateRequestMap,
-      requestMapType,
-      typeImports: new Set(),
-      defaultContentType,
       contentTypeCount,
       contentTypeMappings,
+      defaultContentType,
+      requestMapType,
+      shouldGenerateRequestMap,
+      typeImports: new Set(),
     };
   }
 
@@ -82,7 +81,7 @@ export function generateRequestBodyMap(
 
   const requestMappings = requestContentTypes.contentTypes.map((mapping) => {
     contentTypeMappings.push(mapping);
-    
+
     const typeName = resolveSchemaTypeName(
       mapping.schema,
       operationId,
@@ -97,11 +96,11 @@ ${requestMappings.join("\n")}
 }`;
 
   return {
-    shouldGenerateRequestMap,
-    requestMapType,
-    typeImports,
-    defaultContentType,
     contentTypeCount,
     contentTypeMappings,
+    defaultContentType,
+    requestMapType,
+    shouldGenerateRequestMap,
+    typeImports,
   };
 }
