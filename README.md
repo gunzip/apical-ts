@@ -540,7 +540,7 @@ if (!result.success) {
 
 # Server Generation
 
-The generator can also produce a fully-typed server handler wrapper for your OpenAPI operations. This enables you to build type-safe HTTP servers (e.g., with Express, Fastify, or custom frameworks) that validate requests and responses at runtime using Zod schemas.
+The generator can also produce a fully-typed server handler wrapper for your OpenAPI operations. This enables you to build type-safe HTTP servers (e.g., with Express, Fastify, or custom frameworks) that validate requests at runtime using Zod schemas and can return only responses of the expected types.
 
 ## How to Generate a Server
 
@@ -562,7 +562,7 @@ This will create a `server/` directory in your output folder, containing:
 
 The generated route wrapper is a function that takes a request handler and returns an async function that can be used with any web framework. This allows you to ensure type safety and runtime validation for your request parameters (path, query, headers) and response data.
 
-You are responsible for extracting parameters from the Express request and passing them to the wrapper, then handling the result (status, contentType, data) in your route handler. This allows you to integrate with any web framework and customize error handling as needed.
+You are responsible for extracting parameters from the framework request and passing them to the wrapper, then handling the result (status, contentType, data) in your route handler. This allows you to integrate with any web framework and customize error handling as needed.
 
 Example usage with Express and a helper for parameter extraction:
 
