@@ -10,7 +10,7 @@ Need to validate server requests and return typed responses? We've got you cover
 
 Why choose this generator against alternatives? See [comparison](#comparison-with-alternative-libraries) for more details.
 
-See [supported features](#features) for more information.
+See [supported features](#supported-features) for more information.
 
 ![Demo of OpenAPI TypeScript Generator](./demo.gif)
 
