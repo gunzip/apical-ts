@@ -103,8 +103,9 @@ export function buildGenericParams(
     if (config.shouldGenerateResponseMap) {
       const defaultResp =
         config.contentTypeMaps.defaultResponseContentType || "application/json";
+      const contentTypesTypeName = config.responseMapTypeName.replace(/Map$/, "ContentTypes");
       genericParts.push(
-        `TResponseContentType extends keyof ${config.responseMapTypeName} = "${defaultResp}"`,
+        `TResponseContentType extends ${contentTypesTypeName} = "${defaultResp}"`,
       );
     }
     if (genericParts.length > 0) {
@@ -169,6 +170,47 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
       typeAliases += `export const ${config.responseMapTypeName} = ${responseMapRuntime} as const;\n`;
     }
     typeAliases += `export type ${config.responseMapTypeName} = ${responseMapRuntime};\n\n`;
+    
+    /* Generate flattened content type map for client API compatibility */
+    if (responseMapRuntime !== "{}") {
+      const flattenedTypeName = config.responseMapTypeName.replace(/Map$/, "ContentTypes");
+      typeAliases += `/* Flattened content types for client API compatibility */\nexport type ${flattenedTypeName} = `;
+      
+      // Extract all unique content types from the response map using regex parsing
+      const allContentTypes = new Set<string>();
+      
+      // Match content type patterns in the response map string
+      const contentTypeMatches = responseMapRuntime.match(/"([^"]+)":\s*\{[^}]*"([^"]+)":/g);
+      if (contentTypeMatches) {
+        contentTypeMatches.forEach(match => {
+          // Extract content types from patterns like: "status": { "content-type":
+          const ctMatch = match.match(/"([^"]+)":\s*\{[^}]*"([^"]+)":/);
+          if (ctMatch && ctMatch[2]) {
+            allContentTypes.add(ctMatch[2]);
+          }
+        });
+      }
+      
+      // Also look for direct content type patterns
+      const directMatches = responseMapRuntime.match(/"(application\/[^"]+|text\/[^"]+|[^"]*\/[^"]+)":/g);
+      if (directMatches) {
+        directMatches.forEach(match => {
+          const ct = match.match(/"([^"]+)":/);
+          if (ct && ct[1] && ct[1].includes('/')) {
+            allContentTypes.add(ct[1]);
+          }
+        });
+      }
+      
+      if (allContentTypes.size > 0) {
+        const contentTypeUnion = Array.from(allContentTypes).map(ct => `"${ct}"`).join(" | ");
+        typeAliases += `${contentTypeUnion};\n\n`;
+      } else {
+        // Fallback to "application/json" if no content types found
+        typeAliases += `"application/json";\n\n`;
+      }
+    }
+    
     /* Emit a narrowed DeserializerMap type for this operation.
      * If we have a non-empty response map constant we can use its keys directly via keyof typeof <Map>.
      * Otherwise fall back to a generic string index (keeps backwards compatibility).
