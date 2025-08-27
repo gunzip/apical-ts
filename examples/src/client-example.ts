@@ -1,9 +1,10 @@
+/* eslint-disable no-console */
 /* Minimal client example that calls the Express server using generated client */
 
-import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
-import { getPetById } from "../generated/client/getPetById.js";
-import { getInventory } from "../generated/client/getInventory.js";
 import { globalConfig } from "../generated/client/config.js";
+import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
+import { getInventory } from "../generated/client/getInventory.js";
+import { getPetById } from "../generated/client/getPetById.js";
 
 /* Configure client to point to our local Express server */
 const localConfig = {
@@ -35,10 +36,10 @@ async function demonstrateClient() {
       /* Parse the response data to get type-safe access */
       if (petsResponse.parse && typeof petsResponse.parse === "function") {
         const parseResult = petsResponse.parse();
-        if (parseResult.success) {
-          console.log("🔍 Parsed data (type-safe):", parseResult.data);
-          console.log(`📊 Found ${parseResult.data.length} pets`);
-        } else {
+        if ("parsed" in parseResult) {
+          console.log("🔍 Parsed data (type-safe):", parseResult.parsed);
+          console.log(`📊 Found ${parseResult.parsed.length} pets`);
+        } else if ("error" in parseResult) {
           console.error("❌ Failed to parse response:", parseResult.error);
         }
       } else {
@@ -57,8 +58,8 @@ async function demonstrateClient() {
     console.log("2️⃣ Getting pet with ID 1...");
     const petResponse = await getPetById(
       {
-        path: { petId: "1" },
         headers: { api_key: "demo-api-key" } /* Provide a demo API key */,
+        path: { petId: "1" },
       },
       localConfig,
     );
@@ -69,20 +70,14 @@ async function demonstrateClient() {
       /* Parse the response data */
       if (petResponse.parse && typeof petResponse.parse === "function") {
         const parseResult = petResponse.parse();
-        if (parseResult.success) {
-          const pet = parseResult.data;
+        if ("parsed" in parseResult) {
+          const pet = parseResult.parsed;
           console.log(`🐕 Pet details: ${pet.name} (${pet.status})`);
           if (pet.category) {
             console.log(`🏷️ Category: ${pet.category.name}`);
           }
-        } else {
+        } else if ("error" in parseResult) {
           console.error("❌ Failed to parse pet data:", parseResult.error);
-        }
-      } else {
-        const pet = petResponse.data;
-        console.log(`🐕 Pet details: ${pet.name} (${pet.status})`);
-        if (pet.category) {
-          console.log(`🏷️ Category: ${pet.category.name}`);
         }
       }
     } else if (petResponse.status === 404) {
@@ -114,13 +109,13 @@ async function demonstrateClient() {
         typeof inventoryResponse.parse === "function"
       ) {
         const parseResult = inventoryResponse.parse();
-        if (parseResult.success) {
-          const inventory = parseResult.data;
+        if ("parsed" in parseResult) {
+          const inventory = parseResult.parsed;
           console.log("📦 Inventory summary:");
           for (const [status, count] of Object.entries(inventory)) {
             console.log(`  ${status}: ${count}`);
           }
-        } else {
+        } else if ("error" in parseResult) {
           console.error("❌ Failed to parse inventory:", parseResult.error);
         }
       } else {
@@ -144,8 +139,8 @@ async function demonstrateClient() {
     );
     const nonExistentPetResponse = await getPetById(
       {
-        path: { petId: "999" },
         headers: { api_key: "demo-api-key" },
+        path: { petId: "999" },
       },
       localConfig,
     );

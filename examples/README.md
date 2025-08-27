@@ -56,11 +56,8 @@ This script will:
 Install the required dependencies for running the examples:
 
 ```bash
-# Install TypeScript and tsx for running TypeScript files
-npm install -g tsx
-
 # Install Express and types (if not already available)
-npm install express @types/express
+pnpm add express @types/express
 ```
 
 ### 3. Start the Express Server
@@ -69,7 +66,7 @@ Run the Express server that uses the generated server wrappers:
 
 ```bash
 # From the examples directory
-npx tsx src/express-server-example.ts
+pnpx tsx src/express-server-example.ts
 ```
 
 The server will start on `http://localhost:3000` and display available endpoints:
