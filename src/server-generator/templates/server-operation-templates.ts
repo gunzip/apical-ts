@@ -1,16 +1,9 @@
-import type {
-  ParameterObject,
-  ReferenceObject,
-  SchemaObject,
-} from "openapi3-ts/oas31";
-
-import type { ParameterGroups } from "../../client-generator/parameters.js";
+import type { ParameterGroups } from "../../client-generator/models/parameter-models.js";
 import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
 
-import { extractResponseContentTypes } from "../../client-generator/operation-extractor.js";
-import { resolveSchemaTypeName } from "../../client-generator/responses.js";
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
-import { zodSchemaToCode } from "../../schema-generator/zod-schema-generator.js";
+import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
+import { generateResponseUnion } from "../../shared/response-union-generator.js";
 
 /**
  * Template parameters for server operation wrapper generation
@@ -58,35 +51,15 @@ export function buildServerResponseMap(
   metadata: ServerOperationMetadata,
   typeImports: Set<string>,
 ): string {
-  const operationId = sanitizeIdentifier(metadata.operationId);
-  const responseTypeName = `${operationId}Response`;
-  const responseEntries: string[] = [];
+  /* Use shared response union generation to ensure consistency with client generator */
+  const result = generateResponseUnion(
+    metadata.operation,
+    metadata.operationId,
+    typeImports,
+  );
 
-  // Reuse client extractor to gather responses with content types
-  const responseGroups = extractResponseContentTypes(metadata.operation);
-
-  for (const group of responseGroups) {
-    for (const mapping of group.contentTypes) {
-      const schemaType = resolveSchemaTypeName(
-        mapping.schema,
-        metadata.operationId,
-        `${group.statusCode}Response`,
-        typeImports,
-      );
-      responseEntries.push(
-        `  | { status: ${group.statusCode}; contentType: "${mapping.contentType}"; data: ${schemaType} }`,
-      );
-    }
-  }
-
-  // Fallback for operations without explicit content
-  if (responseEntries.length === 0) {
-    responseEntries.push(
-      `  | { status: 200; contentType: "application/json"; data: unknown }`,
-    );
-  }
-
-  return `export type ${responseTypeName} =${responseEntries.join("\n")};`;
+  /* Return the union type definition */
+  return result.unionTypeDefinition;
 }
 
 /**
@@ -181,85 +154,15 @@ function renderParameterSchemas(
   parameterGroups: ParameterGroups,
   typeImports: Set<string>,
 ): string {
-  const schemas: string[] = [];
-  const sanitizedId = sanitizeIdentifier(operationId);
+  /* Use shared parameter schema generation logic */
+  const result = generateParameterSchemas(operationId, parameterGroups, {
+    strictValidation: false,
+  });
 
-  /* Helper to build property entry using zodSchemaToCode; fallback to z.string() */
-  const buildProp = (name: string, param: ParameterObject): string => {
-    const schema = param.schema as ReferenceObject | SchemaObject | undefined;
-    const isRequired = param.required === true;
+  /* Merge type imports */
+  result.typeImports.forEach((imp) => typeImports.add(imp));
 
-    let zodCode: string;
-    if (schema) {
-      const result = zodSchemaToCode(schema, { imports: typeImports });
-      zodCode = result.code;
-    } else {
-      zodCode = "z.string()";
-    }
-
-    /* Make parameter optional if not explicitly required */
-    if (!isRequired) {
-      zodCode = `${zodCode}.optional()`;
-    }
-
-    return `"${name}": ${zodCode}`;
-  };
-
-  /* Query schema */
-  if (parameterGroups.queryParams.length > 0) {
-    const queryProps = parameterGroups.queryParams
-      .map((p) => buildProp(p.name, p))
-      .join(", ");
-    schemas.push(
-      `const ${sanitizedId}QuerySchema = z.object({ ${queryProps} });`,
-    );
-    schemas.push(
-      `type ${sanitizedId}Query = z.infer<typeof ${sanitizedId}QuerySchema>;`,
-    );
-  } else {
-    schemas.push(`const ${sanitizedId}QuerySchema = z.object({});`);
-    schemas.push(
-      `type ${sanitizedId}Query = z.infer<typeof ${sanitizedId}QuerySchema>;`,
-    );
-  }
-
-  /* Path schema */
-  if (parameterGroups.pathParams.length > 0) {
-    const pathProps = parameterGroups.pathParams
-      .map((p) => buildProp(p.name, p))
-      .join(", ");
-    schemas.push(
-      `const ${sanitizedId}PathSchema = z.object({ ${pathProps} });`,
-    );
-    schemas.push(
-      `type ${sanitizedId}Path = z.infer<typeof ${sanitizedId}PathSchema>;`,
-    );
-  } else {
-    schemas.push(`const ${sanitizedId}PathSchema = z.object({});`);
-    schemas.push(
-      `type ${sanitizedId}Path = z.infer<typeof ${sanitizedId}PathSchema>;`,
-    );
-  }
-
-  /* Headers schema */
-  if (parameterGroups.headerParams.length > 0) {
-    const headerProps = parameterGroups.headerParams
-      .map((p) => buildProp(p.name, p))
-      .join(", ");
-    schemas.push(
-      `const ${sanitizedId}HeadersSchema = z.object({ ${headerProps} });`,
-    );
-    schemas.push(
-      `type ${sanitizedId}Headers = z.infer<typeof ${sanitizedId}HeadersSchema>;`,
-    );
-  } else {
-    schemas.push(`const ${sanitizedId}HeadersSchema = z.object({});`);
-    schemas.push(
-      `type ${sanitizedId}Headers = z.infer<typeof ${sanitizedId}HeadersSchema>;`,
-    );
-  }
-
-  return schemas.join("\n");
+  return result.schemaCode;
 }
 
 /**

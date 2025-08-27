@@ -195,12 +195,16 @@ export function generateOperationFunction(
       metadata.responseHandlers.discriminatedUnionTypeDefinition,
     discriminatedUnionTypeName:
       metadata.responseHandlers.discriminatedUnionTypeName,
+    /* Parameter schema generation */
+    operationId: operation.operationId,
+    parameterGroups: metadata.parameterGroups,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapName: metadata.responseHandlers.responseMapName,
     responseMapType: metadata.responseHandlers.responseMapType,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap, // Use shouldGenerateResponseMap for type aliases
+    typeImports: metadata.typeImports,
   });
 
   /* Render the complete function */

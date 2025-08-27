@@ -6,6 +6,8 @@ import type {
 } from "../responses.js";
 import type { getOperationSecuritySchemes } from "../security.js";
 
+import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
+
 /* TypeScript rendering functions for operation code generation */
 
 export interface ContentTypeMapsConfig {
@@ -69,8 +71,13 @@ export interface ParameterDeclarationConfig {
 export type TypeAliasesConfig = ContentTypeMapsConfig & {
   discriminatedUnionTypeDefinition?: string;
   discriminatedUnionTypeName?: string;
+  /* Parameter schema generation */
+  operationId: string | undefined;
+  parameterGroups: ReturnType<typeof extractParameterGroups>;
   responseMapName?: string;
   responseMapType?: string;
+  /* Type imports to merge parameter schema imports */
+  typeImports: Set<string>;
 };
 
 /*
@@ -96,8 +103,9 @@ export function buildGenericParams(
     if (config.shouldGenerateResponseMap) {
       const defaultResp =
         config.contentTypeMaps.defaultResponseContentType || "application/json";
+      /* Collect all nested content-type keys from the response map. Using keyof on the union of value objects produces never; mapped type flattens them. */
       genericParts.push(
-        `TResponseContentType extends keyof ${config.responseMapTypeName} = "${defaultResp}"`,
+        `TResponseContentType extends { [K in keyof ${config.responseMapTypeName}]: keyof ${config.responseMapTypeName}[K]; }[keyof ${config.responseMapTypeName}] = "${defaultResp}"`,
       );
     }
     if (genericParts.length > 0) {
@@ -121,11 +129,31 @@ export function buildParameterDeclaration(
 }
 
 /*
- * Emits exported request/response content-type map aliases.
+ * Emits exported request/response content-type map aliases and parameter schemas.
  * Skips each side when no map required (empty object or no body for request).
  */
 export function buildTypeAliases(config: TypeAliasesConfig): string {
   let typeAliases = "";
+
+  /* Generate parameter schemas for client operations (for type-safe input parameters) */
+  if (config.operationId) {
+    const parameterSchemas = generateParameterSchemas(
+      config.operationId,
+      config.parameterGroups,
+      {
+        strictValidation: false,
+      },
+    );
+    if (parameterSchemas.schemaCode.trim()) {
+      /* Add Zod import for parameter schemas */
+      config.typeImports.add("z");
+      /* Merge parameter schema imports */
+      parameterSchemas.typeImports.forEach((imp) =>
+        config.typeImports.add(imp),
+      );
+      typeAliases += `/* Parameter schemas for type-safe inputs */\n${parameterSchemas.schemaCode}\n\n`;
+    }
+  }
 
   /* Add discriminated union response type if available */
   if (config.discriminatedUnionTypeDefinition) {
@@ -148,6 +176,7 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
       typeAliases += `export const ${config.responseMapTypeName} = ${responseMapRuntime} as const;\n`;
     }
     typeAliases += `export type ${config.responseMapTypeName} = ${responseMapRuntime};\n\n`;
+
     /* Emit a narrowed DeserializerMap type for this operation.
      * If we have a non-empty response map constant we can use its keys directly via keyof typeof <Map>.
      * Otherwise fall back to a generic string index (keeps backwards compatibility).

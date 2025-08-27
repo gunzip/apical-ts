@@ -28,12 +28,23 @@ export function buildOperationFileContent(
  * ```
  */
 export function buildOperationImports(typeImports: Set<string>): string[] {
-  return [
+  const imports = [
     `import { globalConfig, GlobalConfig, ApiResponse, parseResponseBody, UnexpectedResponseError, parseApiResponseUnknownData } from './config.js';`,
-    ...Array.from(typeImports).map(
-      (type) => `import { ${type} } from '../schemas/${type}.js';`,
-    ),
   ];
+
+  /* Add Zod import if needed for parameter schemas */
+  if (typeImports.has("z")) {
+    imports.push(`import { z } from 'zod';`);
+  }
+
+  /* Add schema imports */
+  const schemaImports = Array.from(typeImports)
+    .filter((type) => type !== "z") // Exclude Zod import
+    .map((type) => `import { ${type} } from '../schemas/${type}.js';`);
+
+  imports.push(...schemaImports);
+
+  return imports;
 }
 
 /**

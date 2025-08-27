@@ -2,6 +2,9 @@
 
 import type { ResponseInfo } from "../models/response-models.js";
 
+/* Import shared response union utilities */
+export { renderUnionType } from "../../shared/response-union-generator.js";
+
 /*
  * Renders an ApiResponse union type component for a response
  */
@@ -99,11 +102,12 @@ export function renderResponseHandler(
       ? responseMapName.replace(/Map$/u, "DeserializerMap")
       : undefined;
 
+    /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
     const parseMethod =
       responseInfo.hasSchema && responseMapName
         ? `,
         parse: (deserializerMap?: ${deserializerMapTypeName}) =>
-          parseApiResponseUnknownData(response, data, ${responseMapName}, deserializerMap as import("./config.js").DeserializerMap),`
+          parseApiResponseUnknownData(response, data, ${responseMapName}["${statusCode}"], deserializerMap as import("./config.js").DeserializerMap),`
         : "";
 
     return `    case ${statusCode}: {
@@ -143,14 +147,4 @@ export function renderResponseHandlers(
   }
 
   return handlers;
-}
-
-/*
- * Renders a TypeScript union type string from union type components
- */
-export function renderUnionType(
-  unionTypes: string[],
-  defaultType = "ApiResponse<number, unknown>",
-): string {
-  return unionTypes.length > 0 ? unionTypes.join(" | ") : defaultType;
 }
