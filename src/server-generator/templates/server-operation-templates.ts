@@ -165,9 +165,9 @@ function renderParameterSchemas(
   parameterGroups: ParameterGroups,
   typeImports: Set<string>,
 ): string {
-  /* Use shared parameter schema generation logic */
+  /* Use shared parameter schema generation logic with strict validation for server input */
   const result = generateParameterSchemas(operationId, parameterGroups, {
-    strictValidation: false,
+    strictValidation: true,
   });
 
   /* Merge type imports */
@@ -204,7 +204,7 @@ function renderValidationLogic(
     const mapRef = ${requestMapTypeName} as Record<string, z.ZodTypeAny | undefined>;
     const schema = mapRef[req.contentType as string];
     if (schema) {
-      const bodyParse = schema.safeParse(req.body);
+      const bodyParse = schema.strict().safeParse(req.body);
       if (!bodyParse.success) return handler({ type: "body_error", error: bodyParse.error });
       parsedBody = bodyParse.data as ${bodyType};
     } else {

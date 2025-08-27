@@ -145,6 +145,9 @@ export function generateParameterSchemas(
     return `"${name}": ${zodCode}`;
   };
 
+  /* Determine object method based on strict validation setting */
+  const objectMethod = strictValidation ? "z.strictObject" : "z.object";
+
   /* Query schema */
   const querySchemaName = `${sanitizedId}QuerySchema`;
   const queryTypeName = `${sanitizedId}Query`;
@@ -153,9 +156,9 @@ export function generateParameterSchemas(
     const queryProps = parameterGroups.queryParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
-    schemas.push(`const ${querySchemaName} = z.object({ ${queryProps} });`);
+    schemas.push(`const ${querySchemaName} = ${objectMethod}({ ${queryProps} });`);
   } else {
-    schemas.push(`const ${querySchemaName} = z.object({});`);
+    schemas.push(`const ${querySchemaName} = ${objectMethod}({});`);
   }
   schemas.push(`type ${queryTypeName} = z.infer<typeof ${querySchemaName}>;`);
 
@@ -167,9 +170,9 @@ export function generateParameterSchemas(
     const pathProps = parameterGroups.pathParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
-    schemas.push(`const ${pathSchemaName} = z.object({ ${pathProps} });`);
+    schemas.push(`const ${pathSchemaName} = ${objectMethod}({ ${pathProps} });`);
   } else {
-    schemas.push(`const ${pathSchemaName} = z.object({});`);
+    schemas.push(`const ${pathSchemaName} = ${objectMethod}({});`);
   }
   schemas.push(`type ${pathTypeName} = z.infer<typeof ${pathSchemaName}>;`);
 
@@ -181,9 +184,9 @@ export function generateParameterSchemas(
     const headerProps = parameterGroups.headerParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
-    schemas.push(`const ${headersSchemaName} = z.object({ ${headerProps} });`);
+    schemas.push(`const ${headersSchemaName} = ${objectMethod}({ ${headerProps} });`);
   } else {
-    schemas.push(`const ${headersSchemaName} = z.object({});`);
+    schemas.push(`const ${headersSchemaName} = ${objectMethod}({});`);
   }
   schemas.push(
     `type ${headersTypeName} = z.infer<typeof ${headersSchemaName}>;`,
