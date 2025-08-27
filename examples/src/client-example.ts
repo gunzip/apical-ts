@@ -30,12 +30,19 @@ async function demonstrateClient() {
       console.log("✅ Found pets:", JSON.stringify(petsResponse.data, null, 2));
       
       /* Parse the response data to get type-safe access */
-      const parseResult = petsResponse.parse();
-      if (parseResult.success) {
-        console.log("🔍 Parsed data (type-safe):", parseResult.data);
-        console.log(`📊 Found ${parseResult.data.length} pets`);
+      if (petsResponse.parse && typeof petsResponse.parse === 'function') {
+        const parseResult = petsResponse.parse();
+        if (parseResult.success) {
+          console.log("🔍 Parsed data (type-safe):", parseResult.data);
+          console.log(`📊 Found ${parseResult.data.length} pets`);
+        } else {
+          console.error("❌ Failed to parse response:", parseResult.error);
+        }
       } else {
-        console.error("❌ Failed to parse response:", parseResult.error);
+        console.log("🔍 Response data (raw):", petsResponse.data);
+        if (Array.isArray(petsResponse.data)) {
+          console.log(`📊 Found ${petsResponse.data.length} pets`);
+        }
       }
     } else {
       console.error("❌ Failed to find pets:", petsResponse.status);
@@ -47,7 +54,8 @@ async function demonstrateClient() {
     console.log("2️⃣ Getting pet with ID 1...");
     const petResponse = await getPetById(
       {
-        path: { petId: 1 },
+        path: { petId: "1" },
+        headers: { api_key: "demo-api-key" }, /* Provide a demo API key */
       },
       localConfig,
     );
@@ -56,15 +64,23 @@ async function demonstrateClient() {
       console.log("✅ Found pet:", JSON.stringify(petResponse.data, null, 2));
       
       /* Parse the response data */
-      const parseResult = petResponse.parse();
-      if (parseResult.success) {
-        const pet = parseResult.data;
+      if (petResponse.parse && typeof petResponse.parse === 'function') {
+        const parseResult = petResponse.parse();
+        if (parseResult.success) {
+          const pet = parseResult.data;
+          console.log(`🐕 Pet details: ${pet.name} (${pet.status})`);
+          if (pet.category) {
+            console.log(`🏷️ Category: ${pet.category.name}`);
+          }
+        } else {
+          console.error("❌ Failed to parse pet data:", parseResult.error);
+        }
+      } else {
+        const pet = petResponse.data;
         console.log(`🐕 Pet details: ${pet.name} (${pet.status})`);
         if (pet.category) {
           console.log(`🏷️ Category: ${pet.category.name}`);
         }
-      } else {
-        console.error("❌ Failed to parse pet data:", parseResult.error);
       }
     } else if (petResponse.status === 404) {
       console.log("❌ Pet not found");
@@ -77,7 +93,9 @@ async function demonstrateClient() {
     /* Example 3: Get inventory */
     console.log("3️⃣ Getting store inventory...");
     const inventoryResponse = await getInventory(
-      {},
+      {
+        headers: { api_key: "demo-api-key" },
+      },
       localConfig,
     );
 
@@ -85,15 +103,25 @@ async function demonstrateClient() {
       console.log("✅ Inventory:", JSON.stringify(inventoryResponse.data, null, 2));
       
       /* Parse the response data */
-      const parseResult = inventoryResponse.parse();
-      if (parseResult.success) {
-        const inventory = parseResult.data;
-        console.log("📦 Inventory summary:");
-        for (const [status, count] of Object.entries(inventory)) {
-          console.log(`  ${status}: ${count}`);
+      if (inventoryResponse.parse && typeof inventoryResponse.parse === 'function') {
+        const parseResult = inventoryResponse.parse();
+        if (parseResult.success) {
+          const inventory = parseResult.data;
+          console.log("📦 Inventory summary:");
+          for (const [status, count] of Object.entries(inventory)) {
+            console.log(`  ${status}: ${count}`);
+          }
+        } else {
+          console.error("❌ Failed to parse inventory:", parseResult.error);
         }
       } else {
-        console.error("❌ Failed to parse inventory:", parseResult.error);
+        const inventory = inventoryResponse.data;
+        console.log("📦 Inventory summary:");
+        if (inventory && typeof inventory === 'object') {
+          for (const [status, count] of Object.entries(inventory)) {
+            console.log(`  ${status}: ${count}`);
+          }
+        }
       }
     } else {
       console.error("❌ Failed to get inventory:", inventoryResponse.status);
@@ -105,7 +133,8 @@ async function demonstrateClient() {
     console.log("4️⃣ Testing error handling - getting non-existent pet (ID 999)...");
     const nonExistentPetResponse = await getPetById(
       {
-        path: { petId: 999 },
+        path: { petId: "999" },
+        headers: { api_key: "demo-api-key" },
       },
       localConfig,
     );
@@ -139,8 +168,6 @@ process.on("SIGINT", () => {
 });
 
 /* Main execution */
-if (require.main === module) {
-  demonstrateClient();
-}
+demonstrateClient();
 
 export { demonstrateClient };

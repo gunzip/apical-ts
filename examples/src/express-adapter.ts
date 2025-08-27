@@ -18,7 +18,7 @@ export function extractRequestParams(req: Request) {
   const transformedPath: Record<string, any> = {};
   for (const [key, value] of Object.entries(req.params)) {
     const transformedKey = transformParameterName(key);
-    transformedPath[transformedKey] = value;
+    transformedPath[transformedKey] = convertPathParameter(value);
   }
 
   /* Transform header parameters */
@@ -37,6 +37,35 @@ export function extractRequestParams(req: Request) {
     body: req.body,
     contentType: req.get("content-type") || undefined,
   };
+}
+
+/**
+ * Convert path parameter values to appropriate types
+ * Express always gives us strings, but OpenAPI schemas may expect numbers, booleans, etc.
+ */
+function convertPathParameter(value: string): any {
+  /* Try to convert to number if it looks like a number */
+  if (/^\d+$/.test(value)) {
+    const num = parseInt(value, 10);
+    if (!isNaN(num)) {
+      return num;
+    }
+  }
+
+  /* Try to convert to float if it looks like a float */
+  if (/^\d+\.\d+$/.test(value)) {
+    const num = parseFloat(value);
+    if (!isNaN(num)) {
+      return num;
+    }
+  }
+
+  /* Convert boolean-like strings */
+  if (value === "true") return true;
+  if (value === "false") return false;
+
+  /* Return as string for everything else */
+  return value;
 }
 
 /**
