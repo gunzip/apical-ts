@@ -19,7 +19,7 @@ import { getPetById } from "../generated/client/getPetById.js";
 const CONFIG = {
   serverPort: 3000,
   serverHost: "localhost",
-  requestCounts: [100, 500, 1000], // Different load levels to test
+  requestCounts: [1000, 2000, 4000, 8000, 10000, 12000], // Different load levels to test
   memoryThresholdMB: 10, // Alert if memory grows by more than this amount
   gcForceInterval: 50, // Force GC every N requests
   samplingInterval: 10, // Sample memory every N requests
@@ -37,7 +37,16 @@ function formatMemory(bytes) {
 }
 
 /* Utility to get memory snapshot */
-function getMemorySnapshot(label = "") {
+type MemorySnapshot = {
+  label: string;
+  timestamp: number;
+  rss: number;
+  heapUsed: number;
+  heapTotal: number;
+  external: number;
+  arrayBuffers: number;
+};
+function getMemorySnapshot(label = ""): MemorySnapshot {
   const usage = process.memoryUsage();
   return {
     label,
@@ -141,6 +150,19 @@ async function waitForServer(maxRetries = 10) {
   return false;
 }
 
+type MemoryTestResult = {
+  requestCount: number;
+  totalTime: number;
+  successfulRequests: number;
+  failedRequests: number;
+  initialMemory: number;
+  finalMemory: number;
+  peakMemory: number;
+  memoryGrowth: number;
+  memoryGrowthMB: number;
+  snapshots: MemorySnapshot[];
+};
+
 /* Execute memory test with specified request count */
 async function executeMemoryTest(requestCount) {
   console.log(`\n📊 Starting memory test with ${requestCount} requests`);
@@ -154,7 +176,7 @@ async function executeMemoryTest(requestCount) {
     API_CONFIG,
   );
 
-  const memorySnapshots = [];
+  const memorySnapshots: MemorySnapshot[] = [];
   let initialSnapshot = getMemorySnapshot("initial");
   memorySnapshots.push(initialSnapshot);
 
@@ -162,22 +184,63 @@ async function executeMemoryTest(requestCount) {
     `📏 Initial memory usage: ${formatMemory(initialSnapshot.heapUsed)}`,
   );
 
-  const operations = [
-    () => api.findPetsByStatus({ query: { status: "available" } }),
-    () => api.findPetsByStatus({ query: { status: "pending" } }),
-    () => api.findPetsByStatus({ query: { status: "sold" } }),
-    () =>
-      api.getPetById({
-        headers: { api_key: "test-key" },
-        path: { petId: "1" },
-      }),
-    () =>
-      api.getPetById({
-        headers: { api_key: "test-key" },
-        path: { petId: "2" },
-      }),
-    () => api.getInventory({ headers: { api_key: "test-key" } }),
-  ];
+  const safeJson = async (r: Response) => {
+    if (!r.ok) return { status: r.status, data: null };
+    const ct = r.headers.get("content-type") || "";
+    if (!ct.includes("application/json"))
+      return { status: r.status, data: null };
+    const text = await r.text();
+    if (!text) return { status: r.status, data: null };
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error("Invalid JSON:", text);
+      return { status: r.status, data: null };
+    }
+  };
+  // Determine mode: validated (client/server generati) or raw-only
+  const rawOnly = process.argv.includes("--raw-only");
+  let operations: (() => Promise<any>)[];
+  if (rawOnly) {
+    operations = [
+      async () => {
+        const r = await fetch(
+          `${API_CONFIG.baseURL}/pet/raw/findByStatus?status=available`,
+        );
+        return safeJson(r);
+      },
+      async () => {
+        const r = await fetch(`${API_CONFIG.baseURL}/pet/raw/1`);
+        return safeJson(r);
+      },
+      async () => {
+        const r = await fetch(`${API_CONFIG.baseURL}/store/raw/inventory`);
+        return safeJson(r);
+      },
+    ];
+    console.log("\n🚦 Running RAW ONLY benchmark (no client/server generated)");
+  } else {
+    operations = [
+      () => api.findPetsByStatus({ query: { status: "available" } }),
+      () => api.findPetsByStatus({ query: { status: "pending" } }),
+      () => api.findPetsByStatus({ query: { status: "sold" } }),
+      () =>
+        api.getPetById({
+          headers: { api_key: "test-key" },
+          path: { petId: "1" },
+        }),
+      () =>
+        api.getPetById({
+          headers: { api_key: "test-key" },
+          path: { petId: "2" },
+        }),
+      () => api.getInventory({ headers: { api_key: "test-key" } }),
+    ];
+    console.log("\n🚦 Running VALIDATED benchmark (client/server generated)");
+  }
+
+  // Optionally, measure parse() cost for validated responses
+  // (for each validated response, call .parse() and measure time/memory)
 
   const startTime = performance.now();
   let successfulRequests = 0;
@@ -257,6 +320,19 @@ async function executeMemoryTest(requestCount) {
     memoryGrowth,
     memoryGrowthMB,
     snapshots: memorySnapshots,
+  } as MemoryTestResult;
+
+  type MemoryTestResult = {
+    requestCount: number;
+    totalTime: number;
+    successfulRequests: number;
+    failedRequests: number;
+    initialMemory: number;
+    finalMemory: number;
+    peakMemory: number;
+    memoryGrowth: number;
+    memoryGrowthMB: number;
+    snapshots: MemorySnapshot[];
   };
 }
 
@@ -271,14 +347,15 @@ async function runMemoryBenchmark() {
     `   GC available: ${global.gc ? "Yes" : "No (run with --expose-gc)"}`,
   );
 
-  let serverProcess = null;
+  let serverProcess: import("child_process").ChildProcess | null = null;
 
   try {
     /* Start server */
-    serverProcess = await startServer();
+    serverProcess =
+      (await startServer()) as import("child_process").ChildProcess;
     await waitForServer();
 
-    const results = [];
+    const results: MemoryTestResult[] = [];
 
     /* Run tests with different request counts */
     for (const requestCount of CONFIG.requestCounts) {
@@ -368,13 +445,15 @@ Usage: node memory-benchmark.js [options]
 Options:
   --help, -h         Show this help message
   --expose-gc        Enable garbage collection (pass to node)
-  
+  --raw-only         Run only raw endpoints (no client/server generated)
+
 Example:
   node --expose-gc memory-benchmark.js
+  node --expose-gc memory-benchmark.js --raw-only
 
 This script tests memory usage patterns by:
 1. Starting the Express server
-2. Making batches of API requests using the generated client
+2. Making batches of API requests using the generated client (default) or only raw endpoints (--raw-only)
 3. Monitoring heap usage and detecting potential memory leaks
 4. Providing detailed memory usage reports
   `);

@@ -23,9 +23,9 @@ const CONFIG = {
 
   /* Test phases */
   phases: [
-    { name: "Light Load", concurrency: 1, requests: 50, duration: 30000 },
-    { name: "Medium Load", concurrency: 5, requests: 200, duration: 60000 },
-    { name: "Heavy Load", concurrency: 10, requests: 500, duration: 90000 },
+    { name: "Light Load", concurrency: 1, requests: 100, duration: 30000 },
+    { name: "Medium Load", concurrency: 5, requests: 1000, duration: 60000 },
+    { name: "Heavy Load", concurrency: 10, requests: 8000, duration: 90000 },
   ],
 
   /* Memory monitoring */
@@ -705,7 +705,7 @@ Usage: node integrated-benchmark.js [options]
 Options:
   --help, -h         Show this help message
   --expose-gc        Enable garbage collection (pass to node)
-  
+
 Example:
   node --expose-gc integrated-benchmark.js
 
@@ -721,7 +721,7 @@ Test phases:
   - Medium Load: Moderate concurrency, typical usage patterns
   - Heavy Load: High concurrency, stress testing
 
-The integrated approach helps identify how memory and performance 
+The integrated approach helps identify how memory and performance
 characteristics change under different load conditions.
   `);
   process.exit(0);

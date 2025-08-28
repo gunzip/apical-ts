@@ -223,19 +223,59 @@ async function testOperationTypes(api) {
   console.log("\n📊 Testing different operation types...");
 
   const operations = {
-    "GET /store/inventory": () =>
-      api.getInventory({
-        headers: { api_key: "test-key" },
-      }),
-    "GET /pet/findByStatus": () =>
-      api.findPetsByStatus({
+    "GET /store/inventory (validated)": async () => {
+      const res = await api.getInventory({ headers: { api_key: "test-key" } });
+      return res;
+    },
+    "GET /store/inventory (raw)": async () => {
+      const res = await fetch(`${API_CONFIG.baseURL}/store/raw/inventory`);
+      return { status: res.status, data: await res.json() };
+    },
+    "GET /pet/findByStatus (validated)": async () => {
+      const res = await api.findPetsByStatus({
         query: { status: "available" },
-      }),
-    "GET /pet/{petId}": () =>
-      api.getPetById({
+      });
+      return res;
+    },
+    "GET /pet/findByStatus (raw)": async () => {
+      const res = await fetch(
+        `${API_CONFIG.baseURL}/pet/raw/findByStatus?status=available`,
+      );
+      return { status: res.status, data: await res.json() };
+    },
+    "GET /pet/{petId} (validated)": async () => {
+      const res = await api.getPetById({
         headers: { api_key: "test-key" },
         path: { petId: "1" },
-      }),
+      });
+      return res;
+    },
+    "GET /pet/{petId} (raw)": async () => {
+      const res = await fetch(`${API_CONFIG.baseURL}/pet/raw/1`);
+      return { status: res.status, data: await res.json() };
+    },
+    "GET /pet/{petId} (validated+parse)": async () => {
+      const res = await api.getPetById({
+        headers: { api_key: "test-key" },
+        path: { petId: "1" },
+      });
+      // Misura parse()
+      const t0 = performance.now();
+      const parseResult = res.parse();
+      const t1 = performance.now();
+      return { ...res, parseTime: t1 - t0, parseResult };
+    },
+    "GET /pet/{petId} (raw+parse)": async () => {
+      const res = await fetch(`${API_CONFIG.baseURL}/pet/raw/1`);
+      const data = await res.json();
+      // Simula validazione (parse) usando lo schema generato se disponibile
+      // Qui si può importare lo schema e chiamare schema.parse(data)
+      // Per ora solo misura parsing JSON
+      const t0 = performance.now();
+      JSON.parse(JSON.stringify(data));
+      const t1 = performance.now();
+      return { status: res.status, data, parseTime: t1 - t0 };
+    },
   };
 
   const results = {};
@@ -245,15 +285,26 @@ async function testOperationTypes(api) {
     const tracker = new PerformanceTracker(operationName);
 
     /* Test sequential requests */
+    let parseTimes = [];
     for (let i = 0; i < 20; i++) {
       try {
-        await tracker.measure(operation);
+        const result = await tracker.measure(operation);
+        if (result && typeof result.parseTime === "number") {
+          parseTimes.push(result.parseTime);
+        }
       } catch (error) {
         /* Error already tracked in tracker */
       }
     }
 
-    results[operationName] = tracker.getStatistics();
+    const stats = tracker.getStatistics();
+    if (parseTimes.length) {
+      stats.parseAvg =
+        parseTimes.reduce((a, b) => a + b, 0) / parseTimes.length;
+      stats.parseMin = Math.min(...parseTimes);
+      stats.parseMax = Math.max(...parseTimes);
+    }
+    results[operationName] = stats;
   }
 
   return results;
@@ -558,7 +609,7 @@ Usage: node performance-benchmark.js [options]
 
 Options:
   --help, -h         Show this help message
-  
+
 This script tests performance characteristics by:
 1. Starting the Express server
 2. Testing different operation types (GET, POST, etc.)

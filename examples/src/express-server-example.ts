@@ -170,6 +170,28 @@ createExpressAdapter(
 );
 
 /* Health check endpoint */
+
+// RAW endpoints (no validation/wrapper) for benchmark comparison
+app.get("/pet/raw/:petId", (req, res) => {
+  const petId = parseInt(req.params.petId, 10);
+  const pet = mockPets.find((p) => p.id === petId);
+  if (!pet) {
+    res.status(404).send();
+    return;
+  }
+  res.status(200).json(pet);
+});
+
+app.get("/pet/raw/findByStatus", (req, res) => {
+  const status = req.query.status;
+  const filteredPets = mockPets.filter((pet) => pet.status === status);
+  res.status(200).json(filteredPets);
+});
+
+app.get("/store/raw/inventory", (req, res) => {
+  res.status(200).json(mockInventory);
+});
+
 app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
