@@ -77,6 +77,47 @@ export function renderContentTypeHeaders(
 }
 
 /*
+ * Renders content type switch statement for handling multiple request content types.
+ * This function generates a switch statement that dynamically selects the appropriate
+ * body processing and content-type header based on the finalRequestContentType variable.
+ */
+export function renderContentTypeSwitch(requestContentTypes: string[]): string {
+  const switchCases = requestContentTypes
+    .map((contentType) => {
+      const strategy = DEFAULT_CONTENT_TYPE_HANDLERS[contentType];
+      if (strategy) {
+        const bodyProcessing = strategy.bodyProcessing;
+        const headerCode = strategy.contentTypeHeader
+          ? `{ ${strategy.contentTypeHeader} }`
+          : "{}";
+        return `    case "${contentType}":
+      bodyContent = ${bodyProcessing};
+      contentTypeHeader = ${headerCode};
+      break;`;
+      } else {
+        /* Generic approach for unknown content types */
+        return `    case "${contentType}":
+      bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
+      contentTypeHeader = { "Content-Type": "${contentType}" };
+      break;`;
+      }
+    })
+    .join("\n");
+
+  const defaultCase = `    default:
+      bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
+      contentTypeHeader = { "Content-Type": finalRequestContentType };`;
+
+  return `  let bodyContent: string | FormData | undefined = "";
+  let contentTypeHeader = {};
+
+  switch (finalRequestContentType) {
+${switchCases}
+${defaultCase}
+  }`;
+}
+
+/*
  * Renders dynamic body content handling code for multiple content types
  * Used when generating switch statements for content type selection
  */
@@ -112,7 +153,7 @@ export function renderDynamicBodyHandling(
 
   return `  let bodyContent: string | FormData | undefined = "";
   let contentTypeHeader = {};
-  
+
   switch (finalRequestContentType) {
 ${switchCases}
 ${defaultCase}

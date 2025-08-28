@@ -9,13 +9,13 @@ import {
   generateSecurityHeaderHandling,
   type SecurityHeader,
 } from "./security.js";
-import { renderContentTypeSwitch } from "./templates/content-type-templates.js";
 import {
   determineFunctionBodyStructure,
   determineHeaderConfiguration,
   renderFunctionBody,
   renderHeadersObject,
 } from "./templates/function-body-templates.js";
+import { renderContentTypeSwitch } from "./templates/request-body-templates.js";
 import { generatePathInterpolation } from "./utils.js";
 
 /**

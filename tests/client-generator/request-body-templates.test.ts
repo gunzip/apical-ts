@@ -4,6 +4,7 @@ import {
   DEFAULT_CONTENT_TYPE_HANDLERS,
   renderBodyHandling,
   renderContentTypeHeaders,
+  renderContentTypeSwitch,
   renderDynamicBodyHandling,
   renderLegacyRequestBodyHandling,
 } from "../../src/client-generator/templates/request-body-templates.js";
@@ -217,6 +218,76 @@ describe("Request Body Template Functions", () => {
       expect(
         DEFAULT_CONTENT_TYPE_HANDLERS["application/json"].requiresFormData,
       ).toBe(false);
+    });
+  });
+
+  describe("renderContentTypeSwitch", () => {
+    it("should generate switch statement for known content types", () => {
+      const contentTypes = ["application/json", "text/plain"];
+      const result = renderContentTypeSwitch(contentTypes);
+
+      expect(result).toContain(
+        'let bodyContent: string | FormData | undefined = "";',
+      );
+      expect(result).toContain("let contentTypeHeader = {};");
+      expect(result).toContain("switch (finalRequestContentType) {");
+      expect(result).toContain('case "application/json":');
+      expect(result).toContain('case "text/plain":');
+      expect(result).toContain("default:");
+      expect(result).toContain(
+        "bodyContent = typeof body === 'string' ? body : JSON.stringify(body);",
+      );
+      expect(result).toContain(
+        'contentTypeHeader = { "Content-Type": finalRequestContentType };',
+      );
+    });
+
+    it("should generate switch statement for unknown content types", () => {
+      const contentTypes = ["application/custom"];
+      const result = renderContentTypeSwitch(contentTypes);
+
+      expect(result).toContain('case "application/custom":');
+      expect(result).toContain(
+        "bodyContent = typeof body === 'string' ? body : JSON.stringify(body);",
+      );
+      expect(result).toContain(
+        'contentTypeHeader = { "Content-Type": "application/custom" };',
+      );
+    });
+
+    it("should handle empty content types array", () => {
+      const result = renderContentTypeSwitch([]);
+
+      expect(result).toContain(
+        'let bodyContent: string | FormData | undefined = "";',
+      );
+      expect(result).toContain("let contentTypeHeader = {};");
+      expect(result).toContain("switch (finalRequestContentType) {");
+      expect(result).toContain("default:");
+      expect(result).not.toContain('case "');
+    });
+
+    it("should generate proper case structure for each content type", () => {
+      const contentTypes = ["application/json"];
+      const result = renderContentTypeSwitch(contentTypes);
+
+      expect(result).toContain('    case "application/json":');
+      expect(result).toContain(
+        "bodyContent = body ? JSON.stringify(body) : undefined;",
+      );
+      expect(result).toContain(
+        'contentTypeHeader = { "Content-Type": "application/json" };',
+      );
+      expect(result).toContain("      break;");
+    });
+
+    it("should handle multipart/form-data correctly", () => {
+      const contentTypes = ["multipart/form-data"];
+      const result = renderContentTypeSwitch(contentTypes);
+
+      expect(result).toContain('case "multipart/form-data":');
+      expect(result).toContain("FormData");
+      expect(result).toContain("contentTypeHeader = {};");
     });
   });
 });
