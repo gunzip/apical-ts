@@ -133,7 +133,8 @@ export function handleStringType(
   if (schema.format === "uuid") code = "z.uuid()";
   if (schema.format === "uri") code = "z.url()";
   if (schema.format === "date") code = "z.iso.date()";
-  if (schema.format === "date-time") code = "z.iso.datetime()";
+  if (schema.format === "date-time")
+    code = "z.iso.datetime({ offset: true, local: true })";
   if (schema.format === "time") code = "z.iso.time()";
   if (schema.format === "duration") code = "z.iso.duration()";
 

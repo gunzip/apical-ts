@@ -21,7 +21,7 @@ export class MockServer {
 
   constructor(config: MockServerConfig) {
     this.config = {
-      host: "localhost",
+      host: "0.0.0.0",
       ...config,
     };
   }

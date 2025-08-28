@@ -279,7 +279,7 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("testAuthBearerWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain(
-      'return { path: "/auth/{userId}", method: "get" };',
+      'return { path: "/auth/{userId}", method: "get" } as const;',
     );
   });
 
@@ -319,7 +319,7 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("createPetWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain(
-      'return { path: "/pets", method: "post" };',
+      'return { path: "/pets", method: "post" } as const;',
     );
   });
 
@@ -360,7 +360,7 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("updatePetStatusWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain(
-      'return { path: "/pets/{petId}/status/{statusId}", method: "patch" };',
+      'return { path: "/pets/{petId}/status/{statusId}", method: "patch" } as const;',
     );
   });
 });

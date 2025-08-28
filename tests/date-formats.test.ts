@@ -22,7 +22,7 @@ describe("Date format handling", () => {
     };
 
     const result = zodSchemaToCode(schema);
-    expect(result.code).toBe("z.iso.datetime()");
+    expect(result.code).toBe("z.iso.datetime({ offset: true, local: true })");
   });
 
   it("should generate z.iso.time() for format: time", () => {
@@ -65,7 +65,7 @@ describe("Date format handling", () => {
 
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe(
-      'z.iso.datetime().default("2023-12-25T10:30:00Z")',
+      'z.iso.datetime({ offset: true, local: true }).default("2023-12-25T10:30:00Z")',
     );
   });
 
