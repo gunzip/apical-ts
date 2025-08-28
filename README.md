@@ -39,7 +39,7 @@ See [supported features](#supported-features) for more information.
     Operations](#binding-configuration-to-all-operations)
   - [Response Handling](#response-handling)
   - [Exception Handling](#exception-handling)
-  - [Validation \& Error Handling (Opt-In)](#validation--error-handling-opt-in)
+  - [Runtime Response Validation (Opt-In)](#runtime-response-validation-opt-in)
   - [Why is Runtime Parsing Opt-In?](#why-is-runtime-parsing-opt-in)
   - [Custom Response Deserialization](#custom-response-deserialization)
     - [Why use `parse()`?](#why-use-parse)
@@ -56,9 +56,9 @@ See [supported features](#supported-features) for more information.
     - [Example: Endpoint with Multiple Response Content
       Types](#example-endpoint-with-multiple-response-content-types)
   - [Using Generated Zod Schemas](#using-generated-zod-schemas)
-- [Server Generation](#server-generation)
-  - [How to Generate a Server](#how-to-generate-a-server)
-  - [Using the Wrapper Handler](#using-the-wrapper-handler)
+- [Server Routes Wrappers Generation](#server-routes-wrappers-generation)
+  - [How to Generate a Server Route Wrapper](#how-to-generate-a-server-route-wrapper)
+  - [Using the Wrapped Handler](#using-the-wrapped-handler)
     - [Handler Function Signature](#handler-function-signature)
 - [Supported Features](#supported-features)
   - [Benefits of Operation-Based
@@ -157,7 +157,7 @@ const newPet = await createPet(
 const result = await getPetById({ petId: "123" });
 ```
 
-## Binding Configuration to All Operations
+## Binding Configuration to Operations
 
 You can use the `configureOperations` helper to bind a configuration object to
 all generated operations, so you don't have to pass the config each time:
@@ -174,6 +174,7 @@ const apiConfig = {
   },
 };
 
+// You may consider to only pass operations you use
 const client = configureOperations(operations, apiConfig);
 
 // Now you can call operations without passing config:
@@ -194,23 +195,14 @@ const result = await getPetById({ petId: "123" });
 if (result.status === 200) {
   // result.data is the RAW response body (unvalidated)
   console.log("Pet (raw):", result.data);
+  // But will have a parse() method bound if you want
+  // to parse the returned response, see examples below
 } else if (result.status === 404) {
   // Not found
   console.warn("Pet not found");
 } else {
   // Exhaustive check
   console.error("Unexpected status", result.status);
-}
-
-// Or use the helper:
-import { isSuccessResponse } from "./generated/client/index.js";
-if (isSuccessResponse(result)) {
-  // result.data is raw; to validate invoke result.parse()
-  // result.parse() is only valued when a schema is defined for the response content type
-  const validated = result.parse();
-  if (validated.parsed) {
-    console.log("Validated Pet:", validated.parsed);
-  }
 }
 ```
 
@@ -232,7 +224,7 @@ try {
 }
 ```
 
-## Validation & Error Handling (Opt-In)
+## Runtime Response Validation (Opt-In)
 
 Operations return raw data by default (no automatic Zod parsing). To perform
 runtime validation you must explicitly call the response object's
@@ -244,7 +236,7 @@ const result = await getUserProfile({ userId: "123" });
 
 if (result.status === 200) {
   const outcome = result.parse();
-  if (outcome && "parsed" in outcome) {
+  if ("parsed" in outcome) {
     console.log("User:", outcome.parsed.name, outcome.parsed.email);
   } else if (outcome && "error" in outcome) {
     console.error("Response validation failed:", outcome.error);
@@ -267,7 +259,7 @@ const result = await getDocument({
 
 if (result.status === 200) {
   const outcome = result.parse();
-  if (outcome && "parsed" in outcome) {
+  if ("parsed" in outcome) {
     console.log("Document:", outcome.parsed);
   }
 }
@@ -523,25 +515,10 @@ const result = await getPetById({
 });
 
 if (result.status === 200) {
+  const data = result.parse({ "application/xml": myXmlDeserializer });
   // result.data is typed as PetXml if response: "application/xml" was selected
   // or as Pet if response: "application/json" was selected
 }
-```
-
-You can also use the provided helpers to handle all cases:
-
-```ts
-import { handleResponse } from "./generated/client/index.js";
-
-handleResponse(result, {
-  200: {
-    "application/json": (data) => console.log("Pet:", data),
-    "application/xml": (data) => {
-      /* handle XML */
-    },
-  },
-  default: (res) => console.error("Other status", res.status),
-});
 ```
 
 ## Using Generated Zod Schemas
@@ -555,14 +532,14 @@ if (!result.success) {
 }
 ```
 
-# Server Generation
+# Server Routes Wrappers Generation
 
 The generator can also produce a fully-typed server handler wrapper for your
 OpenAPI operations. This enables you to build type-safe HTTP servers (e.g., with
 Express, Fastify, or custom frameworks) that validate requests at runtime using
 Zod schemas and can return only responses of the expected types.
 
-## How to Generate a Server
+## How to Generate a Server Route Wrapper
 
 To generate server-side code, use the CLI with the `--generate-server` flag:
 
@@ -578,7 +555,7 @@ This will create a `server/` directory in your output folder, containing:
 - **`server/index.ts`**: Exports the server handler wrappers and types
 - **`server/<operationId>.ts`**: Individual operation handler wrappers
 
-## Using the Wrapper Handler
+## Using the Wrapped Handler
 
 The generated route wrapper is a function that takes a request handler and
 returns an async function that can be used with any web framework. This allows
