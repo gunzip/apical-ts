@@ -221,71 +221,97 @@ async function warmupRequests(api, count = CONFIG.warmupRequests) {
 /* Test different operation types */
 async function testOperationTypes(api) {
   console.log("\n📊 Testing different operation types...");
-
-  const operations = {
-    "GET /store/inventory (validated)": async () => {
-      const res = await api.getInventory({ headers: { api_key: "test-key" } });
-      return res;
-    },
-    "GET /store/inventory (raw)": async () => {
-      const res = await fetch(`${API_CONFIG.baseURL}/store/raw/inventory`);
-      return { status: res.status, data: await res.json() };
-    },
-    "GET /pet/findByStatus (validated)": async () => {
-      const res = await api.findPetsByStatus({
-        query: { status: "available" },
-      });
-      return res;
-    },
-    "GET /pet/findByStatus (raw)": async () => {
-      const res = await fetch(
-        `${API_CONFIG.baseURL}/pet/raw/findByStatus?status=available`,
-      );
-      return { status: res.status, data: await res.json() };
-    },
-    "GET /pet/{petId} (validated)": async () => {
-      const res = await api.getPetById({
-        headers: { api_key: "test-key" },
-        path: { petId: "1" },
-      });
-      return res;
-    },
-    "GET /pet/{petId} (raw)": async () => {
-      const res = await fetch(`${API_CONFIG.baseURL}/pet/raw/1`);
-      return { status: res.status, data: await res.json() };
-    },
-    "GET /pet/{petId} (validated+parse)": async () => {
-      const res = await api.getPetById({
-        headers: { api_key: "test-key" },
-        path: { petId: "1" },
-      });
-      // Misura parse()
-      const t0 = performance.now();
-      const parseResult = res.parse();
-      const t1 = performance.now();
-      return { ...res, parseTime: t1 - t0, parseResult };
-    },
-    "GET /pet/{petId} (raw+parse)": async () => {
-      const res = await fetch(`${API_CONFIG.baseURL}/pet/raw/1`);
-      const data = await res.json();
-      // Simula validazione (parse) usando lo schema generato se disponibile
-      // Qui si può importare lo schema e chiamare schema.parse(data)
-      // Per ora solo misura parsing JSON
-      const t0 = performance.now();
-      JSON.parse(JSON.stringify(data));
-      const t1 = performance.now();
-      return { status: res.status, data, parseTime: t1 - t0 };
-    },
+  // Dynamically build operations based on --raw-only flag
+  const rawOnly = process.argv.includes("--raw-only");
+  const safeJson = async (r: Response) => {
+    if (!r.ok) return { status: r.status, data: null };
+    const ct = r.headers.get("content-type") || "";
+    if (!ct.includes("application/json"))
+      return { status: r.status, data: null };
+    const text = await r.text();
+    if (!text) return { status: r.status, data: null };
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error("Invalid JSON:", text);
+      return { status: r.status, data: null };
+    }
   };
 
-  const results = {};
+  let operations: Record<string, () => Promise<any>>;
+  if (rawOnly) {
+    operations = {
+      "GET /store/inventory (raw)": async () => {
+        const res = await fetch(`${API_CONFIG.baseURL}/store/raw/inventory`);
+        return safeJson(res);
+      },
+      "GET /pet/findByStatus (raw)": async () => {
+        const res = await fetch(
+          `${API_CONFIG.baseURL}/pet/raw/findByStatus?status=available`,
+        );
+        return safeJson(res);
+      },
+      "GET /pet/{petId} (raw)": async () => {
+        const res = await fetch(`${API_CONFIG.baseURL}/pet/raw/1`);
+        return safeJson(res);
+      },
+      "GET /pet/{petId} (raw+parse)": async () => {
+        const res = await fetch(`${API_CONFIG.baseURL}/pet/raw/1`);
+        const data = await safeJson(res);
+        const t0 = performance.now();
+        JSON.parse(JSON.stringify(data));
+        const t1 = performance.now();
+        return { status: res.status, data, parseTime: t1 - t0 };
+      },
+    };
+    console.log(
+      "\n🚦 Running RAW ONLY performance benchmark (no client/server generated)",
+    );
+  } else {
+    operations = {
+      "GET /store/inventory (validated)": async () => {
+        const res = await api.getInventory({
+          headers: { api_key: "test-key" },
+        });
+        return res;
+      },
+      "GET /pet/findByStatus (validated)": async () => {
+        const res = await api.findPetsByStatus({
+          query: { status: "available" },
+        });
+        return res;
+      },
+      "GET /pet/{petId} (validated)": async () => {
+        const res = await api.getPetById({
+          headers: { api_key: "test-key" },
+          path: { petId: "1" },
+        });
+        return res;
+      },
+      "GET /pet/{petId} (validated+parse)": async () => {
+        const res = await api.getPetById({
+          headers: { api_key: "test-key" },
+          path: { petId: "1" },
+        });
+        // Misura parse()
+        const t0 = performance.now();
+        const parseResult = res.parse();
+        const t1 = performance.now();
+        return { ...res, parseTime: t1 - t0, parseResult };
+      },
+    };
+    console.log(
+      "\n🚦 Running VALIDATED performance benchmark (client/server generated)",
+    );
+  }
+
+  const results: Record<string, any> = {};
 
   for (const [operationName, operation] of Object.entries(operations)) {
     console.log(`   Testing ${operationName}...`);
     const tracker = new PerformanceTracker(operationName);
 
-    /* Test sequential requests */
-    let parseTimes = [];
+    const parseTimes: number[] = [];
     for (let i = 0; i < 20; i++) {
       try {
         const result = await tracker.measure(operation);
@@ -297,7 +323,7 @@ async function testOperationTypes(api) {
       }
     }
 
-    const stats = tracker.getStatistics();
+    const stats = tracker.getStatistics() as any;
     if (parseTimes.length) {
       stats.parseAvg =
         parseTimes.reduce((a, b) => a + b, 0) / parseTimes.length;
@@ -340,7 +366,8 @@ async function testConcurrentRequests(api, concurrency, requestCount) {
     promises.push(...batchPromises);
   }
 
-  const results = await Promise.allSettled(promises);
+  const results: PromiseSettledResult<any>[] =
+    await Promise.allSettled(promises);
   const endTime = performance.now();
 
   const totalTime = endTime - startTime;
@@ -359,7 +386,7 @@ async function testConcurrentRequests(api, concurrency, requestCount) {
 async function testThroughput(api) {
   console.log("\n🚀 Testing throughput under different load levels...");
 
-  const results = [];
+  const results: any[] = [];
 
   for (const concurrency of CONFIG.concurrencyLevels) {
     const result = await testConcurrentRequests(
@@ -402,7 +429,7 @@ async function runPerformanceBenchmark() {
   console.log(`   Requests per level: ${CONFIG.requestsPerLevel}`);
   console.log(`   Operation cycles: ${CONFIG.operationCycles}`);
 
-  let serverProcess = null;
+  let serverProcess: any = null;
 
   try {
     /* Start server */
@@ -423,7 +450,10 @@ async function runPerformanceBenchmark() {
     /* Warmup */
     await warmupRequests(api);
 
-    const allResults = {
+    const allResults: {
+      operationTypes: Record<string, any>[];
+      throughput: any[][];
+    } = {
       operationTypes: [],
       throughput: [],
     };
@@ -560,13 +590,13 @@ async function runPerformanceBenchmark() {
 
     const fastestOp = Object.entries(avgOperationResults).reduce(
       (min, [name, stats]) =>
-        stats.avg < min.avg ? { name, avg: stats.avg } : min,
+        (stats as any).avg < min.avg ? { name, avg: (stats as any).avg } : min,
       { name: "", avg: Infinity },
     );
 
     const slowestOp = Object.entries(avgOperationResults).reduce(
       (max, [name, stats]) =>
-        stats.avg > max.avg ? { name, avg: stats.avg } : max,
+        (stats as any).avg > max.avg ? { name, avg: (stats as any).avg } : max,
       { name: "", avg: 0 },
     );
 
@@ -609,6 +639,7 @@ Usage: node performance-benchmark.js [options]
 
 Options:
   --help, -h         Show this help message
+  --raw-only         Run only raw endpoints (no client/server generated)
 
 This script tests performance characteristics by:
 1. Starting the Express server
