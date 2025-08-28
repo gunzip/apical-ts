@@ -1,12 +1,12 @@
 {
-  "name": "typescript-openapi-generator",
+  "name": "openapi-to-typescript",
   "version": "0.0.1",
   "description": "Generates fully-typed Zod v4 schemas and type-safe TypeScript REST API clients and server from OpenAPI 2.0, 3.0.x, and 3.1.x specifications.",
   "main": "dist/index.js",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gunzip/typescript-openapi-generator.git"
+    "url": "git+https://github.com/gunzip/openapi-to-typescript.git"
   },
   "files": [
     "dist",
@@ -14,7 +14,7 @@
     "LICENSE"
   ],
   "bin": {
-    "typescript-openapi-generator": "./dist/index.js"
+    "openapi-to-typescript": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup",

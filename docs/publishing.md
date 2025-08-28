@@ -1,14 +1,12 @@
-# Publishing to GitHub Packages
+# Publishing to NPM registry
 
-This document describes how to publish the `@gunzip/typescript-openapi-generator` package to GitHub Packages.
+This document describes how to publish the `openapi-to-typescript` package to NPM registry.
 
 ## Setup
 
-The project is configured to publish to GitHub Packages with the following setup:
+The project is configured to publish to NPM registry with the following setup:
 
-- **Package name**: `@gunzip/typescript-openapi-generator`
-- **Registry**: `https://npm.pkg.github.com`
-- **Scope**: `@gunzip`
+- **Package name**: `openapi-to-typescript`
 
 ## Publishing Methods
 
@@ -26,14 +24,14 @@ The recommended way to publish is by creating a GitHub release:
 2. **Automatic workflow** will:
    - Run all tests and checks
    - Build the project
-   - Publish to GitHub Packages
+   - Publish to NPM registry
 
 ### 2. Manual Publishing via Workflow Dispatch
 
 You can also trigger publishing manually:
 
 1. Go to **Actions** tab in GitHub
-2. Select **"Publish to GitHub Packages"** workflow
+2. Select **"Publish to NPM registry"** workflow
 3. Click **"Run workflow"**
 4. Optionally specify a version number
 5. Click **"Run workflow"**
@@ -43,9 +41,6 @@ You can also trigger publishing manually:
 For development/testing purposes only:
 
 ```bash
-# Make sure you're authenticated to GitHub Packages
-npm login --scope=@gunzip --registry=https://npm.pkg.github.com
-
 # Build and publish
 pnpm run build
 pnpm publish --no-git-checks
@@ -79,34 +74,12 @@ After pushing the tag, you can create a GitHub release to trigger automatic publ
 
 ### For GitHub Actions (Automatic)
 
-The workflow uses the built-in `GITHUB_TOKEN` which has the necessary permissions to publish packages.
-
-### For Local Development
-
-You need a GitHub Personal Access Token with `write:packages` permission:
-
-1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
-2. Create a token with `write:packages` scope
-3. Add it to your `.npmrc`:
-
-```
-@gunzip:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_TOKEN_HERE
-```
+The workflow uses the repository secret `NPM_TOKEN` which has the necessary permissions to publish packages.
 
 ## Installation for Users
 
-Users need to configure their `.npmrc` to use GitHub Packages:
-
-```
-@gunzip:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=THEIR_GITHUB_TOKEN
-```
-
-Then install with:
-
 ```bash
-pnpm add @gunzip/typescript-openapi-generator
+pnpm add openapi-to-typescript
 ```
 
 ## Package Contents
@@ -122,11 +95,5 @@ The published package includes:
 
 ### Common Issues
 
-1. **Authentication Failed**: Make sure your GitHub token has `write:packages` permission
-2. **Package Already Exists**: You cannot republish the same version. Bump the version first
-3. **Build Failures**: The workflow will fail if tests, linting, or type checking fails
-
-### Checking Published Packages
-
-You can view published packages at:
-`https://github.com/gunzip/typescript-openapi-generator/packages`
+1. **Package Already Exists**: You cannot republish the same version. Bump the version first
+2. **Build Failures**: The workflow will fail if tests, linting, or type checking fails

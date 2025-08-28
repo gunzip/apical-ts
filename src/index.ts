@@ -8,13 +8,13 @@ import { generate } from "./core-generator/index.js";
 const program = new Command();
 
 program
-  .name("typescript-openapi-generator")
-  .description("Generate a TypeScript client from an OpenAPI specification.")
+  .name("openapi-to-typescript")
+  .description("Generate TypeScript from an OpenAPI specification.")
   .version("0.0.1");
 
 program
   .command("generate")
-  .description("Generate the client.")
+  .description("Generate TypeScript client, server and/or schemas.")
   .requiredOption(
     "-i, --input <path>",
     "Path to the OpenAPI specification file.",
