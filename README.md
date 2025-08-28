@@ -5,18 +5,18 @@
 > be version **0.1.0**.
 
 We all like the developer experience of [tRPC](https://trpc.io/), but not always
-you're in control of the backend. OpenAPI specifications provide a powerful way to
+we're in control of the backend. OpenAPI specifications provide a powerful way to
 define your API contracts, and with YanoGen-Ts, you can easily generate TypeScript
-code that adheres to those contracts, all while enjoying a seamless developer experience.
+code that strictly adheres to those contracts, all while enjoying a seamless developer experience.
 
-✨ Effortlessly turn your OpenAPI specifications into fully-typed Zod v4
-schemas—ready for runtime (client or server) validation and TypeScript
+✨ Effortlessly turn your OpenAPI specifications into **fully-typed Zod v4
+schemas** ready for runtime (client or server) validation and TypeScript
 development.
 
-Need a client? Instantly generate a type-safe, low-footprint, operation-based
+Need a **client**? Instantly generate a type-safe, low-footprint, operation-based
 REST API client alongside your schemas.
 
-Need to validate server requests and return typed responses? We've got you
+Need to **validate server requests and return typed responses**? We've got you
 covered with built-in support for request and response validation using Zod
 schemas.
 
