@@ -4,7 +4,6 @@ import {
   renderResponseHandler,
   renderResponseHandlers,
   renderUnionType,
-  renderApiResponseType,
 } from "../../src/client-generator/templates/response-templates.js";
 import type { ResponseInfo } from "../../src/client-generator/models/response-models.js";
 
@@ -117,23 +116,6 @@ describe("response-templates", () => {
     it("should render single union type", () => {
       const result = renderUnionType(["ApiResponse<200, User>"]);
       expect(result).toBe("ApiResponse<200, User>");
-    });
-  });
-
-  describe("renderApiResponseType", () => {
-    it("should render ApiResponse type", () => {
-      const result = renderApiResponseType("200", "User");
-      expect(result).toBe("ApiResponse<200, User>");
-    });
-
-    it("should handle void type", () => {
-      const result = renderApiResponseType("204", "void");
-      expect(result).toBe("ApiResponse<204, void>");
-    });
-
-    it("should handle unknown type", () => {
-      const result = renderApiResponseType("500", "unknown");
-      expect(result).toBe("ApiResponse<500, unknown>");
     });
   });
 });

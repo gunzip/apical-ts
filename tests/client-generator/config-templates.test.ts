@@ -9,7 +9,6 @@ import {
   renderConfigSupport,
   renderErrorClasses,
   renderOperationUtilities,
-  renderTypeGuards,
   renderUtilityFunctions,
 } from "../../src/client-generator/templates/config-templates.js";
 
@@ -158,17 +157,7 @@ describe("client-generator config-templates", () => {
       expect(result).toContain("export type ApiResponse<S extends number, T>");
       expect(result).toContain("readonly status: S;");
       expect(result).toContain("readonly data: T;");
-      expect(result).toContain("readonly error: z.ZodError;");
-    });
-  });
-
-  describe("renderTypeGuards", () => {
-    it("should render type guard functions", () => {
-      const result = renderTypeGuards();
-
-      expect(result).toContain("export function isSuccessResponse");
-      expect(result).toContain("export function isErrorResponse");
-      expect(result).toContain("result.status >= 200 && result.status < 300");
+      expect(result).not.toContain("readonly error: z.ZodError;");
     });
   });
 
@@ -188,7 +177,6 @@ describe("client-generator config-templates", () => {
     it("should render utility functions", () => {
       const result = renderUtilityFunctions();
 
-      expect(result).toContain("export function isStatus");
       expect(result).toContain("export async function parseResponseBody");
       expect(result).toContain("application/json");
     });
@@ -209,9 +197,7 @@ describe("client-generator config-templates", () => {
       const result = renderConfigSupport();
 
       expect(result).toContain("export type ApiResponse");
-      expect(result).toContain("export function isSuccessResponse");
       expect(result).toContain("export class UnexpectedResponseError");
-      expect(result).toContain("export function isStatus");
       expect(result).toContain("export function configureOperations");
     });
 
@@ -220,7 +206,6 @@ describe("client-generator config-templates", () => {
 
       /* Verify that all individual template functions are included */
       expect(result).toContain(renderApiResponseTypes());
-      expect(result).toContain(renderTypeGuards());
       expect(result).toContain(renderErrorClasses());
       expect(result).toContain(renderUtilityFunctions());
       expect(result).toContain(renderOperationUtilities());

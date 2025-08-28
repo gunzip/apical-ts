@@ -20,7 +20,7 @@ describe("precise ApiResponse types", () => {
       /* Should include precise ApiResponseWithParse type */
       expect(result).toContain("ApiResponseWithParse<");
       expect(result).toContain("readonly parse: (");
-      expect(result).toContain(
+      expect(result).not.toContain(
         "ReturnType<typeof parseApiResponseUnknownData>",
       );
 

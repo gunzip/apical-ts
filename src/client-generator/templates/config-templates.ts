@@ -9,28 +9,12 @@ export function renderApiResponseTypes(): string {
   return `/**
  * Represents a generic API response for the new discriminated union pattern.
  * @template S The HTTP status code.
- * @template T The response body type.
- */
-/*
- * ApiResponse now models validation errors as a top-level discriminated branch.
- * For JSON-like responses validated with Zod:
- *   { status: 200, data: ParsedType, response }
- * or { status: 200, error: ZodError, response }
- * This avoids nesting the error inside the data union and lets consumers test
- * for the presence of the error key directly on the result object.
  */
 export type ApiResponse<S extends number, T> =
   | {
       readonly status: S;
       readonly data: T;
       readonly response: Response;
-      readonly parse?: () => ReturnType<typeof parseApiResponseUnknownData>;
-    }
-  | {
-      readonly status: S;
-      readonly error: z.ZodError;
-      readonly response: Response;
-      readonly parse?: () => ReturnType<typeof parseApiResponseUnknownData>;
     };
 
 /* Helper type: union of all models for a given status code */
@@ -138,8 +122,6 @@ export function renderConfigSupport(): string {
   return [
     renderApiResponseTypes(),
     "",
-    renderTypeGuards(),
-    "",
     renderErrorClasses(),
     "",
     renderUtilityFunctions(),
@@ -176,7 +158,7 @@ type Operation = (params: any, config?: GlobalConfig) => Promise<unknown>;
 
 /* Bind all operations with a specific config */
 export function configureOperations<T extends Record<string, Operation>>(
-  operations: T, 
+  operations: T,
   config: GlobalConfig
 ): {
   [K in keyof T]: (params: Parameters<T[K]>[0]) => ReturnType<T[K]>;
@@ -194,82 +176,17 @@ export function configureOperations<T extends Record<string, Operation>>(
 }
 
 /*
- * Renders type guard functions for response status codes
- */
-export function renderTypeGuards(): string {
-  return `/* Type guards for response status codes */
-export function isSuccessResponse<T>(
-  result: ApiResponse<number, any>
-): result is ApiResponse<number, T> {
-  return result.status >= 200 && result.status < 300;
-}
-
-export function isErrorResponse<T>(
-  result: ApiResponse<number, any>
-): result is ApiResponse<number, T> {
-  return !isSuccessResponse(result);
-}`;
-}
-
-/*
  * Renders utility functions for response handling
  */
 export function renderUtilityFunctions(): string {
-  return `/* Type-safe status checking function */
-export function isStatus<
-  TResponse extends ApiResponse<number, unknown>,
-  S extends TResponse['status']
->(
-  result: TResponse,
-  status: S,
-): result is Extract<TResponse, { status: S }> {
-  return result.status === status;
-}
-
-/* Utility function to handle response with exhaustive type checking */
-export function handleResponse<T extends ApiResponse<number, unknown>>(
-  result: T,
-  handlers: {
-    [K in T['status']]?: (
-      payload: Extract<Extract<T, { status: K }>, { data: unknown }> extends infer R
-        ? R extends { data: infer D }
-          ? D
-          : never
-        : never,
-      full: Extract<T, { status: K }>
-    ) => void;
-  } & {
-    default?: (result: T) => void;
-    error?: (error: z.ZodError, full: T) => void;
-  }
-): void {
-  if ('error' in result) {
-    if (handlers.error) {
-      handlers.error(result.error, result);
-      return;
-    }
-    if (handlers.default) {
-      handlers.default(result);
-      return;
-    }
-  }
-  const handler = handlers[result.status as keyof typeof handlers];
-  if (handler && 'data' in result) {
-    /* Use type assertion here as TypeScript can't infer the exact type */
-    (handler as (payload: unknown, full: T) => void)(result.data, result);
-  } else if (handlers.default) {
-    handlers.default(result);
-  }
-}
-
-/* Helper function to parse response body based on content type */
+  return `/* Helper function to parse response body based on content type */
 export async function parseResponseBody(response: Response): Promise<unknown | Blob | FormData | ReadableStream | Response> {
   const contentType = response.headers.get('content-type') || '';
-  if (contentType.includes('application/json') || 
+  if (contentType.includes('application/json') ||
       contentType.includes('+json')) {
     return response.json().catch(() => null);
   }
-  if (contentType.includes('text/') || 
+  if (contentType.includes('text/') ||
       contentType.includes('application/xml') ||
       contentType.includes('application/xhtml+xml')) {
     return response.text().catch(() => null);
@@ -346,11 +263,11 @@ export function parseApiResponseUnknownData<
   deserializerMap?: DeserializerMap,
 ) {
   const contentType = getResponseContentType(response);
-  
+
   /* Apply custom deserializer if provided */
   let deserializedData = data;
   let deserializationError: unknown = undefined;
-  
+
   if (deserializerMap && deserializerMap[contentType]) {
     try {
       deserializedData = deserializerMap[contentType](data, contentType);
@@ -358,7 +275,7 @@ export function parseApiResponseUnknownData<
       deserializationError = error;
     }
   }
-  
+
   const schema = schemaMap[contentType];
   if (!schema || typeof schema.safeParse !== "function") {
     const base = {
@@ -374,7 +291,7 @@ export function parseApiResponseUnknownData<
     }
     return base;
   }
-  
+
   /* Only proceed with Zod validation if deserialization succeeded */
   if (deserializationError) {
     return {
@@ -382,7 +299,7 @@ export function parseApiResponseUnknownData<
       deserializationError,
     };
   }
-  
+
   const result = schema.safeParse(deserializedData);
   if (result.success) {
     return {

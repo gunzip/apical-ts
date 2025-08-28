@@ -6,16 +6,6 @@ import type { ResponseInfo } from "../models/response-models.js";
 export { renderUnionType } from "../../shared/response-union-generator.js";
 
 /*
- * Renders an ApiResponse union type component for a response
- */
-export function renderApiResponseType(
-  statusCode: string,
-  typeName: string,
-): string {
-  return `ApiResponse<${statusCode}, ${typeName}>`;
-}
-
-/*
  * Renders a single response handler case for a switch statement
  */
 export function renderResponseHandler(

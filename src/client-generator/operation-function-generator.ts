@@ -94,7 +94,7 @@ export function extractOperationMetadata(
   );
 
   /* Responses & union return type */
-  /* Build response handlers + discriminated union return type (ApiResponse<code, Data>) */
+  /* Build response handlers + discriminated union return type (ApiResponse<code, data>) */
   const responseHandlers = generateResponseHandlers(
     operation,
     typeImports,
