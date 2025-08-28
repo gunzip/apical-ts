@@ -37,7 +37,13 @@ export const DEFAULT_CONTENT_TYPE_HANDLERS: ContentTypeHandlerConfig = {
       if (body) {
         Object.entries(body).forEach(([key, value]) => {
           if (value !== undefined) {
-            formData.append(key, value);
+            if (value instanceof File || value instanceof Blob) {
+              formData.append(key, value);
+            } else if (typeof value === 'string') {
+              formData.append(key, value);
+            } else {
+              formData.append(key, JSON.stringify(value));
+            }
           }
         });
       }
