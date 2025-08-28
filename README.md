@@ -24,7 +24,7 @@ See [supported features](#supported-features) for more information.
 
 - [OpenAPI TypeScript Generator](#openapi-typescript-generator)
   - [Installation](#installation)
-    - [From GitHub Packages](#from-github-packages)
+    - [From npm registry](#from-npm-registry)
     - [For Development](#for-development)
   - [CLI Usage](#cli-usage)
     - [CLI Options](#cli-options)
@@ -68,22 +68,9 @@ See [supported features](#supported-features) for more information.
 
 ## Installation
 
-### From GitHub Packages
+### From npm registry
 
-This package is published to GitHub Packages. To install it, you need to
-configure npm to use GitHub Packages for the `@gunzip` scope.
-
-Create or update your `.npmrc` file in your project root:
-
-````
-@gunzip:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-```
-
-Where GITHUB_TOKEN is a GitHub personal access token
-taken from the environment variables.
-
-Then install the package:
+Install the package from npm registry:
 
 ```bash
 # Using pnpm
@@ -94,11 +81,7 @@ npm install @gunzip/typescript-openapi-generator
 
 # Using yarn
 yarn add @gunzip/typescript-openapi-generator
-````
-
-**Note**: You'll need a GitHub personal access token with `read:packages`
-permission. You can create one at [GitHub Settings > Developer settings >
-Personal access tokens](https://github.com/settings/tokens).
+```
 
 ### For Development
 

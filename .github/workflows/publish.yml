@@ -1,4 +1,4 @@
-name: Publish to GitHub Packages and NPM Registry
+name: Publish to NPM Registry
 
 on:
   release:
@@ -42,21 +42,21 @@ jobs:
       - name: Build project
         run: pnpm run build
 
-      - name: Configure npm for GitHub Packages
-        run: |
-          echo "@gunzip:registry=https://npm.pkg.github.com" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Configure npm for GitHub Packages
+      #   run: |
+      #     echo "@gunzip:registry=https://npm.pkg.github.com" >> .npmrc
+      #     echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Bump version
         if: github.event.inputs.version_bump
         run: pnpm version ${{ github.event.inputs.version_bump }} --no-git-tag-version
 
-      - name: Publish to GitHub Packages
-        run: pnpm publish --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Publish to GitHub Packages
+      #   run: pnpm publish --no-git-checks
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure npm for NPM registry
         run: |
