@@ -1,12 +1,12 @@
 # Publishing to NPM registry
 
-This document describes how to publish the `openapi-to-typescript` package to NPM registry.
+This document describes how to publish the `openapi-forge-ts` package to NPM registry.
 
 ## Setup
 
 The project is configured to publish to NPM registry with the following setup:
 
-- **Package name**: `openapi-to-typescript`
+- **Package name**: `openapi-forge-ts`
 
 ## Publishing Methods
 
@@ -79,7 +79,7 @@ The workflow uses the repository secret `NPM_TOKEN` which has the necessary perm
 ## Installation for Users
 
 ```bash
-pnpm add openapi-to-typescript
+pnpm add openapi-forge-ts
 ```
 
 ## Package Contents

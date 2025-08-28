@@ -66,36 +66,14 @@ See [supported features](#supported-features) for more information.
 - [Comparison with alternative
   libraries](#comparison-with-alternative-libraries)
 
-## Installation
-
-### From npm registry
-
-Install the package from npm registry:
-
-```bash
-# Using pnpm
-pnpm add openapi-to-typescript
-
-# Using npm
-npm install openapi-to-typescript
-
-# Using yarn
-yarn add openapi-to-typescript
-```
-
-### For Development
-
-```bash
-pnpm install
-```
-
 ## CLI Usage
 
-```
-pnpm start -- generate \
-  --input ./swagger-2.0.yaml \
-  --output ./generated \
-  --generate-client
+```sh
+pnpx openapi-forge-ts generate \
+  --generate-server \
+  --generate-client \
+  -i https://petstore.swagger.io/v2/swagger.json \
+  -o generated
 ```
 
 ### CLI Options
@@ -104,6 +82,7 @@ pnpm start -- generate \
   YAML or JSON format
 - `-o, --output <path>`: Output directory for generated code
 - `--generate-client`: Generate the operation functions (default: false)
+- `--generate-server`: Generate the operation wrapper (default: false)
 
 ## Supported Input Formats
 
@@ -736,23 +715,23 @@ cases.
 
 Here is a comparison of the key features and limitations of each library.
 
-| Feature / Limitation           | openapi-to-typescript (this project) |        openapi-codegen-ts        | openapi-zod-client |     openapi-ts     |
-| ------------------------------ | :----------------------------------: | :------------------------------: | :----------------: | :----------------: |
-| **Output structure**           |               Modular                |            Monolithic            |     Monolithic     |     Monolithic     |
-| **Dependency footprint**       |          Minimal (Zod only)          | io-ts, @pagopa/ts-commons, fp-ts |  zodios + others   | Minimal (Zod only) |
-| **Runtime validation**         |                Zod v4                |              io-ts               |       Zod v3       |       Zod v4       |
-| **OpenAPI version support**    | 2.0, 3.0.x, 3.1.x (auto-normalized)  |            2.0, 3.0.x            |    3.0.x, 3.1.x    |    3.0.x, 3.1.x    |
-| **Error handling**             |            Strongly Typed            |        Typed, exhaustive         |       Basic        |       Basic        |
-| **Generation Speed**           |                Faster                |        Slow on big specs         |        Fast        |        Fast        |
-| **Schema Quality**             |              Very good               |            Very good             |       Loose        |        Good        |
-| **Multiple success responses** |                  ✅                  |                ✅                |         ❌         |         ✅         |
-| **Multiple content types**     |                  ✅                  |                ❌                |         ❌         |         ❌         |
-| **Security header support**    |                  ✅                  |                ✅                |         ❌         |         ✅         |
-| **File download response**     |                  ✅                  |                ✅                |         ❌         |         ✅         |
-| **Tree-shaking friendly**      |                  ✅                  |                ❌                |         ❌         |         ❌         |
-| **Per-operation overrides**    |                  ✅                  |                ✅                |         ❌         |         ✅         |
-| **File upload support**        |                  ✅                  |                ✅                |         ✅         |         ✅         |
-| **Server Validation**          |                  ✅                  |                ❌                |         ❌         |         ❌         |
+| Feature / Limitation           |          openapi-forge-ts           |        openapi-codegen-ts        | openapi-zod-client |     openapi-ts     |
+| ------------------------------ | :---------------------------------: | :------------------------------: | :----------------: | :----------------: |
+| **Output structure**           |               Modular               |            Monolithic            |     Monolithic     |     Monolithic     |
+| **Dependency footprint**       |         Minimal (Zod only)          | io-ts, @pagopa/ts-commons, fp-ts |  zodios + others   | Minimal (Zod only) |
+| **Runtime validation**         |               Zod v4                |              io-ts               |       Zod v3       |       Zod v4       |
+| **OpenAPI version support**    | 2.0, 3.0.x, 3.1.x (auto-normalized) |            2.0, 3.0.x            |    3.0.x, 3.1.x    |    3.0.x, 3.1.x    |
+| **Error handling**             |           Strongly Typed            |        Typed, exhaustive         |       Basic        |       Basic        |
+| **Generation Speed**           |               Faster                |        Slow on big specs         |        Fast        |        Fast        |
+| **Schema Quality**             |              Very good              |            Very good             |       Loose        |        Good        |
+| **Multiple success responses** |                 ✅                  |                ✅                |         ❌         |         ✅         |
+| **Multiple content types**     |                 ✅                  |                ❌                |         ❌         |         ❌         |
+| **Security header support**    |                 ✅                  |                ✅                |         ❌         |         ✅         |
+| **File download response**     |                 ✅                  |                ✅                |         ❌         |         ✅         |
+| **Tree-shaking friendly**      |                 ✅                  |                ❌                |         ❌         |         ❌         |
+| **Per-operation overrides**    |                 ✅                  |                ✅                |         ❌         |         ✅         |
+| **File upload support**        |                 ✅                  |                ✅                |         ✅         |         ✅         |
+| **Server Validation**          |                 ✅                  |                ❌                |         ❌         |         ❌         |
 
 - https://github.com/astahmer/openapi-zod-client
 - https://github.com/pagopa/openapi-codegen-ts
