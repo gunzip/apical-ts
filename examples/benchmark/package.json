@@ -1,0 +1,18 @@
+{
+  "name": "yanogen-ts-benchmarks",
+  "version": "1.0.0",
+  "description": "Performance and memory benchmarks for yanogen-ts generated client",
+  "type": "module",
+  "scripts": {
+    "memory": "tsx memory-benchmark.ts",
+    "performance": "tsx performance-benchmark.ts",
+    "integrated": "tsx integrated-benchmark.ts",
+    "all": "npm run memory && npm run performance && npm run integrated"
+  },
+  "dependencies": {
+    "tsx": "^4.19.1"
+  },
+  "devDependencies": {
+    "clinic": "^13.0.0"
+  }
+}
