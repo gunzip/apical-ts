@@ -1,12 +1,12 @@
 {
-  "name": "openapi-forge-ts",
-  "version": "0.0.2",
+  "name": "yanogen-ts",
+  "version": "0.0.3",
   "description": "Generates fully-typed Zod v4 schemas and type-safe TypeScript REST API clients and server from OpenAPI 2.0, 3.0.x, and 3.1.x specifications.",
   "main": "dist/index.js",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gunzip/openapi-forge-ts.git"
+    "url": "git+https://github.com/gunzip/yanogen-ts.git"
   },
   "files": [
     "dist",
@@ -14,7 +14,7 @@
     "LICENSE"
   ],
   "bin": {
-    "openapi-forge-ts": "./dist/index.js"
+    "yanogen-ts": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup",

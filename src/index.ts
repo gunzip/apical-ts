@@ -8,7 +8,7 @@ import { generate } from "./core-generator/index.js";
 const program = new Command();
 
 program
-  .name("openapi-forge-ts")
+  .name("yanogen-ts")
   .description("Generate TypeScript from an OpenAPI specification.")
   .version("0.0.1");
 

@@ -1,4 +1,4 @@
-# OpenAPI to TypeScript Generator
+# YanoGen-Ts - Yet Another OpenAPI to TypeScript Generator
 
 > **Disclaimer:** This project is **experimental** and currently in an early
 > stage. Breaking changes may occur at any time. The first stable release will
@@ -69,7 +69,7 @@ See [supported features](#supported-features) for more information.
 ## CLI Usage
 
 ```sh
-pnpx openapi-forge-ts generate \
+pnpx yanogen-ts generate \
   --generate-server \
   --generate-client \
   -i https://petstore.swagger.io/v2/swagger.json \
@@ -544,7 +544,7 @@ Zod schemas and can return only responses of the expected types.
 To generate server-side code, use the CLI with the `--generate-server` flag:
 
 ```bash
-pnpx openapi-forge-ts generate \
+pnpx yanogen-ts generate \
   --generate-server \
   -i https://petstore.swagger.io/v2/swagger.json \
   -o generated
@@ -691,7 +691,7 @@ cases.
 
 Here is a comparison of the key features and limitations of each library.
 
-| Feature / Limitation           |          openapi-forge-ts           |        openapi-codegen-ts        | openapi-zod-client |     openapi-ts     |
+| Feature / Limitation           |             yanogen-ts              |        openapi-codegen-ts        | openapi-zod-client |     openapi-ts     |
 | ------------------------------ | :---------------------------------: | :------------------------------: | :----------------: | :----------------: |
 | **Output structure**           |               Modular               |            Monolithic            |     Monolithic     |     Monolithic     |
 | **Dependency footprint**       |         Minimal (Zod only)          | io-ts, @pagopa/ts-commons, fp-ts |  zodios + others   | Minimal (Zod only) |
