@@ -49,7 +49,8 @@ export type ApiResponseWithParse<
         | {
             [K in keyof Map[${"`${S}`"}]]: {
               contentType: K;
-              parsed: ExtractResponseUnion<Map, ${"`${S}`"}>;
+              /* Narrow parsed type to the specific schema for this content type */
+              parsed: z.infer<Map[${"`${S}`"}][K]>;
             };
           }[keyof Map[${"`${S}`"}]]
         | { contentType: string; error: z.ZodError }
