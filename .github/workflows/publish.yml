@@ -58,13 +58,6 @@ jobs:
       #   env:
       #     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Configure npm for NPM registry
-        run: |
-          echo "@gunzip:registry=https://registry.npmjs.org" >> .npmrc
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Publish to NPM
         run: pnpm publish --no-git-checks
         env:
