@@ -1,5 +1,5 @@
 {
-  "name": "@gunzip/typescript-openapi-generator",
+  "name": "typescript-openapi-generator",
   "version": "0.0.1",
   "description": "Generates fully-typed Zod v4 schemas and type-safe TypeScript REST API clients and server from OpenAPI 2.0, 3.0.x, and 3.1.x specifications.",
   "main": "dist/index.js",
