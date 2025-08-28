@@ -260,13 +260,10 @@ For operations with mixed content types, validation only applies when you call
 `parse()` and a schema exists for the selected content type:
 
 ```ts
-const result = await getDocument(
-  {
-    docId: "123",
-    contentType: { response: "application/json" },
-  },
-  apiConfig,
-);
+const result = await getDocument({
+  docId: "123",
+  contentType: { response: "application/json" },
+});
 
 if (result.status === 200) {
   const outcome = result.parse();
@@ -570,10 +567,10 @@ Zod schemas and can return only responses of the expected types.
 To generate server-side code, use the CLI with the `--generate-server` flag:
 
 ```bash
-pnpm start generate \
-  --input ./swagger-2.0.yaml \
-  --output ./generated \
-  --generate-server
+pnpx openapi-forge-ts generate \
+  --generate-server \
+  -i https://petstore.swagger.io/v2/swagger.json \
+  -o generated
 ```
 
 This will create a `server/` directory in your output folder, containing:
@@ -643,6 +640,8 @@ app.listen(3000);
 - The handler receives validated and typed parameters, or error details if
   validation fails
 - You control the HTTP response based on the wrapper's result
+
+See [./examples](./examples) directory for more usage examples.
 
 ### Handler Function Signature
 
