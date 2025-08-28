@@ -16,8 +16,8 @@ import { resolveResponseTypeName } from "./response-analysis.js";
  */
 export function extractResponseContentTypePairs(
   operation: OperationObject,
-): { contentType: string; status: string }[] {
-  const pairs: { contentType: string; status: string }[] = [];
+): { contentType: string | undefined; status: string }[] {
+  const pairs: { contentType: string | undefined; status: string }[] = [];
 
   if (operation.responses) {
     for (const [statusCode, response] of Object.entries(operation.responses)) {
@@ -35,7 +35,7 @@ export function extractResponseContentTypePairs(
       } else {
         /* No content responses like 204 */
         pairs.push({
-          contentType: "",
+          contentType: undefined,
           status: statusCode,
         });
       }
@@ -62,10 +62,10 @@ export function generateDiscriminatedUnionFromConfig(
   const responseMapEntries: string[] = [];
 
   for (const responseType of responseTypes) {
-    if (responseType.contentType === "") {
+    if (!responseType.contentType || responseType.contentType === "") {
       /* Void response */
       unionComponents.push(
-        `{ status: ${responseType.status}; contentType: ""; data: void }`,
+        `{ status: ${responseType.status}; contentType: undefined; data: undefined }`,
       );
     } else {
       /* Response with content */
@@ -143,8 +143,8 @@ export function generateDiscriminatedUnionTypes(
       } else {
         /* Handle responses without content (e.g., 204 No Content) */
         responseTypes.push({
-          contentType: "",
-          dataType: "void",
+          contentType: undefined,
+          dataType: undefined,
           status: statusCode,
         });
       }

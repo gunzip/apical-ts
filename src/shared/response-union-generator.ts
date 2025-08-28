@@ -10,8 +10,8 @@ import { sanitizeIdentifier } from "../schema-generator/utils.js";
  * Response union member for type generation
  */
 export interface ResponseUnionMember {
-  contentType: string;
-  dataType: string;
+  contentType: string | undefined;
+  dataType: string | undefined;
   statusCode: string;
 }
 
@@ -40,8 +40,8 @@ export function generateResponseUnion(
   if (!operation.responses) {
     /* Fallback for operations without responses */
     const fallbackMember: ResponseUnionMember = {
-      contentType: "",
-      dataType: "void",
+      contentType: undefined,
+      dataType: undefined,
       statusCode: "200",
     };
     unionMembers.push(fallbackMember);
@@ -83,8 +83,8 @@ export function generateResponseUnion(
       } else {
         /* Status code has no content/schema - add void response */
         unionMembers.push({
-          contentType: "",
-          dataType: "void",
+          contentType: undefined,
+          dataType: undefined,
           statusCode,
         });
       }
@@ -128,7 +128,7 @@ function generateUnionTypeDefinition(
 
   const memberStrings = members.map(
     (member) =>
-      `  | { status: ${member.statusCode}; contentType: "${member.contentType}"; data: ${member.dataType} }`,
+      `  | { status: ${member.statusCode}; contentType: ${member.contentType ? `"${member.contentType}"` : "undefined"}; data: ${member.dataType ? `${member.dataType}` : "undefined"} }`,
   );
 
   return `export type ${typeName} =

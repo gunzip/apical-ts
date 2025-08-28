@@ -87,8 +87,8 @@ describe("discriminated union response types", () => {
       );
 
       /* Should handle void response */
-      expect(result.unionTypeDefinition).toContain('contentType: ""');
-      expect(result.unionTypeDefinition).toContain("data: void");
+      expect(result.unionTypeDefinition).toContain("contentType: undefined");
+      expect(result.unionTypeDefinition).toContain("data: undefined");
       expect(result.unionTypeDefinition).toContain("status: 204");
 
       /* Should also handle content response */
