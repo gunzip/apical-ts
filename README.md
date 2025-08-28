@@ -4,6 +4,11 @@
 > stage. Breaking changes may occur at any time. The first stable release will
 > be version **0.1.0**.
 
+We all like the developer experience of [tRPC](https://trpc.io/), but not always
+you're in control of the backend. OpenAPI specifications provide a powerful way to
+define your API contracts, and with YanoGen-Ts, you can easily generate TypeScript
+code that adheres to those contracts, all while enjoying a seamless developer experience.
+
 ✨ Effortlessly turn your OpenAPI specifications into fully-typed Zod v4
 schemas—ready for runtime (client or server) validation and TypeScript
 development.
