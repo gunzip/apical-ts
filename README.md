@@ -1,14 +1,22 @@
 # OpenAPI TypeScript Generator
 
-> **Disclaimer:** This project is **experimental** and currently in an early stage. Breaking changes may occur at any time. The first stable release will be version **0.1.0**.
+> **Disclaimer:** This project is **experimental** and currently in an early
+> stage. Breaking changes may occur at any time. The first stable release will
+> be version **0.1.0**.
 
-✨ Effortlessly turn your OpenAPI specifications into fully-typed Zod v4 schemas—ready for runtime (client or server) validation and TypeScript development.
+✨ Effortlessly turn your OpenAPI specifications into fully-typed Zod v4
+schemas—ready for runtime (client or server) validation and TypeScript
+development.
 
-Need a client? Instantly generate a type-safe, low-footprint, operation-based REST API client alongside your schemas.
+Need a client? Instantly generate a type-safe, low-footprint, operation-based
+REST API client alongside your schemas.
 
-Need to validate server requests and return typed responses? We've got you covered with built-in support for request and response validation using Zod schemas.
+Need to validate server requests and return typed responses? We've got you
+covered with built-in support for request and response validation using Zod
+schemas.
 
-Why choose this generator against alternatives? See [comparison](#comparison-with-alternative-libraries) for more details.
+Why choose this generator against alternatives? See
+[comparison](#comparison-with-alternative-libraries) for more details.
 
 See [supported features](#supported-features) for more information.
 
@@ -27,7 +35,8 @@ See [supported features](#supported-features) for more information.
   - [Using the Generated Operations](#using-the-generated-operations)
     - [Define Configuration](#define-configuration)
     - [Call Operations](#call-operations)
-  - [Binding Configuration to All Operations](#binding-configuration-to-all-operations)
+  - [Binding Configuration to All
+    Operations](#binding-configuration-to-all-operations)
   - [Response Handling](#response-handling)
   - [Exception Handling](#exception-handling)
   - [Validation \& Error Handling (Opt-In)](#validation--error-handling-opt-in)
@@ -40,23 +49,29 @@ See [supported features](#supported-features) for more information.
     - [Common Patterns](#common-patterns)
     - [Error Handling Summary](#error-handling-summary)
     - [Best Practices](#best-practices)
-  - [Handling Multiple Content Types (Request \& Response)](#handling-multiple-content-types-request--response)
-    - [Example: Endpoint with Multiple Request Content Types](#example-endpoint-with-multiple-request-content-types)
-    - [Example: Endpoint with Multiple Response Content Types](#example-endpoint-with-multiple-response-content-types)
+  - [Handling Multiple Content Types (Request \&
+    Response)](#handling-multiple-content-types-request--response)
+    - [Example: Endpoint with Multiple Request Content
+      Types](#example-endpoint-with-multiple-request-content-types)
+    - [Example: Endpoint with Multiple Response Content
+      Types](#example-endpoint-with-multiple-response-content-types)
   - [Using Generated Zod Schemas](#using-generated-zod-schemas)
 - [Server Generation](#server-generation)
   - [How to Generate a Server](#how-to-generate-a-server)
   - [Using the Wrapper Handler](#using-the-wrapper-handler)
     - [Handler Function Signature](#handler-function-signature)
 - [Supported Features](#supported-features)
-  - [Benefits of Operation-Based Architecture](#benefits-of-operation-based-architecture)
-- [Comparison with alternative libraries](#comparison-with-alternative-libraries)
+  - [Benefits of Operation-Based
+    Architecture](#benefits-of-operation-based-architecture)
+- [Comparison with alternative
+  libraries](#comparison-with-alternative-libraries)
 
 ## Installation
 
 ### From GitHub Packages
 
-This package is published to GitHub Packages. To install it, you need to configure npm to use GitHub Packages for the `@gunzip` scope.
+This package is published to GitHub Packages. To install it, you need to
+configure npm to use GitHub Packages for the `@gunzip` scope.
 
 Create or update your `.npmrc` file in your project root:
 
@@ -81,7 +96,9 @@ npm install @gunzip/typescript-openapi-generator
 yarn add @gunzip/typescript-openapi-generator
 ````
 
-**Note**: You'll need a GitHub personal access token with `read:packages` permission. You can create one at [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens).
+**Note**: You'll need a GitHub personal access token with `read:packages`
+permission. You can create one at [GitHub Settings > Developer settings >
+Personal access tokens](https://github.com/settings/tokens).
 
 ### For Development
 
@@ -100,7 +117,8 @@ pnpm start -- generate \
 
 ### CLI Options
 
-- `-i, --input <path>`: Path to the OpenAPI spec file (2.0, 3.0.x, or 3.1.x) in YAML or JSON format
+- `-i, --input <path>`: Path to the OpenAPI spec file (2.0, 3.0.x, or 3.1.x) in
+  YAML or JSON format
 - `-o, --output <path>`: Output directory for generated code
 - `--generate-client`: Generate the operation functions (default: false)
 
@@ -112,7 +130,8 @@ The generator automatically detects and converts:
 - **OpenAPI 3.0.x** → 3.1
 - **OpenAPI 3.1.x** (no conversion needed)
 
-All input formats (local or remote yaml or JSON) are automatically normalized to OpenAPI 3.1.0 before generation.
+All input formats (local or remote yaml or JSON) are automatically normalized to
+OpenAPI 3.1.0 before generation.
 
 ## Programmatic Usage
 
@@ -178,7 +197,8 @@ const result = await getPetById({ petId: "123" });
 
 ## Binding Configuration to All Operations
 
-You can use the `configureOperations` helper to bind a configuration object to all generated operations, so you don't have to pass the config each time:
+You can use the `configureOperations` helper to bind a configuration object to
+all generated operations, so you don't have to pass the config each time:
 
 ```ts
 import * as operations from "./generated/client/index.js";
@@ -203,7 +223,8 @@ const newPet = await client.createPet({
 
 ## Response Handling
 
-Each operation returns a discriminated union of possible responses containing the raw (unvalidated) response body in `data`. Validation is opt-in. Example:
+Each operation returns a discriminated union of possible responses containing
+the raw (unvalidated) response body in `data`. Validation is opt-in. Example:
 
 ```ts
 const result = await getPetById({ petId: "123" });
@@ -233,7 +254,8 @@ if (isSuccessResponse(result)) {
 
 ## Exception Handling
 
-All responses not present in the OpenAPI specs throw an `UnexpectedResponseError` error:
+All responses not present in the OpenAPI specs throw an
+`UnexpectedResponseError` error:
 
 ```ts
 try {
@@ -250,7 +272,10 @@ try {
 
 ## Validation & Error Handling (Opt-In)
 
-Operations return raw data by default (no automatic Zod parsing). To perform runtime validation you must explicitly call the response object's `parse(deserializerMap?)` method. Validation errors are reported in the returned object (they do NOT throw) via an `error` property.
+Operations return raw data by default (no automatic Zod parsing). To perform
+runtime validation you must explicitly call the response object's
+`parse(deserializerMap?)` method. Validation errors are reported in the returned
+object (they do NOT throw) via an `error` property.
 
 ```ts
 const result = await getUserProfile({ userId: "123" });
@@ -269,7 +294,8 @@ if (result.status === 200) {
 }
 ```
 
-For operations with mixed content types, validation only applies when you call `parse()` and a schema exists for the selected content type:
+For operations with mixed content types, validation only applies when you call
+`parse()` and a schema exists for the selected content type:
 
 ```ts
 const result = await getDocument(
@@ -288,7 +314,8 @@ if (result.status === 200) {
 }
 ```
 
-Non-JSON responses (like `text/plain`, `application/octet-stream`) are still left raw unless you supply a custom deserializer in `parse()`:
+Non-JSON responses (like `text/plain`, `application/octet-stream`) are still
+left raw unless you supply a custom deserializer in `parse()`:
 
 ```ts
 const result = await downloadFile({ fileId: "123" });
@@ -304,25 +331,44 @@ if (result.status === 200) {
 
 ## Why is Runtime Parsing Opt-In?
 
-TypeScript client generator uses Zod for payload validation and parsing, but we’ve made this feature opt-in rather than mandatory. This design choice provides several key advantages:
+TypeScript client generator uses Zod for payload validation and parsing, but
+we’ve made this feature opt-in rather than mandatory. This design choice
+provides several key advantages:
 
-- **Integration with Existing Systems**: This approach allows for seamless integration with other validation mechanisms already present in your codebase. If you have existing business logic that handles data validation, disabled runtime parsing at the client level avoids redundancy and streamlines your data flow.
+- **Integration with Existing Systems**: This approach allows for seamless
+  integration with other validation mechanisms already present in your codebase.
+  If you have existing business logic that handles data validation, disabled
+  runtime parsing at the client level avoids redundancy and streamlines your
+  data flow.
 
-- **Robustness in the Real World**: APIs responses can be unpredictable. You might encounter non-documented fields or slight deviations from the OpenAPI specification. Making validation optional prevents the client from crashing on unexpected—but often harmless—payloads, ensuring your application remains resilient.
+- **Robustness in the Real World**: APIs responses can be unpredictable. You
+  might encounter non-documented fields or slight deviations from the OpenAPI
+  specification. Making validation optional prevents the client from crashing on
+  unexpected—but often harmless—payloads, ensuring your application remains
+  resilient.
 
-- **Performance**: Parsing and validating a payload comes with a computational cost. By allowing you to opt-in, you can decide to skip validation for non-critical API calls, leading to better performance, especially in high-volume scenarios.
+- **Performance**: Parsing and validating a payload comes with a computational
+  cost. By allowing you to opt-in, you can decide to skip validation for
+  non-critical API calls, leading to better performance, especially in
+  high-volume scenarios.
 
-This approach gives you more control, allowing you to balance strict type-safety with the practical demands of working with real-world APIs.
+This approach gives you more control, allowing you to balance strict type-safety
+with the practical demands of working with real-world APIs.
 
 ## Custom Response Deserialization
 
-For advanced scenarios (e.g. XML parsing, vendor-specific media types, binary post-processing) each successful response object provides a `parse(deserializerMap?)` method. This lets you plug custom per–content-type deserializers before schema validation occurs.
+For advanced scenarios (e.g. XML parsing, vendor-specific media types, binary
+post-processing) each successful response object provides a
+`parse(deserializerMap?)` method. This lets you plug custom per–content-type
+deserializers before schema validation occurs.
 
 ### Why use `parse()`?
 
-- Apply transformations (e.g. date reviver, case normalization) prior to Zod validation
+- Apply transformations (e.g. date reviver, case normalization) prior to Zod
+  validation
 - Decode non‑JSON types (XML → JS object, CSV → array, binary → metadata)
-- Gracefully handle vendor or unknown content types without modifying generated code
+- Gracefully handle vendor or unknown content types without modifying generated
+  code
 
 ### Basic Usage
 
@@ -358,13 +404,18 @@ if (res.status === 200) {
 
 ### Deserializer Map
 
-`parse(deserializerMap?)` accepts an object whose keys are lower‑cased content types (e.g. `"application/xml"`, `"application/vnd.acme+json"`, `"application/octet-stream"`). Each value is a function:
+`parse(deserializerMap?)` accepts an object whose keys are lower‑cased content
+types (e.g. `"application/xml"`, `"application/vnd.acme+json"`,
+`"application/octet-stream"`). Each value is a function:
 
 ```ts
 type Deserializer = (data: unknown, contentType?: string) => unknown;
 ```
 
-If a matching key is present, the raw body (already converted to `json()`, `text()`, `blob()`, `formData()`, or `arrayBuffer()` depending on content type heuristics) is passed to your function. Whatever you return becomes the input to schema validation (if a schema for that content type exists).
+If a matching key is present, the raw body (already converted to `json()`,
+`text()`, `blob()`, `formData()`, or `arrayBuffer()` depending on content type
+heuristics) is passed to your function. Whatever you return becomes the input to
+schema validation (if a schema for that content type exists).
 
 ### Returned Object Shapes
 
@@ -379,9 +430,12 @@ The result of `parse()` is a discriminated object you can pattern match on:
 
 Notes:
 
-- If the deserializer throws, validation is skipped (you get `deserializationError`).
-- If no schema exists, the transformed value is returned under `deserialized` and flagged with `missingSchema: true`.
-- Content type normalization strips any charset parameters (e.g. `application/json; charset=utf-8` → `application/json`).
+- If the deserializer throws, validation is skipped (you get
+  `deserializationError`).
+- If no schema exists, the transformed value is returned under `deserialized`
+  and flagged with `missingSchema: true`.
+- Content type normalization strips any charset parameters (e.g.
+  `application/json; charset=utf-8` → `application/json`).
 
 ### Common Patterns
 
@@ -431,15 +485,20 @@ const outcome = res.parse({
 
 ## Handling Multiple Content Types (Request & Response)
 
-This generator fully supports OpenAPI endpoints that define multiple content types for both requests and responses. For each operation, the generated client:
+This generator fully supports OpenAPI endpoints that define multiple content
+types for both requests and responses. For each operation, the generated client:
 
-- Accepts a `contentType` property in the request object, which is an object with optional `request` and `response` keys, to specify which content type to use for the request and which to prefer for the response.
+- Accepts a `contentType` property in the request object, which is an object
+  with optional `request` and `response` keys, to specify which content type to
+  use for the request and which to prefer for the response.
 - Returns a response typed according to the selected response content type.
-- Validates and parses the response according to the content type actually returned by the server.
+- Validates and parses the response according to the content type actually
+  returned by the server.
 
 ### Example: Endpoint with Multiple Request Content Types
 
-Suppose your OpenAPI spec defines an operation that accepts both `application/json` and `application/x-www-form-urlencoded` for the request body:
+Suppose your OpenAPI spec defines an operation that accepts both
+`application/json` and `application/x-www-form-urlencoded` for the request body:
 
 ```yaml
 requestBody:
@@ -452,7 +511,8 @@ requestBody:
         $ref: "#/components/schemas/PetForm"
 ```
 
-The generated operation function will accept a `contentType` object to select the body and/or response format:
+The generated operation function will accept a `contentType` object to select
+the body and/or response format:
 
 ```ts
 import { createPet } from "./generated/client/index.js";
@@ -494,7 +554,8 @@ responses:
           $ref: "#/components/schemas/PetXml"
 ```
 
-The generated response type will match the selected or default response content type:
+The generated response type will match the selected or default response content
+type:
 
 ```ts
 const result = await getPetById({
@@ -537,7 +598,10 @@ if (!result.success) {
 
 # Server Generation
 
-The generator can also produce a fully-typed server handler wrapper for your OpenAPI operations. This enables you to build type-safe HTTP servers (e.g., with Express, Fastify, or custom frameworks) that validate requests at runtime using Zod schemas and can return only responses of the expected types.
+The generator can also produce a fully-typed server handler wrapper for your
+OpenAPI operations. This enables you to build type-safe HTTP servers (e.g., with
+Express, Fastify, or custom frameworks) that validate requests at runtime using
+Zod schemas and can return only responses of the expected types.
 
 ## How to Generate a Server
 
@@ -557,9 +621,15 @@ This will create a `server/` directory in your output folder, containing:
 
 ## Using the Wrapper Handler
 
-The generated route wrapper is a function that takes a request handler and returns an async function that can be used with any web framework. This allows you to ensure type safety and runtime validation for your request parameters (path, query, headers) and response data.
+The generated route wrapper is a function that takes a request handler and
+returns an async function that can be used with any web framework. This allows
+you to ensure type safety and runtime validation for your request parameters
+(path, query, headers) and response data.
 
-You are responsible for extracting parameters from the framework request and passing them to the wrapper, then handling the result (status, contentType, data) in your route handler. This allows you to integrate with any web framework and customize error handling as needed.
+You are responsible for extracting parameters from the framework request and
+passing them to the wrapper, then handling the result (status, contentType,
+data) in your route handler. This allows you to integrate with any web framework
+and customize error handling as needed.
 
 Example usage with Express and a helper for parameter extraction:
 
@@ -604,17 +674,22 @@ app.get("/test-auth-bearer", async (req, res) => {
 app.listen(3000);
 ```
 
-- The wrapper receives a single params object (containing query, path, headers, body, etc.)
-- You can use a helper like `extractRequestParams` to transform Express request data into the expected format
-- The handler receives validated and typed parameters, or error details if validation fails
+- The wrapper receives a single params object (containing query, path, headers,
+  body, etc.)
+- You can use a helper like `extractRequestParams` to transform Express request
+  data into the expected format
+- The handler receives validated and typed parameters, or error details if
+  validation fails
 - You control the HTTP response based on the wrapper's result
 
 ### Handler Function Signature
 
 The handler you provide to the wrapper receives a single argument:
 
-- For valid requests: `{ type: "ok", value: { query, path, headers, body, ... } }`
-- For validation errors: `{ type: "query_error" | "body_error" | ... , error: ZodError }`
+- For valid requests: `{ type: "ok", value: { query, path, headers, body, ... }
+}`
+- For validation errors: `{ type: "query_error" | "body_error" | ... , error:
+ZodError }`
 
 It must return an object with `{ status, contentType, data }`.
 
@@ -625,23 +700,39 @@ It must return an object with `{ status, contentType, data }`.
 - Automatic error details for validation failures
 - Type-safe handler context
 
-You can use the generated types and schemas for further custom validation or integration with other frameworks.
+You can use the generated types and schemas for further custom validation or
+integration with other frameworks.
 
-- 🚀 **Multi-version support**: Accepts OpenAPI 2.0 (Swagger), 3.0.x, and 3.1.x specifications
-- 🛠️ **Operation-based client generation**: Generates one function per operation, with strong typing and per-operation configuration—no need for blacklisting operations you don't need!
-- 🛡️ **Zod v4 runtime validation (opt-in)**: Invoke `response.parse()` to validate payloads without throwing on validation errors
-- 📦 **Small footprint**: Generates each operation and schema/type in its own file for maximum tree-shaking and modularity
-- 🚀 **Fast code generation**: Optimized for quick generation times, even with large specs, sync types and changes in real-time
-- 🔒 **Type-safe configuration**: Immutable global defaults, with the ability to override config per operation
-- 🔑 **Flexible authentication**: Supports OpenAPI security schemes (Bearer, API Key, etc.), with dynamic header/query configuration
-- 🧩 **Discriminated union response types**: Each operation returns a discriminated union of possible responses, enabling exhaustive handling
-- ⚠️ **Comprehensive error handling**: Only unexpected responses throw a typed exception (`UnexpectedResponseError`) forwarding status, body, and headers
-- 📁 **File upload/download & binary support**: Handles `multipart/form-data` and `application/octet-stream` uploads and downloads
+- 🚀 **Multi-version support**: Accepts OpenAPI 2.0 (Swagger), 3.0.x, and 3.1.x
+  specifications
+- 🛠️ **Operation-based client generation**: Generates one function per
+  operation, with strong typing and per-operation configuration—no need for
+  blacklisting operations you don't need!
+- 🛡️ **Zod v4 runtime validation (opt-in)**: Invoke `response.parse()` to
+  validate payloads without throwing on validation errors
+- 📦 **Small footprint**: Generates each operation and schema/type in its own
+  file for maximum tree-shaking and modularity
+- 🚀 **Fast code generation**: Optimized for quick generation times, even with
+  large specs, sync types and changes in real-time
+- 🔒 **Type-safe configuration**: Immutable global defaults, with the ability to
+  override config per operation
+- 🔑 **Flexible authentication**: Supports OpenAPI security schemes (Bearer, API
+  Key, etc.), with dynamic header/query configuration
+- 🧩 **Discriminated union response types**: Each operation returns a
+  discriminated union of possible responses, enabling exhaustive handling
+- ⚠️ **Comprehensive error handling**: Only unexpected responses throw a typed
+  exception (`UnexpectedResponseError`) forwarding status, body, and headers
+- 📁 **File upload/download & binary support**: Handles `multipart/form-data`
+  and `application/octet-stream` uploads and downloads
 - 📦 **ESM output**: Generated code is ESM-first
-- 🪶 **Minimal dependencies**: No runtime dependencies except Zod; works in Node.js and browsers
-- 🧪 **Self-contained Zod schemas**: Generated schemas can be used independently for validation (e.g., in forms) and server-side logic
-- 🔄 **Automatic OpenAPI normalization**: All input specs are normalized to OpenAPI 3.1.0 before code generation
-- ✅ **Comprehensive test suite**: Project includes Vitest-based tests for all major features
+- 🪶 **Minimal dependencies**: No runtime dependencies except Zod; works in
+  Node.js and browsers
+- 🧪 **Self-contained Zod schemas**: Generated schemas can be used independently
+  for validation (e.g., in forms) and server-side logic
+- 🔄 **Automatic OpenAPI normalization**: All input specs are normalized to
+  OpenAPI 3.1.0 before code generation
+- ✅ **Comprehensive test suite**: Project includes Vitest-based tests for all
+  major features
 
 ## Benefits of Operation-Based Architecture
 
@@ -653,25 +744,52 @@ You can use the generated types and schemas for further custom validation or int
 
 # Comparison with alternative libraries
 
-After [evaluating several libraries](https://github.com/gunzip/openapi-generator-benchmark), we found that each has its [strengths and weaknesses](https://pagopa.github.io/dx/blog/typescript-openapi-generators-0.1-alpha), but ultimately, we chose to build this project to address specific needs and use cases.
+After [evaluating several
+libraries](https://github.com/gunzip/openapi-generator-benchmark), we found that
+each has its [strengths and
+weaknesses](https://pagopa.github.io/dx/blog/typescript-openapi-generators-0.1-alpha),
+but ultimately, we chose to build this project to address specific needs and use
+cases.
 
 Here is a comparison of the key features and limitations of each library.
 
-| Feature / Limitation                          | typescript-openapi-generator (this project) |                      openapi-codegen-ts                       |   openapi-zod-client   |
-| --------------------------------------------- | :-----------------------------------------: | :-----------------------------------------------------------: | :--------------------: |
-| **Output structure**                          |        Modular (per operation/type)         | Monolithic (single file for all operations and request types) |  Single file + zodios  |
-| **Dependency footprint**                      |             Minimal (Zod only)              |               io-ts, @pagopa/ts-commons, fp-ts                |    zodios + others     |
-| **Runtime validation**                        |                   Zod v4                    |                             io-ts                             |         Zod v3         |
-| **OpenAPI version support**                   |     2.0, 3.0.x, 3.1.x (auto-normalized)     |                          2.0, 3.0.x                           |      3.0.x, 3.1.x      |
-| **Error handling**                            |              Typed, exhaustive              |                       Typed, exhaustive                       |         Basic          |
-| **Type complexity**                           |                   Simple                    |                 Complex and hard to maintain                  |         Simple         |
-| **Generation Speed**                          |                   Faster                    |                      Slower on big specs                      |          Fast          |
-| **Subtype constraints**                       |                     ✅                      |                              ✅                               | ⚠️ (Only at top-level) |
-| **Multiple success responses**                |                     ✅                      |                              ✅                               |           ❌           |
-| **Multiple content types (request/response)** |                     ✅                      |                              ❌                               |           ❌           |
-| **Security header support**                   |                     ✅                      |                              ✅                               |           ❌           |
-| **File download response**                    |                     ✅                      |                              ✅                               |           ❌           |
-| **Tree-shaking friendly**                     |                     ✅                      |                              ❌                               |           ❌           |
-| **Per-operation overrides**                   |                     ✅                      |                              ✅                               |           ❌           |
-| **File upload support**                       |                     ✅                      |                              ✅                               |           ✅           |
-| **Server-side usage**                         |                     ✅                      |                              ✅                               |           ✅           |
+| Feature / Limitation           | typescript-openapi-generator (this project) |        openapi-codegen-ts        | openapi-zod-client |     openapi-ts     |
+| ------------------------------ | :-----------------------------------------: | :------------------------------: | :----------------: | :----------------: |
+| **Output structure**           |                   Modular                   |            Monolithic            |     Monolithic     |     Monolithic     |
+| **Dependency footprint**       |             Minimal (Zod only)              | io-ts, @pagopa/ts-commons, fp-ts |  zodios + others   | Minimal (Zod only) |
+| **Runtime validation**         |                   Zod v4                    |              io-ts               |       Zod v3       |       Zod v4       |
+| **OpenAPI version support**    |     2.0, 3.0.x, 3.1.x (auto-normalized)     |            2.0, 3.0.x            |    3.0.x, 3.1.x    |    3.0.x, 3.1.x    |
+| **Error handling**             |               Strongly Typed                |        Typed, exhaustive         |       Basic        |       Basic        |
+| **Generation Speed**           |                   Faster                    |        Slow on big specs         |        Fast        |        Fast        |
+| **Schema Quality**             |                  Very good                  |            Very good             |       Loose        |        Good        |
+| **Multiple success responses** |                     ✅                      |                ✅                |         ❌         |         ✅         |
+| **Multiple content types**     |                     ✅                      |                ❌                |         ❌         |         ❌         |
+| **Security header support**    |                     ✅                      |                ✅                |         ❌         |         ✅         |
+| **File download response**     |                     ✅                      |                ✅                |         ❌         |         ✅         |
+| **Tree-shaking friendly**      |                     ✅                      |                ❌                |         ❌         |         ❌         |
+| **Per-operation overrides**    |                     ✅                      |                ✅                |         ❌         |         ✅         |
+| **File upload support**        |                     ✅                      |                ✅                |         ✅         |         ✅         |
+| **Server Validation**          |                     ✅                      |                ❌                |         ❌         |         ❌         |
+
+- https://github.com/astahmer/openapi-zod-client
+- https://github.com/pagopa/openapi-codegen-ts
+- https://github.com/hey-api/openapi-ts
+
+## Conclusion
+
+This project is designed with a clear focus on delivering an exceptional
+developer experience and robust type safety. Our core goals are to:
+
+- **Eliminate runtime errors** by leveraging _strong_ TypeScript typing and
+  comprehensive support for OpenAPI specs (ie. multiple response types).
+- **Offer a developer experience similar to tRPC**, but fully driven by OpenAPI
+  specifications—combining the best of both worlds: type safety and open
+  standards (works with _external_ specs as well).
+- **Generate high-quality, reusable schemas** for both API requests and
+  responses, ensuring consistency across your codebase.
+
+During our research, we discovered that many existing tools either lacked
+flexibility or forced developers into rigid workflows. By emphasizing
+modularity, type safety, and ease of integration, this project aims to bridge
+those gaps—empowering TypeScript developers to build reliable, maintainable APIs
+with confidence.
