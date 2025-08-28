@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
 import type { ApiResponseWithParse } from "../../generated-test/client/config.js";
+import {
+  isParsed,
+  isSuccessfulParsed,
+} from "../../generated-test/client/config.js";
 import type { GetPetByIdResponseMap } from "../../generated-test/client/getPetById.js";
 
 // Type-level narrowing check: if this file type-checks, the discriminated union works.
@@ -11,12 +15,7 @@ describe("parse() discriminated union usage", () => {
     >(res: R) {
       const result = res.parse();
       // Filter out non-success parse variants first
-      if (
-        "error" in result ||
-        "missingSchema" in result ||
-        "deserializationError" in result
-      )
-        return;
+      if (!isParsed(result)) return;
       if (result.contentType === "application/xml") {
         // @ts-expect-no-error
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -26,6 +25,13 @@ describe("parse() discriminated union usage", () => {
         // @ts-expect-no-error
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         result.parsed.id;
+      }
+
+      // Direct type guard on a generic narrowing
+      if (isParsed(result)) {
+        // parsed is present, can access common properties safely
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        result.parsed;
       }
     }
 

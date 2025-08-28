@@ -312,5 +312,23 @@ export function parseApiResponseUnknownData<
     contentType,
     error: result.error,
   };
-}`;
+}
+
+/* Type guard helpers for narrowing parse() results */
+export function isParsed<
+  T extends
+    | { contentType: string; parsed: unknown }
+    | { contentType: string; error: unknown }
+    | { contentType: string; missingSchema: true; deserialized: unknown }
+    | { contentType: string; deserializationError: unknown }
+>(value: T): value is Extract<T, { parsed: unknown }> {
+  return (
+    !!value &&
+    "parsed" in (value as Record<string, unknown>) &&
+    !("error" in value) &&
+    !("missingSchema" in (value as Record<string, unknown>)) &&
+    !("deserializationError" in (value as Record<string, unknown>))
+  );
+}
+`;
 }
