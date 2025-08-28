@@ -222,7 +222,7 @@ paths:
                 $ref: "#/components/schemas/Pet"
             application/xml:
               schema:
-                $ref: "#/components/schemas/Pet"
+                $ref: "#/components/schemas/PetXml"
         "400":
           description: Invalid ID supplied
         "404":
@@ -794,6 +794,17 @@ components:
             - sold
       xml:
         name: pet
+    PetXml:
+      allOf:
+        - $ref: "#/components/schemas/Pet"
+        - type: object
+          properties:
+            someXmlProp:
+              type: string
+              x-extensible-enum:
+                - ACTIVATED
+          required:
+            - someXmlProp
     ApiResponse:
       type: object
       properties:
