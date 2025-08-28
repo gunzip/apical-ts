@@ -28,9 +28,6 @@ See [supported features](#supported-features) for more information.
 ![Demo of OpenAPI TypeScript Generator](./demo.gif)
 
 - [OpenAPI TypeScript Generator](#openapi-typescript-generator)
-  - [Installation](#installation)
-    - [From npm registry](#from-npm-registry)
-    - [For Development](#for-development)
   - [CLI Usage](#cli-usage)
     - [CLI Options](#cli-options)
   - [Supported Input Formats](#supported-input-formats)
@@ -45,7 +42,7 @@ See [supported features](#supported-features) for more information.
   - [Response Handling](#response-handling)
   - [Exception Handling](#exception-handling)
   - [Runtime Response Validation (Opt-In)](#runtime-response-validation-opt-in)
-  - [Why is Runtime Parsing Opt-In?](#why-is-runtime-parsing-opt-in)
+  - [Why is Runtime Validation Opt-In?](#why-is-runtime-validation-opt-in)
   - [Custom Response Deserialization](#custom-response-deserialization)
     - [Why use `parse()`?](#why-use-parse)
     - [Basic Usage](#basic-usage)
@@ -285,7 +282,7 @@ if (result.status === 200) {
 }
 ```
 
-## Why is Runtime Parsing Opt-In?
+## Why is Runtime Validation Opt-In?
 
 TypeScript client generator uses Zod for payload validation and parsing, but
 we’ve made this feature opt-in rather than mandatory. This design choice
