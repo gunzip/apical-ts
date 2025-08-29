@@ -97,6 +97,8 @@ pnpx chokidar-cli openapi.yaml -c \
 - `-o, --output <path>`: Output directory for generated code
 - `--generate-client`: Generate the operation functions (default: false)
 - `--generate-server`: Generate the operation wrapper (default: false)
+- `--force-validation`: Automatically validate responses with Zod in generated
+  operations (default: manual validation via `parse()` method)
 
 ## Supported Input Formats
 
@@ -201,13 +203,15 @@ const newPet = await client.createPet({
 ## Response Handling
 
 Each operation returns a discriminated union of possible responses containing
-the raw (unvalidated) response body in `data`. Validation is opt-in. Example:
+the raw (unvalidated) response body in `data`. Validation is opt-in by default,
+but can be made automatic with the `--force-validation` flag. Example:
 
 ```ts
 const result = await getPetById({ petId: "123" });
 
 if (result.status === 200) {
-  // result.data is the RAW response body (unvalidated)
+  // result.data is the RAW response body (unvalidated by default)
+  // or VALIDATED data when using --force-validation
   console.log("Pet (raw):", result.data);
   // But will have a parse() method bound if you want
   // to parse the returned response, see examples below
@@ -294,10 +298,43 @@ if (result.status === 200) {
 }
 ```
 
+## Automatic Runtime Validation
+
+When using the `--force-validation` CLI flag, operations automatically validate
+responses using Zod schemas without requiring explicit calls to `parse()`.
+This provides stricter type safety and validation at the cost of performance.
+
+### Usage with Automatic Validation
+
+```ts
+// Generate with --force-validation flag
+pnpx yanogen-ts generate \
+  --generate-client \
+  --force-validation \
+  -i openapi.yaml \
+  -o generated
+
+// Operations now return validated data directly
+const result = await getUserProfile({ userId: "123" });
+
+if (result.status === 200) {
+  // automatically validated and typed
+  if ("parsed" in result) {
+    const profile = result.parsed;
+    console.log("User:", profile.name, profile.email);
+  }
+  else if ("parseError" in result) {
+    console.error("User profile validation failed", result.parseError);
+  }
+} else if (result.status === 404) {
+  console.warn("User not found");
+}
+```
+
 ## Why is Runtime Validation Opt-In?
 
 TypeScript client generator uses Zod for payload validation and parsing, but
-we’ve made this feature opt-in rather than mandatory. This design choice
+we've made this feature opt-in rather than mandatory. This design choice
 provides several key advantages:
 
 - **Integration with Existing Systems**: This approach allows for seamless
@@ -319,6 +356,25 @@ provides several key advantages:
 
 This approach gives you more control, allowing you to balance strict type-safety
 with the practical demands of working with real-world APIs.
+
+### When to Use Automatic Validation
+
+Use the `--force-validation` flag when:
+
+- **Trusted APIs**: When responses always match the OpenAPI specification
+- **Performance is Not Critical**: When the validation overhead is acceptable
+  for your use case
+
+### When to Use Manual Validation
+
+Use the default manual validation (without `--force-validation`) when:
+
+- **Huge Payloads**: When dealing with large responses where validation overhead is a concern
+- **Untrusted APIs**: When APIs may return unexpected data that shouldn't crash your application
+- **Gradual Migration**: When incrementally adding validation to existing
+  codebases
+- **Custom Validation Logic**: When you need more control over validation
+  behavior and error handling or you have your own validation already in place
 
 ## Custom Response Deserialization
 
@@ -660,8 +716,9 @@ integration with other frameworks.
 - 🛠️ **Operation-based client generation**: Generates one function per
   operation, with strong typing and per-operation configuration—no need for
   blacklisting operations you don't need!
-- 🛡️ **Zod v4 runtime validation (opt-in)**: Invoke `response.parse()` to
-  validate payloads without throwing on validation errors
+- 🛡️ **Zod v4 runtime validation (opt-in or automatic)**: Invoke `response.parse()` to
+  validate payloads without throwing on validation errors, or use `--force-validation`
+  for automatic validation in all operations
 - 📦 **Small footprint**: Generates each operation and schema/type in its own
   file for maximum tree-shaking and modularity
 - 🚀 **Fast code generation**: Optimized for quick generation times, even with
