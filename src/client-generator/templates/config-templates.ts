@@ -42,9 +42,7 @@ export type ApiResponseWithParse<
   readonly status: S;
   readonly data: unknown;
   readonly response: Response;
-  readonly parse: (
-    deserializerMap?: Partial<Record<string, Deserializer>>,
-  ) => ${"`${S}`"} extends keyof Map
+  readonly parse: () => ${"`${S}`"} extends keyof Map
     ?
         | {
             [K in keyof Map[${"`${S}`"}]]: {
@@ -113,6 +111,7 @@ export interface GlobalConfig {
   headers: {
     [K in ${auth.hasAuthHeaders ? `AuthHeaders` : "string"}]?: string;
   } & Record<string, string>;
+  deserializerMap?: DeserializerMap;
 }`;
 }
 

@@ -19,7 +19,7 @@ describe("precise ApiResponse types", () => {
 
       /* Should include precise ApiResponseWithParse type */
       expect(result).toContain("ApiResponseWithParse<");
-      expect(result).toContain("readonly parse: (");
+      expect(result).toContain("readonly parse: ()");
       expect(result).not.toContain(
         "ReturnType<typeof parseApiResponseUnknownData>",
       );
@@ -29,11 +29,12 @@ describe("precise ApiResponse types", () => {
       expect(result).not.toMatch(/parse:.*any(?!>)/); // Don't match 'any' in generic bounds
     });
 
-    it("should use precise deserializer map type", () => {
+    it("should generate parse method with no parameters", () => {
       const result = renderApiResponseTypes();
 
-      /* Should use proper deserializer map type */
-      expect(result).toContain("Partial<Record<string, Deserializer>>");
+      /* Should have parse method without parameters */
+      expect(result).toContain("readonly parse: ()");
+      expect(result).not.toContain("Partial<Record<string, Deserializer>>");
     });
   });
 
