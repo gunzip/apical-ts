@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 /*
  * Tests demonstrating the practical usage of the new deserializerMap functionality.
- * Shows how users can configure global deserializers and still override them per call.
+ * Shows how users can configure global deserializers through the config object.
  */
 
 describe("DeserializerMap Usage Examples", () => {
@@ -10,8 +10,8 @@ describe("DeserializerMap Usage Examples", () => {
     /*
      * This test demonstrates the generated TypeScript patterns, showing:
      * 1. How GlobalConfig now includes deserializerMap
-     * 2. How parse() uses config.deserializerMap as fallback
-     * 3. How backward compatibility is maintained
+     * 2. How parse() uses config.deserializerMap automatically
+     * 3. How the new approach simplifies the API
      */
 
     /* Example of how the user would configure a global deserializerMap */
@@ -59,7 +59,7 @@ describe("DeserializerMap Usage Examples", () => {
       config.deserializerMap!["application/vnd.custom+json"],
     ).toBeDefined();
 
-    /* Mock how parseApiResponseUnknownData would work with the new fallback logic */
+    /* Mock how parseApiResponseUnknownData works with the new config-based approach */
     function mockParseApiResponseUnknownData(
       response: { headers: { get: (name: string) => string | null } },
       data: unknown,
@@ -73,7 +73,7 @@ describe("DeserializerMap Usage Examples", () => {
           };
         }
       >,
-      explicitDeserializerMap?: Record<string, (data: unknown) => unknown>,
+      configDeserializerMap?: Record<string, (data: unknown) => unknown>,
     ) {
       const contentType =
         response.headers
@@ -82,8 +82,8 @@ describe("DeserializerMap Usage Examples", () => {
           .trim()
           .toLowerCase() || "";
 
-      /* This demonstrates the new logic: use explicit deserializerMap OR fall back to config */
-      const deserializerMap = explicitDeserializerMap || config.deserializerMap;
+      /* This demonstrates the new logic: use config.deserializerMap */
+      const deserializerMap = configDeserializerMap;
 
       let deserializedData = data;
       if (deserializerMap && deserializerMap[contentType]) {
@@ -105,7 +105,7 @@ describe("DeserializerMap Usage Examples", () => {
       };
     }
 
-    /* Test case 1: parse() with no explicit deserializerMap uses config.deserializerMap */
+    /* Test case 1: parse() uses config.deserializerMap automatically */
     const mockResponse1 = {
       headers: {
         get: (name: string) =>
@@ -122,7 +122,7 @@ describe("DeserializerMap Usage Examples", () => {
       mockResponse1,
       xmlData,
       { "application/xml": mockSchema },
-      undefined, // No explicit deserializerMap - should use config.deserializerMap
+      config.deserializerMap, // Uses config.deserializerMap
     );
 
     expect(result1).toEqual({
@@ -130,11 +130,14 @@ describe("DeserializerMap Usage Examples", () => {
       parsed: { name: "John", age: 30 },
     });
 
-    /* Test case 2: parse() with explicit deserializerMap overrides config.deserializerMap */
-    const customXmlDeserializer = {
-      "application/xml": (data: unknown) => {
-        /* Different XML parsing logic */
-        return { customParsed: true, rawXml: data };
+    /* Test case 2: Different config with different deserializerMap */
+    const customConfig = {
+      ...config,
+      deserializerMap: {
+        "application/xml": (data: unknown) => {
+          /* Different XML parsing logic */
+          return { customParsed: true, rawXml: data };
+        },
       },
     };
 
@@ -142,7 +145,7 @@ describe("DeserializerMap Usage Examples", () => {
       mockResponse1,
       xmlData,
       { "application/xml": mockSchema },
-      customXmlDeserializer, // Explicit deserializerMap overrides config
+      customConfig.deserializerMap, // Uses different deserializerMap
     );
 
     expect(result2).toEqual({
@@ -150,7 +153,7 @@ describe("DeserializerMap Usage Examples", () => {
       parsed: { customParsed: true, rawXml: xmlData },
     });
 
-    /* Test case 3: Backward compatibility - works when config has no deserializerMap */
+    /* Test case 3: Config without deserializerMap works fine */
     const configWithoutDeserializerMap = {
       ...config,
       deserializerMap: undefined,
@@ -160,7 +163,7 @@ describe("DeserializerMap Usage Examples", () => {
       mockResponse1,
       xmlData,
       { "application/xml": mockSchema },
-      undefined, // No deserializers available
+      configWithoutDeserializerMap.deserializerMap, // No deserializers
     );
 
     /* Should work without deserializers, just pass raw data to schema */
@@ -219,5 +222,55 @@ describe("DeserializerMap Usage Examples", () => {
       "application/xml",
       "application/problem+json",
     ]);
+  });
+
+  it("should show how the new config-based approach simplifies API usage", () => {
+    /*
+     * This test demonstrates how the new approach simplifies the API by removing
+     * the need to pass deserializerMap as a parameter to parse().
+     */
+
+    /* OLD WAY (more complex): */
+    interface OldParseMethod {
+      parse(
+        deserializerMap?: Record<string, (data: unknown) => unknown>,
+      ): unknown;
+    }
+
+    /* NEW WAY (simpler): */
+    interface NewParseMethod {
+      parse(): unknown;
+    }
+
+    /* With the new approach, users just configure deserializerMap once in config */
+    const config = {
+      baseURL: "https://api.example.com",
+      fetch: globalThis.fetch,
+      headers: {},
+      deserializerMap: {
+        "application/xml": (data: unknown) => ({ parsed: true }),
+      },
+    };
+
+    /* Then all parse() calls automatically use the configured deserializerMap */
+    const mockResponse: NewParseMethod = {
+      parse: () => {
+        /* Internally uses config.deserializerMap */
+        return { contentType: "application/xml", parsed: { parsed: true } };
+      },
+    };
+
+    const result = mockResponse.parse(); // No parameters needed!
+
+    expect(result).toEqual({
+      contentType: "application/xml",
+      parsed: { parsed: true },
+    });
+
+    /* This is much cleaner than the old way */
+    expect(() => {
+      // Old way would require: mockResponse.parse({ "application/xml": ... })
+      // New way just requires: mockResponse.parse()
+    }).not.toThrow();
   });
 });

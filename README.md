@@ -29,7 +29,8 @@ See [supported features](#supported-features) for more information.
 
 ![Demo of OpenAPI TypeScript Generator](./demo.gif)
 
-- [YanoGen-Ts - Yet Another OpenAPI to TypeScript Generator](#yanogen-ts---yet-another-openapi-to-typescript-generator)
+- [YanoGen-Ts - Yet Another OpenAPI to TypeScript
+  Generator](#yanogen-ts---yet-another-openapi-to-typescript-generator)
   - [CLI Usage](#cli-usage)
     - [Watch mode](#watch-mode)
     - [CLI Options](#cli-options)
@@ -53,17 +54,23 @@ See [supported features](#supported-features) for more information.
     - [Common Patterns](#common-patterns)
     - [Error Handling Summary](#error-handling-summary)
     - [Best Practices](#best-practices)
-  - [Handling Multiple Content Types (Request \& Response)](#handling-multiple-content-types-request--response)
-    - [Example: Endpoint with Multiple Request Content Types](#example-endpoint-with-multiple-request-content-types)
-    - [Example: Endpoint with Multiple Response Content Types](#example-endpoint-with-multiple-response-content-types)
+  - [Handling Multiple Content Types (Request \&
+    Response)](#handling-multiple-content-types-request--response)
+    - [Example: Endpoint with Multiple Request Content
+      Types](#example-endpoint-with-multiple-request-content-types)
+    - [Example: Endpoint with Multiple Response Content
+      Types](#example-endpoint-with-multiple-response-content-types)
   - [Using Generated Zod Schemas](#using-generated-zod-schemas)
 - [Server Routes Wrappers Generation](#server-routes-wrappers-generation)
-  - [How to Generate a Server Route Wrapper](#how-to-generate-a-server-route-wrapper)
+  - [How to Generate a Server Route
+    Wrapper](#how-to-generate-a-server-route-wrapper)
   - [Using the Wrapped Handler](#using-the-wrapped-handler)
     - [Handler Function Signature](#handler-function-signature)
 - [Supported Features](#supported-features)
-  - [Benefits of Operation-Based Architecture](#benefits-of-operation-based-architecture)
-- [Comparison with alternative libraries](#comparison-with-alternative-libraries)
+  - [Benefits of Operation-Based
+    Architecture](#benefits-of-operation-based-architecture)
+- [Comparison with alternative
+  libraries](#comparison-with-alternative-libraries)
   - [Conclusion](#conclusion)
 
 ## CLI Usage
@@ -147,6 +154,8 @@ const apiConfig = {
   headers: {
     Authorization: "Bearer your-token",
   },
+  // here you can provide your custom deserializers
+  // see below for examples
 };
 ```
 
@@ -241,19 +250,19 @@ try {
 ## Runtime Response Validation (Opt-In)
 
 Operations return raw data by default (no automatic Zod parsing). To perform
-runtime validation you must explicitly call the response object's
-`parse(deserializerMap?)` method. Validation errors are reported in the returned
-object (they do NOT throw) via an `error` property.
+runtime validation you must explicitly call the response object's `parse()`
+method. Validation errors are reported in the returned object (they do NOT
+throw) via an `parseError` property.
 
 ```ts
 const result = await getUserProfile({ userId: "123" });
 
 if (result.status === 200) {
   const outcome = result.parse();
-  if ("parsed" in outcome) {
+  if (isParsed(outcome)) {
     console.log("User:", outcome.parsed.name, outcome.parsed.email);
-  } else if (outcome && "error" in outcome) {
-    console.error("Response validation failed:", outcome.error);
+  } else if (outcome && "parseError" in outcome) {
+    console.error("Response validation failed:", outcome.parseError);
   } else {
     console.log("User (raw, unvalidated):", result.data);
   }
@@ -273,22 +282,33 @@ const result = await getDocument({
 
 if (result.status === 200) {
   const outcome = result.parse();
-  if ("parsed" in outcome) {
+  if (isParsed(outcome)) {
     console.log("Document:", outcome.parsed);
   }
 }
 ```
 
 Non-JSON responses (like `text/plain`, `application/octet-stream`) are still
-left raw unless you supply a custom deserializer in `parse()`:
+left raw unless you supply a custom deserializer in the config:
 
 ```ts
-const result = await downloadFile({ fileId: "123" });
+const result = await downloadFile(
+  {
+    fileId: "123",
+  },
+  {
+    // You can provide custom deserializers for specific operations
+    // or even in the global configuration
+    deserializerMap: {
+      ...globalConfig,
+      "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
+    },
+  },
+);
+
 if (result.status === 200) {
-  const outcome = result.parse({
-    "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
-  });
-  if (outcome && "parsed" in outcome) {
+  const outcome = result.parse();
+  if (isParsed(outcome)) {
     console.log("Downloaded file size:", outcome.parsed.size);
   }
 }
@@ -323,11 +343,15 @@ with the practical demands of working with real-world APIs.
 ## Custom Response Deserialization
 
 For advanced scenarios (e.g. XML parsing, vendor-specific media types, binary
-post-processing) each successful response object provides a
-`parse(deserializerMap?)` method. This lets you plug custom per–content-type
-deserializers before schema validation occurs.
+post-processing) you can provide custom deserializers through the config object.
+The `parse()` method will automatically use these deserializers before schema
+validation occurs.
 
-### Why use `parse()`?
+Deserializers are methods that transform the raw response data into a format
+suitable for validation. They can be defined for specific content types and are
+applied automatically during the parsing process.
+
+### Why use Deserializers?
 
 - Apply transformations (e.g. date reviver, case normalization) prior to Zod
   validation
@@ -335,30 +359,63 @@ deserializers before schema validation occurs.
 - Gracefully handle vendor or unknown content types without modifying generated
   code
 
+### Example of Custom Deserializers
+
+```ts
+{
+  "application/xml": (data: unknown) => {
+    // Custom XML parsing logic
+    const xmlString = data as string;
+    const nameMatch = /<name>([^<]+)<\/name>/u.exec(xmlString);
+    const ageMatch = /<age>([^<]+)<\/age>/u.exec(xmlString);
+    return {
+      name: nameMatch?.[1] || "",
+      age: Number(ageMatch?.[1]) || 0,
+    };
+  },
+  "application/vnd.custom+json": (data: unknown) => {
+    // Custom JSON transformation
+    const obj = data as Record<string, unknown>;
+    return {
+      ...obj,
+      id: String(obj.id).toUpperCase(),
+      timestamp: new Date(),
+    };
+  },
+}
+```
+
 ### Basic Usage
 
 ```ts
-const res = await testMultiContentTypes({
-  body: { id: "123", name: "Example" },
-  contentType: { response: "application/xml" },
-});
+const res = await testMultiContentTypes(
+  {
+    body: { id: "123", name: "Example" },
+    contentType: { response: "application/xml" },
+  },
+  {
+    ...globalConfig,
+    // this can be merged into the global config object as well
+    deserializerMap: {
+      "application/xml": (raw: unknown) => customXmlToJson(raw as string),
+      "application/octet-stream": (blob: unknown) => ({
+        size: (blob as Blob).size,
+      }),
+    },
+  },
+);
 
 if (res.status === 200) {
-  const outcome = res.parse({
-    "application/xml": (raw: unknown) => customXmlToJson(raw as string),
-    "application/octet-stream": (blob: unknown) => ({
-      size: (blob as Blob).size,
-    }),
-  });
+  const outcome = res.parse();
 
-  if ("parsed" in outcome) {
+  if (isParsed(outcome)) {
     // Zod-validated & transformed data
     console.log(outcome.parsed);
-  } else if ("error" in outcome) {
-    console.error("Validation failed", outcome.error);
+  } else if ("parseError" in outcome) {
+    console.error("Validation failed", outcome.parseError);
   } else if ("deserializationError" in outcome) {
     console.error("Deserializer threw", outcome.deserializationError);
-  } else if (outcome.missingSchema) {
+  } else if ("missingSchema" in outcome) {
     console.warn(
       "No schema for content type; raw transformed value:",
       outcome.deserialized,
@@ -369,18 +426,17 @@ if (res.status === 200) {
 
 ### Deserializer Map
 
-`parse(deserializerMap?)` accepts an object whose keys are lower‑cased content
-types (e.g. `"application/xml"`, `"application/vnd.acme+json"`,
-`"application/octet-stream"`). Each value is a function:
+The `deserializerMap` is a property of the config object that maps content types
+to deserializer functions:
 
 ```ts
 type Deserializer = (data: unknown, contentType?: string) => unknown;
+type DeserializerMap = Record<string, Deserializer>;
 ```
 
-If a matching key is present, the raw body (already converted to `json()`,
-`text()`, `blob()`, `formData()`, or `arrayBuffer()` depending on content type
-heuristics) is passed to your function. Whatever you return becomes the input to
-schema validation (if a schema for that content type exists).
+When provided in the config, the raw response body is passed to your function
+before schema validation. Whatever you return becomes the input to schema
+validation (if a schema for that content type exists).
 
 ### Returned Object Shapes
 
@@ -389,7 +445,7 @@ The result of `parse()` is a discriminated object you can pattern match on:
 | Scenario                              | Shape                                                                       |
 | ------------------------------------- | --------------------------------------------------------------------------- |
 | Schema + validation success           | `{ contentType, parsed }`                                                   |
-| Schema + validation failure           | `{ contentType, error }`                                                    |
+| Schema + validation failure           | `{ contentType, parseError }`                                               |
 | Schema present but deserializer threw | `{ contentType, deserializationError }`                                     |
 | No schema for content type            | `{ contentType, missingSchema: true, deserialized, deserializationError? }` |
 
@@ -407,28 +463,34 @@ Notes:
 1. XML → JS:
 
 ```ts
-const outcome = res.parse({
-  "application/xml": (xml: unknown) => fastXmlParser.parse(xml as string),
-});
+const outcome = res.parse();
+// Uses deserializerMap from config:
+// {
+//   "application/xml": (xml: unknown) => fastXmlParser.parse(xml as string),
+// }
 ```
 
 2. Binary metadata:
 
 ```ts
-const outcome = res.parse({
-  "application/octet-stream": (b: unknown) => ({ size: (b as Blob).size }),
-});
+const outcome = res.parse();
+// Uses deserializerMap from config:
+// {
+//   "application/octet-stream": (b: unknown) => ({ size: (b as Blob).size }),
+// }
 ```
 
 3. Vendor JSON normalization:
 
 ```ts
-const outcome = res.parse({
-  "application/vnd.custom+json": (data: any) => ({
-    ...data,
-    id: String(data.id).toUpperCase(),
-  }),
-});
+const outcome = res.parse();
+// Uses deserializerMap from config:
+// {
+//   "application/vnd.custom+json": (data: any) => ({
+//     ...data,
+//     id: String(data.id).toUpperCase(),
+//   }),
+// }
 ```
 
 ### Error Handling Summary
@@ -436,7 +498,7 @@ const outcome = res.parse({
 | Field                  | Meaning                                             |
 | ---------------------- | --------------------------------------------------- |
 | `parsed`               | Successfully deserialized and schema-validated data |
-| `error`                | Zod validation error object (`ZodError`)            |
+| `parseError`           | Zod validation error object (`ZodError`)            |
 | `deserializationError` | Exception thrown by your custom deserializer        |
 | `missingSchema`        | No schema was generated for this content type       |
 | `deserialized`         | Transformed value when no schema exists             |
@@ -523,13 +585,21 @@ The generated response type will match the selected or default response content
 type:
 
 ```ts
-const result = await getPetById({
-  petId: "123",
-  contentType: { response: "application/xml" },
-});
+const result = await getPetById(
+  {
+    petId: "123",
+    contentType: { response: "application/xml" },
+  },
+  {
+    ...globalConfig,
+    deserializerMap: {
+      "application/xml": myXmlDeserializer,
+    },
+  },
+);
 
 if (result.status === 200) {
-  const data = result.parse({ "application/xml": myXmlDeserializer });
+  const data = result.parse();
   // result.data is typed as PetXml if response: "application/xml" was selected
   // or as Pet if response: "application/json" was selected
 }
