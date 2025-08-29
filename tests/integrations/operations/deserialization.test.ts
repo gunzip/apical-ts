@@ -66,8 +66,9 @@ describe("Deserialization Operation", () => {
   });
 
   it("captures deserializationError when custom deserializer throws", async () => {
-    const client = createUnauthenticatedClient(baseURL);
-    const res = await client.testDeserialization(
+    const { testDeserialization } = await import("../generated/client/testDeserialization.js");
+    
+    const res = await testDeserialization(
       {},
       {
         baseURL,
@@ -91,8 +92,9 @@ describe("Deserialization Operation", () => {
   });
 
   it("reports validation error when deserializer returns invalid shape", async () => {
-    const client = createUnauthenticatedClient(baseURL);
-    const res = await client.testDeserialization(
+    const { testDeserialization } = await import("../generated/client/testDeserialization.js");
+    
+    const res = await testDeserialization(
       {},
       {
         baseURL,
@@ -116,8 +118,9 @@ describe("Deserialization Operation", () => {
   });
 
   it("parses XML response via custom XML deserializer", async () => {
-    const client = createUnauthenticatedClient(baseURL);
-    const res = await client.testDeserialization(
+    const { testDeserialization } = await import("../generated/client/testDeserialization.js");
+    
+    const res = await testDeserialization(
       {
         contentType: { response: "application/xml" },
       },
@@ -148,8 +151,9 @@ describe("Deserialization Operation", () => {
   });
 
   it("handles vendor JSON content type with custom deserializer on multi-content operation", async () => {
-    const client = createUnauthenticatedClient(baseURL);
-    const res = await client.testMultiContentTypes(
+    const { testMultiContentTypes } = await import("../generated/client/testMultiContentTypes.js");
+    
+    const res = await testMultiContentTypes(
       {
         body: { id: "abc", name: "example" },
         contentType: { response: "application/vnd.custom+json" },
@@ -181,12 +185,13 @@ describe("Deserialization Operation", () => {
   });
 
   it("deserializes binary download into length summary", async () => {
-    const client = createAuthenticatedClient(baseURL, "customToken");
-    const res = await client.testBinaryFileDownload(
+    const { testBinaryFileDownload } = await import("../generated/client/testBinaryFileDownload.js");
+    
+    const res = await testBinaryFileDownload(
       {},
       {
         baseURL,
-        headers: {},
+        headers: { "custom-token": "test-custom-token-abc" }, // Add auth
         fetch,
         deserializerMap: {
           "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
@@ -203,9 +208,9 @@ describe("Deserialization Operation", () => {
   });
 
   it("parses response when request sent as x-www-form-urlencoded with custom vendor JSON response", async () => {
-    // Endpoint is protected by global security; use authenticated client
-    const client = createAuthenticatedClient(baseURL, "customToken");
-    const res = await client.testMultiContentTypes(
+    const { testMultiContentTypes } = await import("../generated/client/testMultiContentTypes.js");
+    
+    const res = await testMultiContentTypes(
       {
         body: { id: "lower", name: "MixedCase" },
         contentType: {
@@ -215,7 +220,7 @@ describe("Deserialization Operation", () => {
       },
       {
         baseURL,
-        headers: {},
+        headers: { "custom-token": "test-custom-token-abc" }, // Add auth for global security
         fetch,
         deserializerMap: {
           "application/vnd.custom+json": (data: any) => ({
