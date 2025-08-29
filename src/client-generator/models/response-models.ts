@@ -52,10 +52,10 @@ export interface ResponseAnalysis {
  * Configuration for analyzing responses
  */
 export interface ResponseAnalysisConfig {
-  /* Whether the operation has a response content type map */
-  hasResponseContentTypeMap?: boolean;
   /* Whether to use forced validation mode */
   forceValidation?: boolean;
+  /* Whether the operation has a response content type map */
+  hasResponseContentTypeMap?: boolean;
   /* The operation being analyzed */
   operation: OperationObject;
   /* Set to collect type imports */

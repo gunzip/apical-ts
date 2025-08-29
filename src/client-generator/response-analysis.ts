@@ -48,8 +48,8 @@ export function analyzeResponseStructure(
   config: ResponseAnalysisConfig,
 ): ResponseAnalysis {
   const {
-    hasResponseContentTypeMap = false,
     forceValidation = false,
+    hasResponseContentTypeMap = false,
     operation,
     typeImports,
   } = config;
@@ -92,8 +92,8 @@ export function analyzeResponseStructure(
     /* Use precise ApiResponseWithParse or ApiResponseWithForcedParse types when response map is available */
     for (const responseInfo of responses) {
       if (responseInfo.hasSchema) {
-        const responseType = forceValidation 
-          ? "ApiResponseWithForcedParse" 
+        const responseType = forceValidation
+          ? "ApiResponseWithForcedParse"
           : "ApiResponseWithParse";
         unionTypes.push(
           `${responseType}<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>`,

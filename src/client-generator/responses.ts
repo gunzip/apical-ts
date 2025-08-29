@@ -92,8 +92,8 @@ export function generateResponseHandlers(
 ): ResponseHandlerResult {
   /* Analyze the response structure */
   const analysis = analyzeResponseStructure({
-    hasResponseContentTypeMap,
     forceValidation,
+    hasResponseContentTypeMap,
     operation,
     typeImports,
   });

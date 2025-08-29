@@ -48,6 +48,13 @@ export interface GenerationOptions {
    * @default 10
    */
   concurrency?: number;
+  /**
+   * Automatically validate responses with Zod in generated operations.
+   * When false (default), operations return ApiResponseWithParse with manual parse() method.
+   * When true, operations return ApiResponseWithForcedParse with automatic validation and parsed field.
+   * @default false
+   */
+  forceValidation?: boolean;
   generateClient: boolean;
   generateServer?: boolean;
   input: string;
@@ -59,13 +66,6 @@ export interface GenerationOptions {
    * @default false
    */
   strictValidation?: boolean;
-  /**
-   * Automatically validate responses with Zod in generated operations.
-   * When false (default), operations return ApiResponseWithParse with manual parse() method.
-   * When true, operations return ApiResponseWithForcedParse with automatic validation and parsed field.
-   * @default false
-   */
-  forceValidation?: boolean;
 }
 
 /**
@@ -74,12 +74,12 @@ export interface GenerationOptions {
 export async function generate(options: GenerationOptions): Promise<void> {
   const {
     concurrency = DEFAULT_CONCURRENCY,
+    forceValidation = false,
     generateClient: genClient,
     generateServer: genServer = false,
     input,
     output,
     strictValidation = false,
-    forceValidation = false,
   } = options;
 
   await fs.mkdir(output, { recursive: true });
