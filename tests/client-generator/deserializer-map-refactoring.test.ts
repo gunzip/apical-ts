@@ -58,12 +58,14 @@ describe("DeserializerMap Refactoring", () => {
       "TestOperationResponseMap",
     );
 
-    /* Verify parse method includes config.deserializerMap fallback */
-    expect(result.responseHandlers[0]).toContain(
+    /* Verify parse method uses only config.deserializerMap */
+    expect(result.responseHandlers[0]).toContain("config.deserializerMap");
+    expect(result.responseHandlers[0]).toContain("parse: ()");
+    expect(result.responseHandlers[0]).not.toContain(
       "deserializerMap || config.deserializerMap",
     );
-    expect(result.responseHandlers[0]).toContain(
-      "parse: (deserializerMap?: TestOperationResponseDeserializerMap)",
+    expect(result.responseHandlers[0]).not.toContain(
+      "parse: (deserializerMap?:",
     );
   });
 
@@ -106,7 +108,7 @@ describe("DeserializerMap Refactoring", () => {
     );
   });
 
-  it("should maintain backward compatibility with explicit deserializerMap parameter", () => {
+  it("should use only config.deserializerMap without explicit parameter", () => {
     const operation: OperationObject = {
       operationId: "backCompatTest",
       responses: {
@@ -134,13 +136,15 @@ describe("DeserializerMap Refactoring", () => {
       "BackCompatTestResponseMap",
     );
 
-    /* Parse method should still accept optional deserializerMap parameter */
-    expect(result.responseHandlers[0]).toContain(
-      "parse: (deserializerMap?: BackCompatTestResponseDeserializerMap)",
+    /* Parse method should take no parameters */
+    expect(result.responseHandlers[0]).toContain("parse: ()");
+    expect(result.responseHandlers[0]).not.toContain(
+      "parse: (deserializerMap?:",
     );
 
-    /* Should use explicit parameter OR fallback to config */
-    expect(result.responseHandlers[0]).toContain(
+    /* Should use only config.deserializerMap */
+    expect(result.responseHandlers[0]).toContain("config.deserializerMap");
+    expect(result.responseHandlers[0]).not.toContain(
       "deserializerMap || config.deserializerMap",
     );
   });
