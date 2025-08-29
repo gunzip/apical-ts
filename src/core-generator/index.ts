@@ -59,6 +59,13 @@ export interface GenerationOptions {
    * @default false
    */
   strictValidation?: boolean;
+  /**
+   * Automatically validate responses with Zod in generated operations.
+   * When false (default), operations return ApiResponseWithParse with manual parse() method.
+   * When true, operations return ApiResponseWithForcedParse with automatic validation and parsed field.
+   * @default false
+   */
+  forceValidation?: boolean;
 }
 
 /**
@@ -72,6 +79,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
     input,
     output,
     strictValidation = false,
+    forceValidation = false,
   } = options;
 
   await fs.mkdir(output, { recursive: true });
@@ -181,7 +189,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
   console.log("✅ Schemas generated successfully");
 
   if (genClient) {
-    await generateOperations(openApiDoc, output, concurrency);
+    await generateOperations(openApiDoc, output, concurrency, forceValidation);
   }
 
   if (genServer) {

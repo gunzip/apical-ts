@@ -57,6 +57,32 @@ export type ApiResponseWithParse<
         | { contentType: string; missingSchema: true; deserialized: unknown }
         | { contentType: string; deserializationError: unknown }
     : never;
+};
+
+/*
+ * Precise ApiResponse type with forced validation and always-present parsed field
+ * Used when forceValidation flag is enabled for automatic response validation
+ */
+export type ApiResponseWithForcedParse<
+  S extends number,
+  Map extends Record<string, Record<string, any>>,
+> = {
+  readonly status: S;
+  readonly data: unknown;
+  readonly response: Response;
+  readonly parsed: ${"`${S}`"} extends keyof Map
+    ?
+        | {
+            [K in keyof Map[${"`${S}`"}]]: {
+              contentType: K;
+              /* Narrow parsed type to the specific schema for this content type */
+              parsed: z.infer<Map[${"`${S}`"}][K]>;
+            };
+          }[keyof Map[${"`${S}`"}]]
+        | { contentType: string; parseError: z.ZodError }
+        | { contentType: string; missingSchema: true; deserialized: unknown }
+        | { contentType: string; deserializationError: unknown }
+    : never;
 };`;
 }
 

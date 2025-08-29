@@ -11,6 +11,7 @@ export { renderUnionType } from "../../shared/response-union-generator.js";
 export function renderResponseHandler(
   responseInfo: ResponseInfo,
   responseMapName?: string,
+  forceValidation = false,
 ): string {
   const { contentType, statusCode, typeName } = responseInfo;
 
@@ -24,17 +25,27 @@ export function renderResponseHandler(
       : undefined;
 
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
-    const parseMethod =
-      responseInfo.hasSchema && responseMapName
-        ? `,
+    if (forceValidation && responseInfo.hasSchema && responseMapName) {
+      /* Force validation mode: automatically call parseApiResponseUnknownData */
+      return `    case ${statusCode}: {
+${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
+      const parsed = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"]);
+      return { status: ${statusCode} as const, data, response, parsed };
+    }`;
+    } else {
+      /* Default mode: provide parse method for manual validation */
+      const parseMethod =
+        responseInfo.hasSchema && responseMapName
+          ? `,
         parse: (deserializerMap?: ${deserializerMapTypeName}) =>
           parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], deserializerMap as import("./config.js").DeserializerMap),`
-        : "";
+          : "";
 
-    return `    case ${statusCode}: {
+      return `    case ${statusCode}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       return { status: ${statusCode} as const, data, response${parseMethod} };
     }`;
+    }
   }
 
   return `    case ${statusCode}:
@@ -47,11 +58,12 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
 export function renderResponseHandlers(
   responses: ResponseInfo[],
   responseMapName?: string,
+  forceValidation = false,
 ): string[] {
   const handlers: string[] = [];
 
   for (const responseInfo of responses) {
-    const handler = renderResponseHandler(responseInfo, responseMapName);
+    const handler = renderResponseHandler(responseInfo, responseMapName, forceValidation);
     handlers.push(handler);
   }
 
