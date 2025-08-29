@@ -88,9 +88,11 @@ export function generateResponseHandlers(
   typeImports: Set<string>,
   hasResponseContentTypeMap = false,
   responseMapName?: string,
+  forceValidation = false,
 ): ResponseHandlerResult {
   /* Analyze the response structure */
   const analysis = analyzeResponseStructure({
+    forceValidation,
     hasResponseContentTypeMap,
     operation,
     typeImports,
@@ -100,6 +102,7 @@ export function generateResponseHandlers(
   const responseHandlers = renderResponseHandlers(
     analysis.responses,
     responseMapName,
+    forceValidation,
   );
 
   /* Generate return type using templates */

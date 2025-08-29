@@ -33,6 +33,9 @@ jobs:
       - name: Generate integration test client and server
         run: pnpm start generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client --generate-server
 
+      - name: Generate integration test client and server (force validation)
+        run: pnpm start generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated-force-validation --generate-client --generate-server --force-validation
+
       - name: Run format check
         run: pnpm format:check
 

@@ -27,6 +27,11 @@ program
     "Use strict object validation (reject unknown properties)",
     false,
   )
+  .option(
+    "--force-validation",
+    "Automatically validate responses with Zod in generated operations (default: manual validation)",
+    false,
+  )
   .action(async (options: Record<string, unknown>) => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

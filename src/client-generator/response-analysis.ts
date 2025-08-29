@@ -47,7 +47,12 @@ export function analyzeContentTypes(
 export function analyzeResponseStructure(
   config: ResponseAnalysisConfig,
 ): ResponseAnalysis {
-  const { hasResponseContentTypeMap = false, operation, typeImports } = config;
+  const {
+    forceValidation = false,
+    hasResponseContentTypeMap = false,
+    operation,
+    typeImports,
+  } = config;
   const responses: ResponseInfo[] = [];
 
   if (operation.responses) {
@@ -84,11 +89,14 @@ export function analyzeResponseStructure(
   /* Generate union types - use precise types when response map is available */
   const unionTypes: string[] = [];
   if (discriminatedUnionResult?.responseMapName) {
-    /* Use precise ApiResponseWithParse types when response map is available */
+    /* Use precise ApiResponseWithParse or ApiResponseWithForcedParse types when response map is available */
     for (const responseInfo of responses) {
       if (responseInfo.hasSchema) {
+        const responseType = forceValidation
+          ? "ApiResponseWithForcedParse"
+          : "ApiResponseWithParse";
         unionTypes.push(
-          `ApiResponseWithParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>`,
+          `${responseType}<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>`,
         );
       } else {
         const dataType = responseInfo.contentType ? "unknown" : "void";

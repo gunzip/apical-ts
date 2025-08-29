@@ -38,6 +38,9 @@ describe("unknown response mode", () => {
       expect(result.responseHandlers[0]).toContain(
         "parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap",
       );
+      expect(result.responseHandlers[0]).toContain(
+        "config.deserializerMap ?? {}",
+      );
 
       /* Verify unknown parsing is used */
       expect(result.responseHandlers[0]).not.toContain(
@@ -107,6 +110,9 @@ describe("unknown response mode", () => {
       expect(result.responseHandlers[0]).toContain("parse: () =>");
       expect(result.responseHandlers[0]).toContain(
         "parseApiResponseUnknownData(minimalResponse, data, GetPetResponseMap",
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "config.deserializerMap ?? {}",
       );
     });
   });

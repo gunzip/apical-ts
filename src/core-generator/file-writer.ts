@@ -8,7 +8,7 @@ export function buildOperationFileContent(
   typeImports: Set<string>,
   functionCode: string,
 ): string {
-  const importLines = buildOperationImports(typeImports);
+  const importLines = buildOperationImports(typeImports, functionCode);
   return `${importLines.join("\n")}\n\n${functionCode}`;
 }
 
@@ -26,9 +26,32 @@ export function buildOperationFileContent(
  * // ]
  * ```
  */
-export function buildOperationImports(typeImports: Set<string>): string[] {
+export function buildOperationImports(
+  typeImports: Set<string>,
+  functionCode?: string,
+): string[] {
+  /* Determine which config types are needed based on function content */
+  const configImports = [
+    "globalConfig",
+    "GlobalConfig",
+    "ApiResponse",
+    "parseResponseBody",
+    "UnexpectedResponseError",
+    "parseApiResponseUnknownData",
+  ];
+
+  /* Add ApiResponseWithParse if used in the function */
+  if (functionCode && functionCode.includes("ApiResponseWithParse")) {
+    configImports.push("ApiResponseWithParse");
+  }
+
+  /* Add ApiResponseWithForcedParse if used in the function */
+  if (functionCode && functionCode.includes("ApiResponseWithForcedParse")) {
+    configImports.push("ApiResponseWithForcedParse");
+  }
+
   const imports = [
-    `import { globalConfig, GlobalConfig, ApiResponse, ApiResponseWithParse, parseResponseBody, UnexpectedResponseError, parseApiResponseUnknownData } from './config.js';`,
+    `import { ${configImports.join(", ")} } from './config.js';`,
   ];
 
   /* Add Zod import if needed for parameter schemas */
