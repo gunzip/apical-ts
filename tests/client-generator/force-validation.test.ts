@@ -35,11 +35,12 @@ describe("force validation flag", () => {
       );
 
       /* Verify response handler includes parse method */
-      expect(result.responseHandlers[0]).toContain(
-        "parse: (deserializerMap?: GetUserResponseDeserializerMap) =>",
-      );
+      expect(result.responseHandlers[0]).toContain("parse: () =>");
       expect(result.responseHandlers[0]).toContain(
         "parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap",
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "config.deserializerMap ?? {}",
       );
 
       /* Verify response handler does NOT include automatic parsing */
@@ -85,6 +86,9 @@ describe("force validation flag", () => {
       expect(result.responseHandlers[0]).toContain("const parsed =");
       expect(result.responseHandlers[0]).toContain(
         "parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap",
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "config.deserializerMap ?? {}",
       );
       expect(result.responseHandlers[0]).toContain("parsed");
 
