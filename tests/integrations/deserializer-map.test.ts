@@ -77,7 +77,7 @@ describe("DeserializerMap Integration Test", () => {
     expect(operationContent).toContain("parseApiResponseUnknownData");
 
     /* Operation function should accept GlobalConfig parameter */
-    expect(operationContent).toContain("config: GlobalConfig = globalConfig");
+    expect(operationContent).toContain("config: GlobalConfig & {");
   });
 
   it("should maintain response map structure for backward compatibility", () => {

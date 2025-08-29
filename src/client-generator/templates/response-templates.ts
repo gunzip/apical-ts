@@ -20,7 +20,7 @@ export function renderResponseHandler(
       responseInfo.hasSchema && responseMapName
         ? `,
         parse: () =>
-          parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap),`
+          parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {}),`
         : "";
 
     return `    case ${statusCode}: {

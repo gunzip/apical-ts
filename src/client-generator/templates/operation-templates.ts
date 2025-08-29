@@ -203,13 +203,9 @@ export function renderOperationFunction(
     : "GlobalConfig";
 
   /* Only add type cast when we have a narrowed type */
-  const defaultValue = config.responseMapTypeName
-    ? `globalConfig as ${configType}`
-    : "globalConfig";
-
   return `${config.typeAliases}${config.summary}export async function ${config.functionName}${config.genericParams}(
   ${config.parameterDeclaration},
-  config: ${configType} = ${defaultValue}
+  config: ${configType} = globalConfig
 ): Promise<${config.updatedReturnType}> {
   ${config.functionBodyCode}
 }`;
