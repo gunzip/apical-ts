@@ -216,6 +216,9 @@ export function generateOperationFunction(
     summary: metadata.summary,
     typeAliases,
     updatedReturnType,
+    responseMapTypeName: metadata.bodyInfo.shouldGenerateResponseMap 
+      ? metadata.bodyInfo.responseMapTypeName 
+      : undefined,
   });
 
   return { functionCode: functionStr, typeImports: metadata.typeImports };

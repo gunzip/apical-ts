@@ -37,6 +37,7 @@ export interface OperationFunctionRenderConfig {
   summary: string;
   typeAliases: string;
   updatedReturnType: string;
+  responseMapTypeName?: string;
 }
 
 /* Data structure representing operation metadata extracted from OpenAPI specification */
@@ -196,9 +197,19 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
 export function renderOperationFunction(
   config: OperationFunctionRenderConfig,
 ): string {
+  /* Use narrowed config type if we have a response map type name */
+  const configType = config.responseMapTypeName
+    ? `GlobalConfig & { deserializerMap?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
+    : "GlobalConfig";
+    
+  /* Only add type cast when we have a narrowed type */
+  const defaultValue = config.responseMapTypeName
+    ? `globalConfig as ${configType}`
+    : "globalConfig";
+    
   return `${config.typeAliases}${config.summary}export async function ${config.functionName}${config.genericParams}(
   ${config.parameterDeclaration},
-  config: GlobalConfig = globalConfig
+  config: ${configType} = ${defaultValue}
 ): Promise<${config.updatedReturnType}> {
   ${config.functionBodyCode}
 }`;
