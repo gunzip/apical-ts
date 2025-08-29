@@ -78,6 +78,19 @@ pnpx yanogen-ts generate \
   -o generated
 ```
 
+### Watch mode
+
+You can run the CLI in watch mode to automatically regenerate code on file changes:
+
+```sh
+pnpx chokidar-cli openapi.yaml -c \
+  yanogen-ts generate \
+  --generate-server \
+  --generate-client \
+  -i https://petstore.swagger.io/v2/swagger.json \
+  -o generated
+```
+
 ### CLI Options
 
 - `-i, --input <path>`: Path to the OpenAPI spec file (2.0, 3.0.x, or 3.1.x) in
