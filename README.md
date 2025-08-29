@@ -700,7 +700,7 @@ integration with other frameworks.
 After [evaluating several
 libraries](https://github.com/gunzip/openapi-generator-benchmark), we found that
 each has its [strengths and
-weaknesses](https://pagopa.github.io/dx/blog/openapi-to-typescripts-0.1-alpha),
+weaknesses](https://pagopa.github.io/dx/blog/typescript-openapi-generators-0.1-alpha),
 but ultimately, we chose to build this project to address specific needs and use
 cases.
 
