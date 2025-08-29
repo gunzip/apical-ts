@@ -213,12 +213,12 @@ export function generateOperationFunction(
     functionName: metadata.functionName,
     genericParams,
     parameterDeclaration,
+    responseMapTypeName: metadata.bodyInfo.shouldGenerateResponseMap
+      ? metadata.bodyInfo.responseMapTypeName
+      : undefined,
     summary: metadata.summary,
     typeAliases,
     updatedReturnType,
-    responseMapTypeName: metadata.bodyInfo.shouldGenerateResponseMap 
-      ? metadata.bodyInfo.responseMapTypeName 
-      : undefined,
   });
 
   return { functionCode: functionStr, typeImports: metadata.typeImports };

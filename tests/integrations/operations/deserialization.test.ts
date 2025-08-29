@@ -66,8 +66,10 @@ describe("Deserialization Operation", () => {
   });
 
   it("captures deserializationError when custom deserializer throws", async () => {
-    const { testDeserialization } = await import("../generated/client/testDeserialization.js");
-    
+    const { testDeserialization } = await import(
+      "../generated/client/testDeserialization.js"
+    );
+
     const res = await testDeserialization(
       {},
       {
@@ -92,8 +94,10 @@ describe("Deserialization Operation", () => {
   });
 
   it("reports validation error when deserializer returns invalid shape", async () => {
-    const { testDeserialization } = await import("../generated/client/testDeserialization.js");
-    
+    const { testDeserialization } = await import(
+      "../generated/client/testDeserialization.js"
+    );
+
     const res = await testDeserialization(
       {},
       {
@@ -101,7 +105,9 @@ describe("Deserialization Operation", () => {
         headers: {},
         fetch,
         deserializerMap: {
-          "application/json": () => ({ name: 123 /* wrong type, age missing */ }),
+          "application/json": () => ({
+            name: 123 /* wrong type, age missing */,
+          }),
         },
       },
     );
@@ -118,8 +124,10 @@ describe("Deserialization Operation", () => {
   });
 
   it("parses XML response via custom XML deserializer", async () => {
-    const { testDeserialization } = await import("../generated/client/testDeserialization.js");
-    
+    const { testDeserialization } = await import(
+      "../generated/client/testDeserialization.js"
+    );
+
     const res = await testDeserialization(
       {
         contentType: { response: "application/xml" },
@@ -151,8 +159,10 @@ describe("Deserialization Operation", () => {
   });
 
   it("handles vendor JSON content type with custom deserializer on multi-content operation", async () => {
-    const { testMultiContentTypes } = await import("../generated/client/testMultiContentTypes.js");
-    
+    const { testMultiContentTypes } = await import(
+      "../generated/client/testMultiContentTypes.js"
+    );
+
     const res = await testMultiContentTypes(
       {
         body: { id: "abc", name: "example" },
@@ -185,8 +195,10 @@ describe("Deserialization Operation", () => {
   });
 
   it("deserializes binary download into length summary", async () => {
-    const { testBinaryFileDownload } = await import("../generated/client/testBinaryFileDownload.js");
-    
+    const { testBinaryFileDownload } = await import(
+      "../generated/client/testBinaryFileDownload.js"
+    );
+
     const res = await testBinaryFileDownload(
       {},
       {
@@ -208,8 +220,10 @@ describe("Deserialization Operation", () => {
   });
 
   it("parses response when request sent as x-www-form-urlencoded with custom vendor JSON response", async () => {
-    const { testMultiContentTypes } = await import("../generated/client/testMultiContentTypes.js");
-    
+    const { testMultiContentTypes } = await import(
+      "../generated/client/testMultiContentTypes.js"
+    );
+
     const res = await testMultiContentTypes(
       {
         body: { id: "lower", name: "MixedCase" },

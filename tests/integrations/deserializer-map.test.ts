@@ -30,9 +30,7 @@ describe("DeserializerMap Integration Test", () => {
     expect(operationContent).toContain("config.deserializerMap");
 
     /* Should not have deserializerMap parameter */
-    expect(operationContent).not.toContain(
-      "parse: (deserializerMap?:",
-    );
+    expect(operationContent).not.toContain("parse: (deserializerMap?:");
 
     /* Should not have the old fallback syntax */
     expect(operationContent).not.toContain(

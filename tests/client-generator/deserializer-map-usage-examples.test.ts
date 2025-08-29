@@ -10,7 +10,7 @@ describe("DeserializerMap Usage Examples", () => {
     /*
      * This test demonstrates the generated TypeScript patterns, showing:
      * 1. How GlobalConfig now includes deserializerMap
-     * 2. How parse() uses config.deserializerMap as fallback 
+     * 2. How parse() uses config.deserializerMap as fallback
      * 3. How backward compatibility is maintained
      */
 
@@ -55,20 +55,36 @@ describe("DeserializerMap Usage Examples", () => {
     /* Verify the config structure matches our expectations */
     expect(config.deserializerMap).toBeDefined();
     expect(config.deserializerMap!["application/xml"]).toBeDefined();
-    expect(config.deserializerMap!["application/vnd.custom+json"]).toBeDefined();
+    expect(
+      config.deserializerMap!["application/vnd.custom+json"],
+    ).toBeDefined();
 
     /* Mock how parseApiResponseUnknownData would work with the new fallback logic */
     function mockParseApiResponseUnknownData(
       response: { headers: { get: (name: string) => string | null } },
       data: unknown,
-      schemaMap: Record<string, { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: unknown } }>,
+      schemaMap: Record<
+        string,
+        {
+          safeParse: (value: unknown) => {
+            success: boolean;
+            data?: unknown;
+            error?: unknown;
+          };
+        }
+      >,
       explicitDeserializerMap?: Record<string, (data: unknown) => unknown>,
     ) {
-      const contentType = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase() || "";
-      
+      const contentType =
+        response.headers
+          .get("content-type")
+          ?.split(";")[0]
+          .trim()
+          .toLowerCase() || "";
+
       /* This demonstrates the new logic: use explicit deserializerMap OR fall back to config */
       const deserializerMap = explicitDeserializerMap || config.deserializerMap;
-      
+
       let deserializedData = data;
       if (deserializerMap && deserializerMap[contentType]) {
         deserializedData = deserializerMap[contentType](data);
@@ -77,32 +93,41 @@ describe("DeserializerMap Usage Examples", () => {
       const schema = schemaMap[contentType];
       if (schema) {
         const result = schema.safeParse(deserializedData);
-        return result.success ? { contentType, parsed: result.data } : { contentType, parseError: result.error };
+        return result.success
+          ? { contentType, parsed: result.data }
+          : { contentType, parseError: result.error };
       }
-      
-      return { contentType, missingSchema: true, deserialized: deserializedData };
+
+      return {
+        contentType,
+        missingSchema: true,
+        deserialized: deserializedData,
+      };
     }
 
     /* Test case 1: parse() with no explicit deserializerMap uses config.deserializerMap */
     const mockResponse1 = {
-      headers: { get: (name: string) => name === "content-type" ? "application/xml" : null },
+      headers: {
+        get: (name: string) =>
+          name === "content-type" ? "application/xml" : null,
+      },
     };
-    
+
     const xmlData = "<user><name>John</name><age>30</age></user>";
-    const mockSchema = { 
-      safeParse: (data: unknown) => ({ success: true, data })
+    const mockSchema = {
+      safeParse: (data: unknown) => ({ success: true, data }),
     };
-    
+
     const result1 = mockParseApiResponseUnknownData(
       mockResponse1,
       xmlData,
       { "application/xml": mockSchema },
-      undefined // No explicit deserializerMap - should use config.deserializerMap
+      undefined, // No explicit deserializerMap - should use config.deserializerMap
     );
 
     expect(result1).toEqual({
       contentType: "application/xml",
-      parsed: { name: "John", age: 30 }
+      parsed: { name: "John", age: 30 },
     });
 
     /* Test case 2: parse() with explicit deserializerMap overrides config.deserializerMap */
@@ -117,12 +142,12 @@ describe("DeserializerMap Usage Examples", () => {
       mockResponse1,
       xmlData,
       { "application/xml": mockSchema },
-      customXmlDeserializer // Explicit deserializerMap overrides config
+      customXmlDeserializer, // Explicit deserializerMap overrides config
     );
 
     expect(result2).toEqual({
       contentType: "application/xml",
-      parsed: { customParsed: true, rawXml: xmlData }
+      parsed: { customParsed: true, rawXml: xmlData },
     });
 
     /* Test case 3: Backward compatibility - works when config has no deserializerMap */
@@ -135,7 +160,7 @@ describe("DeserializerMap Usage Examples", () => {
       mockResponse1,
       xmlData,
       { "application/xml": mockSchema },
-      undefined // No deserializers available
+      undefined, // No deserializers available
     );
 
     /* Should work without deserializers, just pass raw data to schema */
@@ -188,11 +213,11 @@ describe("DeserializerMap Usage Examples", () => {
     /* Verify the new structure is more intuitive */
     expect(newDeserializerMap["application/xml"]).toBeDefined();
     expect(newDeserializerMap["application/problem+json"]).toBeDefined();
-    
+
     /* These content-type keys make sense to users */
     expect(Object.keys(newDeserializerMap)).toEqual([
       "application/xml",
-      "application/problem+json"
+      "application/problem+json",
     ]);
   });
 });

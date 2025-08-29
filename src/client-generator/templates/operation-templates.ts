@@ -34,10 +34,10 @@ export interface OperationFunctionRenderConfig {
   functionName: string;
   genericParams: string;
   parameterDeclaration: string;
+  responseMapTypeName?: string;
   summary: string;
   typeAliases: string;
   updatedReturnType: string;
-  responseMapTypeName?: string;
 }
 
 /* Data structure representing operation metadata extracted from OpenAPI specification */
@@ -201,12 +201,12 @@ export function renderOperationFunction(
   const configType = config.responseMapTypeName
     ? `GlobalConfig & { deserializerMap?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
     : "GlobalConfig";
-    
+
   /* Only add type cast when we have a narrowed type */
   const defaultValue = config.responseMapTypeName
     ? `globalConfig as ${configType}`
     : "globalConfig";
-    
+
   return `${config.typeAliases}${config.summary}export async function ${config.functionName}${config.genericParams}(
   ${config.parameterDeclaration},
   config: ${configType} = ${defaultValue}

@@ -15,14 +15,6 @@ export function renderResponseHandler(
   const { contentType, statusCode, typeName } = responseInfo;
 
   if (typeName || contentType) {
-    /* Add parse method if we have a schema and response map */
-    /* If we have a response map, derive the per-operation deserializer map type name.
-     * Convention: <OperationName>ResponseMap => <OperationName>DeserializerMap
-     */
-    const deserializerMapTypeName = responseMapName
-      ? responseMapName.replace(/Map$/u, "DeserializerMap")
-      : undefined;
-
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
     const parseMethod =
       responseInfo.hasSchema && responseMapName
