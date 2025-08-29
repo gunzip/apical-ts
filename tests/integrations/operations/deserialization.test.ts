@@ -66,15 +66,26 @@ describe("Deserialization Operation", () => {
   });
 
   it("captures deserializationError when custom deserializer throws", async () => {
-    const client = createUnauthenticatedClient(baseURL);
-    const res = await client.testDeserialization({});
+    const { testDeserialization } = await import(
+      "../generated/client/testDeserialization.js"
+    );
+
+    const res = await testDeserialization(
+      {},
+      {
+        baseURL,
+        headers: {},
+        fetch,
+        deserializerMap: {
+          "application/json": () => {
+            throw new Error("boom");
+          },
+        },
+      },
+    );
     expect(res.status).toBe(200);
 
-    const parsed = (res as any).parse({
-      "application/json": () => {
-        throw new Error("boom");
-      },
-    });
+    const parsed = (res as any).parse();
 
     expect(parsed.contentType).toBe("application/json");
     expect(parsed.deserializationError).toBeInstanceOf(Error);
@@ -83,14 +94,27 @@ describe("Deserialization Operation", () => {
   });
 
   it("reports validation error when deserializer returns invalid shape", async () => {
-    const client = createUnauthenticatedClient(baseURL);
-    const res = await client.testDeserialization({});
+    const { testDeserialization } = await import(
+      "../generated/client/testDeserialization.js"
+    );
+
+    const res = await testDeserialization(
+      {},
+      {
+        baseURL,
+        headers: {},
+        fetch,
+        deserializerMap: {
+          "application/json": () => ({
+            name: 123 /* wrong type, age missing */,
+          }),
+        },
+      },
+    );
     expect(res.status).toBe(200);
 
     // Return object missing required property 'age'
-    const parsed = (res as any).parse({
-      "application/json": () => ({ name: 123 /* wrong type, age missing */ }),
-    });
+    const parsed = (res as any).parse();
 
     expect(parsed.contentType).toBe("application/json");
     // Should surface Zod validation error
@@ -100,19 +124,30 @@ describe("Deserialization Operation", () => {
   });
 
   it("parses XML response via custom XML deserializer", async () => {
-    const client = createUnauthenticatedClient(baseURL);
-    const res = await client.testDeserialization({
-      contentType: { response: "application/xml" },
-    });
+    const { testDeserialization } = await import(
+      "../generated/client/testDeserialization.js"
+    );
+
+    const res = await testDeserialization(
+      {
+        contentType: { response: "application/xml" },
+      },
+      {
+        baseURL,
+        headers: {},
+        fetch,
+        deserializerMap: {
+          "application/xml": (xml: string) => {
+            const name = /<name>([^<]+)<\/name>/u.exec(xml)?.[1] || "";
+            const ageStr = /<age>([^<]+)<\/age>/u.exec(xml)?.[1] || "0";
+            return { name, age: Number(ageStr) };
+          },
+        },
+      },
+    );
     expect(res.status).toBe(200);
     // Parse XML string into object expected by schema
-    const parsed = (res as any).parse({
-      "application/xml": (xml: string) => {
-        const name = /<name>([^<]+)<\/name>/u.exec(xml)?.[1] || "";
-        const ageStr = /<age>([^<]+)<\/age>/u.exec(xml)?.[1] || "0";
-        return { name, age: Number(ageStr) };
-      },
-    });
+    const parsed = (res as any).parse();
     expect(parsed.contentType).toBe("application/xml");
     if (parsed.parsed) {
       expect(typeof parsed.parsed.name).toBe("string");
@@ -124,18 +159,29 @@ describe("Deserialization Operation", () => {
   });
 
   it("handles vendor JSON content type with custom deserializer on multi-content operation", async () => {
-    const client = createUnauthenticatedClient(baseURL);
-    const res = await client.testMultiContentTypes({
-      body: { id: "abc", name: "example" },
-      contentType: { response: "application/vnd.custom+json" },
-    });
+    const { testMultiContentTypes } = await import(
+      "../generated/client/testMultiContentTypes.js"
+    );
+
+    const res = await testMultiContentTypes(
+      {
+        body: { id: "abc", name: "example" },
+        contentType: { response: "application/vnd.custom+json" },
+      },
+      {
+        baseURL,
+        headers: {},
+        fetch,
+        deserializerMap: {
+          "application/vnd.custom+json": (data: any) => ({
+            ...data,
+            id: String(data.id).toUpperCase(),
+          }),
+        },
+      },
+    );
     expect(res.status).toBe(200);
-    const parsed = (res as any).parse({
-      "application/vnd.custom+json": (data: any) => ({
-        ...data,
-        id: String(data.id).toUpperCase(),
-      }),
-    });
+    const parsed = (res as any).parse();
     expect(parsed.contentType).toBe("application/vnd.custom+json");
     if (parsed.parsed) {
       expect(parsed.parsed).toHaveProperty("id");
@@ -149,12 +195,23 @@ describe("Deserialization Operation", () => {
   });
 
   it("deserializes binary download into length summary", async () => {
-    const client = createAuthenticatedClient(baseURL, "customToken");
-    const res = await client.testBinaryFileDownload({});
+    const { testBinaryFileDownload } = await import(
+      "../generated/client/testBinaryFileDownload.js"
+    );
+
+    const res = await testBinaryFileDownload(
+      {},
+      {
+        baseURL,
+        headers: { "custom-token": "test-custom-token-abc" }, // Add auth
+        fetch,
+        deserializerMap: {
+          "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
+        },
+      },
+    );
     expect(res.status).toBe(200);
-    const parsed = (res as any).parse({
-      "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
-    });
+    const parsed = (res as any).parse();
     expect(parsed.contentType).toBe("application/octet-stream");
     if (parsed.parsed) {
       expect(parsed.parsed).toHaveProperty("size");
@@ -163,22 +220,32 @@ describe("Deserialization Operation", () => {
   });
 
   it("parses response when request sent as x-www-form-urlencoded with custom vendor JSON response", async () => {
-    // Endpoint is protected by global security; use authenticated client
-    const client = createAuthenticatedClient(baseURL, "customToken");
-    const res = await client.testMultiContentTypes({
-      body: { id: "lower", name: "MixedCase" },
-      contentType: {
-        request: "application/x-www-form-urlencoded",
-        response: "application/vnd.custom+json",
+    const { testMultiContentTypes } = await import(
+      "../generated/client/testMultiContentTypes.js"
+    );
+
+    const res = await testMultiContentTypes(
+      {
+        body: { id: "lower", name: "MixedCase" },
+        contentType: {
+          request: "application/x-www-form-urlencoded",
+          response: "application/vnd.custom+json",
+        },
       },
-    });
+      {
+        baseURL,
+        headers: { "custom-token": "test-custom-token-abc" }, // Add auth for global security
+        fetch,
+        deserializerMap: {
+          "application/vnd.custom+json": (data: any) => ({
+            ...data,
+            id: data.id.toUpperCase(),
+          }),
+        },
+      },
+    );
     expect(res.status).toBe(200);
-    const parsed = (res as any).parse({
-      "application/vnd.custom+json": (data: any) => ({
-        ...data,
-        id: data.id.toUpperCase(),
-      }),
-    });
+    const parsed = (res as any).parse();
     expect(parsed.contentType).toBe("application/vnd.custom+json");
     if (parsed.parsed) {
       // Prism may return a static example (e.g. STRING); ensure our uppercasing ran
