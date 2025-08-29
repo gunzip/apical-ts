@@ -93,28 +93,29 @@ function transformParameterName(name: string): string {
  * This simplifies the process of setting up routes
  */
 export function createExpressAdapter<THandler extends Function>(
-  app: Express.Application,
   wrapper: (handler: THandler) => (req: any) => Promise<any>,
   routeInfo: { path: string; method: string },
   handler: THandler,
 ) {
-  const expressPath = routeInfo.path.replace(
-    /{([^}]+)}/g,
-    ":$1",
-  ); /* Convert {petId} to :petId */
-  const method = routeInfo.method.toLowerCase() as keyof typeof app;
+  return (app: Express.Application) => {
+    const expressPath = routeInfo.path.replace(
+      /{([^}]+)}/g,
+      ":$1",
+    ); /* Convert {petId} to :petId */
+    const method = routeInfo.method.toLowerCase() as keyof typeof app;
 
-  if (typeof app[method] === "function") {
-    (app[method] as any)(expressPath, async (req: Request, res: Response) => {
-      try {
-        const params = extractRequestParams(req);
-        const wrappedHandler = wrapper(handler);
-        const result = await wrappedHandler(params);
-        res.status(result.status).type(result.contentType).send(result.data);
-      } catch (error) {
-        console.error("Error in route handler:", error);
-        res.status(500).json({ error: "Internal server error" });
-      }
-    });
-  }
+    if (typeof app[method] === "function") {
+      (app[method] as any)(expressPath, async (req: Request, res: Response) => {
+        try {
+          const params = extractRequestParams(req);
+          const wrappedHandler = wrapper(handler);
+          const result = await wrappedHandler(params);
+          res.status(result.status).type(result.contentType).send(result.data);
+        } catch (error) {
+          console.error("Error in route handler:", error);
+          res.status(500).json({ error: "Internal server error" });
+        }
+      });
+    }
+  };
 }

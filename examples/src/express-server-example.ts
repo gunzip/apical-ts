@@ -68,8 +68,6 @@ const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
     console.error("Validation error in findPetsByStatus:", params);
     return {
       status: 400,
-      contentType: "",
-      data: void 0,
     };
   }
 
@@ -93,8 +91,6 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
     console.error("Validation error in getPetById:", params);
     return {
       status: 400,
-      contentType: "",
-      data: void 0,
     };
   }
 
@@ -107,8 +103,6 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
   if (!pet) {
     return {
       status: 404,
-      contentType: "",
-      data: void 0,
     };
   }
 
@@ -128,8 +122,6 @@ const getInventoryHandler: getInventoryHandler = async (params) => {
     console.error("Validation error in getInventory:", params);
     return {
       status: 400,
-      contentType: "",
-      data: void 0,
     };
   }
 
@@ -150,24 +142,28 @@ app.get("/pet/findByStatus", async (req, res) => {
   const result = await findPetsByStatusWrapper(findPetsByStatusHandler)(
     extractRequestParams(req),
   );
-  // Return express response
-  res.status(result.status).type(result.contentType).send(result.data);
+  switch (result.status) {
+    case 200:
+      res.status(result.status).type(result.contentType).send(result.data);
+      break;
+    case 400:
+      res.status(result.status).send(result.data);
+      break;
+  }
 });
 
 /* Setup routes using the helper function */
 createExpressAdapter(
-  app,
   getPetByIdWrapper,
   getPetByIdRoute(),
   getPetByIdHandler,
-);
+)(app);
 
 createExpressAdapter(
-  app,
   getInventoryWrapper,
   getInventoryRoute(),
   getInventoryHandler,
-);
+)(app);
 
 /* Health check endpoint */
 
