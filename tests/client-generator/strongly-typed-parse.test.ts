@@ -20,7 +20,7 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
 
       /* Should contain the discriminated union return types */
       expect(result).toContain("contentType: K; parsed:");
-      expect(result).toContain("contentType: string; error:");
+      expect(result).toContain("contentType: string; parseError:");
       expect(result).toContain("contentType: string; missingSchema: true");
 
       /* Should use z.infer in type definitions */
@@ -63,7 +63,7 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
 
       /* Should handle validation error case */
       expect(utilityCode).toContain("if (result.success)");
-      expect(utilityCode).toContain("error: result.error");
+      expect(utilityCode).toContain("parseError: result.error");
     });
 
     it("should handle deserialization errors when deserializerMap provided", () => {

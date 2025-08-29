@@ -4,6 +4,7 @@
 import {
   configureOperations,
   globalConfig,
+  isParsed,
 } from "../generated/client/config.js";
 import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 import { getInventory } from "../generated/client/getInventory.js";
@@ -47,14 +48,14 @@ async function demonstrateClient() {
 
       /* Parse the response data to get type-safe access */
       const parseResult = petsResponse.parse();
-      if ("parsed" in parseResult) {
+      if (isParsed(parseResult)) {
         console.log(
           "🔍 Parsed data (type-safe):",
           JSON.stringify(parseResult.parsed, null, 2),
         );
         console.log(`📊 Found ${parseResult.parsed.length} pets`);
-      } else if ("error" in parseResult) {
-        console.error("❌ Failed to parse response:", parseResult.error);
+      } else if ("parseError" in parseResult) {
+        console.error("❌ Failed to parse response:", parseResult.parseError);
       }
     } else {
       console.error("❌ Failed to find pets:", petsResponse.status);
@@ -80,8 +81,8 @@ async function demonstrateClient() {
         if (pet.category) {
           console.log(`🏷️ Category: ${pet.category.name}`);
         }
-      } else if ("error" in parseResult) {
-        console.error("❌ Failed to parse pet data:", parseResult.error);
+      } else if ("parseError" in parseResult) {
+        console.error("❌ Failed to parse pet data:", parseResult.parseError);
       }
     } else {
       console.error("❌ Failed to get pet:", petResponse.status);
@@ -109,8 +110,8 @@ async function demonstrateClient() {
         for (const [status, count] of Object.entries(inventory)) {
           console.log(`  ${status}: ${count}`);
         }
-      } else if ("error" in parseResult) {
-        console.error("❌ Failed to parse inventory:", parseResult.error);
+      } else if ("parseError" in parseResult) {
+        console.error("❌ Failed to parse inventory:", parseResult.parseError);
       }
     } else {
       console.error("❌ Failed to get inventory:", inventoryResponse.status);

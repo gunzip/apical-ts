@@ -94,7 +94,7 @@ describe("Deserialization Operation", () => {
 
     expect(parsed.contentType).toBe("application/json");
     // Should surface Zod validation error
-    expect(parsed.error).toBeDefined();
+    expect(parsed.parseError).toBeDefined();
     expect(parsed.parsed).toBeUndefined();
     expect(parsed.missingSchema).toBeUndefined();
   });

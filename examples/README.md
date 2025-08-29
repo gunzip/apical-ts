@@ -86,7 +86,7 @@ In a new terminal, run the client example to test the API:
 
 ```bash
 # From the examples directory
-npx tsx src/client-example.ts
+pnpx tsx src/client-example.ts
 ```
 
 This will demonstrate:

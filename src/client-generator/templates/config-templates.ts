@@ -53,10 +53,10 @@ export type ApiResponseWithParse<
               parsed: z.infer<Map[${"`${S}`"}][K]>;
             };
           }[keyof Map[${"`${S}`"}]]
-        | { contentType: string; error: z.ZodError }
+        | { contentType: string; parseError: z.ZodError }
         | { contentType: string; missingSchema: true; deserialized: unknown }
         | { contentType: string; deserializationError: unknown }
-    : { contentType: string; error: unknown };
+    : never;
 };`;
 }
 
@@ -232,7 +232,7 @@ export function parseApiResponseUnknownData<
   schemaMap: TSchemaMap,
 ): (
   | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
-  | { contentType: string; error: z.ZodError }
+  | { contentType: string; parseError: z.ZodError }
   | { contentType: string; missingSchema: true; deserialized: unknown }
 );
 
@@ -246,7 +246,7 @@ export function parseApiResponseUnknownData<
   deserializerMap: DeserializerMap,
 ): (
   | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
-  | { contentType: string; error: z.ZodError }
+  | { contentType: string; parseError: z.ZodError }
   | { contentType: string; missingSchema: true; deserialized: unknown }
   | { contentType: string; deserializationError: unknown }
 );
@@ -310,7 +310,7 @@ export function parseApiResponseUnknownData<
   }
   return {
     contentType,
-    error: result.error,
+    parseError: result.error,
   };
 }
 
@@ -318,14 +318,14 @@ export function parseApiResponseUnknownData<
 export function isParsed<
   T extends
     | { contentType: string; parsed: unknown }
-    | { contentType: string; error: unknown }
+    | { contentType: string; parseError: z.ZodError }
     | { contentType: string; missingSchema: true; deserialized: unknown }
     | { contentType: string; deserializationError: unknown }
 >(value: T): value is Extract<T, { parsed: unknown }> {
   return (
     !!value &&
     "parsed" in (value as Record<string, unknown>) &&
-    !("error" in value) &&
+    !("parseError" in value) &&
     !("missingSchema" in (value as Record<string, unknown>)) &&
     !("deserializationError" in (value as Record<string, unknown>))
   );
