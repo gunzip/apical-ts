@@ -178,12 +178,15 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
     typeAliases += `export type ${config.responseMapTypeName} = ${responseMapRuntime};\n\n`;
 
     /* Emit a narrowed DeserializerMap type for this operation.
-     * If we have a non-empty response map constant we can use its keys directly via keyof typeof <Map>.
-     * Otherwise fall back to a generic string index (keeps backwards compatibility).
+     * Extract content types from the nested response map structure for proper indexing.
+     * Response map structure: { "status": { "content-type": Schema } }
+     * DeserializerMap should be indexed only by content-type: { "content-type": Deserializer }
      */
     const perOpDeserializerMap =
       responseMapRuntime !== "{}"
-        ? `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = Partial<Record<keyof typeof ${config.responseMapTypeName}, import('./config.js').Deserializer>>;\n\n`
+        ? `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = Partial<Record<{
+  [Status in keyof typeof ${config.responseMapTypeName}]: keyof typeof ${config.responseMapTypeName}[Status]
+}[keyof typeof ${config.responseMapTypeName}], import('./config.js').Deserializer>>;\n\n`
         : `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = import('./config.js').DeserializerMap;\n\n`;
     typeAliases += perOpDeserializerMap;
   }

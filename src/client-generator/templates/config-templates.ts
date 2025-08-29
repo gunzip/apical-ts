@@ -113,6 +113,7 @@ export interface GlobalConfig {
   headers: {
     [K in ${auth.hasAuthHeaders ? `AuthHeaders` : "string"}]?: string;
   } & Record<string, string>;
+  deserializerMap?: DeserializerMap;
 }`;
 }
 
