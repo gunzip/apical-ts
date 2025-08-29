@@ -1,20 +1,22 @@
 # YanoGen-Ts - Yet Another OpenAPI to TypeScript Generator
 
-> **Disclaimer:** This project is **experimental** and currently in an early
-> stage. Breaking changes may occur at any time. The first stable release will
-> be version **0.1.0**.
+> **Disclaimer:** This project is currently in an early stage. Breaking changes
+> may occur at any time. The first stable release will be version **0.1.0**.
+> Nevertheless, it's already solid and usable, and you can still use it in your
+> projects, but be prepared for potential changes in the API.
 
 We all like the developer experience of [tRPC](https://trpc.io/), but not always
-we're in control of the backend. OpenAPI specifications provide a powerful way to
-define your API contracts, and with YanoGen-Ts, you can easily generate TypeScript
-code that strictly adheres to those contracts, all while enjoying a seamless developer experience.
+we're in control of the backend. OpenAPI specifications provide a powerful way
+to define your API contracts, and with YanoGen-Ts, you can easily generate
+TypeScript code that strictly adheres to those contracts, all while enjoying a
+seamless developer experience.
 
 ✨ Effortlessly turn your OpenAPI specifications into **fully-typed Zod v4
 schemas** ready for runtime (client or server) validation and TypeScript
 development.
 
-Need a **client**? Instantly generate a type-safe, low-footprint, operation-based
-REST API client alongside your schemas.
+Need a **client**? Instantly generate a type-safe, low-footprint,
+operation-based REST API client alongside your schemas.
 
 Need to **validate server requests and return typed responses**? We've got you
 covered with built-in support for request and response validation using Zod
@@ -27,8 +29,9 @@ See [supported features](#supported-features) for more information.
 
 ![Demo of OpenAPI TypeScript Generator](./demo.gif)
 
-- [OpenAPI TypeScript Generator](#openapi-typescript-generator)
+- [YanoGen-Ts - Yet Another OpenAPI to TypeScript Generator](#yanogen-ts---yet-another-openapi-to-typescript-generator)
   - [CLI Usage](#cli-usage)
+    - [Watch mode](#watch-mode)
     - [CLI Options](#cli-options)
   - [Supported Input Formats](#supported-input-formats)
   - [Programmatic Usage](#programmatic-usage)
@@ -37,8 +40,7 @@ See [supported features](#supported-features) for more information.
   - [Using the Generated Operations](#using-the-generated-operations)
     - [Define Configuration](#define-configuration)
     - [Call Operations](#call-operations)
-  - [Binding Configuration to All
-    Operations](#binding-configuration-to-all-operations)
+  - [Binding Configuration to Operations](#binding-configuration-to-operations)
   - [Response Handling](#response-handling)
   - [Exception Handling](#exception-handling)
   - [Runtime Response Validation (Opt-In)](#runtime-response-validation-opt-in)
@@ -51,22 +53,18 @@ See [supported features](#supported-features) for more information.
     - [Common Patterns](#common-patterns)
     - [Error Handling Summary](#error-handling-summary)
     - [Best Practices](#best-practices)
-  - [Handling Multiple Content Types (Request \&
-    Response)](#handling-multiple-content-types-request--response)
-    - [Example: Endpoint with Multiple Request Content
-      Types](#example-endpoint-with-multiple-request-content-types)
-    - [Example: Endpoint with Multiple Response Content
-      Types](#example-endpoint-with-multiple-response-content-types)
+  - [Handling Multiple Content Types (Request \& Response)](#handling-multiple-content-types-request--response)
+    - [Example: Endpoint with Multiple Request Content Types](#example-endpoint-with-multiple-request-content-types)
+    - [Example: Endpoint with Multiple Response Content Types](#example-endpoint-with-multiple-response-content-types)
   - [Using Generated Zod Schemas](#using-generated-zod-schemas)
 - [Server Routes Wrappers Generation](#server-routes-wrappers-generation)
   - [How to Generate a Server Route Wrapper](#how-to-generate-a-server-route-wrapper)
   - [Using the Wrapped Handler](#using-the-wrapped-handler)
     - [Handler Function Signature](#handler-function-signature)
 - [Supported Features](#supported-features)
-  - [Benefits of Operation-Based
-    Architecture](#benefits-of-operation-based-architecture)
-- [Comparison with alternative
-  libraries](#comparison-with-alternative-libraries)
+  - [Benefits of Operation-Based Architecture](#benefits-of-operation-based-architecture)
+- [Comparison with alternative libraries](#comparison-with-alternative-libraries)
+  - [Conclusion](#conclusion)
 
 ## CLI Usage
 
@@ -80,7 +78,8 @@ pnpx yanogen-ts generate \
 
 ### Watch mode
 
-You can run the CLI in watch mode to automatically regenerate code on file changes:
+You can run the CLI in watch mode to automatically regenerate code on file
+changes:
 
 ```sh
 pnpx chokidar-cli openapi.yaml -c \
