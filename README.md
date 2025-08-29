@@ -2,7 +2,7 @@
 
 > **Disclaimer:** This project is currently in an early stage. Breaking changes
 > may occur at any time. The first stable release will be version **0.1.0**.
-> Nevertheless, it's already solid and usable, and you can still use it in your
+> Nevertheless, it's already solid and you can still use it in your
 > projects, but be prepared for potential changes in the API.
 
 We all like the developer experience of [tRPC](https://trpc.io/), but not always
@@ -15,12 +15,9 @@ seamless developer experience.
 schemas** ready for runtime (client or server) validation and TypeScript
 development.
 
-Need a **client**? Instantly generate a type-safe, low-footprint,
-operation-based REST API client alongside your schemas.
+Need a **client**? 🚀 Instantly generate a type-safe, low-footprint, operation-based REST API client alongside your schemas.
 
-Need to **validate server requests and return typed responses**? We've got you
-covered with built-in support for request and response validation using Zod
-schemas.
+Need to **validate server requests and return typed responses**? 🛡️ We've got you covered with built-in support for request and response validation using Zod schemas.
 
 Why choose this generator against alternatives? See
 [comparison](#comparison-with-alternative-libraries) for more details.
@@ -83,11 +80,11 @@ changes:
 
 ```sh
 pnpx chokidar-cli openapi.yaml -c \
-  yanogen-ts generate \
+  "yanogen-ts generate \
   --generate-server \
   --generate-client \
-  -i https://petstore.swagger.io/v2/swagger.json \
-  -o generated
+  -i openapi.yaml \
+  -o generated"
 ```
 
 ### CLI Options
