@@ -5,9 +5,9 @@
  */
 export interface DiscriminatedResponseType {
   /* Content type (e.g., "application/json") */
-  contentType: string | undefined;
+  contentType?: string | undefined;
   /* TypeScript type name for the data */
-  dataType: string | undefined;
+  dataType?: string | undefined;
   /* HTTP status code */
   status: string;
 }
