@@ -1,53 +1,47 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import { execSync } from "child_process";
+import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 
 /*
  * Integration test for deserializerMap refactoring.
  * Tests that the generated code works correctly with the new deserializerMap functionality.
+ * Uses the client already generated in integration test setup.
  */
 
 describe("DeserializerMap Integration Test", () => {
-  const testOutputDir = "/tmp/deserializer-map-integration-test";
-
-  beforeAll(() => {
-    /* Clean up and generate fresh client code */
-    execSync(`rm -rf ${testOutputDir}`, { stdio: "ignore" });
-    execSync(
-      `pnpm start generate -i tests/integrations/fixtures/test.yaml -o ${testOutputDir} --generate-client`,
-      {
-        cwd: process.cwd(),
-        stdio: "pipe",
-      },
-    );
-  });
+  const generatedDir = "tests/integrations/generated";
 
   it("should generate GlobalConfig with deserializerMap property", () => {
-    const configPath = join(testOutputDir, "client/config.ts");
+    const configPath = join(generatedDir, "client/config.ts");
     const configContent = readFileSync(configPath, "utf-8");
 
     expect(configContent).toContain("export interface GlobalConfig");
     expect(configContent).toContain("deserializerMap?: DeserializerMap;");
   });
 
-  it("should generate operation with parse method that uses config.deserializerMap as fallback", () => {
-    const operationPath = join(testOutputDir, "client/testAuthBearerHttp.ts");
+  it("should generate operation with parse method that uses only config.deserializerMap", () => {
+    const operationPath = join(generatedDir, "client/testAuthBearerHttp.ts");
     const operationContent = readFileSync(operationPath, "utf-8");
 
-    /* Verify parse method uses config.deserializerMap as fallback */
-    expect(operationContent).toContain(
-      "deserializerMap || config.deserializerMap",
+    /* Verify parse method takes no arguments */
+    expect(operationContent).toContain("parse: ()");
+
+    /* Verify parse method uses config.deserializerMap directly */
+    expect(operationContent).toContain("config.deserializerMap");
+
+    /* Should not have deserializerMap parameter */
+    expect(operationContent).not.toContain(
+      "parse: (deserializerMap?:",
     );
 
-    /* Verify parse method still accepts optional deserializerMap parameter */
-    expect(operationContent).toContain(
-      "parse: (deserializerMap?: TestAuthBearerHttpResponseDeserializerMap)",
+    /* Should not have the old fallback syntax */
+    expect(operationContent).not.toContain(
+      "deserializerMap || config.deserializerMap",
     );
   });
 
   it("should generate correct content-type indexed deserializer map types", () => {
-    const operationPath = join(testOutputDir, "client/testAuthBearerHttp.ts");
+    const operationPath = join(generatedDir, "client/testAuthBearerHttp.ts");
     const operationContent = readFileSync(operationPath, "utf-8");
 
     /* Find the deserializer map type definition */
@@ -76,7 +70,7 @@ describe("DeserializerMap Integration Test", () => {
   });
 
   it("should generate operation that imports and uses the correct types", () => {
-    const operationPath = join(testOutputDir, "client/testAuthBearerHttp.ts");
+    const operationPath = join(generatedDir, "client/testAuthBearerHttp.ts");
     const operationContent = readFileSync(operationPath, "utf-8");
 
     /* Should import GlobalConfig and parseApiResponseUnknownData */
@@ -89,7 +83,7 @@ describe("DeserializerMap Integration Test", () => {
   });
 
   it("should maintain response map structure for backward compatibility", () => {
-    const operationPath = join(testOutputDir, "client/testAuthBearerHttp.ts");
+    const operationPath = join(generatedDir, "client/testAuthBearerHttp.ts");
     const operationContent = readFileSync(operationPath, "utf-8");
 
     /* Response map should still be indexed by status code first */
