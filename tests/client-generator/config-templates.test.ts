@@ -7,7 +7,6 @@ import {
   renderConfigImplementation,
   renderConfigInterface,
   renderConfigSupport,
-  renderErrorClasses,
   renderOperationUtilities,
   renderUtilityFunctions,
 } from "../../src/client-generator/templates/config-templates.js";
@@ -157,19 +156,16 @@ describe("client-generator config-templates", () => {
       expect(result).toContain("export type ApiResponse<S extends number, T>");
       expect(result).toContain("readonly status: S;");
       expect(result).toContain("readonly data: T;");
-      expect(result).not.toContain("readonly error: z.ZodError;");
-    });
-  });
 
-  describe("renderErrorClasses", () => {
-    it("should render error classes", () => {
-      const result = renderErrorClasses();
+      /* Should also include the new ApiResponseError type */
+      expect(result).toContain("export type ApiResponseError");
+      expect(result).toContain('readonly kind: "fetch-error"');
+      expect(result).toContain('readonly kind: "parse-error"');
 
+      /* The basic ApiResponse type should not contain error fields (they're in ApiResponseError) */
       expect(result).toContain(
-        "export class UnexpectedResponseError extends Error",
+        "export type ApiResponse<S extends number, T> =",
       );
-      expect(result).toContain("status: number;");
-      expect(result).toContain("data: unknown;");
     });
   });
 
@@ -197,7 +193,6 @@ describe("client-generator config-templates", () => {
       const result = renderConfigSupport();
 
       expect(result).toContain("export type ApiResponse");
-      expect(result).toContain("export class UnexpectedResponseError");
       expect(result).toContain("export function configureOperations");
     });
 
@@ -206,7 +201,6 @@ describe("client-generator config-templates", () => {
 
       /* Verify that all individual template functions are included */
       expect(result).toContain(renderApiResponseTypes());
-      expect(result).toContain(renderErrorClasses());
       expect(result).toContain(renderUtilityFunctions());
       expect(result).toContain(renderOperationUtilities());
     });

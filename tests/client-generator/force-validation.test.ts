@@ -43,13 +43,15 @@ describe("force validation flag", () => {
         "config.deserializerMap ?? {}",
       );
 
-      /* Verify response handler does NOT include automatic parsing */
-      expect(result.responseHandlers[0]).not.toContain("const parsed =");
-      expect(result.responseHandlers[0]).not.toContain("parsed");
+      /* Verify response handler includes parse method for manual validation */
+      expect(result.responseHandlers[0]).toContain("parse: () =>");
+      expect(result.responseHandlers[0]).toContain(
+        "parseApiResponseUnknownData",
+      );
 
       /* Verify return type uses ApiResponseWithParse */
       expect(result.returnType).toBe(
-        "ApiResponseWithParse<200, typeof GetUserResponseMap> | ApiResponse<404, void>",
+        "ApiResponseWithParse<200, typeof GetUserResponseMap> | ApiResponse<404, void> | ApiResponseError",
       );
     });
 
@@ -82,22 +84,28 @@ describe("force validation flag", () => {
         true, // forceValidation = true
       );
 
-      /* Verify response handler includes automatic parsing */
-      expect(result.responseHandlers[0]).toContain("const parsed =");
+      /* Verify response handler includes automatic parsing with error handling */
+      expect(result.responseHandlers[0]).toContain("const parseResult =");
       expect(result.responseHandlers[0]).toContain(
         "parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap",
       );
       expect(result.responseHandlers[0]).toContain(
         "config.deserializerMap ?? {}",
       );
-      expect(result.responseHandlers[0]).toContain("parsed");
+      expect(result.responseHandlers[0]).toContain(
+        'if ("parsed" in parseResult)',
+      );
+      // Should include error handling branches for all error kinds
+      expect(result.responseHandlers[0]).toContain("if (parseResult.kind)");
+      expect(result.responseHandlers[0]).toContain("success: false");
+      expect(result.responseHandlers[0]).not.toContain("parse: () => {");
 
       /* Verify response handler does NOT include parse method */
       expect(result.responseHandlers[0]).not.toContain("parse:");
 
       /* Verify return type uses ApiResponseWithForcedParse */
       expect(result.returnType).toBe(
-        "ApiResponseWithForcedParse<200, typeof GetUserResponseMap> | ApiResponse<404, void>",
+        "ApiResponseWithForcedParse<200, typeof GetUserResponseMap> | ApiResponse<404, void> | ApiResponseError",
       );
     });
 

@@ -243,7 +243,7 @@ describe("function-body-templates", () => {
       expect(result).toContain('case "200": return { status: 200, data };');
       expect(result).toContain("default: {");
       expect(result).toContain(
-        "throw new UnexpectedResponseError(response.status, data, response);",
+        'return {\n        kind: "unexpected-response",\n        success: false,\n        result: {',
       );
     });
 

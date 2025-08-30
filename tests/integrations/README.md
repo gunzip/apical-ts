@@ -133,14 +133,6 @@ All operations return a consistent `ApiResponse<Status, Data>` structure:
 }
 ```
 
-### 4. Error Handling
-
-Failed requests throw `UnexpectedResponseError` with:
-
-- `status`: HTTP status code
-- `data`: Response body
-- `response`: Raw Response object
-
 ### 5. Type Safety
 
 All operations are fully typed based on the OpenAPI specification:

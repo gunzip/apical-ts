@@ -37,7 +37,7 @@ describe("client-generator validation error handling", () => {
 
       /* Return type should be ApiResponseWithParse with precise typing */
       expect(result.returnType).toBe(
-        "ApiResponseWithParse<200, typeof GetUserResponseMap>",
+        "ApiResponseWithParse<200, typeof GetUserResponseMap> | ApiResponseError",
       );
     });
 
@@ -71,11 +71,11 @@ describe("client-generator validation error handling", () => {
         "error: parseResult.error",
       );
       expect(result.returnType).toBe(
-        "ApiResponseWithParse<200, typeof GetDataResponseMap>",
+        "ApiResponseWithParse<200, typeof GetDataResponseMap> | ApiResponseError",
       );
     });
 
-    it("should not include parseError for non-JSON responses", () => {
+    it("should not include parse-error kind for non-JSON responses", () => {
       const operation: OperationObject = {
         operationId: "downloadFile",
         responses: {
@@ -97,10 +97,10 @@ describe("client-generator validation error handling", () => {
       expect(result.responseHandlers[0]).not.toContain("safeParse(");
       expect(result.responseHandlers[0]).not.toContain("error:");
 
-      /* Verify that the return type does NOT include parseError */
+      /* Verify that the return type does NOT include parse-error */
       expect(result.returnType).not.toContain("error:");
       expect(result.returnType).toBe(
-        "ApiResponseWithParse<200, typeof DownloadFileResponseMap>",
+        "ApiResponseWithParse<200, typeof DownloadFileResponseMap> | ApiResponseError",
       );
     });
 
@@ -119,11 +119,13 @@ describe("client-generator validation error handling", () => {
 
       /* Verify that responses without content don't include validation logic */
       expect(result.responseHandlers[0]).not.toContain("safeParse(");
-      expect(result.responseHandlers[0]).not.toContain("parseError");
+      expect(result.responseHandlers[0]).not.toContain("parse-error");
       expect(result.responseHandlers[0]).toContain("data: undefined");
 
-      /* Verify that the return type is simple void without parseError */
-      expect(result.returnType).toBe("ApiResponse<204, void>");
+      /* Verify that the return type is simple void without parse-error */
+      expect(result.returnType).toBe(
+        "ApiResponse<204, void> | ApiResponseError",
+      );
     });
   });
 });

@@ -18,30 +18,40 @@ export function renderResponseHandler(
   if (typeName || contentType) {
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
     if (forceValidation && responseInfo.hasSchema && responseMapName) {
-      /* Force validation mode: automatically call parseApiResponseUnknownData */
+      /* Force validation mode: automatically call parseApiResponseUnknownData with error handling */
       return `    case ${statusCode}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-      const parsed = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {});
-      return { status: ${statusCode} as const, data, response, parsed };
+      const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {});
+      if ("parsed" in parseResult) {
+        return { success: true, status: ${statusCode} as const, data, response, parsed: parseResult };
+      }
+      if (parseResult.kind) {
+        return {
+          ...parseResult,
+          success: false,
+          result: { data, status: 503, response },
+        };
+      }
+      throw new Error("Invalid parse result");
     }`;
     } else {
-      /* Default mode: provide parse method for manual validation */
+      /* Default mode: provide parse method for manual validation with error handling */
       const parseMethod =
         responseInfo.hasSchema && responseMapName
           ? `,
         parse: () =>
-          parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {}),`
+          parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {})`
           : "";
 
       return `    case ${statusCode}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-      return { status: ${statusCode} as const, data, response${parseMethod} };
+      return { success: true, status: ${statusCode} as const, data, response${parseMethod} };
     }`;
     }
   }
 
   return `    case ${statusCode}:
-      return { status: ${statusCode} as const, data: undefined, response };`;
+      return { success: true, status: ${statusCode} as const, data: undefined, response };`;
 }
 
 /*

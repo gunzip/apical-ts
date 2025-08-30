@@ -42,8 +42,8 @@ describe("Force Validation CLI Flag Integration Test", () => {
     expect(manualOperationContent).toContain("parse: () =>");
 
     // Force validation should have parsed field assignment
-    expect(forceValidationOperationContent).toContain("const parsed =");
-    expect(forceValidationOperationContent).toContain("parsed };");
+    expect(forceValidationOperationContent).toContain("parsed: parseResult");
+    expect(forceValidationOperationContent).toContain("success: true");
 
     // Force validation should not have parse() method
     expect(forceValidationOperationContent).not.toContain("parse: () =>");
@@ -61,12 +61,12 @@ describe("Force Validation CLI Flag Integration Test", () => {
 
     // Should automatically call parseApiResponseUnknownData
     expect(forceValidationOperationContent).toContain(
-      "const parsed = parseApiResponseUnknownData(",
+      "const parseResult = parseApiResponseUnknownData(",
     );
 
     // Should return parsed field in response
     expect(forceValidationOperationContent).toContain(
-      "return { status: 200 as const, data, response, parsed };",
+      "return {\n          success: true,\n          status: 200 as const,\n          data,\n          response,\n          parsed: parseResult,\n        };",
     );
   });
 
@@ -188,8 +188,8 @@ describe("Force Validation CLI Flag Integration Test", () => {
     expect(manualMultiContentContent).toContain("parse: () =>");
 
     // Force validation should have parsed field
-    expect(forceValidationMultiContentContent).toContain("const parsed =");
-    expect(forceValidationMultiContentContent).toContain("parsed };");
+    expect(forceValidationMultiContentContent).toContain("parsed: parseResult");
+    expect(forceValidationMultiContentContent).toContain("success: true");
 
     // Both should have the same response map
     expect(manualMultiContentContent).toContain(
@@ -226,10 +226,10 @@ describe("Force Validation CLI Flag Integration Test", () => {
 
     // Both should return simple response structure
     expect(manualSimpleContent).toContain(
-      "return { status: 200 as const, data: undefined, response };",
+      "return { success: true, status: 200 as const, data: undefined, response };",
     );
     expect(forceValidationSimpleContent).toContain(
-      "return { status: 200 as const, data: undefined, response };",
+      "return { success: true, status: 200 as const, data: undefined, response };",
     );
   });
 });

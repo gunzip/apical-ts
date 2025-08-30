@@ -20,7 +20,7 @@ export function buildOperationFileContent(
  * const typeImports = new Set(['User', 'Pet']);
  * const imports = buildOperationImports(typeImports);
  * // Result: [
- * //   "import { globalConfig, GlobalConfig, ApiResponse, parseResponseBody, UnexpectedResponseError } from './config.js';",
+ * //   "import { globalConfig, GlobalConfig, ApiResponse, parseResponseBody } from './config.js';",
  * //   "import { User } from '../schemas/User.js';",
  * //   "import { Pet } from '../schemas/Pet.js';",
  * // ]
@@ -36,8 +36,8 @@ export function buildOperationImports(
     "GlobalConfig",
     "ApiResponse",
     "parseResponseBody",
-    "UnexpectedResponseError",
     "parseApiResponseUnknownData",
+    "ApiResponseError",
   ];
 
   /* Add ApiResponseWithParse if used in the function */

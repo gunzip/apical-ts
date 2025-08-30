@@ -101,15 +101,25 @@ ${headersContent}
   const url = new URL(\`${finalPath}\`, config.baseURL);
   ${queryParamLines ? `  ${queryParamLines}` : ""}
 
-  const response = await config.fetch(url.toString(), {
-    method: "${method.toUpperCase()}",
-    headers: finalHeaders,${
-      hasBody
-        ? `
-    body: bodyContent,`
-        : ""
-    }
-  });
+  let response: Response;
+  try {
+    response = await config.fetch(url.toString(), {
+      method: "${method.toUpperCase()}",
+      headers: finalHeaders,${
+        hasBody
+          ? `
+      body: bodyContent,`
+          : ""
+      }
+    });
+  } catch (error) {
+    /* Handle fetch errors */
+    return {
+      kind: "fetch-error",
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    } as const;
+  }
 
   /*
    * The response body is consumed immediately to prevent holding onto the raw
@@ -126,8 +136,17 @@ ${headersContent}
   switch (response.status) {
 ${responseHandlers.join("\n")}
     default: {
-      // Throw UnexpectedResponseError for undefined status codes
-      throw new UnexpectedResponseError(response.status, data, response);
+      /* Return error for unexpected status codes instead of throwing */
+      return {
+        kind: "unexpected-response",
+        success: false,
+        result: {
+          data,
+          status: response.status,
+          response,
+        },
+        error: \`Unexpected response status: \${response.status}\`,
+      } as const;
     }
   }`;
 }

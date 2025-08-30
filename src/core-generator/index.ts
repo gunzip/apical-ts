@@ -199,7 +199,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
 
   const packageJsonContent = {
     dependencies: {
-      zod: "^3.0.0",
+      zod: "^4.0.0",
     },
     name: "generated-client",
     type: "module",
