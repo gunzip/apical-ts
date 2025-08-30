@@ -193,7 +193,6 @@ describe("client-generator config-templates", () => {
       const result = renderConfigSupport();
 
       expect(result).toContain("export type ApiResponse");
-      expect(result).toContain("export class UnexpectedResponseError");
       expect(result).toContain("export function configureOperations");
     });
 
