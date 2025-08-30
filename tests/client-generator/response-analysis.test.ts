@@ -291,6 +291,7 @@ describe("response-analysis", () => {
       expect(result.unionTypes).toEqual([
         "ApiResponseWithParse<200, typeof GetUserResponseMap>",
         "ApiResponseWithParse<404, typeof GetUserResponseMap>",
+        "ApiResponseError",
       ]);
 
       expect(typeImports.has("User")).toBe(true);
@@ -309,7 +310,8 @@ describe("response-analysis", () => {
       });
 
       expect(result.responses).toHaveLength(0);
-      expect(result.unionTypes).toHaveLength(0);
+      expect(result.unionTypes).toHaveLength(1); // Should contain ApiResponseError
+      expect(result.unionTypes).toEqual(["ApiResponseError"]);
       expect(result.defaultReturnType).toBe("ApiResponse<number, unknown>");
     });
 

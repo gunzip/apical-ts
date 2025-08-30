@@ -18,11 +18,15 @@ export function renderResponseHandler(
   if (typeName || contentType) {
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
     if (forceValidation && responseInfo.hasSchema && responseMapName) {
-      /* Force validation mode: automatically call parseApiResponseUnknownData */
+      /* Force validation mode: automatically call parseApiResponseUnknownData with error handling */
       return `    case ${statusCode}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-      const parsed = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {});
-      return { status: ${statusCode} as const, data, response, parsed };
+      const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {});
+      if ("parsed" in parseResult) {
+        return { status: ${statusCode} as const, data, response, parsed: parseResult };
+      }
+      /* Return error for parse failures in force validation mode */
+      return createApiResponseErrorFromParseResult(parseResult, data, ${statusCode}, response);
     }`;
     } else {
       /* Default mode: provide parse method for manual validation with error handling */

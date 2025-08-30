@@ -37,7 +37,7 @@ describe("client-generator validation error handling", () => {
 
       /* Return type should be ApiResponseWithParse with precise typing */
       expect(result.returnType).toBe(
-        "ApiResponseWithParse<200, typeof GetUserResponseMap>",
+        "ApiResponseWithParse<200, typeof GetUserResponseMap> | ApiResponseError",
       );
     });
 
@@ -71,7 +71,7 @@ describe("client-generator validation error handling", () => {
         "error: parseResult.error",
       );
       expect(result.returnType).toBe(
-        "ApiResponseWithParse<200, typeof GetDataResponseMap>",
+        "ApiResponseWithParse<200, typeof GetDataResponseMap> | ApiResponseError",
       );
     });
 
@@ -100,7 +100,7 @@ describe("client-generator validation error handling", () => {
       /* Verify that the return type does NOT include parseError */
       expect(result.returnType).not.toContain("error:");
       expect(result.returnType).toBe(
-        "ApiResponseWithParse<200, typeof DownloadFileResponseMap>",
+        "ApiResponseWithParse<200, typeof DownloadFileResponseMap> | ApiResponseError",
       );
     });
 
@@ -123,7 +123,7 @@ describe("client-generator validation error handling", () => {
       expect(result.responseHandlers[0]).toContain("data: undefined");
 
       /* Verify that the return type is simple void without parseError */
-      expect(result.returnType).toBe("ApiResponse<204, void>");
+      expect(result.returnType).toBe("ApiResponse<204, void> | ApiResponseError");
     });
   });
 });
