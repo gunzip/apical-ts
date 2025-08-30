@@ -94,7 +94,7 @@ This will demonstrate:
 - Finding pets by status with query parameters
 - Getting a specific pet by ID with path parameters
 - Retrieving store inventory
-- Error handling for non-existent resources
+- Handling typed operation errors (e.g. network, validation, missing schema)
 
 ### 5. Manual Testing
 
@@ -211,12 +211,15 @@ const response = await findPetsByStatus(
   localConfig,
 );
 
-// Handle response with parsing
 if (response.status === 200) {
-  const parseResult = response.parse();
-  if (parseResult.success) {
-    console.log("Pets:", parseResult.data);
+  const parsed = response.parse();
+  if ("parsed" in parsed) {
+    console.log("Pets:", parsed.parsed);
+  } else if (parsed.kind === "parse-error") {
+    console.error("Validation failed:", parsed.error);
   }
+} else if ("kind" in response) {
+  console.error("Operation failed:", response.kind, response.error);
 }
 ```
 
@@ -249,8 +252,8 @@ Each operation generates:
 ## Benefits of This Approach
 
 1. **Type Safety**: Full TypeScript coverage from API definition to implementation
-2. **Runtime Validation**: Automatic validation of requests and responses
-3. **Error Handling**: Structured error handling with discriminated unions
+2. **Runtime Validation**: Opt‑in or automatic validation of responses via `parse()` / `--force-validation`
+3. **Error Handling**: Structured, non‑throwing error objects with discriminated unions
 4. **Framework Agnostic**: Server wrappers can work with any Node.js framework
 5. **Consistent APIs**: Generated client matches server implementation exactly
 6. **Development Experience**: IntelliSense, auto-completion, and compile-time checks

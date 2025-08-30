@@ -20,8 +20,8 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
 
       /* Should contain the discriminated union return types */
       expect(result).toContain("contentType: K; parsed:");
-      expect(result).toContain("contentType: string; parseError:");
-      expect(result).toContain("contentType: string; missingSchema: true");
+      expect(result).toContain('kind: "parse-error"; error:');
+      expect(result).toContain('kind: "missing-schema"; error:');
 
       /* Should use z.infer in type definitions */
       expect(result).toContain("z.infer<TSchemaMap[K]>");
@@ -37,7 +37,7 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
       expect(overloadMatches).toHaveLength(3); // 2 overloads + 1 implementation
 
       /* Should handle deserializationError correctly */
-      expect(result).toContain("deserializationError");
+      expect(result).toContain('kind: "deserialization-error"');
     });
   });
 
@@ -52,10 +52,7 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
 
     it("should handle missing schema correctly", () => {
       const utilityCode = renderUtilityFunctions();
-
-      /* Should handle missing schema case */
-      expect(utilityCode).toContain("missingSchema: true as const");
-      expect(utilityCode).toContain("deserialized: deserializedData");
+      expect(utilityCode).toContain('kind: "missing-schema"');
     });
 
     it("should handle validation errors correctly", () => {
@@ -63,15 +60,12 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
 
       /* Should handle validation error case */
       expect(utilityCode).toContain("if (result.success)");
-      expect(utilityCode).toContain("parseError: result.error");
+      expect(utilityCode).toContain('kind: "parse-error"');
     });
 
     it("should handle deserialization errors when deserializerMap provided", () => {
       const utilityCode = renderUtilityFunctions();
-
-      /* Should handle deserialization errors */
-      expect(utilityCode).toContain("if (deserializationError)");
-      expect(utilityCode).toContain("deserializationError");
+      expect(utilityCode).toContain('kind: "deserialization-error"');
     });
   });
 

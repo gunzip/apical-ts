@@ -22,7 +22,7 @@ export type ApiResponse<S extends number, T> =
  * Error type for operation failures
  * Represents all possible error conditions that can occur during an operation
  */
-export type ApiResponseError = 
+export type ApiResponseError =
   | {
       readonly kind: "fetch-error";
       readonly success: false;
@@ -104,9 +104,9 @@ export type ApiResponseWithParse<
               parsed: z.infer<Map[${"`${S}`"}][K]>;
             };
           }[keyof Map[${"`${S}`"}]]
-        | { contentType: string; parseError: z.ZodError }
-        | { contentType: string; missingSchema: true; deserialized: unknown }
-        | { contentType: string; deserializationError: unknown }
+  | { kind: "parse-error"; error: z.ZodError }
+  | { kind: "missing-schema"; error: string }
+  | { kind: "deserialization-error"; error: unknown }
     : never;
 };
 
@@ -131,9 +131,9 @@ export type ApiResponseWithForcedParse<
               parsed: z.infer<Map[${"`${S}`"}][K]>;
             };
           }[keyof Map[${"`${S}`"}]]
-        | { contentType: string; parseError: z.ZodError }
-        | { contentType: string; missingSchema: true; deserialized: unknown }
-        | { contentType: string; deserializationError: unknown }
+  | { kind: "parse-error"; error: z.ZodError }
+  | { kind: "missing-schema"; error: string }
+  | { kind: "deserialization-error"; error: unknown }
     : never;
 };`;
 }
@@ -311,8 +311,9 @@ export function parseApiResponseUnknownData<
   schemaMap: TSchemaMap,
 ): (
   | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
-  | { contentType: string; parseError: z.ZodError }
-  | { contentType: string; missingSchema: true; deserialized: unknown }
+  | { kind: "parse-error"; error: z.ZodError }
+  | { kind: "missing-schema"; error: string }
+  | { kind: "deserialization-error"; error: unknown }
 );
 
 /* Overload with deserializerMap */
@@ -325,9 +326,9 @@ export function parseApiResponseUnknownData<
   deserializerMap: DeserializerMap,
 ): (
   | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
-  | { contentType: string; parseError: z.ZodError }
-  | { contentType: string; missingSchema: true; deserialized: unknown }
-  | { contentType: string; deserializationError: unknown }
+  | { kind: "parse-error"; error: z.ZodError }
+  | { kind: "missing-schema"; error: string }
+  | { kind: "deserialization-error"; error: unknown }
 );
 
 /* Implementation */
@@ -358,56 +359,33 @@ export function parseApiResponseUnknownData<
 
   const schema = schemaMap[contentType];
   if (!schema || typeof schema.safeParse !== "function") {
-    const base = {
-      contentType,
-      missingSchema: true as const,
-      deserialized: deserializedData,
-    };
     if (deserializationError) {
-      return {
-        ...base,
-        deserializationError,
-      };
+      return { kind: "deserialization-error", error: deserializationError } as const;
     }
-    return base;
+  return { kind: "missing-schema", error: \`No schema found for content-type: \${contentType}\` } as const;
   }
 
   /* Only proceed with Zod validation if deserialization succeeded */
   if (deserializationError) {
-    return {
-      contentType,
-      deserializationError,
-    };
+    return { kind: "deserialization-error", error: deserializationError } as const;
   }
 
   const result = schema.safeParse(deserializedData);
   if (result.success) {
-    return {
-      contentType,
-      parsed: result.data,
-    };
+    return { contentType, parsed: result.data };
   }
-  return {
-    contentType,
-    parseError: result.error,
-  };
+  return { kind: "parse-error", error: result.error } as const;
 }
 
 /* Type guard helpers for narrowing parse() results */
 export function isParsed<
   T extends
     | { contentType: string; parsed: unknown }
-    | { contentType: string; parseError: z.ZodError }
-    | { contentType: string; missingSchema: true; deserialized: unknown }
-    | { contentType: string; deserializationError: unknown }
+    | { kind: "parse-error"; error: z.ZodError }
+    | { kind: "missing-schema"; error: string }
+    | { kind: "deserialization-error"; error: unknown }
 >(value: T): value is Extract<T, { parsed: unknown }> {
-  return (
-    !!value &&
-    "parsed" in (value as Record<string, unknown>) &&
-    !("parseError" in value) &&
-    !("missingSchema" in (value as Record<string, unknown>)) &&
-    !("deserializationError" in (value as Record<string, unknown>))
-  );
+  return !!value && "parsed" in (value as Record<string, unknown>);
 }
 `;
 }

@@ -25,44 +25,30 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       if ("parsed" in parseResult) {
         return { success: true, status: ${statusCode} as const, data, response, parsed: parseResult };
       }
-      /* Return error for parse failures in force validation mode */
-      if ("parseError" in parseResult) {
+      if (parseResult.kind === "parse-error") {
         return {
           kind: "parse-error",
           success: false,
-          result: {
-            data,
-            status: ${statusCode},
-            response,
-          },
-          error: parseResult.parseError,
-        } as const;
+          result: { data, status: ${statusCode}, response },
+          error: parseResult.error,
+        } as ApiResponseError;
       }
-      if ("deserializationError" in parseResult) {
-        return {
-          kind: "deserialization-error",
-          success: false,
-          result: {
-            data,
-            status: ${statusCode},
-            response,
-          },
-          error: parseResult.deserializationError,
-        } as const;
-      }
-      if ("missingSchema" in parseResult) {
+      if (parseResult.kind === "missing-schema") {
         return {
           kind: "missing-schema",
           success: false,
-          result: {
-            data,
-            status: ${statusCode},
-            response,
-          },
-          error: \`No schema found for content-type: \${parseResult.contentType}\`,
-        } as const;
+          result: { data, status: ${statusCode}, response },
+          error: parseResult.error,
+        } as ApiResponseError;
       }
-      /* This should never be reached due to TypeScript type checking */
+      if (parseResult.kind === "deserialization-error") {
+        return {
+          kind: "deserialization-error",
+          success: false,
+          result: { data, status: ${statusCode}, response },
+          error: parseResult.error,
+        } as ApiResponseError;
+      }
       throw new Error("Invalid parse result");
     }`;
     } else {

@@ -208,34 +208,34 @@ const newPet = await client.createPet({
 
 ## Response Handling
 
-Each operation returns a discriminated union of possible responses containing
-the raw (unvalidated) response body in `data`. Validation is opt-in by default,
-but can be made automatic with the `--force-validation` flag. Example:
+Each operation returns a discriminated union: either an API response (with a
+`status` code) or an error object (`ApiResponseError`) with a `kind`
+discriminator. Note: the `fetch-error` variant has NO `status`, so you must
+guard on `kind` before relying on `status` being present. Validation is opt-in
+by default, but can be made automatic with the `--force-validation` flag.
+
+Recommended pattern:
 
 ```ts
 const result = await getPetById({ petId: "123" });
 
-if (result.status === 200) {
-  // result.data is the RAW response body (unvalidated by default)
-  // or VALIDATED data when using --force-validation
-  console.log("Pet (raw):", result.data);
-  // But will have a parse() method bound if you want
-  // to parse the returned response, see examples below
-} else if (result.status === 404) {
-  // Not found
-  console.warn("Pet not found");
-} else if ("kind" in result) {
-  // Handle operation errors (network, parsing, etc.)
+if ("kind" in result) {
+  // Operation-level error (network, parsing, missing schema, etc.)
   console.error("Operation failed:", result.kind, result.error);
+} else if (result.status === 200) {
+  // result.data is RAW (unless --force-validation was used)
+  console.log("Pet (raw):", result.data);
+} else if (result.status === 404) {
+  console.warn("Pet not found");
 } else {
-  // Exhaustive check for other response status codes
-  console.error("Unexpected status", result.status);
+  // Exhaustive fall-through for other documented statuses
+  console.error("Unexpected documented status", result.status);
 }
 ```
 
 ## Error Handling
 
-Operations never throw exceptions. Instead, all errors are returned as part of the response union, providing a consistent and type-safe error handling experience.
+Operations never throw exceptions. Instead, all errors are returned as part of the response union, providing a consistent and type-safe error handling experience. There is no `result.success` boolean; you distinguish errors via the presence of the `kind` discriminator.
 
 ### Error Types
 
@@ -282,14 +282,8 @@ type ApiResponseError =
 ```ts
 const result = await getPetById({ petId: "123" });
 
-// Handle success responses
-if (result.status === 200) {
-  console.log("Pet:", result.data);
-} else if (result.status === 404) {
-  console.warn("Pet not found");
-}
-// Handle operation errors
-else if ("kind" in result) {
+if ("kind" in result) {
+  // All error variants handled first (safe: fetch-error lacks status)
   switch (result.kind) {
     case "fetch-error":
       console.error("Network error:", result.error);
@@ -307,6 +301,12 @@ else if ("kind" in result) {
       console.error("Schema missing:", result.error);
       break;
   }
+} else if (result.status === 200) {
+  console.log("Pet:", result.data);
+} else if (result.status === 404) {
+  console.warn("Pet not found");
+} else {
+  console.error("Unexpected documented status", result.status);
 }
 ```
 
@@ -324,20 +324,28 @@ Different error types provide different context:
 
 Operations return raw data by default (no automatic Zod parsing). To perform
 runtime validation you must explicitly call the response object's `parse()`
-method. Validation errors are reported in the returned object (they do NOT
-throw) via an `parseError` property.
+method. The `parse()` method now returns a discriminated union:
+
+- `{ contentType, parsed }` on success
+- `{ kind: "parse-error", error: ZodError }` when validation fails
+- `{ kind: "deserialization-error", error: unknown }` when a custom deserializer throws
+- `{ kind: "missing-schema", error: string }` when no schema exists for the resolved content type
+
+These objects never throw; you inspect the returned value to act accordingly.
 
 ```ts
 const result = await getUserProfile({ userId: "123" });
 
 if (result.status === 200) {
   const outcome = result.parse();
-  if (isParsed(outcome)) {
+  if ("parsed" in outcome) {
     console.log("User:", outcome.parsed.name, outcome.parsed.email);
-  } else if (outcome && "parseError" in outcome) {
-    console.error("Response validation failed:", outcome.parseError);
-  } else {
-    console.log("User (raw, unvalidated):", result.data);
+  } else if (outcome.kind === "parse-error") {
+    console.error("Response validation failed:", outcome.error);
+  } else if (outcome.kind === "deserialization-error") {
+    console.error("Deserializer failed:", outcome.error);
+  } else if (outcome.kind === "missing-schema") {
+    console.warn("No schema – raw data retained:", result.data);
   }
 } else if (result.status === 404) {
   console.warn("User not found");
@@ -355,7 +363,7 @@ const result = await getDocument({
 
 if (result.status === 200) {
   const outcome = result.parse();
-  if (isParsed(outcome)) {
+  if ("parsed" in outcome) {
     console.log("Document:", outcome.parsed);
   }
 }
@@ -381,7 +389,7 @@ const result = await downloadFile(
 
 if (result.status === 200) {
   const outcome = result.parse();
-  if (isParsed(outcome)) {
+  if ("parsed" in outcome) {
     console.log("Downloaded file size:", outcome.parsed.size);
   }
 }
@@ -407,17 +415,14 @@ pnpx yanogen-ts generate \
 const result = await getUserProfile({ userId: "123" });
 
 if (result.status === 200) {
-  // automatically validated and typed
+  // automatically validated and typed (result has either parsed or an error kind)
   if ("parsed" in result) {
-    const profile = result.parsed;
-    console.log("User:", profile.name, profile.email);
+    console.log("User:", result.parsed.name, result.parsed.email);
+  } else if (result.kind === "parse-error") {
+    console.error("User profile validation failed", result.error);
   }
 } else if (result.status === 404) {
   console.warn("User not found");
-}
-// Handle validation errors in force validation mode
-else if ("kind" in result && result.kind === "parse-error") {
-  console.error("User profile validation failed", result.error);
 }
 ```
 
@@ -533,19 +538,14 @@ const res = await testMultiContentTypes(
 
 if (res.status === 200) {
   const outcome = res.parse();
-
-  if (isParsed(outcome)) {
-    // Zod-validated & transformed data
+  if ("parsed" in outcome) {
     console.log(outcome.parsed);
-  } else if ("parseError" in outcome) {
-    console.error("Validation failed", outcome.parseError);
-  } else if ("deserializationError" in outcome) {
-    console.error("Deserializer threw", outcome.deserializationError);
-  } else if ("missingSchema" in outcome) {
-    console.warn(
-      "No schema for content type; raw transformed value:",
-      outcome.deserialized,
-    );
+  } else if (outcome.kind === "parse-error") {
+    console.error("Validation failed", outcome.error);
+  } else if (outcome.kind === "deserialization-error") {
+    console.error("Deserializer threw", outcome.error);
+  } else if (outcome.kind === "missing-schema") {
+    console.warn("No schema for content type; raw value:", res.data);
   }
 }
 ```
@@ -621,13 +621,14 @@ const outcome = res.parse();
 
 ### Error Handling Summary
 
-| Field                  | Meaning                                             |
-| ---------------------- | --------------------------------------------------- |
-| `parsed`               | Successfully deserialized and schema-validated data |
-| `parseError`           | Zod validation error object (`ZodError`)            |
-| `deserializationError` | Exception thrown by your custom deserializer        |
-| `missingSchema`        | No schema was generated for this content type       |
-| `deserialized`         | Transformed value when no schema exists             |
+| Field                         | Meaning                                             |
+| ----------------------------- | --------------------------------------------------- |
+| Variant / Field               | Meaning                                             |
+| ----------------------        | --------------------------------------------------- |
+| `parsed`                      | Successfully deserialized & schema-validated data   |
+| `kind: parse-error`           | Validation failed (`error` is a `ZodError`)         |
+| `kind: deserialization-error` | Custom deserializer threw an exception              |
+| `kind: missing-schema`        | No schema found for that content type               |
 
 ### Best Practices
 
