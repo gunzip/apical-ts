@@ -139,9 +139,9 @@ describe("error handling in client generator", () => {
         "const parseResult = parseApiResponseUnknownData",
       );
       expect(responseHandler).toContain('if ("parsed" in parseResult)');
-      expect(responseHandler).toContain(
-        "createApiResponseErrorFromParseResult",
-      );
+      expect(responseHandler).toContain('if ("parseError" in parseResult)');
+      expect(responseHandler).toContain('kind: "parse-error"');
+      expect(responseHandler).toContain('success: false');
       /* Force validation should directly return parsed result or error, not provide a parse method */
     });
   });

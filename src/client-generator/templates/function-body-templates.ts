@@ -101,8 +101,9 @@ ${headersContent}
   const url = new URL(\`${finalPath}\`, config.baseURL);
   ${queryParamLines ? `  ${queryParamLines}` : ""}
 
+  let response: Response;
   try {
-    const response = await config.fetch(url.toString(), {
+    response = await config.fetch(url.toString(), {
       method: "${method.toUpperCase()}",
       headers: finalHeaders,${
         hasBody
@@ -111,38 +112,42 @@ ${headersContent}
           : ""
       }
     });
+  } catch (error) {
+    /* Handle fetch errors */
+    return {
+      kind: "fetch-error",
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    } as const;
+  }
 
-    /*
-     * The response body is consumed immediately to prevent holding onto the raw
-     * response stream. A new, lightweight response object is created with only
-     * the necessary properties, and headers are copied to a Map to break the
-     * reference to the original response object.
-     */
-    const data = await parseResponseBody(response);
-    const minimalResponse = {
-      status: response.status,
-      headers: new Map(response.headers.entries()),
-    };
+  /*
+   * The response body is consumed immediately to prevent holding onto the raw
+   * response stream. A new, lightweight response object is created with only
+   * the necessary properties, and headers are copied to a Map to break the
+   * reference to the original response object.
+   */
+  const data = await parseResponseBody(response);
+  const minimalResponse = {
+    status: response.status,
+    headers: new Map(response.headers.entries()),
+  };
 
-    switch (response.status) {
+  switch (response.status) {
 ${responseHandlers.join("\n")}
-      default: {
-        /* Return error for unexpected status codes instead of throwing */
-        return {
-          kind: "unexpected-response",
+    default: {
+      /* Return error for unexpected status codes instead of throwing */
+      return {
+        kind: "unexpected-response",
+        success: false,
+        result: {
           data,
           status: response.status,
           response,
-          error: \`Unexpected response status: \${response.status}\`,
-        } as const;
-      }
+        },
+        error: \`Unexpected response status: \${response.status}\`,
+      } as const;
     }
-  } catch (error) {
-    /* Handle fetch errors and other exceptions */
-    return {
-      kind: "fetch-error",
-      error: error instanceof Error ? error.message : String(error),
-    } as const;
   }`;
 }
 

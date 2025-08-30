@@ -23,10 +23,47 @@ export function renderResponseHandler(
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {});
       if ("parsed" in parseResult) {
-        return { status: ${statusCode} as const, data, response, parsed: parseResult };
+        return { success: true, status: ${statusCode} as const, data, response, parsed: parseResult };
       }
       /* Return error for parse failures in force validation mode */
-      return createApiResponseErrorFromParseResult(parseResult, data, ${statusCode}, response);
+      if ("parseError" in parseResult) {
+        return {
+          kind: "parse-error",
+          success: false,
+          result: {
+            data,
+            status: ${statusCode},
+            response,
+          },
+          error: parseResult.parseError,
+        } as const;
+      }
+      if ("deserializationError" in parseResult) {
+        return {
+          kind: "deserialization-error",
+          success: false,
+          result: {
+            data,
+            status: ${statusCode},
+            response,
+          },
+          error: parseResult.deserializationError,
+        } as const;
+      }
+      if ("missingSchema" in parseResult) {
+        return {
+          kind: "missing-schema",
+          success: false,
+          result: {
+            data,
+            status: ${statusCode},
+            response,
+          },
+          error: \`No schema found for content-type: \${parseResult.contentType}\`,
+        } as const;
+      }
+      /* This should never be reached due to TypeScript type checking */
+      throw new Error("Invalid parse result");
     }`;
     } else {
       /* Default mode: provide parse method for manual validation with error handling */
@@ -39,13 +76,13 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
 
       return `    case ${statusCode}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-      return { status: ${statusCode} as const, data, response${parseMethod} };
+      return { success: true, status: ${statusCode} as const, data, response${parseMethod} };
     }`;
     }
   }
 
   return `    case ${statusCode}:
-      return { status: ${statusCode} as const, data: undefined, response };`;
+      return { success: true, status: ${statusCode} as const, data: undefined, response };`;
 }
 
 /*

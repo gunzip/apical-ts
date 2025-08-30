@@ -95,9 +95,8 @@ describe("force validation flag", () => {
       expect(result.responseHandlers[0]).toContain(
         'if ("parsed" in parseResult)',
       );
-      expect(result.responseHandlers[0]).toContain(
-        "createApiResponseErrorFromParseResult",
-      );
+      expect(result.responseHandlers[0]).toContain('kind: "parse-error"');
+      expect(result.responseHandlers[0]).toContain('success: false');
       expect(result.responseHandlers[0]).not.toContain("parse: () => {");
 
       /* Verify response handler does NOT include parse method */
