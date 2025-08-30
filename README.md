@@ -789,7 +789,7 @@ const app = express();
 app.use(express.json());
 
 const wrappedHandler = testAuthBearerWrapper(async (params) => {
-  if (params.type === "ok") {
+  if (params.kind === "ok") {
     // Here you can access validated and typed parameters
     const { query, path, headers, body } = params.value;
     // ...
@@ -832,9 +832,9 @@ See [./examples](./examples) directory for more usage examples.
 
 The handler you provide to the wrapper receives a single argument:
 
-- For valid requests: `{ type: "ok", value: { query, path, headers, body, ... }
+- For valid requests: `{ kind: "ok", value: { query, path, headers, body, ... }
 }`
-- For validation errors: `{ type: "query_error" | "body_error" | ... , error:
+- For validation errors: `{ kind: "query_error" | "body_error" | ... , error:
 ZodError }`
 
 It must return an object with `{ status, contentType, data }`.

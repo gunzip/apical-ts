@@ -13,7 +13,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
   it("should return 200 with all parameters correctly validated and passed", async () => {
     // Arrange: Setup handler to validate all parameter types
     const handler: testParameterWithDashHandler = async (params) => {
-      if (params.type === "ok") {
+      if (params.kind === "ok") {
         // Validate path parameters
         expect(params.value.path.pathParam).toBe("test-path-param");
 
@@ -65,7 +65,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
     let pathValidationFailed = false;
 
     const handler: testParameterWithDashHandler = async (params) => {
-      if (params.type === "path_error") {
+      if (params.kind === "path_error") {
         pathValidationFailed = true;
         // Check that path validation failed for minimum length
         const pathError = params.error.issues.find((issue) =>
@@ -122,7 +122,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
     let queryValidationFailed = false;
 
     const handler: testParameterWithDashHandler = async (params) => {
-      if (params.type === "query_error") {
+      if (params.kind === "query_error") {
         queryValidationFailed = true;
         // Check that request-id validation failed for minimum length
         const requestIdError = params.error.issues.find((issue) =>
@@ -179,7 +179,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
     let headerValidationFailed = false;
 
     const handler: testParameterWithDashHandler = async (params) => {
-      if (params.type === "headers_error") {
+      if (params.kind === "headers_error") {
         headerValidationFailed = true;
         // Check that header validation failed
         expect(params.error.issues.length).toBeGreaterThan(0);
@@ -231,7 +231,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
     // (foo-bar -> fooBar, path-param -> pathParam, etc.)
     const handler: testParameterWithDashHandler = async (params) => {
       console.log(params);
-      if (params.type === "ok") {
+      if (params.kind === "ok") {
         // The generated wrapper should transform kebab-case to camelCase
         expect(params.value.query).toHaveProperty("fooBar");
         expect(params.value.query).toHaveProperty("requestId");

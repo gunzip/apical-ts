@@ -10,7 +10,7 @@ describe("testMultiContentTypes operation integration tests", () => {
   it("should handle JSON content type request and response", async () => {
     // Arrange: Handler that accepts JSON and returns JSON
     const handler: testMultiContentTypesHandler = async (params) => {
-      if (params.type === "ok") {
+      if (params.kind === "ok") {
         expect(params.value.body).toBeDefined();
         expect(params.value.body).toMatchObject({
           id: "test-123",
@@ -55,7 +55,7 @@ describe("testMultiContentTypes operation integration tests", () => {
   it("should handle custom JSON content type response", async () => {
     // Arrange: Handler that returns custom vnd JSON
     const handler: testMultiContentTypesHandler = async (params) => {
-      if (params.type === "ok") {
+      if (params.kind === "ok") {
         return {
           status: 200,
           contentType: "application/vnd.custom+json",
@@ -99,7 +99,7 @@ describe("testMultiContentTypes operation integration tests", () => {
   it("should handle form-urlencoded content type", async () => {
     // Arrange: Handler that accepts form data
     const handler: testMultiContentTypesHandler = async (params) => {
-      if (params.type === "ok") {
+      if (params.kind === "ok") {
         expect(params.value.body).toBeDefined();
         // Form-encoded data might be parsed differently
 
@@ -143,7 +143,7 @@ describe("testMultiContentTypes operation integration tests", () => {
     let validationErrorReceived = false;
 
     const handler: testMultiContentTypesHandler = async (params) => {
-      if (params.type === "body_error") {
+      if (params.kind === "body_error") {
         validationErrorReceived = true;
         expect(params.error.issues).toBeDefined();
 
@@ -196,7 +196,7 @@ describe("testMultiContentTypes operation integration tests", () => {
   it("should handle unknown content types gracefully", async () => {
     // Arrange: Handler that accepts any content type
     const handler: testMultiContentTypesHandler = async (params) => {
-      if (params.type === "ok") {
+      if (params.kind === "ok") {
         // Should still receive the body even with unknown content type
         // Body might be undefined for unknown content types, which is acceptable
 
@@ -208,7 +208,7 @@ describe("testMultiContentTypes operation integration tests", () => {
             name: "Unknown Content Type",
           },
         };
-      } else if (params.type === "body_error") {
+      } else if (params.kind === "body_error") {
         // If there's a body validation error with unknown content type, that's also acceptable
         return {
           status: 200,

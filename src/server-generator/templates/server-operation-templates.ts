@@ -107,10 +107,10 @@ export function renderServerOperationWrapper(
       : "undefined";
 
   const validationErrorType = `type ${sanitizedId}ValidationError =
-  | { type: "query_error"; error: z.ZodError }
-  | { type: "path_error"; error: z.ZodError }
-  | { type: "headers_error"; error: z.ZodError }
-  | { type: "body_error"; error: z.ZodError };`;
+  | { kind: "query_error"; error: z.ZodError }
+  | { kind: "path_error"; error: z.ZodError }
+  | { kind: "headers_error"; error: z.ZodError }
+  | { kind: "body_error"; error: z.ZodError };`;
 
   const parsedParamsType = `type ${sanitizedId}ParsedParams = {
   query: ${sanitizedId}Query;
@@ -120,7 +120,7 @@ export function renderServerOperationWrapper(
 };`;
 
   const handlerType = `export type ${sanitizedId}Handler = (
-  params: { type: "ok"; value: ${sanitizedId}ParsedParams } | ${sanitizedId}ValidationError,
+  params: { kind: "ok"; value: ${sanitizedId}ParsedParams } | ${sanitizedId}ValidationError,
 ) => Promise<${responseType}>;`;
 
   const wrapperFunction = `export function ${functionName}(
@@ -189,13 +189,13 @@ function renderValidationLogic(
     ? `z.infer<(typeof ${requestMapTypeName})["application/json"]>`
     : "undefined";
   const shared = `  const queryParse = ${sanitizedId}QuerySchema.safeParse(req.query);
-  if (!queryParse.success) return handler({ type: "query_error", error: queryParse.error });
+  if (!queryParse.success) return handler({ kind: "query_error", error: queryParse.error });
 
   const pathParse = ${sanitizedId}PathSchema.safeParse(req.path);
-  if (!pathParse.success) return handler({ type: "path_error", error: pathParse.error });
+  if (!pathParse.success) return handler({ kind: "path_error", error: pathParse.error });
 
   const headersParse = ${sanitizedId}HeadersSchema.safeParse(req.headers);
-  if (!headersParse.success) return handler({ type: "headers_error", error: headersParse.error });`;
+  if (!headersParse.success) return handler({ kind: "headers_error", error: headersParse.error });`;
 
   const bodyLogic = requestMapTypeName
     ? `
@@ -204,12 +204,12 @@ function renderValidationLogic(
     const schema = ${requestMapTypeName}[req.contentType];
     if (schema) {
       const bodyParse = schema.strict().safeParse(req.body);
-      if (!bodyParse.success) return handler({ type: "body_error", error: bodyParse.error });
+      if (!bodyParse.success) return handler({ kind: "body_error", error: bodyParse.error });
       parsedBody = bodyParse.data as ${bodyType};
     } else {
       /* Unknown content-type fallback: accept any */
       const bodyParse = z.any().safeParse(req.body);
-      if (!bodyParse.success) return handler({ type: "body_error", error: bodyParse.error });
+      if (!bodyParse.success) return handler({ kind: "body_error", error: bodyParse.error });
       parsedBody = bodyParse.data as ${bodyType};
     }
   }`
@@ -218,7 +218,7 @@ function renderValidationLogic(
   let parsedBody: unknown | undefined = undefined;
   if (req.body !== undefined) {
     const bodyParse = z.any().safeParse(req.body);
-    if (!bodyParse.success) return handler({ type: "body_error", error: bodyParse.error });
+    if (!bodyParse.success) return handler({ kind: "body_error", error: bodyParse.error });
     parsedBody = bodyParse.data as unknown;
   }`
       : `
@@ -226,12 +226,12 @@ function renderValidationLogic(
 
   const tail = `
   return handler({
-    type: "ok",
-    value: { 
-      query: queryParse.data, 
-      path: pathParse.data, 
+    kind: "ok",
+    value: {
+      query: queryParse.data,
+      path: pathParse.data,
       headers: headersParse.data,
-      body: parsedBody 
+      body: parsedBody
     },
   });`;
 

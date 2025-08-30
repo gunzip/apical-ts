@@ -12,13 +12,13 @@ describe("Strict validation behavior", () => {
     let actualError: any = null;
 
     const handler: testMultiContentTypesHandler = async (params) => {
-      if (params.type === "ok") {
+      if (params.kind === "ok") {
         return {
           status: 200,
           contentType: "application/json",
           data: mockData.newModel(),
         };
-      } else if (params.type === "body_error") {
+      } else if (params.kind === "body_error") {
         validationErrorReceived = true;
         actualError = params.error;
         return {
@@ -28,7 +28,7 @@ describe("Strict validation behavior", () => {
         };
       }
 
-      throw new Error(`Unexpected validation error: ${params.type}`);
+      throw new Error(`Unexpected validation error: ${params.kind}`);
     };
 
     const app = setupTestRoute(
@@ -61,7 +61,7 @@ describe("Strict validation behavior", () => {
 
   it("should accept request body without extra properties", async () => {
     const handler: testMultiContentTypesHandler = async (params) => {
-      if (params.type === "ok") {
+      if (params.kind === "ok") {
         expect(params.value.body).toEqual({
           id: "test-123",
           name: "Test Object",
@@ -73,7 +73,7 @@ describe("Strict validation behavior", () => {
         };
       }
 
-      throw new Error(`Unexpected validation error: ${params.type}`);
+      throw new Error(`Unexpected validation error: ${params.kind}`);
     };
 
     const app = setupTestRoute(

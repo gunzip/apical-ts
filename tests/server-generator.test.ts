@@ -46,11 +46,11 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("testSimpleQueryQuerySchema");
     expect(result.wrapperCode).toContain('"query1": z.string()');
     expect(result.wrapperCode).toContain('"query2": z.string()');
-    expect(result.wrapperCode).toContain('type: "query_error"');
-    expect(result.wrapperCode).toContain('type: "path_error"');
-    expect(result.wrapperCode).toContain('type: "headers_error"');
-    expect(result.wrapperCode).toContain('type: "body_error"');
-    expect(result.wrapperCode).toContain('type: "ok"');
+    expect(result.wrapperCode).toContain('kind: "query_error"');
+    expect(result.wrapperCode).toContain('kind: "path_error"');
+    expect(result.wrapperCode).toContain('kind: "headers_error"');
+    expect(result.wrapperCode).toContain('kind: "body_error"');
+    expect(result.wrapperCode).toContain('kind: "ok"');
   });
 
   it("should use strict validation for server input types (query, path, headers)", () => {

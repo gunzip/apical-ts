@@ -63,7 +63,7 @@ const mockInventory = {
 
 /* Implementation of findPetsByStatus handler */
 const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
-  if (params.type !== "ok") {
+  if (params.kind !== "ok") {
     /* Handle validation errors */
     console.error("Validation error in findPetsByStatus:", params);
     return {
@@ -86,7 +86,7 @@ const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
 
 /* Implementation of getPetById handler */
 const getPetByIdHandler: getPetByIdHandler = async (params) => {
-  if (params.type !== "ok") {
+  if (params.kind !== "ok") {
     /* Handle validation errors */
     console.error("Validation error in getPetById:", params);
     return {
@@ -117,7 +117,7 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
 /* We disable type checking to allow emitting an unexpected response */
 /* @ts-ignore */
 const getInventoryHandler: getInventoryHandler = async (params) => {
-  if (params.type !== "ok") {
+  if (params.kind !== "ok") {
     /* Handle validation errors */
     console.error("Validation error in getInventory:", params);
     return {
