@@ -68,10 +68,10 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain('"petId": z.string()');
 
     /* Verify validation error types */
-    expect(result.wrapperCode).toContain("query_error");
-    expect(result.wrapperCode).toContain("path_error");
-    expect(result.wrapperCode).toContain("headers_error");
-    expect(result.wrapperCode).toContain("body_error");
+    expect(result.wrapperCode).toContain("query-error");
+    expect(result.wrapperCode).toContain("path-error");
+    expect(result.wrapperCode).toContain("headers-error");
+    expect(result.wrapperCode).toContain("body-error");
 
     /* Verify response types */
     expect(result.wrapperCode).toContain("status: 200");
@@ -122,10 +122,10 @@ describe("server-generator comprehensive validation", () => {
 
     /* Should include validation error discriminated union */
     expect(result.wrapperCode).toContain("testOperationValidationError");
-    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"query_error"/);
-    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"path_error"/);
-    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"headers_error"/);
-    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"body_error"/);
+    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"query-error"/);
+    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"path-error"/);
+    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"headers-error"/);
+    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"body-error"/);
 
     /* Should include parsed params type */
     expect(result.wrapperCode).toContain("testOperationParsedParams");

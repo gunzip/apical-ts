@@ -46,10 +46,10 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("testSimpleQueryQuerySchema");
     expect(result.wrapperCode).toContain('"query1": z.string()');
     expect(result.wrapperCode).toContain('"query2": z.string()');
-    expect(result.wrapperCode).toContain('kind: "query_error"');
-    expect(result.wrapperCode).toContain('kind: "path_error"');
-    expect(result.wrapperCode).toContain('kind: "headers_error"');
-    expect(result.wrapperCode).toContain('kind: "body_error"');
+    expect(result.wrapperCode).toContain('kind: "query-error"');
+    expect(result.wrapperCode).toContain('kind: "path-error"');
+    expect(result.wrapperCode).toContain('kind: "headers-error"');
+    expect(result.wrapperCode).toContain('kind: "body-error"');
     expect(result.wrapperCode).toContain("success: true");
   });
 
@@ -168,7 +168,7 @@ describe("server-generator operation wrapper", () => {
     /* Verify that request body validation uses .strict() method conditionally */
     expect(result.wrapperCode).toContain("schema.strict().safeParse(req.body)");
     expect(result.wrapperCode).toContain("testStrictBodyValidationWrapper");
-    expect(result.wrapperCode).toContain("body_error");
+    expect(result.wrapperCode).toContain("body-error");
     expect(result.wrapperCode).toContain("parsedBody");
   });
 
@@ -239,7 +239,7 @@ describe("server-generator operation wrapper", () => {
     );
 
     expect(result.wrapperCode).toContain("testWithBodyWrapper");
-    expect(result.wrapperCode).toContain("body_error");
+    expect(result.wrapperCode).toContain("body-error");
     expect(result.wrapperCode).toContain("parsedBody");
   });
 

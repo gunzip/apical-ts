@@ -101,7 +101,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
       if (
         "success" in params &&
         !params.success &&
-        params.kind === "query_error"
+        params.kind === "query-error"
       ) {
         validationErrorReceived = true;
         expect(params.error.issues).toBeDefined();

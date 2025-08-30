@@ -11,18 +11,15 @@ describe("Strict validation behavior", () => {
     let validationErrorReceived = false;
     let actualError: any = null;
 
+    // @ts-expect-error
     const handler: testMultiContentTypesHandler = async (params) => {
-      if ("success" in params && params.success) {
+      if (params.success) {
         return {
           status: 200,
           contentType: "application/json",
           data: mockData.newModel(),
         };
-      } else if (
-        "success" in params &&
-        !params.success &&
-        params.kind === "body_error"
-      ) {
+      } else if (!params.success && params.kind === "body-error") {
         validationErrorReceived = true;
         actualError = params.error;
         return {
@@ -33,7 +30,7 @@ describe("Strict validation behavior", () => {
       }
 
       throw new Error(
-        `Unexpected validation error: ${"success" in params && !params.success ? params.kind : "unknown"}`,
+        `Unexpected validation error: ${!params.success ? params.kind : "unknown"}`,
       );
     };
 
