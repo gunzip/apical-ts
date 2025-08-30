@@ -91,19 +91,18 @@ export function renderFunctionBody(
   securityHeaderLines?: string,
   queryParamLines?: string,
 ): string {
-  return `${contentTypeLogic}${bodyContentCode}
+  return `  try {
+${contentTypeLogic}${bodyContentCode}
 
-  const finalHeaders: Record<string, string> = {
+    const finalHeaders: Record<string, string> = {
 ${headersContent}
-  };
-  ${headerParamLines ? `  ${headerParamLines}` : ""}${securityHeaderLines ? `  ${securityHeaderLines}` : ""}
+    };
+    ${headerParamLines ? `    ${headerParamLines}` : ""}${securityHeaderLines ? `    ${securityHeaderLines}` : ""}
 
-  const url = new URL(\`${finalPath}\`, config.baseURL);
-  ${queryParamLines ? `  ${queryParamLines}` : ""}
+    const url = new URL(\`${finalPath}\`, config.baseURL);
+    ${queryParamLines ? `    ${queryParamLines}` : ""}
 
-  let response: Response;
-  try {
-    response = await config.fetch(url.toString(), {
+    const response = await config.fetch(url.toString(), {
       method: "${method.toUpperCase()}",
       headers: finalHeaders,${
         hasBody
@@ -112,42 +111,41 @@ ${headersContent}
           : ""
       }
     });
-  } catch (error) {
-    /* Handle fetch errors */
-    return {
-      kind: "fetch-error",
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    } as const;
-  }
 
-  /*
-   * The response body is consumed immediately to prevent holding onto the raw
-   * response stream. A new, lightweight response object is created with only
-   * the necessary properties, and headers are copied to a Map to break the
-   * reference to the original response object.
-   */
-  const data = await parseResponseBody(response);
-  const minimalResponse = {
-    status: response.status,
-    headers: new Map(response.headers.entries()),
-  };
+    /*
+     * The response body is consumed immediately to prevent holding onto the raw
+     * response stream. A new, lightweight response object is created with only
+     * the necessary properties, and headers are copied to a Map to break the
+     * reference to the original response object.
+     */
+    const data = await parseResponseBody(response);
+    const minimalResponse = {
+      status: response.status,
+      headers: new Map(response.headers.entries()),
+    };
 
-  switch (response.status) {
+    switch (response.status) {
 ${responseHandlers.join("\n")}
-    default: {
-      /* Return error for unexpected status codes instead of throwing */
-      return {
-        kind: "unexpected-response",
-        success: false,
-        result: {
-          data,
-          status: response.status,
-          response,
-        },
-        error: \`Unexpected response status: \${response.status}\`,
-      } as const;
+      default: {
+        /* Return error for unexpected status codes instead of throwing */
+        return {
+          kind: "unexpected-response",
+          success: false,
+          result: {
+            data,
+            status: response.status,
+            response,
+          },
+          error: \`Unexpected response status: \${response.status}\`,
+        } as const;
+      }
     }
+  } catch (error) {
+    return {
+      success: false,
+      kind: "unexpected-error",
+      error,
+    } as const;
   }`;
 }
 

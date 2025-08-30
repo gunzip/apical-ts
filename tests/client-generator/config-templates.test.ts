@@ -159,7 +159,7 @@ describe("client-generator config-templates", () => {
 
       /* Should also include the new ApiResponseError type */
       expect(result).toContain("export type ApiResponseError");
-      expect(result).toContain('readonly kind: "fetch-error"');
+      expect(result).toContain('readonly kind: "unexpected-error"');
       expect(result).toContain('readonly kind: "parse-error"');
 
       /* The basic ApiResponse type should not contain error fields (they're in ApiResponseError) */
