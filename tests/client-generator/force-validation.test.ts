@@ -45,7 +45,9 @@ describe("force validation flag", () => {
 
       /* Verify response handler includes parse method for manual validation */
       expect(result.responseHandlers[0]).toContain("parse: () =>");
-      expect(result.responseHandlers[0]).toContain("parseApiResponseUnknownData");
+      expect(result.responseHandlers[0]).toContain(
+        "parseApiResponseUnknownData",
+      );
 
       /* Verify return type uses ApiResponseWithParse */
       expect(result.returnType).toBe(
@@ -90,8 +92,12 @@ describe("force validation flag", () => {
       expect(result.responseHandlers[0]).toContain(
         "config.deserializerMap ?? {}",
       );
-      expect(result.responseHandlers[0]).toContain('if ("parsed" in parseResult)');
-      expect(result.responseHandlers[0]).toContain("createApiResponseErrorFromParseResult");
+      expect(result.responseHandlers[0]).toContain(
+        'if ("parsed" in parseResult)',
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "createApiResponseErrorFromParseResult",
+      );
       expect(result.responseHandlers[0]).not.toContain("parse: () => {");
 
       /* Verify response handler does NOT include parse method */

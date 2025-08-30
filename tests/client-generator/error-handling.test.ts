@@ -90,13 +90,23 @@ describe("error handling in client generator", () => {
       };
 
       const typeImports = new Set<string>();
-      const result = generateResponseHandlers(operation, typeImports, true, "TestOperationResponseMap", false);
+      const result = generateResponseHandlers(
+        operation,
+        typeImports,
+        true,
+        "TestOperationResponseMap",
+        false,
+      );
 
       /* Should include parse method that calls parseApiResponseUnknownData */
       const responseHandler = result.responseHandlers[0];
       expect(responseHandler).toContain("parse: () =>");
-      expect(responseHandler).toContain("parseApiResponseUnknownData(minimalResponse, data, TestOperationResponseMap");
-      expect(responseHandler).not.toContain("createApiResponseErrorFromParseResult");
+      expect(responseHandler).toContain(
+        "parseApiResponseUnknownData(minimalResponse, data, TestOperationResponseMap",
+      );
+      expect(responseHandler).not.toContain(
+        "createApiResponseErrorFromParseResult",
+      );
     });
 
     it("should generate force validation handlers that return errors", () => {
@@ -115,13 +125,23 @@ describe("error handling in client generator", () => {
       };
 
       const typeImports = new Set<string>();
-      const result = generateResponseHandlers(operation, typeImports, true, "TestOperationResponseMap", true);
+      const result = generateResponseHandlers(
+        operation,
+        typeImports,
+        true,
+        "TestOperationResponseMap",
+        true,
+      );
 
       /* Should include error handling in force validation mode */
       const responseHandler = result.responseHandlers[0];
-      expect(responseHandler).toContain("const parseResult = parseApiResponseUnknownData");
+      expect(responseHandler).toContain(
+        "const parseResult = parseApiResponseUnknownData",
+      );
       expect(responseHandler).toContain('if ("parsed" in parseResult)');
-      expect(responseHandler).toContain("createApiResponseErrorFromParseResult");
+      expect(responseHandler).toContain(
+        "createApiResponseErrorFromParseResult",
+      );
       /* Force validation should directly return parsed result or error, not provide a parse method */
     });
   });
@@ -172,9 +192,10 @@ describe("error handling in client generator", () => {
         const result = generateResponseHandlers(operation, typeImports);
 
         /* All operations should include ApiResponseError in their return type */
-        expect(result.returnType, `${name} should include ApiResponseError`).toContain(
-          "ApiResponseError",
-        );
+        expect(
+          result.returnType,
+          `${name} should include ApiResponseError`,
+        ).toContain("ApiResponseError");
       }
     });
   });

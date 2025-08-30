@@ -40,7 +40,7 @@ See [supported features](#supported-features) for more information.
     - [Call Operations](#call-operations)
   - [Binding Configuration to Operations](#binding-configuration-to-operations)
   - [Response Handling](#response-handling)
-  - [Exception Handling](#exception-handling)
+  - [Error Handling](#error-handling)
   - [Runtime Response Validation (Opt-In)](#runtime-response-validation-opt-in)
   - [Why is Runtime Validation Opt-In?](#why-is-runtime-validation-opt-in)
   - [Custom Response Deserialization](#custom-response-deserialization)
@@ -224,29 +224,101 @@ if (result.status === 200) {
 } else if (result.status === 404) {
   // Not found
   console.warn("Pet not found");
+} else if ("kind" in result) {
+  // Handle operation errors (network, parsing, etc.)
+  console.error("Operation failed:", result.kind, result.error);
 } else {
-  // Exhaustive check
+  // Exhaustive check for other response status codes
   console.error("Unexpected status", result.status);
 }
 ```
 
-## Exception Handling
+## Error Handling
 
-All responses not present in the OpenAPI specs throw an
-`UnexpectedResponseError` error:
+Operations never throw exceptions. Instead, all errors are returned as part of the response union, providing a consistent and type-safe error handling experience.
+
+### Error Types
+
+All operations return a union that includes `ApiResponseError`, which is a discriminated union covering all possible error scenarios:
 
 ```ts
-try {
-  const result = await getPetById({ petId: "notfound" });
-  // handle result as above
-} catch (err) {
-  if (err instanceof UnexpectedResponseError) {
-    console.error("Unexpected response", err.status, err.data);
-  } else {
-    throw err; // rethrow unknown errors
+type ApiResponseError =
+  | {
+      readonly kind: "fetch-error";
+      readonly error: string;
+    }
+  | {
+      readonly kind: "unexpected-response";
+      readonly data: unknown;
+      readonly status: number;
+      readonly response: Response;
+      readonly error: string;
+    }
+  | {
+      readonly kind: "parse-error";
+      readonly data: unknown;
+      readonly status: number;
+      readonly response: Response;
+      readonly error: z.ZodError;
+    }
+  | {
+      readonly kind: "deserialization-error";
+      readonly data: unknown;
+      readonly status: number;
+      readonly response: Response;
+      readonly error: unknown;
+    }
+  | {
+      readonly kind: "missing-schema";
+      readonly data: unknown;
+      readonly status: number;
+      readonly response: Response;
+      readonly error: string;
+    };
+```
+
+### Error Handling Patterns
+
+```ts
+const result = await getPetById({ petId: "123" });
+
+// Handle success responses
+if (result.status === 200) {
+  console.log("Pet:", result.data);
+} else if (result.status === 404) {
+  console.warn("Pet not found");
+}
+// Handle operation errors
+else if ("kind" in result) {
+  switch (result.kind) {
+    case "fetch-error":
+      console.error("Network error:", result.error);
+      break;
+    case "unexpected-response":
+      console.error("Unexpected status:", result.status, result.error);
+      break;
+    case "parse-error":
+      console.error("Validation failed:", result.error);
+      break;
+    case "deserialization-error":
+      console.error("Deserialization failed:", result.error);
+      break;
+    case "missing-schema":
+      console.error("Schema missing:", result.error);
+      break;
   }
 }
 ```
+
+### Error Context
+
+Different error types provide different context:
+
+- **fetch-error**: Network failures, connection issues (no `status`, `data`, or `response`)
+- **unexpected-response**: HTTP status codes not defined in OpenAPI spec (includes `status`, `data`, `response`)
+- **parse-error**: Zod validation failures when using `parse()` or `--force-validation` (includes parsing details)
+- **deserialization-error**: Custom deserializer failures (includes original error)
+- **missing-schema**: No schema available for content type (includes attempted deserialization)
 
 ## Runtime Response Validation (Opt-In)
 
@@ -340,11 +412,12 @@ if (result.status === 200) {
     const profile = result.parsed;
     console.log("User:", profile.name, profile.email);
   }
-  else if ("parseError" in result) {
-    console.error("User profile validation failed", result.parseError);
-  }
 } else if (result.status === 404) {
   console.warn("User not found");
+}
+// Handle validation errors in force validation mode
+else if ("kind" in result && result.kind === "parse-error") {
+  console.error("User profile validation failed", result.error);
 }
 ```
 
@@ -796,8 +869,7 @@ integration with other frameworks.
   Key, etc.), with dynamic header/query configuration
 - 🧩 **Discriminated union response types**: Each operation returns a
   discriminated union of possible responses, enabling exhaustive handling
-- ⚠️ **Comprehensive error handling**: Only unexpected responses throw a typed
-  exception (`UnexpectedResponseError`) forwarding status, body, and headers
+- ⚠️ **Comprehensive error handling**: No exceptions thrown - all errors (network, parsing, unexpected responses) are returned as typed error objects with detailed context
 - 📁 **File upload/download & binary support**: Handles `multipart/form-data`
   and `application/octet-stream` uploads and downloads
 - 📦 **ESM output**: Generated code is ESM-first

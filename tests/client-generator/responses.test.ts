@@ -125,7 +125,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<204, void> | ApiResponseError");
+      expect(result.returnType).toBe(
+        "ApiResponse<204, void> | ApiResponseError",
+      );
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 204:");
       expect(result.responseHandlers[0]).toContain("data: undefined");
@@ -175,7 +177,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, unknown> | ApiResponseError");
+      expect(result.returnType).toBe(
+        "ApiResponse<200, unknown> | ApiResponseError",
+      );
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 200:");
       expect(result.responseHandlers[0]).toContain("data = undefined");
@@ -215,7 +219,9 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      expect(result.returnType).toBe("ApiResponse<200, void> | ApiResponseError");
+      expect(result.returnType).toBe(
+        "ApiResponse<200, void> | ApiResponseError",
+      );
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 200:");
     });

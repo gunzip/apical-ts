@@ -123,7 +123,9 @@ describe("client-generator validation error handling", () => {
       expect(result.responseHandlers[0]).toContain("data: undefined");
 
       /* Verify that the return type is simple void without parseError */
-      expect(result.returnType).toBe("ApiResponse<204, void> | ApiResponseError");
+      expect(result.returnType).toBe(
+        "ApiResponse<204, void> | ApiResponseError",
+      );
     });
   });
 });
