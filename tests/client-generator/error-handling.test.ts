@@ -74,7 +74,7 @@ describe("error handling in client generator", () => {
   });
 
   describe("response handler parse method error handling", () => {
-    it("should generate parse method that handles parsing errors", () => {
+    it("should generate parse method that calls parseApiResponseUnknownData", () => {
       const operation: OperationObject = {
         operationId: "testOperation",
         responses: {
@@ -90,14 +90,13 @@ describe("error handling in client generator", () => {
       };
 
       const typeImports = new Set<string>();
-      const result = generateResponseHandlers(operation, typeImports, false, "TestOperationResponseMap");
+      const result = generateResponseHandlers(operation, typeImports, true, "TestOperationResponseMap", false);
 
-      /* Should include error handling in parse method */
+      /* Should include parse method that calls parseApiResponseUnknownData */
       const responseHandler = result.responseHandlers[0];
-      expect(responseHandler).toContain("parse: () => {");
-      expect(responseHandler).toContain("const parseResult = parseApiResponseUnknownData");
-      expect(responseHandler).toContain('if ("parsed" in parseResult)');
-      expect(responseHandler).toContain("createApiResponseErrorFromParseResult");
+      expect(responseHandler).toContain("parse: () =>");
+      expect(responseHandler).toContain("parseApiResponseUnknownData(minimalResponse, data, TestOperationResponseMap");
+      expect(responseHandler).not.toContain("createApiResponseErrorFromParseResult");
     });
 
     it("should generate force validation handlers that return errors", () => {
@@ -116,7 +115,7 @@ describe("error handling in client generator", () => {
       };
 
       const typeImports = new Set<string>();
-      const result = generateResponseHandlers(operation, typeImports, true, "TestOperationResponseMap");
+      const result = generateResponseHandlers(operation, typeImports, true, "TestOperationResponseMap", true);
 
       /* Should include error handling in force validation mode */
       const responseHandler = result.responseHandlers[0];

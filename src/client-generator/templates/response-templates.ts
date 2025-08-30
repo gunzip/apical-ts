@@ -33,14 +33,8 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       const parseMethod =
         responseInfo.hasSchema && responseMapName
           ? `,
-        parse: () => {
-          const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {});
-          if ("parsed" in parseResult) {
-            return parseResult;
-          }
-          /* Return error for parse failures */
-          return createApiResponseErrorFromParseResult(parseResult, data, ${statusCode}, response);
-        }`
+        parse: () =>
+          parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {})`
           : "";
 
       return `    case ${statusCode}: {

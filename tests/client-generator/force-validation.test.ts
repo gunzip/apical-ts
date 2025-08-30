@@ -44,9 +44,8 @@ describe("force validation flag", () => {
       );
 
       /* Verify response handler includes parse method for manual validation */
-      expect(result.responseHandlers[0]).toContain("parse: () => {");
-      expect(result.responseHandlers[0]).toContain("const parseResult ="); // Inside the parse method
-      expect(result.responseHandlers[0]).toContain("createApiResponseErrorFromParseResult");
+      expect(result.responseHandlers[0]).toContain("parse: () =>");
+      expect(result.responseHandlers[0]).toContain("parseApiResponseUnknownData");
 
       /* Verify return type uses ApiResponseWithParse */
       expect(result.returnType).toBe(
