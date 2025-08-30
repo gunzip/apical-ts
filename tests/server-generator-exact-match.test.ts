@@ -76,16 +76,16 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify error handling with correct error types */
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "query_error", error: queryParse\.error, success: false \}\)/,
+      /return handler\(\{ kind: "query-error", error: queryParse\.error, success: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "path_error", error: pathParse\.error, success: false \}\)/,
+      /return handler\(\{ kind: "path-error", error: pathParse\.error, success: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "headers_error", error: headersParse\.error, success: false \}\)/,
+      /return handler\(\{ kind: "headers-error", error: headersParse\.error, success: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "body_error", error: bodyParse\.error, success: false \}\)/,
+      /return handler\(\{ kind: "body-error", error: bodyParse\.error, success: false \}\)/,
     );
 
     /* Verify success handler call with all parameters */

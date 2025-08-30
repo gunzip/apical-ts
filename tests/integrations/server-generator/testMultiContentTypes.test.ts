@@ -146,7 +146,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       if (
         "success" in params &&
         !params.success &&
-        params.kind === "body_error"
+        params.kind === "body-error"
       ) {
         validationErrorReceived = true;
         expect(params.error.issues).toBeDefined();
@@ -215,7 +215,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       } else if (
         "success" in params &&
         !params.success &&
-        params.kind === "body_error"
+        params.kind === "body-error"
       ) {
         // If there's a body validation error with unknown content type, that's also acceptable
         return {

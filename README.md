@@ -834,7 +834,7 @@ The handler you provide to the wrapper receives a single argument:
 
 - For valid requests: `{ kind: "ok", value: { query, path, headers, body, ... }
 }`
-- For validation errors: `{ kind: "query_error" | "body_error" | ... , error:
+- For validation errors: `{ kind: "query-error" | "body-error" | ... , error:
 ZodError }`
 
 It must return an object with `{ status, contentType, data }`.

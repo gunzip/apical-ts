@@ -271,7 +271,7 @@ Each operation generates:
 
 ```typescript
 const handler: operationHandler = async (params) => {
-  if (params.kind === "query_error") {
+  if (params.kind === "query-error") {
     // Handle query parameter validation errors
     console.error("Query validation failed:", params.error);
     return {
@@ -281,7 +281,7 @@ const handler: operationHandler = async (params) => {
     };
   }
 
-  if (params.kind === "path_error") {
+  if (params.kind === "path-error") {
     // Handle path parameter validation errors
     return {
       status: 400,

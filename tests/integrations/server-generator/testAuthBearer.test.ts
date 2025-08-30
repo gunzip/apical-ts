@@ -64,7 +64,7 @@ describe("testAuthBearer operation integration tests", () => {
       if (
         "success" in params &&
         !params.success &&
-        params.kind === "query_error"
+        params.kind === "query-error"
       ) {
         validationErrorReceived = true;
         // Verify the validation error structure
@@ -123,7 +123,7 @@ describe("testAuthBearer operation integration tests", () => {
       if (
         "success" in params &&
         !params.success &&
-        params.kind === "query_error"
+        params.kind === "query-error"
       ) {
         cursorValidationFailed = true;
         // Check that cursor validation failed
