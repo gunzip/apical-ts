@@ -118,7 +118,7 @@ OpenAPI 3.1.0 before generation.
 ## Programmatic Usage
 
 ```ts
-import { generate } from "./src/generator";
+import { generate } from "./src/core-generator/index.js";
 
 await generate({
   input: "./openapi.yaml",
@@ -784,7 +784,6 @@ Example usage with Express and a helper for parameter extraction:
 import express from "express";
 import {
   testAuthBearerWrapper,
-  testAuthBearerHandler,
 } from "./generated/server/testAuthBearer.js";
 import { extractRequestParams } from "./test-helpers.js";
 
