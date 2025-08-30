@@ -7,7 +7,6 @@ import {
   renderConfigImplementation,
   renderConfigInterface,
   renderConfigSupport,
-  renderErrorClasses,
   renderOperationUtilities,
   renderUtilityFunctions,
 } from "../../src/client-generator/templates/config-templates.js";
@@ -171,17 +170,6 @@ describe("client-generator config-templates", () => {
   });
 
   describe("renderErrorClasses", () => {
-    it("should render error classes", () => {
-      const result = renderErrorClasses();
-
-      expect(result).toContain(
-        "export class UnexpectedResponseError extends Error",
-      );
-      expect(result).toContain("status: number;");
-      expect(result).toContain("data: unknown;");
-    });
-  });
-
   describe("renderUtilityFunctions", () => {
     it("should render utility functions", () => {
       const result = renderUtilityFunctions();
@@ -215,7 +203,6 @@ describe("client-generator config-templates", () => {
 
       /* Verify that all individual template functions are included */
       expect(result).toContain(renderApiResponseTypes());
-      expect(result).toContain(renderErrorClasses());
       expect(result).toContain(renderUtilityFunctions());
       expect(result).toContain(renderOperationUtilities());
     });

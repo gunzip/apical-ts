@@ -324,7 +324,6 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate comprehensive error shape
         if (error.status !== undefined) {
-          // This is an UnexpectedResponseError with proper structure
           expect(error.status).toBeGreaterThanOrEqual(400);
           expect(error.status).toBeLessThan(500);
           expect(error.data).toBeDefined();
@@ -353,7 +352,6 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate comprehensive error shape
         if (error.status !== undefined) {
-          // This is an UnexpectedResponseError with proper structure
           expect(error.status).toBeGreaterThanOrEqual(400);
           expect(error.status).toBeLessThan(500);
           expect(error.data).toBeDefined();

@@ -193,31 +193,10 @@ export function renderConfigSupport(): string {
   return [
     renderApiResponseTypes(),
     "",
-    renderErrorClasses(),
-    "",
     renderUtilityFunctions(),
     "",
     renderOperationUtilities(),
   ].join("\n");
-}
-
-/*
- * Renders error class definitions
- */
-export function renderErrorClasses(): string {
-  return `/* Error thrown when receiving an unexpected response status code */
-export class UnexpectedResponseError extends Error {
-  status: number;
-  data: unknown;
-  response: Response;
-  constructor(status: number, data: unknown, response: Response) {
-  super('Unexpected response status: ' + status);
-    this.name = 'UnexpectedResponseError';
-    this.status = status;
-    this.data = data;
-    this.response = response;
-  }
-}`;
 }
 
 /*
