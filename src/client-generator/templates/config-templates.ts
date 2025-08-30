@@ -207,22 +207,39 @@ export function renderOperationUtilities(): string {
   return `/* Utility types for operation binding */
 type Operation = (params: any, config?: GlobalConfig) => Promise<unknown>;
 
-/* Bind all operations with a specific config */
-export function configureOperations<T extends Record<string, Operation>>(
-  operations: T,
-  config: GlobalConfig
+// Distribute over unions and replace ApiResponseWithParse members when forceValidation=true
+type ReplaceWithForcedParse<U, TForceValidation extends boolean> = U extends any
+  ? U extends ApiResponseWithParse<infer S, infer Map>
+    ? TForceValidation extends true
+      ? ApiResponseWithForcedParse<S, Map>
+      : U
+    : U
+  : never;
+
+type AdjustedReturnType<R, TForceValidation extends boolean> = R extends Promise<infer U>
+  ? Promise<ReplaceWithForcedParse<U, TForceValidation>>
+  : ReplaceWithForcedParse<R, TForceValidation>;
+
+/* Bind all operations with a specific config preserving return types & forceValidation behavior */
+export function configureOperations<
+  TOperations extends Record<string, Operation>,
+  TForceValidation extends boolean,
+>(
+  operations: TOperations,
+  config: Omit<GlobalConfig, 'forceValidation'> & { forceValidation: TForceValidation }
 ): {
-  [K in keyof T]: (params: Parameters<T[K]>[0]) => ReturnType<T[K]>;
+  [K in keyof TOperations]: TOperations[K] extends (params: infer P, ...rest: any[]) => infer R
+    ? (params: P) => AdjustedReturnType<R, TForceValidation>
+    : never;
 } {
-  const bound: Partial<Record<keyof T, (params: unknown) => Promise<unknown>>> = {};
+  const bound: Partial<Record<keyof TOperations, (params: unknown) => unknown>> = {};
   for (const key in operations) {
-    if (typeof operations[key] === 'function') {
-      bound[key] = (params: unknown) => operations[key](params, config);
+    const op = operations[key];
+    if (typeof op === 'function') {
+      bound[key] = (params: unknown) => (op as any)(params, config);
     }
   }
-  return bound as {
-    [K in keyof T]: (params: Parameters<T[K]>[0]) => ReturnType<T[K]>;
-  };
+  return bound as any;
 }`;
 }
 
