@@ -96,15 +96,7 @@ describe("force validation flag", () => {
         'if ("parsed" in parseResult)',
       );
       // Should include error handling branches for all error kinds
-      expect(result.responseHandlers[0]).toContain(
-        'parseResult.kind === "parse-error"',
-      );
-      expect(result.responseHandlers[0]).toContain(
-        'parseResult.kind === "missing-schema"',
-      );
-      expect(result.responseHandlers[0]).toContain(
-        'parseResult.kind === "deserialization-error"',
-      );
+      expect(result.responseHandlers[0]).toContain("if (parseResult.kind)");
       expect(result.responseHandlers[0]).toContain("success: false");
       expect(result.responseHandlers[0]).not.toContain("parse: () => {");
 

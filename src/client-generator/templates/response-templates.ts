@@ -25,29 +25,12 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       if ("parsed" in parseResult) {
         return { success: true, status: ${statusCode} as const, data, response, parsed: parseResult };
       }
-      if (parseResult.kind === "parse-error") {
+      if (parseResult.kind) {
         return {
-          kind: "parse-error",
+          ...parseResult,
           success: false,
-          result: { data, status: ${statusCode}, response },
-          error: parseResult.error,
-        } as ApiResponseError;
-      }
-      if (parseResult.kind === "missing-schema") {
-        return {
-          kind: "missing-schema",
-          success: false,
-          result: { data, status: ${statusCode}, response },
-          error: parseResult.error,
-        } as ApiResponseError;
-      }
-      if (parseResult.kind === "deserialization-error") {
-        return {
-          kind: "deserialization-error",
-          success: false,
-          result: { data, status: ${statusCode}, response },
-          error: parseResult.error,
-        } as ApiResponseError;
+          result: { data, status: 503, response },
+        };
       }
       throw new Error("Invalid parse result");
     }`;
