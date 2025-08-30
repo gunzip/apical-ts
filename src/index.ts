@@ -22,11 +22,13 @@ program
   .requiredOption("-o, --output <path>", "Path to the output directory.")
   .option("--generate-client", "Generate the full HTTP client.", false)
   .option("--generate-server", "Generate server endpoint wrappers.", false)
-  .option(
-    "--strict-validation",
-    "Use strict object validation (reject unknown properties)",
-    false,
-  )
+  // Disable strict validation setting, this should remain strict for the server
+  // and loose for the client
+  // .option(
+  //   "--strict-validation",
+  //   "Use strict object validation (reject unknown properties)",
+  //   false,
+  // )
   .option(
     "--force-validation",
     "Automatically validate responses with Zod in generated operations (default: manual validation)",
