@@ -10,7 +10,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
   it("should return 503 with TestAuthBearerHttp503Response", async () => {
     // Arrange: Setup handler to return 503 status
     const handler: testAuthBearerHttpHandler = async (params) => {
-      if (params.kind === "ok") {
+      if ("success" in params && params.success) {
         expect(params.value.query.qr).toBe("test-503");
 
         return {
@@ -52,7 +52,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
   it("should return 504 with ProblemDetails (application/problem+json)", async () => {
     // Arrange: Setup handler to return 504 status with ProblemDetails
     const handler: testAuthBearerHttpHandler = async (params) => {
-      if (params.kind === "ok") {
+      if ("success" in params && params.success) {
         expect(params.value.query.qr).toBe("test-504");
 
         return {
@@ -98,7 +98,11 @@ describe("testAuthBearerHttp operation integration tests", () => {
     let validationErrorReceived = false;
 
     const handler: testAuthBearerHttpHandler = async (params) => {
-      if (params.kind === "query_error") {
+      if (
+        "success" in params &&
+        !params.success &&
+        params.kind === "query_error"
+      ) {
         validationErrorReceived = true;
         expect(params.error.issues).toBeDefined();
 
@@ -152,7 +156,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
   it("should validate different content types properly", async () => {
     // Arrange: Test both content types work
     const handler: testAuthBearerHttpHandler = async (params) => {
-      if (params.kind === "ok") {
+      if ("success" in params && params.success) {
         const contentType = params.value.query.qr;
 
         if (contentType === "json") {

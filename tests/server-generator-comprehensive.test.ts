@@ -86,7 +86,7 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain("bodyParse.success");
 
     /* Verify success handler call */
-    expect(result.wrapperCode).toContain('kind: "ok"');
+    expect(result.wrapperCode).toContain("success: true");
     expect(result.wrapperCode).toContain("value: {");
     expect(result.wrapperCode).toContain("query: queryParse.data");
     expect(result.wrapperCode).toContain("path: pathParse.data");
@@ -136,7 +136,7 @@ describe("server-generator comprehensive validation", () => {
     /* Should include handler type with discriminated union */
     expect(result.wrapperCode).toContain("testOperationHandler");
     expect(result.wrapperCode).toContain(
-      '{ kind: "ok"; value: testOperationParsedParams }',
+      "{ success: true; value: testOperationParsedParams }",
     );
     expect(result.wrapperCode).toContain("testOperationValidationError");
   });
