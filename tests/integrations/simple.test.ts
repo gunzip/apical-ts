@@ -65,7 +65,7 @@ describe("Working Integration Test Demo", () => {
         name: "Test Name",
       },
     });
-    
+
     if ("success" in response && response.success) {
       // If it succeeds, verify response
       expect(response.status).toBe(201);
@@ -73,7 +73,9 @@ describe("Working Integration Test Demo", () => {
       // Expected to fail with auth (401) or validation (400) error
       expect([400, 401]).toContain(response.result.status);
     } else {
-      expect.fail("Response should either be successful or return error object");
+      expect.fail(
+        "Response should either be successful or return error object",
+      );
     }
   });
 
@@ -92,14 +94,16 @@ describe("Working Integration Test Demo", () => {
     const response = await client.testFileUpload({
       body: formData,
     });
-    
+
     if ("success" in response && response.success) {
       expect(response.status).toBe(200);
     } else if ("kind" in response) {
       // Expected to fail with auth (401) or validation (400) error
       expect([400, 401]).toContain(response.result.status);
     } else {
-      expect.fail("Response should either be successful or return error object");
+      expect.fail(
+        "Response should either be successful or return error object",
+      );
     }
   });
 
@@ -109,7 +113,7 @@ describe("Working Integration Test Demo", () => {
 
     // Act - testBinaryFileDownload also requires global auth
     const response = await client.testBinaryFileDownload({});
-    
+
     if ("success" in response && response.success) {
       expect(response.status).toBe(200);
       expect(response.response.headers.get("content-type")).toContain(
@@ -119,7 +123,9 @@ describe("Working Integration Test Demo", () => {
       // Expected to fail with auth (401) or validation (400) error
       expect([400, 401]).toContain(response.result.status);
     } else {
-      expect.fail("Response should either be successful or return error object");
+      expect.fail(
+        "Response should either be successful or return error object",
+      );
     }
   });
 
@@ -150,7 +156,7 @@ describe("Working Integration Test Demo", () => {
 
     // Act & Assert - Try an operation that requires auth
     const result = await client.testSimplePatch({});
-    
+
     // Should return an error object instead of throwing
     if ("kind" in result) {
       expect(result.kind).toBe("unexpected-response");
