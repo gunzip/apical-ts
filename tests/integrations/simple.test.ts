@@ -59,18 +59,21 @@ describe("Working Integration Test Demo", () => {
     // Act - testInlineBodySchema requires body but has no auth (uses global custom-token)
     // Since we can't easily provide custom-token globally, this will fail with 401
     // which demonstrates that the auth is working
-    try {
-      const response = await client.testInlineBodySchema({
-        body: {
-          age: 25,
-          name: "Test Name",
-        },
-      });
+    const response = await client.testInlineBodySchema({
+      body: {
+        age: 25,
+        name: "Test Name",
+      },
+    });
+    
+    if ("success" in response && response.success) {
       // If it succeeds, verify response
       expect(response.status).toBe(201);
-    } catch (error) {
+    } else if ("kind" in response) {
       // Expected to fail with auth (401) or validation (400) error
-      expect(error.message).toMatch(/40[01]/);
+      expect([400, 401]).toContain(response.result.status);
+    } else {
+      expect.fail("Response should either be successful or return error object");
     }
   });
 
@@ -79,21 +82,24 @@ describe("Working Integration Test Demo", () => {
     const client = createUnauthenticatedClient(baseURL);
 
     // Act - testFileUpload also requires global auth, so will fail with 401
-    try {
-      const formData = new FormData();
-      formData.append(
-        "file",
-        new Blob(["test content"], { type: "text/plain" }),
-        "test.txt",
-      );
+    const formData = new FormData();
+    formData.append(
+      "file",
+      new Blob(["test content"], { type: "text/plain" }),
+      "test.txt",
+    );
 
-      const response = await client.testFileUpload({
-        body: formData,
-      });
+    const response = await client.testFileUpload({
+      body: formData,
+    });
+    
+    if ("success" in response && response.success) {
       expect(response.status).toBe(200);
-    } catch (error) {
+    } else if ("kind" in response) {
       // Expected to fail with auth (401) or validation (400) error
-      expect(error.message).toMatch(/40[01]/);
+      expect([400, 401]).toContain(response.result.status);
+    } else {
+      expect.fail("Response should either be successful or return error object");
     }
   });
 
@@ -102,15 +108,18 @@ describe("Working Integration Test Demo", () => {
     const client = createUnauthenticatedClient(baseURL);
 
     // Act - testBinaryFileDownload also requires global auth
-    try {
-      const response = await client.testBinaryFileDownload({});
+    const response = await client.testBinaryFileDownload({});
+    
+    if ("success" in response && response.success) {
       expect(response.status).toBe(200);
       expect(response.response.headers.get("content-type")).toContain(
         "application/octet-stream",
       );
-    } catch (error) {
+    } else if ("kind" in response) {
       // Expected to fail with auth (401) or validation (400) error
-      expect(error.message).toMatch(/40[01]/);
+      expect([400, 401]).toContain(response.result.status);
+    } else {
+      expect.fail("Response should either be successful or return error object");
     }
   });
 
@@ -140,14 +149,18 @@ describe("Working Integration Test Demo", () => {
     const client = createUnauthenticatedClient(baseURL);
 
     // Act & Assert - Try an operation that requires auth
-    try {
-      await client.testSimplePatch({});
-      expect.fail("Expected operation to throw error due to missing auth");
-    } catch (error) {
-      expect(error.message).toContain("Unexpected response status: 401");
-      expect(error.status).toBe(401);
-      expect(error.data).toBeDefined();
-      expect(error.response).toBeInstanceOf(Response);
+    const result = await client.testSimplePatch({});
+    
+    // Should return an error object instead of throwing
+    if ("kind" in result) {
+      expect(result.kind).toBe("unexpected-response");
+      expect(result.success).toBe(false);
+      expect(result.result.status).toBe(401);
+      expect(result.error).toContain("Unexpected response status: 401");
+      expect(result.result.data).toBeDefined();
+      expect(result.result.response).toBeInstanceOf(Response);
+    } else {
+      expect.fail("Expected operation to return error object for missing auth");
     }
   });
 });
