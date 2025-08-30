@@ -25,12 +25,18 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       return { status: ${statusCode} as const, data, response, parsed };
     }`;
     } else {
-      /* Default mode: provide parse method for manual validation */
+      /* Default mode: provide parse method for manual validation with error handling */
       const parseMethod =
         responseInfo.hasSchema && responseMapName
           ? `,
-        parse: () =>
-          parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {}),`
+        parse: () => {
+          const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {});
+          if ("parsed" in parseResult) {
+            return parseResult;
+          }
+          /* Return error for parse failures */
+          return createApiResponseErrorFromParseResult(parseResult, data, ${statusCode}, response);
+        }`
           : "";
 
       return `    case ${statusCode}: {

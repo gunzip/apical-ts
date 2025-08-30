@@ -17,6 +17,44 @@ export type ApiResponse<S extends number, T> =
       readonly response: Response;
     };
 
+/*
+ * Error type for operation failures
+ * Represents all possible error conditions that can occur during an operation
+ */
+export type ApiResponseError = 
+  | {
+      readonly kind: "fetch-error";
+      readonly error: string;
+    }
+  | {
+      readonly kind: "unexpected-response";
+      readonly data: unknown;
+      readonly status: number;
+      readonly response: Response;
+      readonly error: string;
+    }
+  | {
+      readonly kind: "parse-error";
+      readonly data: unknown;
+      readonly status: number;
+      readonly response: Response;
+      readonly error: z.ZodError;
+    }
+  | {
+      readonly kind: "deserialization-error";
+      readonly data: unknown;
+      readonly status: number;
+      readonly response: Response;
+      readonly error: unknown;
+    }
+  | {
+      readonly kind: "missing-schema";
+      readonly data: unknown;
+      readonly status: number;
+      readonly response: Response;
+      readonly error: string;
+    };
+
 /* Helper type: union of all models for a given status code */
 type ResponseModelsForStatus<
   Map extends Record<string, Record<string, any>>,
@@ -354,6 +392,49 @@ export function isParsed<
     !("missingSchema" in (value as Record<string, unknown>)) &&
     !("deserializationError" in (value as Record<string, unknown>))
   );
+}
+
+/*
+ * Helper function to create ApiResponseError from parsing results
+ */
+export function createApiResponseErrorFromParseResult(
+  parseResult: 
+    | { contentType: string; parseError: z.ZodError }
+    | { contentType: string; missingSchema: true; deserialized: unknown }
+    | { contentType: string; deserializationError: unknown },
+  data: unknown,
+  status: number,
+  response: Response,
+): ApiResponseError {
+  if ("parseError" in parseResult) {
+    return {
+      kind: "parse-error",
+      data,
+      status,
+      response,
+      error: parseResult.parseError,
+    };
+  }
+  if ("deserializationError" in parseResult) {
+    return {
+      kind: "deserialization-error",
+      data,
+      status,
+      response,
+      error: parseResult.deserializationError,
+    };
+  }
+  if ("missingSchema" in parseResult) {
+    return {
+      kind: "missing-schema",
+      data,
+      status,
+      response,
+      error: \`No schema found for content-type: \${parseResult.contentType}\`,
+    };
+  }
+  /* This should never be reached due to TypeScript type checking */
+  throw new Error("Invalid parse result");
 }
 `;
 }

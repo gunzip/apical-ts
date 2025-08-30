@@ -38,6 +38,8 @@ export function buildOperationImports(
     "parseResponseBody",
     "UnexpectedResponseError",
     "parseApiResponseUnknownData",
+    "ApiResponseError",
+    "createApiResponseErrorFromParseResult",
   ];
 
   /* Add ApiResponseWithParse if used in the function */

@@ -115,6 +115,9 @@ export function analyzeResponseStructure(
     }
   }
 
+  /* Always add ApiResponseError to the union for error handling */
+  unionTypes.push("ApiResponseError");
+
   return {
     defaultReturnType: "ApiResponse<number, unknown>",
     discriminatedUnionTypeDefinition:
