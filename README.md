@@ -782,9 +782,7 @@ Example usage with Express and a helper for parameter extraction:
 
 ```ts
 import express from "express";
-import {
-  testAuthBearerWrapper,
-} from "./generated/server/testAuthBearer.js";
+import { testAuthBearerWrapper } from "./generated/server/testAuthBearer.js";
 import { extractRequestParams } from "./test-helpers.js";
 
 const app = express();
