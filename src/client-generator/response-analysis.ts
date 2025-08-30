@@ -86,17 +86,15 @@ export function analyzeResponseStructure(
     );
   }
 
-  /* Generate union types - use precise types when response map is available */
+  /* Generate union types - use conditional types when response map is available */
   const unionTypes: string[] = [];
   if (discriminatedUnionResult?.responseMapName) {
-    /* Use precise ApiResponseWithParse or ApiResponseWithForcedParse types when response map is available */
+    /* Use conditional types that depend on TForceValidation when response map is available */
     for (const responseInfo of responses) {
       if (responseInfo.hasSchema) {
-        const responseType = forceValidation
-          ? "ApiResponseWithForcedParse"
-          : "ApiResponseWithParse";
+        /* Generate conditional type based on TForceValidation */
         unionTypes.push(
-          `${responseType}<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>`,
+          `(TForceValidation extends true ? ApiResponseWithForcedParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}> : ApiResponseWithParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>)`,
         );
       } else {
         const dataType = responseInfo.contentType ? "unknown" : "void";

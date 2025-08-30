@@ -183,6 +183,7 @@ export interface GlobalConfig {
     [K in ${auth.hasAuthHeaders ? `AuthHeaders` : "string"}]?: string;
   } & Record<string, string>;
   deserializerMap?: DeserializerMap;
+  forceValidation?: boolean;
 }`;
 }
 

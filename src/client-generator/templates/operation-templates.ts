@@ -82,38 +82,60 @@ export type TypeAliasesConfig = ContentTypeMapsConfig & {
 };
 
 /*
- * Creates generic parameter list for request/response content-type selection.
- * Example output: <TRequestContentType extends keyof MyOpRequestMap = "application/json", TResponseContentType extends keyof MyOpResponseMap = "application/json">
- * Returns both the generic parameter string and the adjusted return type (map lookup when response map present).
+ * Creates generic parameter list for dynamic force validation and content-type selection.
+ * Example output: <TForceValidation extends boolean = false, TRequestContentType extends keyof MyOpRequestMap = "application/json", TResponseContentType extends keyof MyOpResponseMap = "application/json">
+ * Returns both the generic parameter string and the adjusted return type with conditional types for force validation.
  */
 export function buildGenericParams(
   config: GenericParamsConfig,
 ): GenericParamsResult {
-  let genericParams = "";
-  const updatedReturnType = config.initialReturnType;
+  const genericParts: string[] = [];
+  
+  /* Always include TForceValidation parameter for dynamic force validation */
+  genericParts.push("TForceValidation extends boolean = false");
 
-  if (config.shouldGenerateRequestMap || config.shouldGenerateResponseMap) {
-    const genericParts: string[] = [];
-    if (config.shouldGenerateRequestMap) {
-      const defaultReq =
-        config.contentTypeMaps.defaultRequestContentType || "application/json";
-      genericParts.push(
-        `TRequestContentType extends keyof ${config.requestMapTypeName} = "${defaultReq}"`,
-      );
-    }
-    if (config.shouldGenerateResponseMap) {
-      const defaultResp =
-        config.contentTypeMaps.defaultResponseContentType || "application/json";
-      /* Collect all nested content-type keys from the response map. Using keyof on the union of value objects produces never; mapped type flattens them. */
-      genericParts.push(
-        `TResponseContentType extends { [K in keyof ${config.responseMapTypeName}]: keyof ${config.responseMapTypeName}[K]; }[keyof ${config.responseMapTypeName}] = "${defaultResp}"`,
-      );
-    }
-    if (genericParts.length > 0) {
-      genericParams = `<${genericParts.join(", ")}>`;
-    }
+  if (config.shouldGenerateRequestMap) {
+    const defaultReq =
+      config.contentTypeMaps.defaultRequestContentType || "application/json";
+    genericParts.push(
+      `TRequestContentType extends keyof ${config.requestMapTypeName} = "${defaultReq}"`,
+    );
   }
+  if (config.shouldGenerateResponseMap) {
+    const defaultResp =
+      config.contentTypeMaps.defaultResponseContentType || "application/json";
+    /* Collect all nested content-type keys from the response map. Using keyof on the union of value objects produces never; mapped type flattens them. */
+    genericParts.push(
+      `TResponseContentType extends { [K in keyof ${config.responseMapTypeName}]: keyof ${config.responseMapTypeName}[K]; }[keyof ${config.responseMapTypeName}] = "${defaultResp}"`,
+    );
+  }
+
+  const genericParams = `<${genericParts.join(", ")}>`;
+  
+  /* Transform return type to use conditional types based on TForceValidation */
+  const updatedReturnType = transformReturnTypeForConditionalValidation(config.initialReturnType);
+  
   return { genericParams, updatedReturnType };
+}
+
+/*
+ * Transforms return type to use conditional types based on TForceValidation
+ * Converts ApiResponseWithParse<...> and ApiResponseWithForcedParse<...> to conditional types
+ */
+function transformReturnTypeForConditionalValidation(returnType: string): string {
+  /* Replace ApiResponseWithParse<X, Y> with conditional type */
+  let transformed = returnType.replace(
+    /ApiResponseWithParse<([^>]+), ([^>]+)>/g,
+    "TForceValidation extends true ? ApiResponseWithForcedParse<$1, $2> : ApiResponseWithParse<$1, $2>"
+  );
+  
+  /* Replace ApiResponseWithForcedParse<X, Y> with conditional type */
+  transformed = transformed.replace(
+    /ApiResponseWithForcedParse<([^>]+), ([^>]+)>/g,
+    "TForceValidation extends true ? ApiResponseWithForcedParse<$1, $2> : ApiResponseWithParse<$1, $2>"
+  );
+  
+  return transformed;
 }
 
 /*
@@ -198,9 +220,12 @@ export function renderOperationFunction(
   config: OperationFunctionRenderConfig,
 ): string {
   /* Use narrowed config type if we have a response map type name */
-  const configType = config.responseMapTypeName
+  const baseConfigType = config.responseMapTypeName
     ? `GlobalConfig & { deserializerMap?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
     : "GlobalConfig";
+    
+  /* Add forceValidation generic constraint to config type */
+  const configType = `${baseConfigType} & { forceValidation?: TForceValidation }`;
 
   /* Only add type cast when we have a narrowed type */
   return `${config.typeAliases}${config.summary}export async function ${config.functionName}${config.genericParams}(

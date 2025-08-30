@@ -11,47 +11,52 @@ export { renderUnionType } from "../../shared/response-union-generator.js";
 export function renderResponseHandler(
   responseInfo: ResponseInfo,
   responseMapName?: string,
-  forceValidation = false,
+  _forceValidation = false, // Keep parameter for backward compatibility but ignore it
 ): string {
   const { contentType, statusCode, typeName } = responseInfo;
 
   if (typeName || contentType) {
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
-    if (forceValidation && responseInfo.hasSchema && responseMapName) {
-      /* Force validation mode: automatically call parseApiResponseUnknownData with error handling */
+    if (responseInfo.hasSchema && responseMapName) {
+      /* Dynamic validation mode: conditionally call parseApiResponseUnknownData based on config.forceValidation */
       return `    case ${statusCode}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-      const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {});
-      if ("parsed" in parseResult) {
-        return { success: true, status: ${statusCode} as const, data, response, parsed: parseResult };
+      if (config.forceValidation) {
+        /* Force validation: automatically parse and return result */
+        const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {});
+        if ("parsed" in parseResult) {
+          return { success: true, status: ${statusCode} as const, data, response, parsed: parseResult } as any;
+        }
+        if (parseResult.kind) {
+          return {
+            ...parseResult,
+            success: false,
+            result: { data, status: ${statusCode}, response },
+          } as any;
+        }
+        throw new Error("Invalid parse result");
+      } else {
+        /* Manual validation: provide parse method */
+        return { 
+          success: true, 
+          status: ${statusCode} as const, 
+          data, 
+          response,
+          parse: () => parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {})
+        } as any;
       }
-      if (parseResult.kind) {
-        return {
-          ...parseResult,
-          success: false,
-          result: { data, status: 503, response },
-        };
-      }
-      throw new Error("Invalid parse result");
     }`;
     } else {
-      /* Default mode: provide parse method for manual validation with error handling */
-      const parseMethod =
-        responseInfo.hasSchema && responseMapName
-          ? `,
-        parse: () =>
-          parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {})`
-          : "";
-
+      /* No schema or response map: return simple response */
       return `    case ${statusCode}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-      return { success: true, status: ${statusCode} as const, data, response${parseMethod} };
+      return { success: true, status: ${statusCode} as const, data, response } as any;
     }`;
     }
   }
 
   return `    case ${statusCode}:
-      return { success: true, status: ${statusCode} as const, data: undefined, response };`;
+      return { success: true, status: ${statusCode} as const, data: undefined, response } as any;`;
 }
 
 /*
