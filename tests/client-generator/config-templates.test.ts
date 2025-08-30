@@ -169,7 +169,6 @@ describe("client-generator config-templates", () => {
     });
   });
 
-  describe("renderErrorClasses", () => {
   describe("renderUtilityFunctions", () => {
     it("should render utility functions", () => {
       const result = renderUtilityFunctions();
