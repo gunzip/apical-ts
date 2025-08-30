@@ -18,56 +18,47 @@ export type ApiResponse<S extends number, T> =
       readonly response: Response;
     };
 
+/**
+ * Extended info for API responses errors
+ */
+type ApiResponseErrorResult = {
+  readonly data: unknown;
+  readonly status: number;
+  readonly response: Response;
+};
+
 /*
  * Error type for operation failures
  * Represents all possible error conditions that can occur during an operation
  */
-export type ApiResponseError =
+export type ApiResponseError = {
+  readonly success: false;
+} & (
   | {
       readonly kind: "fetch-error";
-      readonly success: false;
       readonly error: string;
     }
   | {
       readonly kind: "unexpected-response";
-      readonly success: false;
-      readonly result: {
-        readonly data: unknown;
-        readonly status: number;
-        readonly response: Response;
-      };
+      readonly result: ApiResponseErrorResult;
       readonly error: string;
     }
   | {
       readonly kind: "parse-error";
-      readonly success: false;
-      readonly result: {
-        readonly data: unknown;
-        readonly status: number;
-        readonly response: Response;
-      };
+      readonly result: ApiResponseErrorResult;
       readonly error: z.ZodError;
     }
   | {
       readonly kind: "deserialization-error";
-      readonly success: false;
-      readonly result: {
-        readonly data: unknown;
-        readonly status: number;
-        readonly response: Response;
-      };
+      readonly result: ApiResponseErrorResult;
       readonly error: unknown;
     }
   | {
       readonly kind: "missing-schema";
-      readonly success: false;
-      readonly result: {
-        readonly data: unknown;
-        readonly status: number;
-        readonly response: Response;
-      };
+      readonly result: ApiResponseErrorResult;
       readonly error: string;
-    };
+    }
+);
 
 /* Helper type: union of all models for a given status code */
 type ResponseModelsForStatus<
