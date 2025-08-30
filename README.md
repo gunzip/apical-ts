@@ -244,8 +244,8 @@ All operations return a union that includes `ApiResponseError`, which is a discr
 ```ts
 type ApiResponseError =
   | {
-      readonly kind: "fetch-error";
-      readonly error: string;
+      readonly kind: "unexpected-error";
+      readonly error: unknown;
     }
   | {
       readonly kind: "unexpected-response";
@@ -283,10 +283,10 @@ type ApiResponseError =
 const result = await getPetById({ petId: "123" });
 
 if ("kind" in result) {
-  // All error variants handled first (safe: fetch-error lacks status)
+  // All error variants handled first (safe: unexpected-error lacks status)
   switch (result.kind) {
-    case "fetch-error":
-      console.error("Network error:", result.error);
+    case "unexpected-error":
+      console.error("Unexpected error:", result.error);
       break;
     case "unexpected-response":
       console.error("Unexpected status:", result.status, result.error);
@@ -314,7 +314,7 @@ if ("kind" in result) {
 
 Different error types provide different context:
 
-- **fetch-error**: Network failures, connection issues (no `status`, `data`, or `response`)
+- **unexpected-error**: Network failures, connection issues, or any unexpected exception (no `status`, `data`, or `response`)
 - **unexpected-response**: HTTP status codes not defined in OpenAPI spec (includes `status`, `data`, `response`)
 - **parse-error**: Zod validation failures when using `parse()` or `--force-validation` (includes parsing details)
 - **deserialization-error**: Custom deserializer failures (includes original error)

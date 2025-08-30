@@ -64,9 +64,12 @@ describe("Force Validation CLI Flag Integration Test", () => {
       "const parseResult = parseApiResponseUnknownData(",
     );
 
-    // Should return parsed field in response
+    // Should return parsed field in response when parsing succeeds
     expect(forceValidationOperationContent).toContain(
-      "return {\n          success: true,\n          status: 200 as const,\n          data,\n          response,\n          parsed: parseResult,\n        };",
+      'if ("parsed" in parseResult) {',
+    );
+    expect(forceValidationOperationContent).toContain(
+      "return {\n            success: true,\n            status: 200 as const,\n            data,\n            response,\n            parsed: parseResult,\n          };",
     );
   });
 
@@ -226,10 +229,10 @@ describe("Force Validation CLI Flag Integration Test", () => {
 
     // Both should return simple response structure
     expect(manualSimpleContent).toContain(
-      "return { success: true, status: 200 as const, data: undefined, response };",
+      "return {\n          success: true,\n          status: 200 as const,\n          data: undefined,\n          response,\n        };",
     );
     expect(forceValidationSimpleContent).toContain(
-      "return { success: true, status: 200 as const, data: undefined, response };",
+      "return {\n          success: true,\n          status: 200 as const,\n          data: undefined,\n          response,\n        };",
     );
   });
 });

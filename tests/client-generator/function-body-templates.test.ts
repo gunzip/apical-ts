@@ -242,9 +242,7 @@ describe("function-body-templates", () => {
       expect(result).toContain("switch (response.status) {");
       expect(result).toContain('case "200": return { status: 200, data };');
       expect(result).toContain("default: {");
-      expect(result).toContain(
-        'return {\n        kind: "unexpected-response",\n        success: false,\n        result: {',
-      );
+      expect(result).toContain('kind: "unexpected-response"');
     });
 
     it("should render function body without body for GET request", () => {

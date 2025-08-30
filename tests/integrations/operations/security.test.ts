@@ -371,30 +371,18 @@ describe("Security Operations", () => {
         "bearerToken",
       );
 
-      // Act & Assert
-      try {
-        await invalidClient.testOverriddenSecurity({
-          headers: {
-            Authorization: "Bearer test-token",
-          },
-        });
-        expect.fail("Expected request to throw an error");
-      } catch (error) {
-        expect(error).toBeDefined();
-        // Validate comprehensive error shape
-        if (error.status !== undefined) {
-          // This is an HTTP error response
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
-        } else {
-          // Should be a network error, not a security error
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
-          expect(error.message || error.toString()).toMatch(
-            /fetch|network|connection|ECONNREFUSED|Invalid URL/i,
-          );
-        }
-      }
+      // Act
+      const result = await invalidClient.testOverriddenSecurity({
+        headers: {
+          Authorization: "Bearer test-token",
+        },
+      });
+
+      // Assert - Should return error result instead of throwing
+      expect(result).toBeDefined();
+      expect(result.success).toBe(false);
+      expect(result.kind).toBe("unexpected-error");
+      expect(result.error).toBeDefined();
     });
   });
 });

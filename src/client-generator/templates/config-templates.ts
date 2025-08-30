@@ -35,8 +35,8 @@ export type ApiResponseError = {
   readonly success: false;
 } & (
   | {
-      readonly kind: "fetch-error";
-      readonly error: string;
+      readonly kind: "unexpected-error";
+      readonly error: unknown;
     }
   | {
       readonly kind: "unexpected-response";
