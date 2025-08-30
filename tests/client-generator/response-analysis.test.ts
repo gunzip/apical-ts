@@ -289,8 +289,8 @@ describe("response-analysis", () => {
       expect(result.responses[1].typeName).toBe("Error");
 
       expect(result.unionTypes).toEqual([
-        "ApiResponseWithParse<200, typeof GetUserResponseMap>",
-        "ApiResponseWithParse<404, typeof GetUserResponseMap>",
+        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof GetUserResponseMap> : ApiResponseWithParse<200, typeof GetUserResponseMap>)",
+        "(TForceValidation extends true ? ApiResponseWithForcedParse<404, typeof GetUserResponseMap> : ApiResponseWithParse<404, typeof GetUserResponseMap>)",
         "ApiResponseError",
       ]);
 

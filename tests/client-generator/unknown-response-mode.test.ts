@@ -52,7 +52,7 @@ describe("unknown response mode", () => {
 
       /* Verify return type uses precise types for responses with content and void for others */
       expect(result.returnType).toBe(
-        "ApiResponseWithParse<200, typeof GetUserResponseMap> | ApiResponse<404, void> | ApiResponseError",
+        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof GetUserResponseMap> : ApiResponseWithParse<200, typeof GetUserResponseMap>) | ApiResponse<404, void> | ApiResponseError",
       );
     });
 

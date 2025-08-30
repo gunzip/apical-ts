@@ -112,30 +112,10 @@ export function buildGenericParams(
 
   const genericParams = `<${genericParts.join(", ")}>`;
   
-  /* Transform return type to use conditional types based on TForceValidation */
-  const updatedReturnType = transformReturnTypeForConditionalValidation(config.initialReturnType);
+  /* Return the original return type since response analysis already handles conditional types */
+  const updatedReturnType = config.initialReturnType;
   
   return { genericParams, updatedReturnType };
-}
-
-/*
- * Transforms return type to use conditional types based on TForceValidation
- * Converts ApiResponseWithParse<...> and ApiResponseWithForcedParse<...> to conditional types
- */
-function transformReturnTypeForConditionalValidation(returnType: string): string {
-  /* Replace ApiResponseWithParse<X, Y> with conditional type */
-  let transformed = returnType.replace(
-    /ApiResponseWithParse<([^>]+), ([^>]+)>/g,
-    "TForceValidation extends true ? ApiResponseWithForcedParse<$1, $2> : ApiResponseWithParse<$1, $2>"
-  );
-  
-  /* Replace ApiResponseWithForcedParse<X, Y> with conditional type */
-  transformed = transformed.replace(
-    /ApiResponseWithForcedParse<([^>]+), ([^>]+)>/g,
-    "TForceValidation extends true ? ApiResponseWithForcedParse<$1, $2> : ApiResponseWithParse<$1, $2>"
-  );
-  
-  return transformed;
 }
 
 /*

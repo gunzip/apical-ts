@@ -115,7 +115,7 @@ describe("Multi-content-type operation function generation", () => {
 
     // Check return type uses precise ApiResponseWithParse types
     expect(result.functionCode).toContain(
-      "Promise<ApiResponseWithParse<200, typeof PetFindByStatusResponseMap> | ApiResponseWithParse<404, typeof PetFindByStatusResponseMap> | ApiResponseError>",
+      "Promise<(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof PetFindByStatusResponseMap> : ApiResponseWithParse<200, typeof PetFindByStatusResponseMap>) | (TForceValidation extends true ? ApiResponseWithForcedParse<404, typeof PetFindByStatusResponseMap> : ApiResponseWithParse<404, typeof PetFindByStatusResponseMap>) | ApiResponseError>",
     );
 
     // Check discriminated union type definition is generated
