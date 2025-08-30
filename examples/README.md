@@ -171,7 +171,7 @@ Generated server wrappers expect handlers that follow this pattern:
 
 ```typescript
 const handler: getPetByIdHandler = async (params) => {
-  if (params.type !== "ok") {
+  if (params.kind !== "ok") {
     // Handle validation errors
     return { status: 400, contentType: "", data: void 0 };
   }
@@ -271,7 +271,7 @@ Each operation generates:
 
 ```typescript
 const handler: operationHandler = async (params) => {
-  if (params.type === "query_error") {
+  if (params.kind === "query_error") {
     // Handle query parameter validation errors
     console.error("Query validation failed:", params.error);
     return {
@@ -281,7 +281,7 @@ const handler: operationHandler = async (params) => {
     };
   }
 
-  if (params.type === "path_error") {
+  if (params.kind === "path_error") {
     // Handle path parameter validation errors
     return {
       status: 400,
@@ -299,7 +299,7 @@ const handler: operationHandler = async (params) => {
 
 ```typescript
 const getPetByIdHandler: getPetByIdHandler = async (params) => {
-  if (params.type !== "ok") {
+  if (params.kind !== "ok") {
     return { status: 400, contentType: "", data: void 0 };
   }
 

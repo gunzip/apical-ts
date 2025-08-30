@@ -11,7 +11,7 @@ describe("testAuthBearer operation integration tests", () => {
   it("should return 200 with valid Person when all required parameters are provided", async () => {
     // Arrange: Setup the Express route with the generated wrapper
     const handler: testAuthBearerHandler = async (params) => {
-      if (params.type === "ok") {
+      if ("success" in params && params.success) {
         // Validate that required query parameters are present
         expect(params.value.query.qr).toBeDefined();
         expect(params.value.query.qr).toBe("test-required");
@@ -61,7 +61,11 @@ describe("testAuthBearer operation integration tests", () => {
     let validationErrorReceived = false;
 
     const handler: testAuthBearerHandler = async (params) => {
-      if (params.type === "query_error") {
+      if (
+        "success" in params &&
+        !params.success &&
+        params.kind === "query_error"
+      ) {
         validationErrorReceived = true;
         // Verify the validation error structure
         expect(params.error.issues).toBeDefined();
@@ -116,7 +120,11 @@ describe("testAuthBearer operation integration tests", () => {
     let cursorValidationFailed = false;
 
     const handler: testAuthBearerHandler = async (params) => {
-      if (params.type === "query_error") {
+      if (
+        "success" in params &&
+        !params.success &&
+        params.kind === "query_error"
+      ) {
         cursorValidationFailed = true;
         // Check that cursor validation failed
         const cursorError = params.error.issues.find((issue) =>
@@ -170,7 +178,7 @@ describe("testAuthBearer operation integration tests", () => {
     // Arrange
     // Note: After fixing the bug, optional parameters are now properly optional
     const handler: testAuthBearerHandler = async (params) => {
-      if (params.type === "ok") {
+      if ("success" in params && params.success) {
         // Only qr should be required according to OpenAPI spec
         expect(params.value.query.qr).toBe("required-only");
         // Optional parameters should be undefined when not provided

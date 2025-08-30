@@ -76,21 +76,21 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify error handling with correct error types */
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ type: "query_error", error: queryParse\.error \}\)/,
+      /return handler\(\{ kind: "query_error", error: queryParse\.error, success: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ type: "path_error", error: pathParse\.error \}\)/,
+      /return handler\(\{ kind: "path_error", error: pathParse\.error, success: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ type: "headers_error", error: headersParse\.error \}\)/,
+      /return handler\(\{ kind: "headers_error", error: headersParse\.error, success: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ type: "body_error", error: bodyParse\.error \}\)/,
+      /return handler\(\{ kind: "body_error", error: bodyParse\.error, success: false \}\)/,
     );
 
     /* Verify success handler call with all parameters */
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{\s*type: "ok",\s*value: \{\s*query: queryParse\.data,\s*path: pathParse\.data,\s*headers: headersParse\.data,\s*body: parsedBody\s*\},?\s*\}\)/,
+      /return handler\(\{\s*success: true,\s*value: \{\s*query: queryParse\.data,\s*path: pathParse\.data,\s*headers: headersParse\.data,\s*body: parsedBody\s*\},?\s*\}\)/,
     );
 
     /* Verify discriminated union types are correctly defined */
@@ -108,7 +108,7 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify handler type includes both success and error cases */
     expect(result.wrapperCode).toMatch(
-      /petFindByStatusHandler = \(\s*params: \{ type: "ok"; value: petFindByStatusParsedParams \} \| petFindByStatusValidationError,?\s*\) => Promise<petFindByStatusResponse>/,
+      /petFindByStatusHandler = \(\s*params: \{ success: true; value: petFindByStatusParsedParams \} \| petFindByStatusValidationError,?\s*\) => Promise<petFindByStatusResponse>/,
     );
   });
 

@@ -86,7 +86,7 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain("bodyParse.success");
 
     /* Verify success handler call */
-    expect(result.wrapperCode).toContain('type: "ok"');
+    expect(result.wrapperCode).toContain("success: true");
     expect(result.wrapperCode).toContain("value: {");
     expect(result.wrapperCode).toContain("query: queryParse.data");
     expect(result.wrapperCode).toContain("path: pathParse.data");
@@ -122,10 +122,10 @@ describe("server-generator comprehensive validation", () => {
 
     /* Should include validation error discriminated union */
     expect(result.wrapperCode).toContain("testOperationValidationError");
-    expect(result.wrapperCode).toMatch(/\|\s*{\s*type:\s*"query_error"/);
-    expect(result.wrapperCode).toMatch(/\|\s*{\s*type:\s*"path_error"/);
-    expect(result.wrapperCode).toMatch(/\|\s*{\s*type:\s*"headers_error"/);
-    expect(result.wrapperCode).toMatch(/\|\s*{\s*type:\s*"body_error"/);
+    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"query_error"/);
+    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"path_error"/);
+    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"headers_error"/);
+    expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"body_error"/);
 
     /* Should include parsed params type */
     expect(result.wrapperCode).toContain("testOperationParsedParams");
@@ -136,7 +136,7 @@ describe("server-generator comprehensive validation", () => {
     /* Should include handler type with discriminated union */
     expect(result.wrapperCode).toContain("testOperationHandler");
     expect(result.wrapperCode).toContain(
-      '{ type: "ok"; value: testOperationParsedParams }',
+      "{ success: true; value: testOperationParsedParams }",
     );
     expect(result.wrapperCode).toContain("testOperationValidationError");
   });
