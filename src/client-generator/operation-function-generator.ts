@@ -213,6 +213,7 @@ export function generateOperationFunction(
     functionName: metadata.functionName,
     genericParams,
     parameterDeclaration,
+    parameterInterface: metadata.parameterStructures.paramsInterface,
     responseMapTypeName: metadata.bodyInfo.shouldGenerateResponseMap
       ? metadata.bodyInfo.responseMapTypeName
       : undefined,

@@ -193,6 +193,14 @@ describe("operation-templates", () => {
         shouldGenerateResponseMap: true,
         requestMapTypeName: "TestRequestMap",
         responseMapTypeName: "TestResponseMap",
+        operationId: undefined,
+        parameterGroups: {
+          path: [],
+          query: [],
+          header: [],
+          cookie: [],
+          matrix: [],
+        } as any,
         contentTypeMaps: {
           defaultRequestContentType: "application/json",
           defaultResponseContentType: "application/json",
@@ -204,6 +212,7 @@ describe("operation-templates", () => {
             "{ 'application/json': User; 'text/plain': string; }",
           typeImports: new Set(),
         },
+        typeImports: new Set(),
       };
 
       const result = buildTypeAliases(config);
@@ -224,6 +233,14 @@ describe("operation-templates", () => {
         shouldGenerateResponseMap: false,
         requestMapTypeName: "TestRequestMap",
         responseMapTypeName: "TestResponseMap",
+        operationId: undefined,
+        parameterGroups: {
+          path: [],
+          query: [],
+          header: [],
+          cookie: [],
+          matrix: [],
+        } as any,
         contentTypeMaps: {
           defaultRequestContentType: "application/json",
           defaultResponseContentType: null,
@@ -233,6 +250,7 @@ describe("operation-templates", () => {
           responseMapType: "{}",
           typeImports: new Set(),
         },
+        typeImports: new Set(),
       };
 
       const result = buildTypeAliases(config);
@@ -250,6 +268,14 @@ describe("operation-templates", () => {
         shouldGenerateResponseMap: true,
         requestMapTypeName: "TestRequestMap",
         responseMapTypeName: "TestResponseMap",
+        operationId: undefined,
+        parameterGroups: {
+          path: [],
+          query: [],
+          header: [],
+          cookie: [],
+          matrix: [],
+        } as any,
         contentTypeMaps: {
           defaultRequestContentType: null,
           defaultResponseContentType: "application/json",
@@ -259,6 +285,7 @@ describe("operation-templates", () => {
           responseMapType: "{ 'application/json': User; }",
           typeImports: new Set(),
         },
+        typeImports: new Set(),
       };
 
       const result = buildTypeAliases(config);
@@ -278,6 +305,14 @@ describe("operation-templates", () => {
         shouldGenerateResponseMap: false,
         requestMapTypeName: "TestRequestMap",
         responseMapTypeName: "TestResponseMap",
+        operationId: undefined,
+        parameterGroups: {
+          path: [],
+          query: [],
+          header: [],
+          cookie: [],
+          matrix: [],
+        } as any,
         contentTypeMaps: {
           defaultRequestContentType: null,
           defaultResponseContentType: null,
@@ -287,6 +322,7 @@ describe("operation-templates", () => {
           responseMapType: "{}",
           typeImports: new Set(),
         },
+        typeImports: new Set(),
       };
 
       const result = buildTypeAliases(config);
@@ -307,6 +343,7 @@ describe("operation-templates", () => {
           '<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">',
         parameterDeclaration:
           "{ body }: { body: TestRequestMap[TRequestContentType] }",
+        parameterInterface: "{ body: TestRequestMap[TRequestContentType] }",
         updatedReturnType: "ApiResponse<200, User>",
         functionBodyCode: "return fetchApi('/test', { method: 'POST', body });",
         typeAliases:
@@ -318,6 +355,18 @@ describe("operation-templates", () => {
       expect(result).toBe(
         "export type TestRequestMap = { 'application/json': User; };\n\n" +
           "/** Test operation */\n" +
+          'export function testOperation<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
+          "  params: { body: TestRequestMap[TRequestContentType] },\n" +
+          "  config: GlobalConfig & { forceValidation: true }\n" +
+          "): Promise<ApiResponse<200, User>>;\n" +
+          'export function testOperation<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
+          "  params: { body: TestRequestMap[TRequestContentType] },\n" +
+          "  config: GlobalConfig & { forceValidation: false }\n" +
+          "): Promise<ApiResponse<200, User>>;\n" +
+          'export function testOperation<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
+          "  params: { body: TestRequestMap[TRequestContentType] },\n" +
+          "  config?: GlobalConfig\n" +
+          "): Promise<ApiResponse<200, User>>;\n" +
           'export async function testOperation<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  { body }: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config: GlobalConfig = globalConfig\n" +
@@ -333,6 +382,7 @@ describe("operation-templates", () => {
         summary: "",
         genericParams: "<TForceValidation extends boolean = false>",
         parameterDeclaration: "{}: {} = {}",
+        parameterInterface: "{}",
         updatedReturnType: "ApiResponse<200, User>",
         functionBodyCode: "return fetchApi('/test');",
         typeAliases: "",
@@ -341,7 +391,19 @@ describe("operation-templates", () => {
       const result = renderOperationFunction(config);
 
       expect(result).toBe(
-        "export async function testOperation<TForceValidation extends boolean = false>(\n" +
+        "export function testOperation<TForceValidation extends boolean = false>(\n" +
+          "  params: {},\n" +
+          "  config: GlobalConfig & { forceValidation: true }\n" +
+          "): Promise<ApiResponse<200, User>>;\n" +
+          "export function testOperation<TForceValidation extends boolean = false>(\n" +
+          "  params: {},\n" +
+          "  config: GlobalConfig & { forceValidation: false }\n" +
+          "): Promise<ApiResponse<200, User>>;\n" +
+          "export function testOperation<TForceValidation extends boolean = false>(\n" +
+          "  params: {},\n" +
+          "  config?: GlobalConfig\n" +
+          "): Promise<ApiResponse<200, User>>;\n" +
+          "export async function testOperation<TForceValidation extends boolean = false>(\n" +
           "  {}: {} = {},\n" +
           "  config: GlobalConfig = globalConfig\n" +
           "): Promise<ApiResponse<200, User>> {\n" +

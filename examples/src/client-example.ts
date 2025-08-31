@@ -24,164 +24,50 @@ async function demonstrateClient() {
   );
   console.log("");
 
+  // default configuration forceValidation=false
+  const petsResponse = await findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (petsResponse.success === true && petsResponse.status === 200) {
+    petsResponse.parse();
+  }
+
+  // overridden configuration forceValidation=true
+  const petsResponse2 = await findPetsByStatus(
+    {
+      query: { status: "available" },
+    },
+    { ...globalConfig, forceValidation: true },
+  );
+  if (petsResponse2.success === true && petsResponse2.status === 200) {
+    // automatic validation: .parsed available
+    petsResponse2.parsed;
+  }
+
+  // with configureOperation and forceValidation=true
   const api = configureOperations(
+    { findPetsByStatus, getInventory, getPetById },
+    { ...localConfig, forceValidation: true },
+  );
+  const petsResponse3 = await api.findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (petsResponse3.success === true && petsResponse3.status === 200) {
+    // bound automatic validation: .parsed available
+    petsResponse3.parsed;
+  }
+
+  // with configureOperation and forceValidation=false
+  const api2 = configureOperations(
     { findPetsByStatus, getInventory, getPetById },
     { ...localConfig, forceValidation: false },
   );
-
-  try {
-    /* Example 1: Find pets by status */
-    console.log("1️⃣ Finding pets with status 'available'...");
-    const petsResponse = await api.findPetsByStatus({
-      query: { status: "available" },
-    });
-
-    if (petsResponse.success === true && petsResponse.status === 200) {
-      console.log(
-        "✅ Found pets (raw):",
-        JSON.stringify(petsResponse.data, null, 2),
-      );
-
-      /* Parse the response data to get type-safe access */
-      const parseResult = petsResponse.parse();
-      if (isParsed(parseResult)) {
-        console.log(
-          "🔍 Parsed data (type-safe):",
-          JSON.stringify(parseResult.parsed, null, 2),
-        );
-        console.log(`📊 Found ${parseResult.parsed.length} pets`);
-      } else if ("parseError" in parseResult) {
-        console.error("❌ Failed to parse response:", parseResult.parseError);
-      }
-    } else if (petsResponse.success === true) {
-      console.error("❌ Failed to find pets:", petsResponse.status);
-    } else {
-      console.error("❌ Failed to find pets: unexpected error", petsResponse);
-    }
-
-    console.log("");
-
-    /* Example 2: Get specific pet by ID */
-    console.log("2️⃣ Getting pet with ID 1...");
-    const petResponse = await api.getPetById({
-      headers: { api_key: "demo-api-key" } /* Provide a demo API key */,
-      path: { petId: "1" },
-    });
-
-    if (petResponse.success === true && petResponse.status === 200) {
-      console.log("✅ Found pet:", JSON.stringify(petResponse.data, null, 2));
-
-      /* Parse the response data */
-      const parseResult = petResponse.parse();
-      if ("parsed" in parseResult) {
-        const pet = parseResult.parsed;
-        console.log(`🐕 Pet details: ${pet.name} (${pet.status})`);
-        if (pet.category) {
-          console.log(`🏷️ Category: ${pet.category.name}`);
-        }
-      } else if ("parseError" in parseResult) {
-        console.error("❌ Failed to parse pet data:", parseResult.parseError);
-      }
-    } else if (petResponse.success === true) {
-      console.error("❌ Failed to get pet:", petResponse.status);
-    } else {
-      console.error("❌ Failed to get pet: unexpected error", petResponse);
-    }
-
-    console.log("");
-
-    /* Example 3: Get inventory */
-    console.log("3️⃣ Getting store inventory...");
-    const inventoryResponse = await api.getInventory({
-      headers: { api_key: "demo-api-key" },
-    });
-
-    if (
-      inventoryResponse.success === true &&
-      inventoryResponse.status === 200
-    ) {
-      console.log(
-        "✅ Inventory:",
-        JSON.stringify(inventoryResponse.data, null, 2),
-      );
-
-      /* Parse the response data */
-      const parseResult = inventoryResponse.parse();
-      if ("parsed" in parseResult) {
-        const inventory = parseResult.parsed;
-        console.log("📦 Inventory summary:");
-        for (const [status, count] of Object.entries(inventory)) {
-          console.log(`  ${status}: ${count}`);
-        }
-      } else if ("parseError" in parseResult) {
-        console.error("❌ Failed to parse inventory:", parseResult.parseError);
-      }
-    } else if (inventoryResponse.success === true) {
-      console.error("❌ Failed to get inventory:", inventoryResponse.status);
-    } else {
-      console.error(
-        "❌ Failed to get inventory: unexpected error",
-        inventoryResponse,
-      );
-    }
-
-    console.log("");
-
-    /* Example 4: Error handling - try to get non-existent pet */
-    console.log(
-      "4️⃣ Testing error handling - getting non-existent pet (ID 999)...",
-    );
-    const nonExistentPetResponse = await api.getPetById({
-      headers: { api_key: "demo-api-key" },
-      path: { petId: "999" },
-    });
-
-    if (
-      nonExistentPetResponse.success === true &&
-      nonExistentPetResponse.status === 404
-    ) {
-      console.log("✅ Correctly received 404 for non-existent pet");
-    } else if (nonExistentPetResponse.success === true) {
-      console.log("🤔 Unexpected response:", nonExistentPetResponse.status);
-    } else {
-      console.error(
-        "❌ Unexpected error getting non-existent pet",
-        nonExistentPetResponse,
-      );
-    }
-  } catch (error) {
-    console.error("❌ Error during client demonstration:", error);
-
-    /* Check if it's a network error */
-    if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
-      console.log("");
-      console.log("💡 It looks like the Express server is not running.");
-      console.log("   Please start the server first:");
-      console.log("   npx tsx src/express-server-example.ts");
-    }
+  const petsResponse4 = await api2.findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (petsResponse4.success === true && petsResponse4.status === 200) {
+    petsResponse4.parse();
   }
-
-  /* Example 5: Unexpected - send invalid parameters in getInventory */
-  console.log("5️⃣ Testing error handling - sending invalid parameters...");
-
-  // use native fetch since generated client cannot send invalid parameters
-  const invalidInventoryResponse = await fetch(
-    "http://localhost:3000/store/inventory?invalidParam=invalid",
-    {
-      method: "GET",
-      headers: { foo: "demo-api-key" },
-    },
-  );
-
-  // @ts-ignore
-  if (invalidInventoryResponse.status === 400) {
-    console.log("✅ Correctly received 400 for invalid parameters");
-  } else {
-    console.log("🤔 Unexpected response:", invalidInventoryResponse.status);
-  }
-
-  console.log("");
-  console.log("🏁 Client demonstration completed!");
 }
 
 /* Handle graceful shutdown */

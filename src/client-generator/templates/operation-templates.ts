@@ -34,6 +34,8 @@ export interface OperationFunctionRenderConfig {
   functionName: string;
   genericParams: string;
   parameterDeclaration: string;
+  /* Raw interface for first parameter (used in overload signatures without destructuring) */
+  parameterInterface: string;
   responseMapTypeName?: string;
   summary: string;
   typeAliases: string;
@@ -208,7 +210,30 @@ export function renderOperationFunction(
   const configType = baseConfigType;
 
   /* Only add type cast when we have a narrowed type (handled implicitly) */
-  return `${config.typeAliases}${config.summary}export async function ${config.functionName}${config.genericParams}(
+  /* Overloads: specialize conditional branches by substituting TForceValidation with literals */
+  const trueReturn = config.updatedReturnType.replace(
+    /TForceValidation extends true/gu,
+    "true extends true",
+  );
+  const falseReturn = config.updatedReturnType.replace(
+    /TForceValidation extends true/gu,
+    "false extends true",
+  );
+  /* Overload signatures receive a single named parameter (no destructuring, no defaults) */
+  const overloadParamDecl = `params: ${config.parameterInterface}`;
+  return `${config.typeAliases}${config.summary}export function ${config.functionName}${config.genericParams}(
+  ${overloadParamDecl},
+  config: ${configType} & { forceValidation: true }
+): Promise<${trueReturn}>;
+export function ${config.functionName}${config.genericParams}(
+  ${overloadParamDecl},
+  config: ${configType} & { forceValidation: false }
+): Promise<${falseReturn}>;
+export function ${config.functionName}${config.genericParams}(
+  ${overloadParamDecl},
+  config?: ${configType}
+): Promise<${config.updatedReturnType}>;
+export async function ${config.functionName}${config.genericParams}(
   ${config.parameterDeclaration},
   config: ${configType} = globalConfig
 ): Promise<${config.updatedReturnType}> {
