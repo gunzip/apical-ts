@@ -24,38 +24,42 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
         /* Force validation: automatically parse and return result */
         const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {});
         if ("parsed" in parseResult) {
-          return { success: true, status: ${statusCode} as const, data, response, parsed: parseResult } as any;
+          const forcedResult = { success: true as const, status: ${statusCode} as const, data, response, parsed: parseResult } satisfies ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}>;
+          // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
+          return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>);
         }
         if (parseResult.kind) {
-          return {
+          const errorResult = {
             ...parseResult,
-            success: false,
+            success: false as const,
             result: { data, status: ${statusCode}, response },
-          } as any;
+          } satisfies ApiResponseError;
+          return errorResult;
         }
         throw new Error("Invalid parse result");
       } else {
         /* Manual validation: provide parse method */
-        return {
-          success: true,
+        const manualResult = {
+          success: true as const,
           status: ${statusCode} as const,
           data,
           response,
           parse: () => parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {})
-        } as any;
+        } satisfies ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>;
+        return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>);
       }
     }`;
     } else {
       /* No schema or response map: return simple response */
       return `    case ${statusCode}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-      return { success: true, status: ${statusCode} as const, data, response } as any;
+  return { success: true as const, status: ${statusCode} as const, data, response };
     }`;
     }
   }
 
   return `    case ${statusCode}:
-      return { success: true, status: ${statusCode} as const, data: undefined, response } as any;`;
+  return { success: true as const, status: ${statusCode} as const, data: undefined, response };`;
 }
 
 /*

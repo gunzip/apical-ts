@@ -276,10 +276,13 @@ export function configureOperations<TOperations extends Record<string, Operation
     const op = operations[key];
     /* Preserve runtime guard (test expects the string below to appear) */
     if (typeof operations[key] === 'function') {
-      bound[key] = (params: unknown) => (op as any)(params, config);
+      bound[key] = (params: unknown) => {
+        return (op as (...args: any[]) => unknown)(params, config);
+      };
     }
   }
-  return bound as any;
+  /* Cast through satisfies to keep key mapping precise while avoiding any */
+  return bound as { [K in keyof TOperations]: BoundOperation<TOperations[K], boolean> };
 }`;
 }
 

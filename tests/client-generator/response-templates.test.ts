@@ -26,7 +26,7 @@ describe("response-templates", () => {
 
       expect(result).toContain("case 204:");
       expect(result).toContain(
-        "return { success: true, status: 204 as const, data: undefined, response } as any;",
+        "return { success: true as const, status: 204 as const, data: undefined, response };",
       );
     });
 
@@ -48,7 +48,7 @@ describe("response-templates", () => {
       expect(result).toContain("case 200: {");
       expect(result).toContain("const data = undefined");
       expect(result).toContain(
-        "return { success: true, status: 200 as const, data, response } as any;",
+        "return { success: true as const, status: 200 as const, data, response };",
       );
     });
   });
