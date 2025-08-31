@@ -35,12 +35,24 @@ describe("force validation flag", () => {
       );
 
       /* Verify response handler includes conditional logic for both modes */
-      expect(result.responseHandlers[0]).toContain("if (config.forceValidation)");
-      expect(result.responseHandlers[0]).toContain("/* Force validation: automatically parse and return result */");
-      expect(result.responseHandlers[0]).toContain("/* Manual validation: provide parse method */");
-      expect(result.responseHandlers[0]).toContain("parse: () => parseApiResponseUnknownData");
-      expect(result.responseHandlers[0]).toContain("parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap");
-      expect(result.responseHandlers[0]).toContain("config.deserializerMap ?? {}");
+      expect(result.responseHandlers[0]).toContain(
+        "if (config.forceValidation)",
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "/* Force validation: automatically parse and return result */",
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "/* Manual validation: provide parse method */",
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "parse: () => parseApiResponseUnknownData",
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap",
+      );
+      expect(result.responseHandlers[0]).toContain(
+        "config.deserializerMap ?? {}",
+      );
 
       /* Verify return type uses conditional types */
       expect(result.returnType).toBe(
@@ -78,14 +90,20 @@ describe("force validation flag", () => {
       );
 
       /* Verify response handler includes conditional logic for both force and manual validation */
-      expect(result.responseHandlers[0]).toContain("if (config.forceValidation)");
+      expect(result.responseHandlers[0]).toContain(
+        "if (config.forceValidation)",
+      );
       expect(result.responseHandlers[0]).toContain("const parseResult =");
-      expect(result.responseHandlers[0]).toContain("parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap");
-      expect(result.responseHandlers[0]).toContain('if ("parsed" in parseResult)');
+      expect(result.responseHandlers[0]).toContain(
+        "parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap",
+      );
+      expect(result.responseHandlers[0]).toContain(
+        'if ("parsed" in parseResult)',
+      );
       expect(result.responseHandlers[0]).toContain("parsed: parseResult");
       expect(result.responseHandlers[0]).toContain("if (parseResult.kind)");
       expect(result.responseHandlers[0]).toContain("success: false");
-      
+
       /* Should also contain manual validation branch */
       expect(result.responseHandlers[0]).toContain("} else {");
       expect(result.responseHandlers[0]).toContain("parse: () =>");
@@ -116,7 +134,9 @@ describe("force validation flag", () => {
       );
 
       /* Verify no conditional parsing logic is added for responses without schemas */
-      expect(result.responseHandlers[0]).not.toContain("config.forceValidation");
+      expect(result.responseHandlers[0]).not.toContain(
+        "config.forceValidation",
+      );
       expect(result.responseHandlers[0]).not.toContain("const parseResult =");
       expect(result.responseHandlers[0]).not.toContain("parsed");
       expect(result.responseHandlers[0]).not.toContain("parse:");

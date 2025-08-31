@@ -90,7 +90,7 @@ export function buildGenericParams(
   config: GenericParamsConfig,
 ): GenericParamsResult {
   const genericParts: string[] = [];
-  
+
   /* Always include TForceValidation parameter for dynamic force validation */
   genericParts.push("TForceValidation extends boolean = false");
 
@@ -111,10 +111,10 @@ export function buildGenericParams(
   }
 
   const genericParams = `<${genericParts.join(", ")}>`;
-  
+
   /* Return the original return type since response analysis already handles conditional types */
   const updatedReturnType = config.initialReturnType;
-  
+
   return { genericParams, updatedReturnType };
 }
 
@@ -203,7 +203,7 @@ export function renderOperationFunction(
   const baseConfigType = config.responseMapTypeName
     ? `GlobalConfig & { deserializerMap?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
     : "GlobalConfig";
-    
+
   /* Add forceValidation generic constraint to config type */
   const configType = `${baseConfigType} & { forceValidation?: TForceValidation }`;
 

@@ -11,7 +11,6 @@ export { renderUnionType } from "../../shared/response-union-generator.js";
 export function renderResponseHandler(
   responseInfo: ResponseInfo,
   responseMapName?: string,
-  _forceValidation = false, // Keep parameter for backward compatibility but ignore it
 ): string {
   const { contentType, statusCode, typeName } = responseInfo;
 
@@ -37,10 +36,10 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
         throw new Error("Invalid parse result");
       } else {
         /* Manual validation: provide parse method */
-        return { 
-          success: true, 
-          status: ${statusCode} as const, 
-          data, 
+        return {
+          success: true,
+          status: ${statusCode} as const,
+          data,
           response,
           parse: () => parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializerMap ?? {})
         } as any;

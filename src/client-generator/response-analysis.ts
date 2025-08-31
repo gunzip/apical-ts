@@ -47,12 +47,7 @@ export function analyzeContentTypes(
 export function analyzeResponseStructure(
   config: ResponseAnalysisConfig,
 ): ResponseAnalysis {
-  const {
-    forceValidation = false,
-    hasResponseContentTypeMap = false,
-    operation,
-    typeImports,
-  } = config;
+  const { hasResponseContentTypeMap = false, operation, typeImports } = config;
   const responses: ResponseInfo[] = [];
 
   if (operation.responses) {

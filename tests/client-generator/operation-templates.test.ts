@@ -33,7 +33,9 @@ describe("operation-templates", () => {
 
       const result = buildGenericParams(config);
 
-      expect(result.genericParams).toBe("<TForceValidation extends boolean = false>");
+      expect(result.genericParams).toBe(
+        "<TForceValidation extends boolean = false>",
+      );
       expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
 
