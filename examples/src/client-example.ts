@@ -25,12 +25,8 @@ async function demonstrateClient() {
   console.log("");
 
   const api = configureOperations(
-    {
-      findPetsByStatus,
-      getInventory,
-      getPetById,
-    },
-    { ...globalConfig, forceValidation: false },
+    { findPetsByStatus, getInventory, getPetById },
+    { ...localConfig, forceValidation: false },
   );
 
   try {
@@ -40,7 +36,7 @@ async function demonstrateClient() {
       query: { status: "available" },
     });
 
-    if (petsResponse.success == true && petsResponse.status === 200) {
+    if (petsResponse.success === true && petsResponse.status === 200) {
       console.log(
         "✅ Found pets (raw):",
         JSON.stringify(petsResponse.data, null, 2),
@@ -57,8 +53,10 @@ async function demonstrateClient() {
       } else if ("parseError" in parseResult) {
         console.error("❌ Failed to parse response:", parseResult.parseError);
       }
-    } else {
+    } else if (petsResponse.success === true) {
       console.error("❌ Failed to find pets:", petsResponse.status);
+    } else {
+      console.error("❌ Failed to find pets: unexpected error", petsResponse);
     }
 
     console.log("");
@@ -70,7 +68,7 @@ async function demonstrateClient() {
       path: { petId: "1" },
     });
 
-    if (petResponse.status === 200) {
+    if (petResponse.success === true && petResponse.status === 200) {
       console.log("✅ Found pet:", JSON.stringify(petResponse.data, null, 2));
 
       /* Parse the response data */
@@ -84,8 +82,10 @@ async function demonstrateClient() {
       } else if ("parseError" in parseResult) {
         console.error("❌ Failed to parse pet data:", parseResult.parseError);
       }
-    } else {
+    } else if (petResponse.success === true) {
       console.error("❌ Failed to get pet:", petResponse.status);
+    } else {
+      console.error("❌ Failed to get pet: unexpected error", petResponse);
     }
 
     console.log("");
@@ -96,7 +96,10 @@ async function demonstrateClient() {
       headers: { api_key: "demo-api-key" },
     });
 
-    if (inventoryResponse.status === 200) {
+    if (
+      inventoryResponse.success === true &&
+      inventoryResponse.status === 200
+    ) {
       console.log(
         "✅ Inventory:",
         JSON.stringify(inventoryResponse.data, null, 2),
@@ -113,8 +116,13 @@ async function demonstrateClient() {
       } else if ("parseError" in parseResult) {
         console.error("❌ Failed to parse inventory:", parseResult.parseError);
       }
-    } else {
+    } else if (inventoryResponse.success === true) {
       console.error("❌ Failed to get inventory:", inventoryResponse.status);
+    } else {
+      console.error(
+        "❌ Failed to get inventory: unexpected error",
+        inventoryResponse,
+      );
     }
 
     console.log("");
@@ -128,10 +136,18 @@ async function demonstrateClient() {
       path: { petId: "999" },
     });
 
-    if (nonExistentPetResponse.status === 404) {
+    if (
+      nonExistentPetResponse.success === true &&
+      nonExistentPetResponse.status === 404
+    ) {
       console.log("✅ Correctly received 404 for non-existent pet");
-    } else {
+    } else if (nonExistentPetResponse.success === true) {
       console.log("🤔 Unexpected response:", nonExistentPetResponse.status);
+    } else {
+      console.error(
+        "❌ Unexpected error getting non-existent pet",
+        nonExistentPetResponse,
+      );
     }
   } catch (error) {
     console.error("❌ Error during client demonstration:", error);

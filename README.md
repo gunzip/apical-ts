@@ -204,39 +204,108 @@ const newPet = await client.createPet({
 });
 ```
 
+### Bound Operation Return Types & `forceValidation`
+
+When you call an operation directly (without binding via
+`configureOperations`), the returned Promise's success branch will include a
+conditional union whose shape depends on the internal generic
+`TForceValidation` and the runtime `config.forceValidation` flag. This raw form
+exposes both of these possibilities in the type system:
+
+```
+ApiResponseWithParse<...> | ApiResponseWithForcedParse<...> | ApiResponseError | ...other documented statuses
+```
+
+This means TypeScript may show a union where the success status variant either
+has a `.parse()` method (manual validation) or a `.parsed` field (automatic
+validation) until you further narrow.
+
+To improve developer experience, the generator rewrites return types when you
+bind operations with `configureOperations`:
+
+- If you bind with `forceValidation: false` (or omit it), **forced** variants
+  are removed, so success responses always expose a `.parse()` method after you
+  narrow on `success === true` and a specific `status`.
+- If you bind with `forceValidation: true`, success responses expose a
+  `.parsed` field (and no `.parse()` method) because validation is performed
+  automatically.
+
+This rewrite only affects the TypeScript surface for better ergonomics; runtime
+behavior is unchanged.
+
+Examples:
+
+```ts
+// Manual validation bound client (no forced variants present)
+const manual = configureOperations(
+  { getPetById },
+  { ...globalConfig, forceValidation: false },
+);
+const r1 = await manual.getPetById({ petId: "123" });
+if (r1.success === true && r1.status === 200) {
+  // r1 has .parse()
+  const outcome = r1.parse();
+  if ("parsed" in outcome) console.log(outcome.parsed.name);
+}
+
+// Automatic validation bound client
+const auto = configureOperations(
+  { getPetById },
+  { ...globalConfig, forceValidation: true },
+);
+const r2 = await auto.getPetById({ petId: "123" });
+if (r2.success === true && r2.status === 200) {
+  // r2 has .parsed (and no .parse())
+  if ("parsed" in r2.parsed) {
+    console.log(r2.parsed.parsed.name); // inner discriminated union from content type
+  }
+}
+
+// Direct call (unbound) – union includes both possibilities until narrowed further
+const direct = await getPetById({ petId: "123" });
+if (direct.success === true && direct.status === 200) {
+  if ("parse" in direct) {
+    const outcome = direct.parse();
+    if ("parsed" in outcome) console.log(outcome.parsed.name);
+  } else if ("parsed" in direct) {
+    if ("parsed" in direct.parsed) console.log(direct.parsed.parsed.name);
+  }
+}
+```
+
+In summary: prefer binding for the best DX; direct calls surface the full
+conditional space for maximum static fidelity.
+
 ## Response Handling
 
-Each operation returns a discriminated union: either an API response (with a
-`status` code) or an error object (`ApiResponseError`) with a `kind`
-discriminator. Note: the `fetch-error` variant has NO `status`, so you must
-guard on `kind` before relying on `status` being present.
+Each operation returns a discriminated union: either a successful API response
+(`success: true` with a `status` code) or an error object (`success: false`)
+with a `kind` discriminator.
 
-Validation is opt-in by default (responses expose a `parse()` method). You can
-enable automatic validation at runtime by providing `forceValidation: true` in
-the configuration you pass to an operation or via `configureOperations`.
+Validation is opt-in by default (success responses expose a `parse()` method).
+You can enable automatic validation at runtime by providing
+`forceValidation: true` in the configuration you pass to an operation or via
+`configureOperations`.
 
 Recommended pattern:
 
 ```ts
 const result = await getPetById({ petId: "123" });
 
-if ("kind" in result) {
-  // Operation-level error (network, parsing, missing schema, etc.)
+if (result.success === false) {
   console.error("Operation failed:", result.kind, result.error);
 } else if (result.status === 200) {
-  // result.data is RAW (unless forceValidation: true was set on the config)
   console.log("Pet (raw):", result.data);
 } else if (result.status === 404) {
   console.warn("Pet not found");
 } else {
-  // Exhaustive fall-through for other documented statuses
   console.error("Unexpected documented status", result.status);
 }
 ```
 
 ## Error Handling
 
-Operations never throw exceptions. Instead, all errors are returned as part of the response union, providing a consistent and type-safe error handling experience. There is no `result.success` boolean; you distinguish errors via the presence of the `kind` discriminator.
+Operations never throw exceptions. Instead, all errors are returned as part of the response union, providing a consistent and type-safe error handling experience. You can branch on either `result.success === false` or the presence of the `kind` field; both are valid.
 
 ### Error Types
 

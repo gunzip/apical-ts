@@ -83,7 +83,7 @@ export type TypeAliasesConfig = ContentTypeMapsConfig & {
 
 /*
  * Creates generic parameter list for dynamic force validation and content-type selection.
- * Example output: <TForceValidation extends boolean = false, TRequestContentType extends keyof MyOpRequestMap = "application/json", TResponseContentType extends keyof MyOpResponseMap = "application/json">
+ * Example output (after removal of forceValidation generic): <TRequestContentType extends keyof MyOpRequestMap = "application/json", TResponseContentType extends keyof MyOpResponseMap = "application/json">
  * Returns both the generic parameter string and the adjusted return type with conditional types for force validation.
  */
 export function buildGenericParams(
@@ -204,13 +204,7 @@ export function renderOperationFunction(
     ? `GlobalConfig & { deserializerMap?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
     : "GlobalConfig";
 
-  /* NOTE: We intentionally do NOT narrow forceValidation to TForceValidation here.
-   * Using { forceValidation?: TForceValidation } causes assignment incompatibilities when
-   * passing a GlobalConfig where forceValidation?: boolean because boolean is not assignable
-   * to an unconstrained generic literal (true/false). Keeping GlobalConfig's own boolean property
-   * avoids pervasive type errors while generic TForceValidation is still available to influence
-   * the return type (selected explicitly by callers if desired).
-   */
+  /* forceValidation typing now handled exclusively by configureOperations overload discrimination */
   const configType = baseConfigType;
 
   /* Only add type cast when we have a narrowed type (handled implicitly) */
