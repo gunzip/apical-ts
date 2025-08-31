@@ -204,10 +204,16 @@ export function renderOperationFunction(
     ? `GlobalConfig & { deserializerMap?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
     : "GlobalConfig";
 
-  /* Add forceValidation generic constraint to config type */
-  const configType = `${baseConfigType} & { forceValidation?: TForceValidation }`;
+  /* NOTE: We intentionally do NOT narrow forceValidation to TForceValidation here.
+   * Using { forceValidation?: TForceValidation } causes assignment incompatibilities when
+   * passing a GlobalConfig where forceValidation?: boolean because boolean is not assignable
+   * to an unconstrained generic literal (true/false). Keeping GlobalConfig's own boolean property
+   * avoids pervasive type errors while generic TForceValidation is still available to influence
+   * the return type (selected explicitly by callers if desired).
+   */
+  const configType = baseConfigType;
 
-  /* Only add type cast when we have a narrowed type */
+  /* Only add type cast when we have a narrowed type (handled implicitly) */
   return `${config.typeAliases}${config.summary}export async function ${config.functionName}${config.genericParams}(
   ${config.parameterDeclaration},
   config: ${configType} = globalConfig

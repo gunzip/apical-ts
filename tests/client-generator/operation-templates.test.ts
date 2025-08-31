@@ -320,7 +320,7 @@ describe("operation-templates", () => {
           "/** Test operation */\n" +
           'export async function testOperation<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  { body }: { body: TestRequestMap[TRequestContentType] },\n" +
-          "  config: GlobalConfig & { forceValidation?: TForceValidation } = globalConfig\n" +
+          "  config: GlobalConfig = globalConfig\n" +
           "): Promise<ApiResponse<200, User>> {\n" +
           "  return fetchApi('/test', { method: 'POST', body });\n" +
           "}",
@@ -343,7 +343,7 @@ describe("operation-templates", () => {
       expect(result).toBe(
         "export async function testOperation<TForceValidation extends boolean = false>(\n" +
           "  {}: {} = {},\n" +
-          "  config: GlobalConfig & { forceValidation?: TForceValidation } = globalConfig\n" +
+          "  config: GlobalConfig = globalConfig\n" +
           "): Promise<ApiResponse<200, User>> {\n" +
           "  return fetchApi('/test');\n" +
           "}",

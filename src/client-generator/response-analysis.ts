@@ -47,7 +47,12 @@ export function analyzeContentTypes(
 export function analyzeResponseStructure(
   config: ResponseAnalysisConfig,
 ): ResponseAnalysis {
-  const { hasResponseContentTypeMap = false, operation, typeImports } = config;
+  const {
+    forceValidation,
+    hasResponseContentTypeMap = false,
+    operation,
+    typeImports,
+  } = config;
   const responses: ResponseInfo[] = [];
 
   if (operation.responses) {
@@ -84,13 +89,19 @@ export function analyzeResponseStructure(
   /* Generate union types - use conditional types when response map is available */
   const unionTypes: string[] = [];
   if (discriminatedUnionResult?.responseMapName) {
-    /* Use conditional types that depend on TForceValidation when response map is available */
     for (const responseInfo of responses) {
       if (responseInfo.hasSchema) {
-        /* Generate conditional type based on TForceValidation */
-        unionTypes.push(
-          `(TForceValidation extends true ? ApiResponseWithForcedParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}> : ApiResponseWithParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>)`,
-        );
+        if (forceValidation) {
+          // In global force validation mode, always use forced parse variant (simpler union)
+          unionTypes.push(
+            `ApiResponseWithForcedParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>`,
+          );
+        } else {
+          // Dynamic mode: conditional on generic TForceValidation
+          unionTypes.push(
+            `(TForceValidation extends true ? ApiResponseWithForcedParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}> : ApiResponseWithParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>)`,
+          );
+        }
       } else {
         const dataType = responseInfo.contentType ? "unknown" : "void";
         unionTypes.push(`ApiResponse<${responseInfo.statusCode}, ${dataType}>`);

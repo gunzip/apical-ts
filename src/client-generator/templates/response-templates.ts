@@ -17,7 +17,7 @@ export function renderResponseHandler(
   if (typeName || contentType) {
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
     if (responseInfo.hasSchema && responseMapName) {
-      /* Dynamic validation mode: conditionally call parseApiResponseUnknownData based on config.forceValidation */
+      /* Always generate dynamic validation logic (forceValidation flag removed) */
       return `    case ${statusCode}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       if (config.forceValidation) {

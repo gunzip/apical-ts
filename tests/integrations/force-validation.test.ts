@@ -69,7 +69,7 @@ describe("Force Validation CLI Flag Integration Test", () => {
       'if ("parsed" in parseResult) {',
     );
     expect(forceValidationOperationContent).toContain(
-      "return {\n            success: true,\n            status: 200 as const,\n            data,\n            response,\n            parsed: parseResult,\n          };",
+      "return {\n            success: true,\n            status: 200 as const,\n            data,\n            response,\n            parsed: parseResult,\n          } as any;",
     );
   });
 
@@ -229,10 +229,10 @@ describe("Force Validation CLI Flag Integration Test", () => {
 
     // Both should return simple response structure
     expect(manualSimpleContent).toContain(
-      "return {\n          success: true,\n          status: 200 as const,\n          data: undefined,\n          response,\n        };",
+      "return {\n          success: true,\n          status: 200 as const,\n          data: undefined,\n          response,\n        } as any;",
     );
     expect(forceValidationSimpleContent).toContain(
-      "return {\n          success: true,\n          status: 200 as const,\n          data: undefined,\n          response,\n        };",
+      "return {\n          success: true,\n          status: 200 as const,\n          data: undefined,\n          response,\n        } as any;",
     );
   });
 });

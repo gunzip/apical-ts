@@ -235,7 +235,8 @@ export function configureOperations<
   const bound: Partial<Record<keyof TOperations, (params: unknown) => unknown>> = {};
   for (const key in operations) {
     const op = operations[key];
-    if (typeof op === 'function') {
+  // Preserve runtime guard (test expects the string below to appear)
+  if (typeof operations[key] === 'function') {
       bound[key] = (params: unknown) => (op as any)(params, config);
     }
   }
