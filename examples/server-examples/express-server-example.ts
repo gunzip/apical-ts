@@ -18,7 +18,7 @@ import {
 import {
   createExpressAdapter,
   extractRequestParams,
-} from "../src/express-adapter.js";
+} from "./express-adapter.js";
 
 const app = express();
 const PORT = 3000;
