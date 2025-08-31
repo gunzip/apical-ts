@@ -1,5 +1,9 @@
 # YanoGen-Ts - Yet Another OpenAPI to TypeScript Generator
 
+✨ Effortlessly turn your OpenAPI specifications into **fully-typed Zod v4
+schemas** ready for runtime (client or server) validation and TypeScript
+development.
+
 > **Disclaimer:** This project is currently in an early stage. Breaking changes
 > may occur at any time. The first stable release will be version **0.1.0**.
 > Nevertheless, it's already solid and you can still use it in your
@@ -10,10 +14,6 @@ we're in control of the backend. OpenAPI specifications provide a powerful way
 to define your API contracts, and with YanoGen-Ts, you can easily generate
 TypeScript code that strictly adheres to those contracts, all while enjoying a
 seamless developer experience.
-
-✨ Effortlessly turn your OpenAPI specifications into **fully-typed Zod v4
-schemas** ready for runtime (client or server) validation and TypeScript
-development.
 
 Need a **client**? 🚀 Instantly generate a type-safe, low-footprint, operation-based REST API client alongside your schemas.
 
@@ -142,17 +142,23 @@ The generator creates:
 ```ts
 import { getPetById, createPet } from "./generated/client/index.js";
 
-// You can define your API configuration (all fields required)
-// or just use the default configuration to avoid passing it
-// as parameter to every operation
+// You can define your API configuration or just use the default one
 const apiConfig = {
   baseURL: "https://api.example.com/v1",
-  fetch: fetch, // or globalThis.fetch in browsers
+  fetch: fetch,
   headers: {
     Authorization: "Bearer your-token",
   },
-  // here you can provide your custom deserializers
-  // see below for examples
+  // optional
+  forceValidation: false,
+  // optional
+  deserializersMap: {
+    "application/json": (data) => JSON.parse(data),
+    "application/xml": (data) => {
+      const parser = new DOMParser();
+      return parser.parseFromString(data, "application/xml");
+    },
+  },
 };
 ```
 
@@ -162,7 +168,10 @@ const apiConfig = {
 // Simple operation call
 const pet = await getPetById({ petId: "123" }, apiConfig);
 
-// Operation with request body
+// Operation with typed request body
+// You probably want to bind a configuration object
+// to the operation, in order to avoid passing it as parameter
+// see section "Binding Configuration to Operations" below.
 const newPet = await createPet(
   {
     body: {
@@ -173,7 +182,7 @@ const newPet = await createPet(
   apiConfig,
 );
 
-// Use default empty config (operations work without configuration)
+// Or, using default config
 const result = await getPetById({ petId: "123" });
 ```
 
@@ -204,30 +213,95 @@ const newPet = await client.createPet({
 });
 ```
 
-### Bound Operation Return Types & `forceValidation`
+You can still override the configuration for individual operations,
+passing it as the second argument.
 
-When you call a generated operation directly (without binding via
-`configureOperations`), the returned Promise's success branch will either
-include a result with a parsed field or a parse() method, depending on the
-runtime `config.forceValidation` flag.
+### Lazy Validation vs Automatic Validation
 
-```ts
-ApiResponseWithParse<...> | ApiResponseWithForcedParse<...> | ApiResponseError | ...other documented statuses
-```
-
-The client keeps the right return types when you bind operations with `configureOperations`:
+When you call a generated operation that has a response body defined within the
+OpenAPI specification for some status codes, the returned Promise resolves to a
+result object that provides either a `.parsed` field or a `.parse()` method,
+depending on the value of the `config.forceValidation` flag. You can set this
+flag in the configuration passed to an individual operation or globally using
+`configureOperations`.
 
 - If you bind with `forceValidation: false` (or omit it),
   success responses always expose a `.parse()` method after you
-  narrow on `success === true` and a specific `status`.
+  narrow on `success === true` and a specific `status`. You have to handle
+  parsing errors manually in this case.
 - If you bind with `forceValidation: true`, success responses expose a
   `.parsed` field (and no `.parse()` method) because validation is performed
-  automatically during the request lifecycle.
+  automatically during the request lifecycle. In case of parsing errors, the
+  returned result will include a `ZodError` instance instead of the `parsed`
+  field.
+
+Don't worry if it seems confusing at first, type inference will help you.
 
 Examples:
 
 ```ts
-// src/examples/src/client-example.ts
+// examples/client-examples/force-validation.ts
+
+import {
+  configureOperations,
+  globalConfig,
+} from "../generated/client/config.js";
+import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
+import { getInventory } from "../generated/client/getInventory.js";
+import { getPetById } from "../generated/client/getPetById.js";
+
+async function demonstrateClient() {
+  // Manual validation bound operation
+  // default configuration has forceValidation=false
+  const petsResponse = await findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (petsResponse.success === true && petsResponse.status === 200) {
+    petsResponse.parse();
+  }
+
+  // Manual validation bound client
+  // using configureOperation with forceValidation=false
+  const api2 = configureOperations(
+    { findPetsByStatus, getInventory, getPetById },
+    { ...globalConfig, forceValidation: false },
+  );
+  const petsResponse4 = await api2.findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (petsResponse4.success === true && petsResponse4.status === 200) {
+    petsResponse4.parse();
+  }
+
+  // Automatic validation bound operation
+  // overridden per op configuration forceValidation=true
+  const petsResponse2 = await findPetsByStatus(
+    {
+      query: { status: "available" },
+    },
+    { ...globalConfig, forceValidation: true },
+  );
+  if (petsResponse2.success === true && petsResponse2.status === 200) {
+    // automatic validation: .parsed available
+    petsResponse2.parsed;
+  }
+
+  // Automatic validation bound client
+  // with configureOperation and forceValidation=true
+  const api = configureOperations(
+    { findPetsByStatus, getInventory, getPetById },
+    { ...globalConfig, forceValidation: true },
+  );
+  const petsResponse3 = await api.findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (petsResponse3.success === true && petsResponse3.status === 200) {
+    // bound automatic validation: .parsed available
+    petsResponse3.parsed;
+  }
+}
+
+demonstrateClient();
 ```
 
 ## Response Handling
@@ -259,7 +333,10 @@ if (result.success === false) {
 
 ## Error Handling
 
-Operations never throw exceptions. Instead, all errors are returned as part of the response union, providing a consistent and type-safe error handling experience. You can branch on either `result.success === false` or the presence of the `kind` field; both are valid.
+Client calls never throw exceptions. Instead, all errors are returned as part of
+the response union, providing a consistent and type-safe error handling
+experience. You can branch on either `result.success === false` or the presence
+of the `kind` field; both are valid.
 
 ### Error Types
 
@@ -306,23 +383,23 @@ type ApiResponseError =
 ```ts
 const result = await getPetById({ petId: "123" });
 
-if ("kind" in result) {
+if (!result.success) {
   // All error variants handled first (safe: unexpected-error lacks status)
   switch (result.kind) {
-    case "unexpected-error":
-      console.error("Unexpected error:", result.error);
-      break;
     case "unexpected-response":
       console.error("Unexpected status:", result.status, result.error);
-      break;
-    case "parse-error":
-      console.error("Validation failed:", result.error);
       break;
     case "deserialization-error":
       console.error("Deserialization failed:", result.error);
       break;
+    case "parse-error":
+      console.error("Validation failed:", result.error);
+      break;
     case "missing-schema":
       console.error("Schema missing:", result.error);
+      break;
+    case "unexpected-error":
+      console.error("Unexpected error:", result.error);
       break;
   }
 } else if (result.status === 200) {
@@ -360,19 +437,21 @@ These objects never throw; you inspect the returned value to act accordingly.
 ```ts
 const result = await getUserProfile({ userId: "123" });
 
-if (result.status === 200) {
-  const outcome = result.parse();
-  if ("parsed" in outcome) {
-    console.log("User:", outcome.parsed.name, outcome.parsed.email);
-  } else if (outcome.kind === "parse-error") {
-    console.error("Response validation failed:", outcome.error);
-  } else if (outcome.kind === "deserialization-error") {
-    console.error("Deserializer failed:", outcome.error);
-  } else if (outcome.kind === "missing-schema") {
-    console.warn("No schema – raw data retained:", result.data);
+if (result.success) {
+  if (result.status === 200) {
+    const outcome = result.parse();
+    if ("parsed" in outcome) {
+      console.log("User:", outcome.parsed.name, outcome.parsed.email);
+    } else if (outcome.kind === "parse-error") {
+      console.error("Response validation failed:", outcome.error);
+    } else if (outcome.kind === "deserialization-error") {
+      console.error("Deserializer failed:", outcome.error);
+    } else if (outcome.kind === "missing-schema") {
+      console.warn("No schema – raw data retained:", result.data);
+    }
+  } else if (result.status === 404) {
+    console.warn("User not found");
   }
-} else if (result.status === 404) {
-  console.warn("User not found");
 }
 ```
 
@@ -387,7 +466,7 @@ const result = await getDocument({
 
 if (result.status === 200) {
   const outcome = result.parse();
-  if ("parsed" in outcome) {
+  if (isParsed(outcome)) {
     console.log("Document:", outcome.parsed);
   }
 }
@@ -421,7 +500,9 @@ if (result.status === 200) {
 
 ## Automatic Runtime Validation
 
-Enable automatic validation per request by setting `forceValidation: true` in the config you pass to an operation, or globally by binding a config with `configureOperations`:
+Enable automatic validation per request by setting `forceValidation: true` in
+the config you pass to an operation, or globally by binding a config with
+`configureOperations`:
 
 ```ts
 import {
@@ -437,8 +518,8 @@ const client = configureOperations(
 );
 
 const result = await client.getUserProfile({ userId: "123" });
-if (result.status === 200) {
-  if ("parsed" in result) {
+if (result.success && result.status === 200) {
+  if (isParsed(result)) {
     console.log("User:", result.parsed.name);
   } else if (result.kind === "parse-error") {
     console.error("Validation failed", result.error);
@@ -556,9 +637,9 @@ const res = await testMultiContentTypes(
   },
 );
 
-if (res.status === 200) {
+if (res.success && res.status === 200) {
   const outcome = res.parse();
-  if ("parsed" in outcome) {
+  if (isParsed(outcome)) {
     console.log(outcome.parsed);
   } else if (outcome.kind === "parse-error") {
     console.error("Validation failed", outcome.error);
@@ -809,7 +890,7 @@ const app = express();
 app.use(express.json());
 
 const wrappedHandler = testAuthBearerWrapper(async (params) => {
-  if (params.kind === "ok") {
+  if (params.success) {
     // Here you can access validated and typed parameters
     const { query, path, headers, body } = params.value;
     // ...
@@ -852,9 +933,9 @@ See [./examples](./examples) directory for more usage examples.
 
 The handler you provide to the wrapper receives a single argument:
 
-- For valid requests: `{ kind: "ok", value: { query, path, headers, body, ... }
+- For valid requests: `{ success: true, value: { query, path, headers, body, ... }
 }`
-- For validation errors: `{ kind: "query-error" | "body-error" | ... , error:
+- For validation errors: `{ success: false, kind: "query-error" | "body-error" | ... , error:
 ZodError }`
 
 It must return an object with `{ status, contentType, data }`.
@@ -905,6 +986,7 @@ integration with other frameworks.
 - **Flexibility**: Easy per-operation configuration with all required fields
 - **Maintainability**: Each operation in its own file
 - **Testing**: Simple to mock individual operations
+- **Debugging**: Easier to trace issues with isolated operations
 
 # Comparison with alternative libraries
 
