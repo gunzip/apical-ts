@@ -153,6 +153,7 @@ export const globalConfig: GlobalConfig = {
   baseURL: '${server.defaultBaseURL}',
   fetch: fetch,
   headers: {},
+  forceValidation: false
 };
 
 /* A minimal, serializable representation of a fetch Response */
@@ -220,23 +221,42 @@ type AdjustedReturnType<R, TForceValidation extends boolean> = R extends Promise
   ? Promise<ReplaceWithForcedParse<U, TForceValidation>>
   : ReplaceWithForcedParse<R, TForceValidation>;
 
-/* Bind all operations with a specific config preserving return types & forceValidation behavior */
-export function configureOperations<
-  TOperations extends Record<string, Operation>,
-  TForceValidation extends boolean,
->(
+/* Bind all operations with a specific config preserving return types & forceValidation behavior.
+ * NOTE: Using overloads instead of a boolean generic prevents type widening when spreading
+ * config objects (example: { ...globalConfig, forceValidation: false }) which would otherwise
+ * infer the boolean type and produce a union including ApiResponseWithForcedParse even when the
+ * literal value is false. The overloads keep the API ergonomic while ensuring callers
+ * get precise return types that match the actual runtime behavior.
+ */
+export function configureOperations<TOperations extends Record<string, Operation>>(
   operations: TOperations,
-  config: Omit<GlobalConfig, 'forceValidation'> & { forceValidation: TForceValidation }
+  config: Omit<GlobalConfig, 'forceValidation'> & { forceValidation: true }
 ): {
   [K in keyof TOperations]: TOperations[K] extends (params: infer P, ...rest: any[]) => infer R
-    ? (params: P) => AdjustedReturnType<R, TForceValidation>
+    ? (params: P) => AdjustedReturnType<R, true>
+    : never;
+};
+export function configureOperations<TOperations extends Record<string, Operation>>(
+  operations: TOperations,
+  config: Omit<GlobalConfig, 'forceValidation'> & { forceValidation: false }
+): {
+  [K in keyof TOperations]: TOperations[K] extends (params: infer P, ...rest: any[]) => infer R
+    ? (params: P) => AdjustedReturnType<R, false>
+    : never;
+};
+export function configureOperations<TOperations extends Record<string, Operation>>(
+  operations: TOperations,
+  config: Omit<GlobalConfig, 'forceValidation'> & { forceValidation: boolean }
+): {
+  [K in keyof TOperations]: TOperations[K] extends (params: infer P, ...rest: any[]) => infer R
+    ? (params: P) => AdjustedReturnType<R, boolean>
     : never;
 } {
   const bound: Partial<Record<keyof TOperations, (params: unknown) => unknown>> = {};
   for (const key in operations) {
     const op = operations[key];
-  // Preserve runtime guard (test expects the string below to appear)
-  if (typeof operations[key] === 'function') {
+    /* Preserve runtime guard (test expects the string below to appear) */
+    if (typeof operations[key] === 'function') {
       bound[key] = (params: unknown) => (op as any)(params, config);
     }
   }

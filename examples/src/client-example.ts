@@ -30,7 +30,7 @@ async function demonstrateClient() {
       getInventory,
       getPetById,
     },
-    localConfig,
+    { ...globalConfig, forceValidation: false },
   );
 
   try {
@@ -40,7 +40,7 @@ async function demonstrateClient() {
       query: { status: "available" },
     });
 
-    if (petsResponse.status === 200) {
+    if (petsResponse.success == true && petsResponse.status === 200) {
       console.log(
         "✅ Found pets (raw):",
         JSON.stringify(petsResponse.data, null, 2),

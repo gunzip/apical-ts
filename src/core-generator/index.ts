@@ -48,13 +48,6 @@ export interface GenerationOptions {
    * @default 10
    */
   concurrency?: number;
-  /**
-   * Automatically validate responses with Zod in generated operations.
-   * When false (default), operations return ApiResponseWithParse with manual parse() method.
-   * When true, operations return ApiResponseWithForcedParse with automatic validation and parsed field.
-   * @default false
-   */
-  forceValidation?: boolean;
   generateClient: boolean;
   generateServer?: boolean;
   input: string;
@@ -74,7 +67,6 @@ export interface GenerationOptions {
 export async function generate(options: GenerationOptions): Promise<void> {
   const {
     concurrency = DEFAULT_CONCURRENCY,
-    forceValidation = false,
     generateClient: genClient,
     generateServer: genServer = false,
     input,
@@ -189,7 +181,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
   console.log("✅ Schemas generated successfully");
 
   if (genClient) {
-    await generateOperations(openApiDoc, output, concurrency, forceValidation);
+    await generateOperations(openApiDoc, output, concurrency);
   }
 
   if (genServer) {

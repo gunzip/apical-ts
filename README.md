@@ -101,8 +101,6 @@ pnpx chokidar-cli openapi.yaml -c \
 - `-o, --output <path>`: Output directory for generated code
 - `--generate-client`: Generate the operation functions (default: false)
 - `--generate-server`: Generate the operation wrapper (default: false)
-- `--force-validation`: Automatically validate responses with Zod in generated
-  operations (default: manual validation via `parse()` method)
 
 ## Supported Input Formats
 
@@ -211,8 +209,11 @@ const newPet = await client.createPet({
 Each operation returns a discriminated union: either an API response (with a
 `status` code) or an error object (`ApiResponseError`) with a `kind`
 discriminator. Note: the `fetch-error` variant has NO `status`, so you must
-guard on `kind` before relying on `status` being present. Validation is opt-in
-by default, but can be made automatic with the `--force-validation` flag.
+guard on `kind` before relying on `status` being present.
+
+Validation is opt-in by default (responses expose a `parse()` method). You can
+enable automatic validation at runtime by providing `forceValidation: true` in
+the configuration you pass to an operation or via `configureOperations`.
 
 Recommended pattern:
 

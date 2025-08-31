@@ -52,7 +52,6 @@ export function extractOperationMetadata(
   operation: OperationObject,
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
   doc: OpenAPIObject,
-  forceValidation = false,
 ): OperationMetadata {
   assert(operation.operationId, "Operation ID is required");
   const functionName: string = sanitizeIdentifier(operation.operationId);
@@ -101,7 +100,6 @@ export function extractOperationMetadata(
     typeImports,
     bodyInfo.shouldExportResponseMap,
     bodyInfo.shouldExportResponseMap ? bodyInfo.responseMapTypeName : undefined,
-    forceValidation,
   );
 
   /* Security overrides/auth headers */
@@ -162,7 +160,6 @@ export function generateOperationFunction(
   operation: OperationObject,
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
   doc: OpenAPIObject,
-  forceValidation = false,
 ): GeneratedFunction {
   /* Extract all metadata using pure logic function */
   const metadata = extractOperationMetadata(
@@ -171,7 +168,6 @@ export function generateOperationFunction(
     operation,
     pathLevelParameters,
     doc,
-    forceValidation,
   );
 
   /* Render using template functions */

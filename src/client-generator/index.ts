@@ -23,7 +23,6 @@ export async function generateOperations(
   doc: OpenAPIObject,
   outputDir: string,
   concurrency: number,
-  forceValidation = false,
 ): Promise<void> {
   const operationsDir = await createOperationsDirectory(outputDir);
 
@@ -32,12 +31,7 @@ export async function generateOperations(
   const serverUrls = extractServerUrls(doc);
 
   // Process all operations and write files
-  const operations = await processOperations(
-    doc,
-    operationsDir,
-    concurrency,
-    forceValidation,
-  );
+  const operations = await processOperations(doc, operationsDir, concurrency);
 
   // Write configuration file
   await writeConfigFile(authHeaders, serverUrls, operationsDir);
@@ -53,7 +47,6 @@ async function processOperations(
   doc: OpenAPIObject,
   operationsDir: string,
   concurrency: number,
-  forceValidation: boolean,
 ): Promise<OperationMetadata[]> {
   const operations = extractAllOperations(doc);
   const limit = pLimit(concurrency);
@@ -73,7 +66,6 @@ async function processOperations(
         operation,
         pathLevelParameters,
         doc,
-        forceValidation,
       );
 
       await writeOperationFile(
