@@ -206,75 +206,29 @@ const newPet = await client.createPet({
 
 ### Bound Operation Return Types & `forceValidation`
 
-When you call an operation directly (without binding via
-`configureOperations`), the returned Promise's success branch will include a
-conditional union whose shape depends on the internal generic
-`TForceValidation` and the runtime `config.forceValidation` flag. This raw form
-exposes both of these possibilities in the type system:
+When you call a generated operation directly (without binding via
+`configureOperations`), the returned Promise's success branch will either
+include a result with a parsed field or a parse() method, depending on the
+runtime `config.forceValidation` flag.
 
-```
+```ts
 ApiResponseWithParse<...> | ApiResponseWithForcedParse<...> | ApiResponseError | ...other documented statuses
 ```
 
-This means TypeScript may show a union where the success status variant either
-has a `.parse()` method (manual validation) or a `.parsed` field (automatic
-validation) until you further narrow.
+The client keeps the right return types when you bind operations with `configureOperations`:
 
-To improve developer experience, the generator rewrites return types when you
-bind operations with `configureOperations`:
-
-- If you bind with `forceValidation: false` (or omit it), **forced** variants
-  are removed, so success responses always expose a `.parse()` method after you
+- If you bind with `forceValidation: false` (or omit it),
+  success responses always expose a `.parse()` method after you
   narrow on `success === true` and a specific `status`.
 - If you bind with `forceValidation: true`, success responses expose a
   `.parsed` field (and no `.parse()` method) because validation is performed
-  automatically.
-
-This rewrite only affects the TypeScript surface for better ergonomics; runtime
-behavior is unchanged.
+  automatically during the request lifecycle.
 
 Examples:
 
 ```ts
-// Manual validation bound client (no forced variants present)
-const manual = configureOperations(
-  { getPetById },
-  { ...globalConfig, forceValidation: false },
-);
-const r1 = await manual.getPetById({ petId: "123" });
-if (r1.success === true && r1.status === 200) {
-  // r1 has .parse()
-  const outcome = r1.parse();
-  if ("parsed" in outcome) console.log(outcome.parsed.name);
-}
 
-// Automatic validation bound client
-const auto = configureOperations(
-  { getPetById },
-  { ...globalConfig, forceValidation: true },
-);
-const r2 = await auto.getPetById({ petId: "123" });
-if (r2.success === true && r2.status === 200) {
-  // r2 has .parsed (and no .parse())
-  if ("parsed" in r2.parsed) {
-    console.log(r2.parsed.parsed.name); // inner discriminated union from content type
-  }
-}
-
-// Direct call (unbound) – union includes both possibilities until narrowed further
-const direct = await getPetById({ petId: "123" });
-if (direct.success === true && direct.status === 200) {
-  if ("parse" in direct) {
-    const outcome = direct.parse();
-    if ("parsed" in outcome) console.log(outcome.parsed.name);
-  } else if ("parsed" in direct) {
-    if ("parsed" in direct.parsed) console.log(direct.parsed.parsed.name);
-  }
-}
 ```
-
-In summary: prefer binding for the best DX; direct calls surface the full
-conditional space for maximum static fidelity.
 
 ## Response Handling
 

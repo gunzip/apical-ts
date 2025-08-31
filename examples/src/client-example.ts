@@ -24,6 +24,7 @@ async function demonstrateClient() {
   );
   console.log("");
 
+  // Manual validation bound client
   // default configuration forceValidation=false
   const petsResponse = await findPetsByStatus({
     query: { status: "available" },
@@ -32,7 +33,21 @@ async function demonstrateClient() {
     petsResponse.parse();
   }
 
-  // overridden configuration forceValidation=true
+  // Manual validation bound client
+  // using configureOperation with forceValidation=false
+  const api2 = configureOperations(
+    { findPetsByStatus, getInventory, getPetById },
+    { ...localConfig, forceValidation: false },
+  );
+  const petsResponse4 = await api2.findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (petsResponse4.success === true && petsResponse4.status === 200) {
+    petsResponse4.parse();
+  }
+
+  // Automatic validation bound client
+  // overridden per op configuration forceValidation=true
   const petsResponse2 = await findPetsByStatus(
     {
       query: { status: "available" },
@@ -44,6 +59,7 @@ async function demonstrateClient() {
     petsResponse2.parsed;
   }
 
+  // Automatic validation bound client
   // with configureOperation and forceValidation=true
   const api = configureOperations(
     { findPetsByStatus, getInventory, getPetById },
@@ -55,18 +71,6 @@ async function demonstrateClient() {
   if (petsResponse3.success === true && petsResponse3.status === 200) {
     // bound automatic validation: .parsed available
     petsResponse3.parsed;
-  }
-
-  // with configureOperation and forceValidation=false
-  const api2 = configureOperations(
-    { findPetsByStatus, getInventory, getPetById },
-    { ...localConfig, forceValidation: false },
-  );
-  const petsResponse4 = await api2.findPetsByStatus({
-    query: { status: "available" },
-  });
-  if (petsResponse4.success === true && petsResponse4.status === 200) {
-    petsResponse4.parse();
   }
 }
 
