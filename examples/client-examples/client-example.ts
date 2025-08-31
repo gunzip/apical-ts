@@ -4,7 +4,6 @@
 import {
   configureOperations,
   globalConfig,
-  isParsed,
 } from "../generated/client/config.js";
 import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 import { getInventory } from "../generated/client/getInventory.js";
@@ -17,13 +16,6 @@ const localConfig = {
 };
 
 async function demonstrateClient() {
-  console.log("🔌 Starting client demonstration...");
-  console.log(
-    "📡 Configured to call local Express server at:",
-    localConfig.baseURL,
-  );
-  console.log("");
-
   // Manual validation bound client
   // default configuration forceValidation=false
   const petsResponse = await findPetsByStatus({

@@ -12,23 +12,6 @@ This example uses the [Swagger Petstore OpenAPI specification](https://raw.githu
 
 The example shows how to bridge the generated server wrappers with Express.js using an adapter pattern, and how to call the resulting API using the generated client.
 
-## Directory Structure
-
-```
-examples/
-├── openapi.yaml                    # OpenAPI specification (Swagger Petstore)
-├── generate-server-client.sh       # Script to generate server and client code
-├── src/
-│   ├── express-server-example.ts   # Express server using generated wrappers
-│   ├── express-adapter.ts          # Adapter for connecting wrappers to Express
-│   └── client-example.ts           # Client example calling the Express server
-├── generated/                      # Generated code (created by script)
-│   ├── schemas/                    # Zod schemas for data validation
-│   ├── server/                     # Server operation wrappers
-│   └── client/                     # Type-safe client functions
-└── README.md                       # This file
-```
-
 ## Prerequisites
 
 - Node.js 20.18.2+ (check your version with `node --version`)
@@ -66,7 +49,7 @@ Run the Express server that uses the generated server wrappers:
 
 ```bash
 # From the examples directory
-pnpx tsx src/express-server-example.ts
+pnpx tsx server-examples/express-server-example.ts
 ```
 
 The server will start on `http://localhost:3000` and display available endpoints:
@@ -86,7 +69,7 @@ In a new terminal, run the client example to test the API:
 
 ```bash
 # From the examples directory
-pnpx tsx src/client-example.ts
+pnpx tsx client-examples/client-example.ts
 ```
 
 This will demonstrate:
@@ -116,7 +99,7 @@ curl "http://localhost:3000/health"
 
 ## Key Components Explained
 
-### 1. Express Adapter (`src/express-adapter.ts`)
+### 1. Express Adapter (`server-examples/express-adapter.ts`)
 
 The adapter module provides utilities to bridge generated server wrappers with Express:
 
@@ -132,7 +115,7 @@ const result = await wrappedHandler(params);
 sendWrapperResponse(res, result);
 ```
 
-### 2. Server Implementation (`src/express-server-example.ts`)
+### 2. Server Implementation (`server-examples/express-server-example.ts`)
 
 Shows two approaches for setting up routes:
 
@@ -171,9 +154,9 @@ Generated server wrappers expect handlers that follow this pattern:
 
 ```typescript
 const handler: getPetByIdHandler = async (params) => {
-  if (params.kind !== "ok") {
+  if (!params.success) {
     // Handle validation errors
-    return { status: 400, contentType: "", data: void 0 };
+    return { status: 400 };
   }
 
   // Access validated parameters
@@ -183,7 +166,7 @@ const handler: getPetByIdHandler = async (params) => {
   const pet = findPetById(petId);
 
   if (!pet) {
-    return { status: 404, contentType: "", data: void 0 };
+    return { status: 404 };
   }
 
   return {
@@ -194,7 +177,7 @@ const handler: getPetByIdHandler = async (params) => {
 };
 ```
 
-### 5. Client Usage (`src/client-example.ts`)
+### 5. Client Usage (`client-examples/client-example.ts`)
 
 The generated client provides type-safe functions with built-in validation:
 
@@ -211,14 +194,14 @@ const response = await findPetsByStatus(
   localConfig,
 );
 
-if (response.status === 200) {
-  const parsed = response.parse();
-  if ("parsed" in parsed) {
-    console.log("Pets:", parsed.parsed);
-  } else if (parsed.kind === "parse-error") {
-    console.error("Validation failed:", parsed.error);
+if (response.success && response.status === 200) {
+  const data = response.parse();
+  if (isParsed(data)) {
+    console.log("Pets:", data.parsed);
+  } else if (data.kind === "parse-error") {
+    console.error("Validation failed:", data.error);
   }
-} else if ("kind" in response) {
+} else {
   console.error("Operation failed:", response.kind, response.error);
 }
 ```
@@ -295,34 +278,6 @@ const handler: operationHandler = async (params) => {
 };
 ```
 
-### Integration with Database
-
-```typescript
-const getPetByIdHandler: getPetByIdHandler = async (params) => {
-  if (params.kind !== "ok") {
-    return { status: 400, contentType: "", data: void 0 };
-  }
-
-  const { petId } = params.value.path;
-
-  try {
-    const pet = await database.pets.findById(petId);
-    if (!pet) {
-      return { status: 404, contentType: "", data: void 0 };
-    }
-
-    return {
-      status: 200,
-      contentType: "application/json",
-      data: pet,
-    };
-  } catch (error) {
-    console.error("Database error:", error);
-    return { status: 500, contentType: "", data: void 0 };
-  }
-};
-```
-
 ## Troubleshooting
 
 ### Generation Issues
@@ -336,22 +291,3 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
 - **Module not found**: Ensure generated code exists by running the generation script
 - **Type errors**: Regenerate code after OpenAPI specification changes
 - **Connection refused**: Make sure the Express server is running before running the client
-
-### Common Patterns
-
-**Converting Express paths to OpenAPI paths:**
-
-```typescript
-const expressPath = routeInfo.path.replace(/{([^}]+)}/g, ":$1");
-// "/pet/{petId}" becomes "/pet/:petId"
-```
-
-**Handling optional parameters:**
-
-```typescript
-if (status !== undefined) {
-  url.searchParams.append("status", String(status));
-}
-```
-
-This example provides a complete, production-ready pattern for integrating OpenAPI specifications with Express.js using generated TypeScript code.

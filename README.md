@@ -227,7 +227,7 @@ The client keeps the right return types when you bind operations with `configure
 Examples:
 
 ```ts
-
+// src/examples/src/client-example.ts
 ```
 
 ## Response Handling

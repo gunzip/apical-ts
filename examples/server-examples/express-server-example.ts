@@ -18,7 +18,7 @@ import {
 import {
   createExpressAdapter,
   extractRequestParams,
-} from "./express-adapter.js";
+} from "../src/express-adapter.js";
 
 const app = express();
 const PORT = 3000;
@@ -63,7 +63,7 @@ const mockInventory = {
 
 /* Implementation of findPetsByStatus handler */
 const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
-  if (params.kind !== "ok") {
+  if (!params.success) {
     /* Handle validation errors */
     console.error("Validation error in findPetsByStatus:", params);
     return {
@@ -86,7 +86,7 @@ const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
 
 /* Implementation of getPetById handler */
 const getPetByIdHandler: getPetByIdHandler = async (params) => {
-  if (params.kind !== "ok") {
+  if (!params.success) {
     /* Handle validation errors */
     console.error("Validation error in getPetById:", params);
     return {
@@ -117,7 +117,7 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
 /* We disable type checking to allow emitting an unexpected response */
 /* @ts-ignore */
 const getInventoryHandler: getInventoryHandler = async (params) => {
-  if (params.kind !== "ok") {
+  if (!params.success) {
     /* Handle validation errors */
     console.error("Validation error in getInventory:", params);
     return {
@@ -147,7 +147,7 @@ app.get("/pet/findByStatus", async (req, res) => {
       res.status(result.status).type(result.contentType).send(result.data);
       break;
     case 400:
-      res.status(result.status).send(result.data);
+      res.status(result.status);
       break;
   }
 });
