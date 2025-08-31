@@ -88,14 +88,9 @@ export function generateResponseHandlers(
   typeImports: Set<string>,
   hasResponseContentTypeMap = false,
   responseMapName?: string,
-  /* Deprecated: previously toggled global forced validation during generation.
-   * Now always generate conditional logic so caller can choose at runtime.
-   * The parameter is accepted for backward compatibility but ignored. */
-  _forceValidationIgnored = false,
 ): ResponseHandlerResult {
   /* Analyze the response structure */
   const analysis = analyzeResponseStructure({
-    forceValidation: false,
     hasResponseContentTypeMap,
     operation,
     typeImports,
@@ -105,7 +100,6 @@ export function generateResponseHandlers(
   const responseHandlers = renderResponseHandlers(
     analysis.responses,
     responseMapName,
-    false,
   );
 
   /* Generate return type using templates */
