@@ -119,6 +119,16 @@ const response = await client.testCustomTokenHeader({
     "custom-token": "test-token-value",
   },
 });
+
+// Enable automatic response validation (force validation) dynamically:
+const responseWithForcedValidation = await client.testDeserialization(
+  {},
+  {
+    ...globalConfig,
+    forceValidation: true,
+  },
+);
+// When forceValidation=true parsed result is included automatically.
 ```
 
 ### 3. Response Structure

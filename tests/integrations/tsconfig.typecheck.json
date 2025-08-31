@@ -9,5 +9,5 @@
     // Ensure strictness mirrors project settings
     "strict": true
   },
-  "include": ["generated/**/*.ts", "generated-force-validation/**/*.ts"]
+  "include": ["generated/**/*.ts"]
 }
