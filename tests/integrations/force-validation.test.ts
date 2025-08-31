@@ -3,9 +3,8 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 /*
- * Integration test for --force-validation CLI flag
- * Tests that the generated code has the correct structure and behavior differences
- * when force-validation is enabled vs disabled
+ * Integration test for runtime forceValidation behavior
+ * Ensures generated code contains both manual and automatic validation code paths
  */
 
 describe("Dynamic Force Validation Integration Test", () => {

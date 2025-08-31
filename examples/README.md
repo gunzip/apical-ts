@@ -252,7 +252,7 @@ Each operation generates:
 ## Benefits of This Approach
 
 1. **Type Safety**: Full TypeScript coverage from API definition to implementation
-2. **Runtime Validation**: Opt‑in or automatic validation of responses via `parse()` / `--force-validation`
+2. **Runtime Validation**: Opt‑in (`parse()` method) or automatic (`forceValidation: true` in config) response validation
 3. **Error Handling**: Structured, non‑throwing error objects with discriminated unions
 4. **Framework Agnostic**: Server wrappers can work with any Node.js framework
 5. **Consistent APIs**: Generated client matches server implementation exactly
