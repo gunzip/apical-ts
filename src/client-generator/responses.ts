@@ -102,7 +102,6 @@ export function generateResponseHandlers(
   const responseHandlers = renderResponseHandlers(
     analysis.responses,
     responseMapName,
-    forceValidation,
   );
 
   /* Generate return type using templates */
