@@ -22,7 +22,7 @@ export const DEFAULT_CONTENT_TYPE_HANDLERS: ContentTypeHandlerConfig = {
   },
   "application/x-www-form-urlencoded": {
     bodyProcessing:
-      "body ? new URLSearchParams(body as Record<string, string>).toString() : undefined",
+      "body ? formUrlEncode(body, { arrayFormat: 'repeat' }) : undefined",
     contentTypeHeader: '"Content-Type": "application/x-www-form-urlencoded"',
     requiresFormData: false,
   },

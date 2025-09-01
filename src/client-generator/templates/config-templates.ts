@@ -418,5 +418,49 @@ export function isParsed<
 >(value: T): value is Extract<T, { parsed: unknown }> {
   return !!value && "parsed" in (value as Record<string, unknown>);
 }
+/*
+ * Serialize a complex object into application/x-www-form-urlencoded form using
+ * URLSearchParams. Arrays are represented by repeating the key for each value
+ * (e.g. key=a&key=b). Objects are JSON-stringified as a safe fallback.
+ */
+export type ArrayFormat = "repeat" | "brackets";
+
+export interface FormUrlEncodeOptions {
+  arrayFormat?: ArrayFormat;
+}
+
+export function formUrlEncode(
+  input: unknown,
+  options: FormUrlEncodeOptions = {},
+): string {
+  const { arrayFormat = "repeat" } = options; // 'repeat' by default
+  const params = new URLSearchParams();
+
+  if (!input || typeof input !== "object") {
+    return params.toString();
+  }
+
+  const obj = input as Record<string, unknown>;
+
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined || v === null) {
+      continue;
+    }
+
+    if (Array.isArray(v)) {
+      const arrayKey = arrayFormat === "brackets" ? ${"`${k}[]`"} : k;
+      for (const item of v) {
+        if (item !== undefined && item !== null) {
+          params.append(arrayKey, String(item));
+        }
+      }
+    } else if (typeof v === "object") {
+      params.append(k, JSON.stringify(v));
+    } else {
+      params.append(k, String(v));
+    }
+  }
+  return params.toString();
+}
 `;
 }

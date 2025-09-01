@@ -50,6 +50,11 @@ export function buildOperationImports(
     configImports.push("ApiResponseWithForcedParse");
   }
 
+  /* Add formUrlEncode helper import when operation body handling uses urlencoded serialization */
+  if (functionCode && functionCode.includes("formUrlEncode(")) {
+    configImports.push("formUrlEncode");
+  }
+
   const imports = [
     `import { ${configImports.join(", ")} } from './config.js';`,
   ];
