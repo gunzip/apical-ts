@@ -5,12 +5,12 @@ import { renderConfigInterface } from "../../src/client-generator/templates/conf
 import type { OperationObject } from "openapi3-ts/oas31";
 
 /*
- * Tests for the deserializerMap refactoring
- * Verifies that the GlobalConfig includes deserializerMap and parse methods use config.deserializerMap as fallback
+ * Tests for the deserializers refactoring
+ * Verifies that the GlobalConfig includes deserializers and parse methods use config.deserializers as fallback
  */
 
 describe("DeserializerMap Refactoring", () => {
-  it("should include deserializerMap in GlobalConfig interface", () => {
+  it("should include deserializers in GlobalConfig interface", () => {
     const configStructure = {
       auth: {
         hasAuthHeaders: true,
@@ -24,11 +24,11 @@ describe("DeserializerMap Refactoring", () => {
 
     const result = renderConfigInterface(configStructure);
 
-    expect(result).toContain("deserializerMap?: DeserializerMap;");
+    expect(result).toContain("deserializers?: DeserializerMap;");
     expect(result).toContain("export interface GlobalConfig");
   });
 
-  it("should generate parse methods that use config.deserializerMap as fallback", () => {
+  it("should generate parse methods that use config.deserializers as fallback", () => {
     const operation: OperationObject = {
       operationId: "testOperation",
       responses: {
@@ -58,14 +58,14 @@ describe("DeserializerMap Refactoring", () => {
       "TestOperationResponseMap",
     );
 
-    /* Verify parse method uses only config.deserializerMap */
-    expect(result.responseHandlers[0]).toContain("config.deserializerMap");
+    /* Verify parse method uses only config.deserializers */
+    expect(result.responseHandlers[0]).toContain("config.deserializers");
     expect(result.responseHandlers[0]).toContain("parse: ()");
     expect(result.responseHandlers[0]).not.toContain(
-      "deserializerMap || config.deserializerMap",
+      "deserializers || config.deserializers",
     );
     expect(result.responseHandlers[0]).not.toContain(
-      "parse: (deserializerMap?:",
+      "parse: (deserializers?:",
     );
   });
 
@@ -108,7 +108,7 @@ describe("DeserializerMap Refactoring", () => {
     );
   });
 
-  it("should use only config.deserializerMap without explicit parameter", () => {
+  it("should use only config.deserializers without explicit parameter", () => {
     const operation: OperationObject = {
       operationId: "backCompatTest",
       responses: {
@@ -139,13 +139,13 @@ describe("DeserializerMap Refactoring", () => {
     /* Parse method should take no parameters */
     expect(result.responseHandlers[0]).toContain("parse: ()");
     expect(result.responseHandlers[0]).not.toContain(
-      "parse: (deserializerMap?:",
+      "parse: (deserializers?:",
     );
 
-    /* Should use only config.deserializerMap */
-    expect(result.responseHandlers[0]).toContain("config.deserializerMap");
+    /* Should use only config.deserializers */
+    expect(result.responseHandlers[0]).toContain("config.deserializers");
     expect(result.responseHandlers[0]).not.toContain(
-      "deserializerMap || config.deserializerMap",
+      "deserializers || config.deserializers",
     );
   });
 });

@@ -203,7 +203,7 @@ export function renderOperationFunction(
 ): string {
   /* Use narrowed config type if we have a response map type name */
   const baseConfigType = config.responseMapTypeName
-    ? `GlobalConfig & { deserializerMap?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
+    ? `GlobalConfig & { deserializers?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
     : "GlobalConfig";
 
   /* forceValidation typing now handled exclusively by configureOperations overload discrimination */
