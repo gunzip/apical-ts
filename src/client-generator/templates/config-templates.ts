@@ -195,6 +195,8 @@ export function renderConfigSupport(): string {
   return [
     renderApiResponseTypes(),
     "",
+    renderRequestBodyType(),
+    "",
     renderUtilityFunctions(),
     "",
     renderOperationUtilities(),
@@ -284,6 +286,12 @@ export function configureOperations<TOperations extends Record<string, Operation
   /* Cast through satisfies to keep key mapping precise while avoiding any */
   return bound as { [K in keyof TOperations]: BoundOperation<TOperations[K], boolean> };
 }`;
+}
+
+/* Render RequestBody alias used across generated clients */
+export function renderRequestBodyType(): string {
+  return `/* Common request body union for generated clients */
+export type RequestBody = string | Blob | ArrayBuffer | FormData | undefined;`;
 }
 
 /*

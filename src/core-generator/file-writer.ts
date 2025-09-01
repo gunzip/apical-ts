@@ -55,6 +55,11 @@ export function buildOperationImports(
     configImports.push("formUrlEncode");
   }
 
+  /* RequestBody alias used by generated operation body typing */
+  if (functionCode && functionCode.includes("RequestBody")) {
+    configImports.push("RequestBody");
+  }
+
   const imports = [
     `import { ${configImports.join(", ")} } from './config.js';`,
   ];

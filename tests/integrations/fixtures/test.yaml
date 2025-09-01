@@ -159,6 +159,19 @@ paths:
       responses:
         "200":
           description: "File uploaded"
+  /test-octet-upload:
+    post:
+      operationId: testOctetStreamUpload
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: "Octet stream uploaded"
   /test-binary-file-download:
     get:
       operationId: testBinaryFileDownload

@@ -9,6 +9,18 @@ import {
   renderLegacyRequestBodyHandling,
 } from "../../src/client-generator/templates/request-body-templates.js";
 
+describe("request-body templates", () => {
+  it("renders a switch that uses RequestBody and includes octet-stream", () => {
+    const code = renderContentTypeSwitch([
+      "application/octet-stream",
+      "application/json",
+    ]);
+    expect(code).toMatch(/let bodyContent: RequestBody/);
+    expect(code).toMatch(/case "application\/octet-stream"/);
+    expect(code).toMatch(/Content-Type\": \"application\/octet-stream\"/);
+  });
+});
+
 describe("Request Body Template Functions", () => {
   describe("renderBodyHandling", () => {
     it("should render body handling with default indentation", () => {
@@ -182,9 +194,7 @@ describe("Request Body Template Functions", () => {
     it("should generate proper variable declarations", () => {
       const result = renderDynamicBodyHandling(["application/json"]);
 
-      expect(result).toContain(
-        "let bodyContent: string | FormData | undefined = ",
-      );
+      expect(result).toContain("let bodyContent: RequestBody = ");
       expect(result).toContain("let contentTypeHeader = {}");
     });
   });
@@ -226,9 +236,7 @@ describe("Request Body Template Functions", () => {
       const contentTypes = ["application/json", "text/plain"];
       const result = renderContentTypeSwitch(contentTypes);
 
-      expect(result).toContain(
-        'let bodyContent: string | FormData | undefined = "";',
-      );
+      expect(result).toContain('let bodyContent: RequestBody = "";');
       expect(result).toContain("let contentTypeHeader = {};");
       expect(result).toContain("switch (finalRequestContentType) {");
       expect(result).toContain('case "application/json":');
@@ -258,9 +266,7 @@ describe("Request Body Template Functions", () => {
     it("should handle empty content types array", () => {
       const result = renderContentTypeSwitch([]);
 
-      expect(result).toContain(
-        'let bodyContent: string | FormData | undefined = "";',
-      );
+      expect(result).toContain('let bodyContent: RequestBody = "";');
       expect(result).toContain("let contentTypeHeader = {};");
       expect(result).toContain("switch (finalRequestContentType) {");
       expect(result).toContain("default:");

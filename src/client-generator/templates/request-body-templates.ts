@@ -114,7 +114,7 @@ export function renderContentTypeSwitch(requestContentTypes: string[]): string {
       bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
       contentTypeHeader = { "Content-Type": finalRequestContentType };`;
 
-  return `  let bodyContent: string | FormData | undefined = "";
+  return `  let bodyContent: RequestBody = "";
   let contentTypeHeader = {};
 
   switch (finalRequestContentType) {
@@ -157,7 +157,7 @@ export function renderDynamicBodyHandling(
       bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
       contentTypeHeader = { "Content-Type": finalRequestContentType };`;
 
-  return `  let bodyContent: string | FormData | undefined = "";
+  return `  let bodyContent: RequestBody = "";
   let contentTypeHeader = {};
 
   switch (finalRequestContentType) {

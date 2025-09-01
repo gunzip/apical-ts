@@ -254,6 +254,7 @@ function extractRequestSchemas(
       "application/json",
       "multipart/form-data",
       "application/x-www-form-urlencoded",
+      "application/octet-stream",
     ];
 
     assert(operation.operationId, "Operation ID is missing");

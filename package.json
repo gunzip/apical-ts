@@ -25,6 +25,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "typecheck:examples": "tsc -p examples/tsconfig.examples.json",
+    "typecheck:tests": "vitest run tests/integrations/typecheck.test.ts",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
     "start": "node dist/index.js",
