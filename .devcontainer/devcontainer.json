@@ -9,11 +9,10 @@
       "nvmInstallPath": "/opt/nvm"
     }
   },
-  "postStartCommand": {
-    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
-  },
+  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && mkdir -p /tmp/.pnpm-store && cd ${containerWorkspaceFolder} && pnpm install",
   "containerEnv": {
-    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
+    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+    "PNPM_STORE_PATH": "/tmp/.pnpm-store"
   },
   "customizations": {
     "vscode": {
