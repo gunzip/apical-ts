@@ -932,50 +932,45 @@ and customize error handling as needed.
 Example usage with Express and a helper for parameter extraction:
 
 ```ts
-import express from "express";
-import { testAuthBearerWrapper } from "./generated/server/testAuthBearer.js";
-import { extractRequestParams } from "./test-helpers.js";
+// examples/server-examples/express-server-example.ts#L62-L91
 
-const app = express();
-app.use(express.json());
-
-const wrappedHandler = testAuthBearerWrapper(async (params) => {
-  if (params.success) {
-    // Here you can access validated and typed parameters
-    const { query, path, headers, body } = params.value;
-    // ...
-    doSomethingWithParams(query.someParam);
-    // Here you can return a typed response
+/* Implementation of getPetById handler */
+const getPetByIdHandler: getPetByIdHandler = async (params) => {
+  if (!params.success) {
+    /* Handle validation errors */
+    console.error("Validation error in getPetById:", params);
     return {
-      status: 200,
-      contentType: "application/json",
-      data: { message: "Success" },
+      status: 400,
     };
   }
-  // Handle validation errors or other cases
+
+  const { petId } = params.value.path;
+  console.log(`Getting pet by ID: ${petId}`);
+
+  /* Find pet by ID */
+  const pet = mockPets.find((p) => p.id === petId);
+
+  if (!pet) {
+    return {
+      status: 404,
+    };
+  }
+
   return {
-    status: 400,
+    status: 200,
     contentType: "application/json",
-    data: { error: "Validation failed" },
+    data: pet,
   };
-});
-
-app.get("/test-auth-bearer", async (req, res) => {
-  const result = await wrappedHandler(extractRequestParams(req));
-  // Now result contains the status, contentType, and data
-  res.status(result.status).type(result.contentType).send(result.data);
-});
-
-app.listen(3000);
+};
+/* Setup routes using the helper function */
+createExpressAdapter(getPetByIdRoute(), getPetByIdHandler)(app);
 ```
 
-- The wrapper receives a single params object (containing query, path, headers,
-  body, etc.)
-- You can use a helper like `extractRequestParams` to transform Express request
-  data into the expected format
-- The handler receives validated and typed parameters, or error details if
-  validation fails
+- The wrapper receives a single params object containing validated query, path,
+  headers, body, etc. or error details if validation fails
 - You control the HTTP response based on the wrapper's result
+- All responses are type checked: you cannot return a response shape which is
+  not valid according to the OpenAPI schema.
 
 See [./examples](./examples) directory for more usage examples.
 
