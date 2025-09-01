@@ -251,53 +251,53 @@ import { getInventory } from "../generated/client/getInventory.js";
 import { getPetById } from "../generated/client/getPetById.js";
 
 async function demonstrateClient() {
-  // Manual validation bound operation
-  // default configuration has forceValidation=false
-  const petsResponse = await findPetsByStatus({
+  // Manual validation bound client
+  // default configuration forceValidation=false
+  const lazyPetsResponse = await findPetsByStatus({
     query: { status: "available" },
   });
-  if (petsResponse.success === true && petsResponse.status === 200) {
-    petsResponse.parse();
+  if (lazyPetsResponse.success === true && lazyPetsResponse.status === 200) {
+    lazyPetsResponse.parse();
   }
 
   // Manual validation bound client
   // using configureOperation with forceValidation=false
-  const api2 = configureOperations(
+  const lazyClient = configureOperations(
     { findPetsByStatus, getInventory, getPetById },
     { ...globalConfig, forceValidation: false },
   );
-  const petsResponse4 = await api2.findPetsByStatus({
+  const petsResponse1 = await lazyClient.findPetsByStatus({
     query: { status: "available" },
   });
-  if (petsResponse4.success === true && petsResponse4.status === 200) {
-    petsResponse4.parse();
+  if (petsResponse1.success === true && petsResponse1.status === 200) {
+    petsResponse1.parse();
   }
 
-  // Automatic validation bound operation
+  // Automatic validation bound client
   // overridden per op configuration forceValidation=true
-  const petsResponse2 = await findPetsByStatus(
+  const greedyPetResponse = await findPetsByStatus(
     {
       query: { status: "available" },
     },
     { ...globalConfig, forceValidation: true },
   );
-  if (petsResponse2.success === true && petsResponse2.status === 200) {
+  if (greedyPetResponse.success === true && greedyPetResponse.status === 200) {
     // automatic validation: .parsed available
-    petsResponse2.parsed;
+    greedyPetResponse.parsed;
   }
 
   // Automatic validation bound client
   // with configureOperation and forceValidation=true
-  const api = configureOperations(
+  const greedyClient = configureOperations(
     { findPetsByStatus, getInventory, getPetById },
     { ...globalConfig, forceValidation: true },
   );
-  const petsResponse3 = await api.findPetsByStatus({
+  const petsResponse2 = await greedyClient.findPetsByStatus({
     query: { status: "available" },
   });
-  if (petsResponse3.success === true && petsResponse3.status === 200) {
+  if (petsResponse2.success === true && petsResponse2.status === 200) {
     // bound automatic validation: .parsed available
-    petsResponse3.parsed;
+    petsResponse2.parsed;
   }
 }
 
@@ -483,7 +483,7 @@ const result = await downloadFile(
   {
     // You can provide custom deserializers for specific operations
     // or even in the global configuration
-    deserializerMap: {
+    deserializers: {
       ...globalConfig,
       "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
     },
@@ -628,7 +628,7 @@ const res = await testMultiContentTypes(
   {
     ...globalConfig,
     // this can be merged into the global config object as well
-    deserializerMap: {
+    deserializers: {
       "application/xml": (raw: unknown) => customXmlToJson(raw as string),
       "application/octet-stream": (blob: unknown) => ({
         size: (blob as Blob).size,
@@ -653,7 +653,7 @@ if (res.success && res.status === 200) {
 
 ### Deserializer Map
 
-The `deserializerMap` is a property of the config object that maps content types
+The `deserializers` is a property of the config object that maps content types
 to deserializer functions:
 
 ```ts
@@ -691,7 +691,7 @@ Notes:
 
 ```ts
 const outcome = res.parse();
-// Uses deserializerMap from config:
+// Uses deserializers from config:
 // {
 //   "application/xml": (xml: unknown) => fastXmlParser.parse(xml as string),
 // }
@@ -701,7 +701,7 @@ const outcome = res.parse();
 
 ```ts
 const outcome = res.parse();
-// Uses deserializerMap from config:
+// Uses deserializers from config:
 // {
 //   "application/octet-stream": (b: unknown) => ({ size: (b as Blob).size }),
 // }
@@ -711,7 +711,7 @@ const outcome = res.parse();
 
 ```ts
 const outcome = res.parse();
-// Uses deserializerMap from config:
+// Uses deserializers from config:
 // {
 //   "application/vnd.custom+json": (data: any) => ({
 //     ...data,
@@ -820,7 +820,7 @@ const result = await getPetById(
   },
   {
     ...globalConfig,
-    deserializerMap: {
+    deserializers: {
       "application/xml": myXmlDeserializer,
     },
   },

@@ -15,7 +15,7 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
       /* Should contain the function with proper overloads */
       expect(result).toContain("parseApiResponseUnknownData");
 
-      /* Should have overload without deserializerMap */
+      /* Should have overload without deserializers */
       expect(result).toContain("export function parseApiResponseUnknownData<");
 
       /* Should contain the discriminated union return types */
@@ -27,7 +27,7 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
       expect(result).toContain("z.infer<TSchemaMap[K]>");
     });
 
-    it("should include proper overloads for with/without deserializerMap", () => {
+    it("should include proper overloads for with/without deserializers", () => {
       const result = renderUtilityFunctions();
 
       /* Should have two overloads */
@@ -63,7 +63,7 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
       expect(utilityCode).toContain('kind: "parse-error"');
     });
 
-    it("should handle deserialization errors when deserializerMap provided", () => {
+    it("should handle deserialization errors when deserializers provided", () => {
       const utilityCode = renderUtilityFunctions();
       expect(utilityCode).toContain('kind: "deserialization-error"');
     });

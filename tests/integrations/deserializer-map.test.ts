@@ -3,38 +3,38 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 /*
- * Integration test for deserializerMap refactoring.
- * Tests that the generated code works correctly with the new deserializerMap functionality.
+ * Integration test for deserializers refactoring.
+ * Tests that the generated code works correctly with the new deserializers functionality.
  * Uses the client already generated in integration test setup.
  */
 
 describe("DeserializerMap Integration Test", () => {
   const generatedDir = "tests/integrations/generated";
 
-  it("should generate GlobalConfig with deserializerMap property", () => {
+  it("should generate GlobalConfig with deserializers property", () => {
     const configPath = join(generatedDir, "client/config.ts");
     const configContent = readFileSync(configPath, "utf-8");
 
     expect(configContent).toContain("export interface GlobalConfig");
-    expect(configContent).toContain("deserializerMap?: DeserializerMap;");
+    expect(configContent).toContain("deserializers?: DeserializerMap;");
   });
 
-  it("should generate operation with parse method that uses only config.deserializerMap", () => {
+  it("should generate operation with parse method that uses only config.deserializers", () => {
     const operationPath = join(generatedDir, "client/testAuthBearerHttp.ts");
     const operationContent = readFileSync(operationPath, "utf-8");
 
     /* Verify parse method takes no arguments */
     expect(operationContent).toContain("parse: ()");
 
-    /* Verify parse method uses config.deserializerMap directly */
-    expect(operationContent).toContain("config.deserializerMap");
+    /* Verify parse method uses config.deserializers directly */
+    expect(operationContent).toContain("config.deserializers");
 
-    /* Should not have deserializerMap parameter */
-    expect(operationContent).not.toContain("parse: (deserializerMap?:");
+    /* Should not have deserializers parameter */
+    expect(operationContent).not.toContain("parse: (deserializers?:");
 
     /* Should not have the old fallback syntax */
     expect(operationContent).not.toContain(
-      "deserializerMap || config.deserializerMap",
+      "deserializers || config.deserializers",
     );
   });
 

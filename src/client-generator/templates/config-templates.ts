@@ -183,7 +183,7 @@ export interface GlobalConfig {
   headers: {
     [K in ${auth.hasAuthHeaders ? `AuthHeaders` : "string"}]?: string;
   } & Record<string, string>;
-  deserializerMap?: DeserializerMap;
+  deserializers?: DeserializerMap;
   forceValidation?: boolean;
 }`;
 }
@@ -333,7 +333,7 @@ export function getResponseContentType(response: MinimalResponse): string {
 export type Deserializer = (data: unknown, contentType?: string) => unknown;
 export type DeserializerMap = Record<string, Deserializer>;
 
-/* Overload without deserializerMap */
+/* Overload without deserializers */
 export function parseApiResponseUnknownData<
   TSchemaMap extends Record<string, { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }>
 >(
@@ -347,14 +347,14 @@ export function parseApiResponseUnknownData<
   | { kind: "deserialization-error"; error: unknown }
 );
 
-/* Overload with deserializerMap */
+/* Overload with deserializers */
 export function parseApiResponseUnknownData<
   TSchemaMap extends Record<string, { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }>
 >(
   response: MinimalResponse,
   data: unknown,
   schemaMap: TSchemaMap,
-  deserializerMap: DeserializerMap,
+  deserializers: DeserializerMap,
 ): (
   | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
   | { kind: "parse-error"; error: z.ZodError }
@@ -372,7 +372,7 @@ export function parseApiResponseUnknownData<
   response: MinimalResponse,
   data: unknown,
   schemaMap: TSchemaMap,
-  deserializerMap?: DeserializerMap,
+  deserializers?: DeserializerMap,
 ) {
   const contentType = getResponseContentType(response);
 
@@ -380,9 +380,9 @@ export function parseApiResponseUnknownData<
   let deserializedData = data;
   let deserializationError: unknown = undefined;
 
-  if (deserializerMap && deserializerMap[contentType]) {
+  if (deserializers && deserializers[contentType]) {
     try {
-      deserializedData = deserializerMap[contentType](data, contentType);
+      deserializedData = deserializers[contentType](data, contentType);
     } catch (error) {
       deserializationError = error;
     }

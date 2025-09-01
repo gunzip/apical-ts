@@ -39,7 +39,7 @@ describe("unknown response mode", () => {
         "parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap",
       );
       expect(result.responseHandlers[0]).toContain(
-        "config.deserializerMap ?? {}",
+        "config.deserializers ?? {}",
       );
 
       /* Verify unknown parsing is used */
@@ -112,7 +112,7 @@ describe("unknown response mode", () => {
         "parseApiResponseUnknownData(minimalResponse, data, GetPetResponseMap",
       );
       expect(result.responseHandlers[0]).toContain(
-        "config.deserializerMap ?? {}",
+        "config.deserializers ?? {}",
       );
     });
   });

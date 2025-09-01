@@ -1,6 +1,6 @@
 {
   "name": "yanogen-ts",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Generates fully-typed Zod v4 schemas and type-safe TypeScript REST API clients and server from OpenAPI 2.0, 3.0.x, and 3.1.x specifications.",
   "main": "dist/index.js",
   "type": "module",

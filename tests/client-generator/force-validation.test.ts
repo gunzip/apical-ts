@@ -51,7 +51,7 @@ describe("force validation flag", () => {
         "parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap",
       );
       expect(result.responseHandlers[0]).toContain(
-        "config.deserializerMap ?? {}",
+        "config.deserializers ?? {}",
       );
 
       /* Verify return type uses conditional types */
