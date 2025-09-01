@@ -35,7 +35,10 @@ Curious why you should choose this generator over others? See
 
 ![Demo of OpenAPI TypeScript Generator](./demo.gif)
 
+## Table of Contents <!-- omit in toc -->
+
 - [YanoGen-Ts - Yet Another OpenAPI to TypeScript Generator](#yanogen-ts---yet-another-openapi-to-typescript-generator)
+  - [Why another generator?](#why-another-generator)
   - [CLI Usage](#cli-usage)
     - [Watch mode](#watch-mode)
     - [CLI Options](#cli-options)
@@ -43,18 +46,25 @@ Curious why you should choose this generator over others? See
   - [Programmatic Usage](#programmatic-usage)
   - [Generated Architecture](#generated-architecture)
 - [Client Generation](#client-generation)
-  - [Using the Generated Operations](#using-the-generated-operations)
-    - [Define Configuration](#define-configuration)
-    - [Call Operations](#call-operations)
+  - [Define Configuration](#define-configuration)
+  - [Call Operations](#call-operations)
   - [Binding Configuration to Operations](#binding-configuration-to-operations)
   - [Response Handling](#response-handling)
   - [Error Handling](#error-handling)
-  - [Runtime Response Validation (Opt-In)](#runtime-response-validation-opt-in)
-  - [Why is Runtime Validation Opt-In?](#why-is-runtime-validation-opt-in)
+    - [Error Types](#error-types)
+    - [Error Handling Patterns](#error-handling-patterns)
+    - [Error Context](#error-context)
+  - [Response Payload Validation](#response-payload-validation)
+    - [Manual Runtime Validation](#manual-runtime-validation)
+    - [Automatic Runtime Validation](#automatic-runtime-validation)
+    - [Why is Runtime Validation Opt-In?](#why-is-runtime-validation-opt-in)
+    - [When to Enable Automatic Validation](#when-to-enable-automatic-validation)
+    - [When to Use Manual Validation](#when-to-use-manual-validation)
   - [Custom Response Deserialization](#custom-response-deserialization)
-    - [Why use `parse()`?](#why-use-parse)
+    - [Why use Deserializers?](#why-use-deserializers)
+    - [Example of Custom Deserializers](#example-of-custom-deserializers)
     - [Basic Usage](#basic-usage)
-    - [Deserializers](#deserializers)
+    - [Configuring Deserializers](#configuring-deserializers)
     - [Returned Object Shapes](#returned-object-shapes)
     - [Common Patterns](#common-patterns)
     - [Error Handling Summary](#error-handling-summary)
@@ -137,9 +147,7 @@ The generator creates:
 
 # Client Generation
 
-## Using the Generated Operations
-
-### Define Configuration
+## Define Configuration
 
 ```ts
 import { getPetById, createPet } from "./generated/client/index.js";
@@ -164,7 +172,7 @@ const apiConfig = {
 };
 ```
 
-### Call Operations
+## Call Operations
 
 ```ts
 // Simple operation call
@@ -217,92 +225,6 @@ const newPet = await client.createPet({
 
 You can still override the configuration for individual operations, passing it
 as the second argument.
-
-### Lazy Validation vs Automatic Validation
-
-When you call a generated operation that has a response body defined within the
-OpenAPI specification for some status codes, the returned Promise resolves to a
-result object that provides either a `.parsed` field or a `.parse()` method,
-depending on the value of the `config.forceValidation` flag. You can set this
-flag in the configuration passed to an individual operation or globally using
-`configureOperations`.
-
-- If you bind with `forceValidation: false` (or omit it), success responses
-  always expose a `.parse()` method after you narrow on `success === true` and a
-  specific `status`. You have to handle parsing errors manually in this case.
-- If you bind with `forceValidation: true`, success responses expose a `.parsed`
-  field (and no `.parse()` method) because validation is performed automatically
-  during the request lifecycle. In case of parsing errors, the returned result
-  will include a `ZodError` instance instead of the `parsed` field.
-
-Don't worry if it seems confusing at first, type inference will help you.
-
-Examples:
-
-```ts
-// examples/client-examples/force-validation.ts
-
-import {
-  configureOperations,
-  globalConfig,
-} from "../generated/client/config.js";
-import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
-import { getInventory } from "../generated/client/getInventory.js";
-import { getPetById } from "../generated/client/getPetById.js";
-
-async function demonstrateClient() {
-  // Manual validation bound client
-  // default configuration forceValidation=false
-  const lazyPetsResponse = await findPetsByStatus({
-    query: { status: "available" },
-  });
-  if (lazyPetsResponse.success === true && lazyPetsResponse.status === 200) {
-    lazyPetsResponse.parse();
-  }
-
-  // Manual validation bound client
-  // using configureOperation with forceValidation=false
-  const lazyClient = configureOperations(
-    { findPetsByStatus, getInventory, getPetById },
-    { ...globalConfig, forceValidation: false },
-  );
-  const petsResponse1 = await lazyClient.findPetsByStatus({
-    query: { status: "available" },
-  });
-  if (petsResponse1.success === true && petsResponse1.status === 200) {
-    petsResponse1.parse();
-  }
-
-  // Automatic validation bound client
-  // overridden per op configuration forceValidation=true
-  const greedyPetResponse = await findPetsByStatus(
-    {
-      query: { status: "available" },
-    },
-    { ...globalConfig, forceValidation: true },
-  );
-  if (greedyPetResponse.success === true && greedyPetResponse.status === 200) {
-    // automatic validation: .parsed available
-    greedyPetResponse.parsed;
-  }
-
-  // Automatic validation bound client
-  // with configureOperation and forceValidation=true
-  const greedyClient = configureOperations(
-    { findPetsByStatus, getInventory, getPetById },
-    { ...globalConfig, forceValidation: true },
-  );
-  const petsResponse2 = await greedyClient.findPetsByStatus({
-    query: { status: "available" },
-  });
-  if (petsResponse2.success === true && petsResponse2.status === 200) {
-    // bound automatic validation: .parsed available
-    petsResponse2.parsed;
-  }
-}
-
-demonstrateClient();
-```
 
 ## Response Handling
 
@@ -428,7 +350,93 @@ Different error types provide different context:
 - **missing-schema**: No schema available for content type (includes attempted
   deserialization)
 
-## Runtime Response Validation (Opt-In)
+## Response Payload Validation
+
+When you call a generated operation that has a response body defined within the
+OpenAPI specification for some status codes, the returned Promise resolves to a
+result object that provides either a `.parsed` field or a `.parse()` method,
+depending on the value of the `config.forceValidation` flag. You can set this
+flag in the configuration passed to an individual operation or globally using
+`configureOperations`.
+
+- If you bind with `forceValidation: false` (or omit it), success responses
+  always expose a `.parse()` method after you narrow on `success === true` and a
+  specific `status`. You have to handle parsing errors manually in this case.
+- If you bind with `forceValidation: true`, success responses expose a `.parsed`
+  field (and no `.parse()` method) because validation is performed automatically
+  during the request lifecycle. In case of parsing errors, the returned result
+  will include a `ZodError` instance instead of the `parsed` field.
+
+Don't worry if it seems confusing at first, type inference will help you.
+
+Examples:
+
+```ts
+// examples/client-examples/force-validation.ts
+
+import {
+  configureOperations,
+  globalConfig,
+} from "../generated/client/config.js";
+import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
+import { getInventory } from "../generated/client/getInventory.js";
+import { getPetById } from "../generated/client/getPetById.js";
+
+async function demonstrateClient() {
+  // Manual validation bound client
+  // default configuration forceValidation=false
+  const lazyPetsResponse = await findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (lazyPetsResponse.success === true && lazyPetsResponse.status === 200) {
+    lazyPetsResponse.parse();
+  }
+
+  // Manual validation bound client
+  // using configureOperation with forceValidation=false
+  const lazyClient = configureOperations(
+    { findPetsByStatus, getInventory, getPetById },
+    { ...globalConfig, forceValidation: false },
+  );
+  const petsResponse1 = await lazyClient.findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (petsResponse1.success === true && petsResponse1.status === 200) {
+    petsResponse1.parse();
+  }
+
+  // Automatic validation bound client
+  // overridden per op configuration forceValidation=true
+  const greedyPetResponse = await findPetsByStatus(
+    {
+      query: { status: "available" },
+    },
+    { ...globalConfig, forceValidation: true },
+  );
+  if (greedyPetResponse.success === true && greedyPetResponse.status === 200) {
+    // automatic validation: .parsed available
+    greedyPetResponse.parsed;
+  }
+
+  // Automatic validation bound client
+  // with configureOperation and forceValidation=true
+  const greedyClient = configureOperations(
+    { findPetsByStatus, getInventory, getPetById },
+    { ...globalConfig, forceValidation: true },
+  );
+  const petsResponse2 = await greedyClient.findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (petsResponse2.success === true && petsResponse2.status === 200) {
+    // bound automatic validation: .parsed available
+    petsResponse2.parsed;
+  }
+}
+
+demonstrateClient();
+```
+
+### Manual Runtime Validation
 
 Operations return raw data unless you enable automatic Zod parsing (setting
 `forceValidation` flag to `true`). To perform runtime validation, explicitly
@@ -508,7 +516,7 @@ if (result.status === 200) {
 }
 ```
 
-## Automatic Runtime Validation
+### Automatic Runtime Validation
 
 Enable automatic validation per request by setting `forceValidation: true` in
 the config you pass to an operation, or globally by binding a config with
@@ -537,7 +545,7 @@ if (result.success && result.status === 200) {
 }
 ```
 
-## Why is Runtime Validation Opt-In?
+### Why is Runtime Validation Opt-In?
 
 TypeScript client generator uses Zod for payload validation and parsing, but
 we've made this feature opt-in rather than mandatory. This design choice
@@ -663,7 +671,7 @@ if (res.success && res.status === 200) {
 }
 ```
 
-### Deserializers
+### Configuring Deserializers
 
 The `deserializers` is a property of the config object that maps content types
 to deserializer functions:
@@ -847,6 +855,8 @@ if (result.status === 200) {
 
 ## Using Generated Zod Schemas
 
+You can use the generated Zod schemas to validate and parse your data easily.
+
 ```ts
 import { Pet } from "./generated/schemas/Pet.js";
 
@@ -1024,7 +1034,7 @@ Here is a comparison of the key features and limitations of each library.
 | **Error handling**             |           Strongly Typed            |        Typed, exhaustive         |       Basic        |       Basic        |
 | **Generation Speed**           |               Faster                |        Slow on big specs         |        Fast        |        Fast        |
 | **Schema Quality**             |              Very good              |            Very good             |       Loose        |        Good        |
-| **Multiple success responses** |                 ✅                  |                ✅                |         ❌         |         ✅         |
+| **Multiple success responses** |                 ✅                  |                ✅                |         ❌         |         ❌         |
 | **Multiple content types**     |                 ✅                  |                ❌                |         ❌         |         ❌         |
 | **Security header support**    |                 ✅                  |                ✅                |         ❌         |         ✅         |
 | **File download response**     |                 ✅                  |                ✅                |         ❌         |         ✅         |
