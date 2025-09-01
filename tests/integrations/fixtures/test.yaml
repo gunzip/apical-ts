@@ -512,6 +512,24 @@ paths:
               schema:
                 $ref: "#/components/schemas/TestDeserUser"
 
+  /test-dashed-body:
+    post:
+      operationId: testDashedBody
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DashedBodyTest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashedBodyTest"
+
 # -------------
 # Components
 # -------------
@@ -596,6 +614,22 @@ components:
       properties:
         id-field:
           type: string
+    DashedBodyTest:
+      type: object
+      properties:
+        id-field:
+          type: string
+        nested-dash:
+          type: object
+          properties:
+            child-prop:
+              type: string
+      required:
+        - id-field
+      example:
+        id-field: example-id
+        nested-dash:
+          child-prop: child-value
     MessageSubject:
       type: string
       description: |-
