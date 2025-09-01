@@ -302,7 +302,6 @@ async function demonstrateClient() {
 }
 
 demonstrateClient();
-
 ```
 
 ## Response Handling
