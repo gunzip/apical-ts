@@ -167,6 +167,8 @@ function renderParameterSchemas(
 ): string {
   /* Use shared parameter schema generation logic with strict validation for server input */
   const result = generateParameterSchemas(operationId, parameterGroups, {
+    coercePrimitives: true,
+    lowercaseHeaderKeys: true,
     strictValidation: true,
   });
 

@@ -332,6 +332,40 @@ paths:
           description: "Ok"
         "500":
           description: "Fatal error"
+  /test-coercion/{int-param}/{bool-param}:
+    get:
+      operationId: testCoercion
+      parameters:
+        - name: int-param
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: bool-param
+          in: path
+          required: true
+          schema:
+            type: boolean
+        - name: num-query
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: flag-query
+          in: query
+          required: true
+          schema:
+            type: boolean
+        - name: count-header
+          in: header
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ok
+        "500":
+          description: Fatal error
   /test-path-level-parameter:
     parameters:
       - $ref: "#/components/parameters/RequiredRequestId"
