@@ -59,7 +59,7 @@ The workspace provides the following VS Code tasks for common workflows:
 
 - **TypeScript Build**: `pnpm run build`
 - **Run Tests**: `pnpm test`
-- **Test OpenAPI 3.1 Generation**: `pnpm start generate -i test.yaml -o generated-test --generate-client`
+- **Test OpenAPI 3.1 Generation**: `pnpm generate`
 
 > **Note:** Always run `pnpm install` before any other command. Use `pnpm run typecheck` for type validation, and run `pnpm run lint` and `pnpm run format` before committing code.
 

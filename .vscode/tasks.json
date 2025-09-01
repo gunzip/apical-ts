@@ -20,22 +20,14 @@
       "label": "Test OpenAPI 3.1 Generation",
       "type": "shell",
       "command": "pnpm",
-      "args": [
-        "start",
-        "generate",
-        "-i",
-        "test.yaml",
-        "-o",
-        "generated-test",
-        "--generate-client"
-      ],
+      "args": ["generate"],
       "group": "test"
     },
     {
       "label": "Remove old generated test",
       "type": "shell",
       "command": "rm",
-      "args": ["-rf", "generated-test"],
+      "args": ["-rf", "tests/integrations/generated"],
       "group": "build"
     }
   ]
