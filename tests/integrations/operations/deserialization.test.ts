@@ -78,7 +78,7 @@ describe("Deserialization Operation", () => {
         baseURL,
         headers: {},
         fetch,
-        deserializerMap: {
+        deserializers: {
           "application/json": () => {
             throw new Error("boom");
           },
@@ -105,7 +105,7 @@ describe("Deserialization Operation", () => {
         baseURL,
         headers: {},
         fetch,
-        deserializerMap: {
+        deserializers: {
           "application/json": () => ({
             name: 123 /* wrong type, age missing */,
           }),
@@ -136,7 +136,7 @@ describe("Deserialization Operation", () => {
         baseURL,
         headers: {},
         fetch,
-        deserializerMap: {
+        deserializers: {
           "application/xml": (xml: unknown) => {
             const xmlStr = String(xml);
             const name = /<name>([^<]+)<\/name>/u.exec(xmlStr)?.[1] || "";
@@ -173,7 +173,7 @@ describe("Deserialization Operation", () => {
         baseURL,
         headers: {},
         fetch,
-        deserializerMap: {
+        deserializers: {
           "application/vnd.custom+json": (data: unknown) => ({
             ...(data as any),
             id: String((data as any).id).toUpperCase(),
@@ -206,7 +206,7 @@ describe("Deserialization Operation", () => {
         baseURL,
         headers: { "custom-token": "test-custom-token-abc" }, // Add auth
         fetch,
-        deserializerMap: {
+        deserializers: {
           "application/octet-stream": (blob: unknown) => ({
             size: (blob as any).size,
           }),
@@ -246,7 +246,7 @@ describe("Deserialization Operation", () => {
         baseURL,
         headers: { "custom-token": "test-custom-token-abc" }, // Add auth for global security
         fetch,
-        deserializerMap: {
+        deserializers: {
           "application/vnd.custom+json": (data: any) => ({
             ...data,
             id: data.id.toUpperCase(),

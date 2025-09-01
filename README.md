@@ -302,7 +302,6 @@ async function demonstrateClient() {
 }
 
 demonstrateClient();
-
 ```
 
 ## Response Handling
@@ -484,7 +483,7 @@ const result = await downloadFile(
   {
     // You can provide custom deserializers for specific operations
     // or even in the global configuration
-    deserializerMap: {
+    deserializers: {
       ...globalConfig,
       "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
     },
@@ -629,7 +628,7 @@ const res = await testMultiContentTypes(
   {
     ...globalConfig,
     // this can be merged into the global config object as well
-    deserializerMap: {
+    deserializers: {
       "application/xml": (raw: unknown) => customXmlToJson(raw as string),
       "application/octet-stream": (blob: unknown) => ({
         size: (blob as Blob).size,
@@ -654,7 +653,7 @@ if (res.success && res.status === 200) {
 
 ### Deserializer Map
 
-The `deserializerMap` is a property of the config object that maps content types
+The `deserializers` is a property of the config object that maps content types
 to deserializer functions:
 
 ```ts
@@ -692,7 +691,7 @@ Notes:
 
 ```ts
 const outcome = res.parse();
-// Uses deserializerMap from config:
+// Uses deserializers from config:
 // {
 //   "application/xml": (xml: unknown) => fastXmlParser.parse(xml as string),
 // }
@@ -702,7 +701,7 @@ const outcome = res.parse();
 
 ```ts
 const outcome = res.parse();
-// Uses deserializerMap from config:
+// Uses deserializers from config:
 // {
 //   "application/octet-stream": (b: unknown) => ({ size: (b as Blob).size }),
 // }
@@ -712,7 +711,7 @@ const outcome = res.parse();
 
 ```ts
 const outcome = res.parse();
-// Uses deserializerMap from config:
+// Uses deserializers from config:
 // {
 //   "application/vnd.custom+json": (data: any) => ({
 //     ...data,
@@ -821,7 +820,7 @@ const result = await getPetById(
   },
   {
     ...globalConfig,
-    deserializerMap: {
+    deserializers: {
       "application/xml": myXmlDeserializer,
     },
   },
