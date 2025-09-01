@@ -9,7 +9,7 @@
       "nvmInstallPath": "/opt/nvm"
     }
   },
-  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && mkdir -p /tmp/.pnpm-store && cd ${containerWorkspaceFolder} && pnpm install",
+  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && mkdir -p /tmp/.pnpm-store && pnpm config set store-dir /tmp/.pnpm-store && cd ${containerWorkspaceFolder} && pnpm install",
   "containerEnv": {
     "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
     "PNPM_STORE_PATH": "/tmp/.pnpm-store"
