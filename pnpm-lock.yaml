@@ -67,7 +67,7 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
       prettier:
-        specifier: ^3.2.5
+        specifier: ^3.6.2
         version: 3.6.2
       supertest:
         specifier: ^7.1.4

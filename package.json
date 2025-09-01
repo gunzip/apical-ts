@@ -58,7 +58,7 @@
     "embedme": "^1.22.1",
     "eslint": "^9.33.0",
     "express": "^5.1.0",
-    "prettier": "^3.2.5",
+    "prettier": "^3.6.2",
     "supertest": "^7.1.4",
     "tsup": "^8.5.0",
     "typescript": "^5.4.5",
