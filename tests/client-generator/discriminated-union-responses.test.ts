@@ -36,7 +36,9 @@ describe("discriminated union response types", () => {
       );
 
       /* Should generate union type name */
-      expect(result.unionTypeName).toBe("TestMultiContentTypesResponse");
+      expect(result.unionTypeName).toBe(
+        "TestMultiContentTypesOperationResponse",
+      );
 
       /* Should include all content type pairs */
       expect(result.unionTypeDefinition).toContain("application/json");
@@ -123,7 +125,7 @@ describe("discriminated union response types", () => {
 
       /* Should include discriminated union information */
       expect(result.discriminatedUnionTypeName).toBe(
-        "TestMultiContentTypesResponse",
+        "TestMultiContentTypesOperationResponse",
       );
       expect(result.discriminatedUnionTypeDefinition).toBeTruthy();
       expect(result.responseMapName).toBe("TestMultiContentTypesResponseMap");
@@ -197,7 +199,7 @@ describe("discriminated union response types", () => {
 
       /* Should include discriminated union information */
       expect(result.discriminatedUnionTypeName).toBe(
-        "TestMultiContentTypesResponse",
+        "TestMultiContentTypesOperationResponse",
       );
       expect(result.discriminatedUnionTypeDefinition).toBeTruthy();
       expect(result.responseMapName).toBe("TestMultiContentTypesResponseMap");

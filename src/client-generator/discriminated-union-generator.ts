@@ -53,7 +53,11 @@ export function generateDiscriminatedUnionFromConfig(
 ): DiscriminatedUnionResult {
   const { operationId, responseTypes } = config;
 
-  const unionTypeName = `${sanitizeIdentifier(operationId).charAt(0).toUpperCase()}${sanitizeIdentifier(operationId).slice(1)}Response`;
+  /*
+   * NOTE: We append `OperationResponse` to guarantee a distinct identifier that
+   * will not clash with component schema names which end in `Response` or `<status>Response`.
+   */
+  const unionTypeName = `${sanitizeIdentifier(operationId).charAt(0).toUpperCase()}${sanitizeIdentifier(operationId).slice(1)}OperationResponse`;
   const responseMapName = `${sanitizeIdentifier(operationId).charAt(0).toUpperCase()}${sanitizeIdentifier(operationId).slice(1)}ResponseMap`;
 
   /* Generate union type components */

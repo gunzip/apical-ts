@@ -41,7 +41,9 @@ export function renderDestructuredParameters(
       if (prop.needsQuoting) {
         headerProperties.push(`"${prop.name}": ${prop.varName}`);
       } else {
-        headerProperties.push(prop.name);
+        /* Use the derived variable name so that later header handling code
+         * refers to the correct (possibly camelCased) identifier. */
+        headerProperties.push(`${prop.varName}`);
       }
     });
 
@@ -89,6 +91,7 @@ export function renderParameterHandling(
     return params
       .map((p) => {
         const varName = toValidVariableName(p.name);
+        // Use the sanitized variable name on the LHS, original header string as key
         return `if (${varName} !== undefined) finalHeaders['${p.name}'] = String(${varName});`;
       })
       .join("\n    ");
@@ -141,7 +144,8 @@ export function renderParameterInterface(analysis: ParameterAnalysis): string {
       if (prop.needsQuoting) {
         headerProperties.push(`"${prop.name}"${requiredMarker}: string`);
       } else {
-        headerProperties.push(`${prop.name}${requiredMarker}: string`);
+        /* Use the sanitized variable name consistently */
+        headerProperties.push(`${prop.varName}${requiredMarker}: string`);
       }
     });
 

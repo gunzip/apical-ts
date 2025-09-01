@@ -71,10 +71,14 @@ export function analyzeParameters(
   /* Analyze header parameters */
   const headerProperties = structure.processed.headerParams.map((param) => {
     const varName = toValidVariableName(param.name);
+    /*
+     * Use the variable name directly for the property name when quoting is not required.
+     */
+    const needsQuoting = param.name !== varName;
     return {
       isRequired: param.required === true,
-      name: param.name !== varName ? param.name : toCamelCase(param.name),
-      needsQuoting: param.name !== varName,
+      name: needsQuoting ? param.name : varName,
+      needsQuoting,
       varName,
     };
   });

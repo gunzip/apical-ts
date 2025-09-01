@@ -352,6 +352,7 @@ function extractResponseSchemas(
         "application/problem+json",
         "application/octet-stream",
         "multipart/form-data",
+        "application/pdf",
       ];
 
       for (const contentType of Object.keys(responseObj.content)) {

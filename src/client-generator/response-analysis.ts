@@ -71,7 +71,9 @@ export function analyzeResponseStructure(
     }
   }
 
-  /* Generate discriminated union types if operation has an operationId */
+  /* Generate discriminated union types if operation has an operationId. The resulting
+   * union type now uses the suffix `OperationResponse` to avoid collisions with
+   * imported schema types (e.g. FooResponse). */
   let discriminatedUnionResult;
   if (operation.operationId) {
     discriminatedUnionResult = generateDiscriminatedUnionTypes(

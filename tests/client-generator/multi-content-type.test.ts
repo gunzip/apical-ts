@@ -120,7 +120,7 @@ describe("Multi-content-type operation function generation", () => {
 
     // Check discriminated union type definition is generated
     expect(result.functionCode).toContain(
-      "export type PetFindByStatusResponse =",
+      "export type PetFindByStatusOperationResponse =",
     );
     expect(result.functionCode).toContain(
       '{ status: 200; contentType: "application/json"; data: PetFindByStatus200Response }',
