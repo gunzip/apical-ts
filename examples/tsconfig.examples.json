@@ -3,6 +3,7 @@
   "compilerOptions": {
     "noEmit": true,
     "moduleResolution": "NodeNext",
+    "skipLibCheck": true,
     "module": "NodeNext",
     "target": "ES2022"
   },
