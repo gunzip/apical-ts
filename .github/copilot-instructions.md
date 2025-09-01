@@ -1,20 +1,20 @@
-# Copilot Instructions for TypeScript OpenAPI Generator
+# Copilot Instructions for TypeScript
 
 ## Repository Summary
 
-This repository is an **OpenAPI TypeScript Client Generator** that converts OpenAPI 3.1.0 specifications into fully-typed Zod v4 schemas and type-safe REST API clients. It generates operation-based TypeScript clients with runtime validation capabilities, supporting OpenAPI 2.0, 3.0.x, and 3.1.x specifications.
+This repository is an **OpenAPI TypeScript Client Generator** that converts OpenAPI specifications into fully-typed Zod v4 schemas and type-safe REST API clients. It generates operation-based TypeScript clients with runtime validation capabilities, supporting OpenAPI 2.0, 3.0.x, and 3.1.x specifications.
 
 **Repository Size**: Medium (~33 TypeScript files, ~4,500 lines of code)  
 **Project Type**: CLI tool and library for code generation  
 **Languages**: TypeScript (ES2022), Node.js  
 **Frameworks**: Zod v4 for schema validation, Vitest for testing  
-**Target Runtime**: Node.js 20.18.2+
+**Target Runtime**: Node.js 22+
 
 ## Build and Validation Instructions
 
 ### Prerequisites
 
-- **Node.js**: Version 20.18.2 (specified in `.node-version`)
+- **Node.js**: Version 22+ (specified in `.node-version`)
 - **Package Manager**: pnpm 10.14.0+ (ALWAYS use pnpm, not npm)
 
 ### Setup Commands
@@ -37,7 +37,8 @@ pnpm run build
 
 ### pnpm Tasks
 
-- `pnpm run build`: Build the project using tsup (compiles TypeScript to `dist/` without type checking)
+- `pnpm run build`: Build the project using tsup (compiles TypeScript to dist/ without type checking)
+- `pnpm run build:docs`: Generate documentation by embedding code in README.md
 - `pnpm run lint`: Run eslint with autofix on `src/`
 - `pnpm run lint:check`: Run eslint on `src/` (no autofix)
 - `pnpm run format`: Format all files using Prettier (writes changes)
@@ -46,6 +47,11 @@ pnpm run build
 - `pnpm run test`: Run all tests with Vitest
 - `pnpm run test:coverage`: Run tests with coverage report
 - `pnpm run start`: Run the CLI from `dist/index.js`
+- `pnpm run generate`: Generate client and server from test fixtures
+- `pnpm run prepublishOnly`: Build docs and project before publishing
+- `pnpm run release:patch`: Bump patch version and push
+- `pnpm run release:minor`: Bump minor version and push
+- `pnpm run release:major`: Bump major version and push
 
 #### Additional VS Code Tasks
 
@@ -54,7 +60,6 @@ The workspace provides the following VS Code tasks for common workflows:
 - **TypeScript Build**: `pnpm run build`
 - **Run Tests**: `pnpm test`
 - **Test OpenAPI 3.1 Generation**: `pnpm start generate -i test.yaml -o generated-test --generate-client`
-- **Remove old generated test**: `rm -rf generated-test`
 
 > **Note:** Always run `pnpm install` before any other command. Use `pnpm run typecheck` for type validation, and run `pnpm run lint` and `pnpm run format` before committing code.
 
@@ -75,7 +80,7 @@ The workspace provides the following VS Code tasks for common workflows:
 pnpm test
 ```
 
-**Test Configuration**: Uses Vitest with Node.js environment, tests located in `src/tests/`
+**Test Configuration**: Uses Vitest with Node.js environment, tests located in `tests/`
 
 ### CLI Usage
 
@@ -129,8 +134,8 @@ await generate({
 │   ├── client-generator/           # Client generator modules
 │   ├── core-generator/             # Core generator modules
 │   ├── operation-id-generator/     # Operation ID generator
-│   ├── schema-generator/           # Zod schema generator
-│   └── tests/                      # Test helpers and fixtures
+│   └── schema-generator/           # Zod schema generator
+├── tests/                         # Unit tests
 ├── dist/                          # Build output (generated)
 ├── package.json                   # Dependencies and scripts
 ├── tsconfig.json                  # TypeScript configuration
@@ -185,7 +190,7 @@ await generate({
 
 - Generates operation IDs for OpenAPI specs that lack them
 
-**Tests** (`src/tests/`):
+**Tests** (`tests/`):
 
 - Unit tests for core functionality and all generators
 - Use Vitest with descriptive test names
@@ -203,8 +208,8 @@ await generate({
 **Test Configuration** (`vitest.config.ts`):
 
 - Node.js environment, globals enabled
-- Includes: `src/tests/**/*.test.ts`
-- Coverage: text, json, html reporters
+- Includes: `tests/**/*.test.ts`
+- Coverage: text, json, html reporters, include `src/**/*`, exclude `src/tests/**/*`
 
 **Package Configuration** (`package.json`):
 
@@ -264,7 +269,7 @@ await generate({
 **Adding New Features**:
 
 1. Run `pnpm install` and `pnpm run build` to ensure clean state
-2. Add tests in `src/tests/` following existing patterns
+2. Add tests in `tests/` following existing patterns
 3. Implement functionality in appropriate module
 4. Run `pnpm test` to validate changes
 5. Test CLI with sample files: `pnpm start generate -i test.yaml -o /tmp/test`

@@ -2,13 +2,7 @@
 applyTo: "**"
 ---
 
-Come desiderato, ho aggiunto un punto alle linee guida in inglese.
-
----
-
 To create effective unit tests for a TypeScript project, you should provide GitHub Copilot with clear guidelines that focus on best practices. Here are five points you can share with Copilot.
-
----
 
 ## Test Behavior, Not Implementation
 
