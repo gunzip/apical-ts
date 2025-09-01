@@ -7,5 +7,6 @@
     "module": "NodeNext",
     "target": "ES2022"
   },
-  "include": ["./**/*.ts"]
+  "include": ["./**/*.ts"],
+  "exclude": ["benchmark"]
 }
