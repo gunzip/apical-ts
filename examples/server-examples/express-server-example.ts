@@ -6,12 +6,10 @@ import {
   type findPetsByStatusHandler,
 } from "../generated/server/findPetsByStatus.js";
 import {
-  getPetByIdWrapper,
   type getPetByIdHandler,
   route as getPetByIdRoute,
 } from "../generated/server/getPetById.js";
 import {
-  getInventoryWrapper,
   type getInventoryHandler,
   route as getInventoryRoute,
 } from "../generated/server/getInventory.js";
@@ -61,29 +59,6 @@ const mockInventory = {
   sold: 3,
 };
 
-/* Implementation of findPetsByStatus handler */
-const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
-  if (!params.success) {
-    /* Handle validation errors */
-    console.error("Validation error in findPetsByStatus:", params);
-    return {
-      status: 400,
-    };
-  }
-
-  const { status } = params.value.query;
-  console.log(`Finding pets by status: ${status}`);
-
-  /* Filter pets by status */
-  const filteredPets = mockPets.filter((pet) => pet.status === status);
-
-  return {
-    status: 200,
-    contentType: "application/json",
-    data: filteredPets,
-  };
-};
-
 /* Implementation of getPetById handler */
 const getPetByIdHandler: getPetByIdHandler = async (params) => {
   if (!params.success) {
@@ -112,6 +87,8 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
     data: pet,
   };
 };
+/* Setup routes using the helper function */
+createExpressAdapter(getPetByIdRoute(), getPetByIdHandler)(app);
 
 /* Implementation of getInventory handler */
 /* We disable type checking to allow emitting an unexpected response */
@@ -133,10 +110,33 @@ const getInventoryHandler: getInventoryHandler = async (params) => {
     data: mockInventory,
   };
 };
+createExpressAdapter(getInventoryRoute(), getInventoryHandler)(app);
 
-/* Setup routes using generated wrappers */
+/* Setup routes manually using generated wrappers */
 
-/* Method 1: Manual setup with extractRequestParams and sendWrapperResponse */
+const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
+  if (!params.success) {
+    /* Handle validation errors */
+    console.error("Validation error in findPetsByStatus:", params);
+    return {
+      status: 400,
+    };
+  }
+
+  const { status } = params.value.query;
+  console.log(`Finding pets by status: ${status}`);
+
+  /* Filter pets by status */
+  const filteredPets = mockPets.filter((pet) => pet.status === status);
+
+  return {
+    status: 200,
+    contentType: "application/json",
+    data: filteredPets,
+  };
+};
+
+/* Manual setup with extractRequestParams and sendWrapperResponse */
 app.get("/pet/findByStatus", async (req, res) => {
   // Get wrapped handler in order to validate request and response
   const result = await findPetsByStatusWrapper(findPetsByStatusHandler)(
@@ -151,19 +151,6 @@ app.get("/pet/findByStatus", async (req, res) => {
       break;
   }
 });
-
-/* Setup routes using the helper function */
-createExpressAdapter(
-  getPetByIdWrapper,
-  getPetByIdRoute(),
-  getPetByIdHandler,
-)(app);
-
-createExpressAdapter(
-  getInventoryWrapper,
-  getInventoryRoute(),
-  getInventoryHandler,
-)(app);
 
 /* Health check endpoint */
 

@@ -3,6 +3,15 @@
 import type { Request, Response } from "express";
 
 /**
+ * Standard response format from generated server wrappers
+ */
+export interface ServerResponse {
+  status: number;
+  contentType?: string;
+  data?: any;
+}
+
+/**
  * Extract parameters from Express request for wrapper consumption
  * Handles parameter name transformation from kebab-case to camelCase
  */
@@ -92,9 +101,15 @@ function transformParameterName(name: string): string {
  * Adapter function that connects a generated wrapper to Express
  * This simplifies the process of setting up routes
  */
-export function createExpressAdapter<THandler extends Function>(
-  wrapper: (handler: THandler) => (req: any) => Promise<any>,
-  routeInfo: { path: string; method: string },
+export function createExpressAdapter<
+  THandler extends Function,
+  TResponse extends ServerResponse,
+>(
+  routeInfo: {
+    path: string;
+    method: string;
+    wrapper: (handler: THandler) => (req: any) => Promise<TResponse>;
+  },
   handler: THandler,
 ) {
   return (app: Express.Application) => {
@@ -108,9 +123,12 @@ export function createExpressAdapter<THandler extends Function>(
       (app[method] as any)(expressPath, async (req: Request, res: Response) => {
         try {
           const params = extractRequestParams(req);
-          const wrappedHandler = wrapper(handler);
-          const result = await wrappedHandler(params);
-          res.status(result.status).type(result.contentType).send(result.data);
+          const wrappedHandler = routeInfo.wrapper(handler);
+          const result: TResponse = await wrappedHandler(params);
+          res
+            .status(result.status)
+            .type(result.contentType || "application/json")
+            .send(result.data);
         } catch (error) {
           console.error("Error in route handler:", error);
           res.status(500).json({ error: "Internal server error" });
