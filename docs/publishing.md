@@ -68,13 +68,15 @@ These scripts will:
 3. Create a git tag
 4. Push the changes and tag to GitHub
 
-After pushing the tag, you can create a GitHub release to trigger automatic publishing.
+After pushing the tag, you can create a GitHub release to trigger automatic
+publishing.
 
 ## Authentication
 
 ### For GitHub Actions (Automatic)
 
-The workflow uses the repository secret `NPM_TOKEN` which has the necessary permissions to publish packages.
+The workflow uses the repository secret `NPM_TOKEN` which has the necessary
+permissions to publish packages.
 
 ## Installation for Users
 
@@ -95,5 +97,7 @@ The published package includes:
 
 ### Common Issues
 
-1. **Package Already Exists**: You cannot republish the same version. Bump the version first
-2. **Build Failures**: The workflow will fail if tests, linting, or type checking fails
+1. **Package Already Exists**: You cannot republish the same version. Bump the
+   version first
+2. **Build Failures**: The workflow will fail if tests, linting, or type
+   checking fails

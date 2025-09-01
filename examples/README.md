@@ -1,16 +1,22 @@
 # Express OpenAPI Server Wrapper Example
 
-This example demonstrates how to use the generated OpenAPI server wrappers with Express.js, showcasing a complete integration that includes both server-side wrappers and client-side type-safe API calls.
+This example demonstrates how to use the generated OpenAPI server wrappers with
+Express.js, showcasing a complete integration that includes both server-side
+wrappers and client-side type-safe API calls.
 
 ## Overview
 
-This example uses the [Swagger Petstore OpenAPI specification](https://raw.githubusercontent.com/swagger-api/swagger-petstore/refs/heads/master/src/main/resources/openapi.yaml) to generate:
+This example uses the
+[Swagger Petstore OpenAPI specification](https://raw.githubusercontent.com/swagger-api/swagger-petstore/refs/heads/master/src/main/resources/openapi.yaml)
+to generate:
 
 - **Server wrappers**: Type-safe request handlers with automatic validation
 - **Client functions**: Type-safe API client functions
 - **Zod schemas**: Runtime validation schemas for all data types
 
-The example shows how to bridge the generated server wrappers with Express.js using an adapter pattern, and how to call the resulting API using the generated client.
+The example shows how to bridge the generated server wrappers with Express.js
+using an adapter pattern, and how to call the resulting API using the generated
+client.
 
 ## Prerequisites
 
@@ -31,8 +37,10 @@ pnpm generate:examples
 This task will:
 
 - Clean any existing generated code
-- Run the TypeScript OpenAPI generator with both `--generate-server` and `--generate-client` flags
-- Create the `generated/` directory with schemas, server wrappers, and client functions
+- Run the TypeScript OpenAPI generator with both `--generate-server` and
+  `--generate-client` flags
+- Create the `generated/` directory with schemas, server wrappers, and client
+  functions
 
 ### 2. Install Dependencies
 
@@ -52,7 +60,8 @@ Run the Express server that uses the generated server wrappers:
 pnpx tsx server-examples/express-server-example.ts
 ```
 
-The server will start on `http://localhost:3000` and display available endpoints:
+The server will start on `http://localhost:3000` and display available
+endpoints:
 
 ```
 🚀 Express server running on http://localhost:3000
@@ -101,10 +110,13 @@ curl "http://localhost:3000/health"
 
 ### 1. Express Adapter (`server-examples/express-adapter.ts`)
 
-The adapter module provides utilities to bridge generated server wrappers with Express:
+The adapter module provides utilities to bridge generated server wrappers with
+Express:
 
-- **`extractRequestParams(req)`**: Converts Express `Request` objects into the format expected by generated wrappers
-- **`sendWrapperResponse(res, result)`**: Sends wrapper results as Express responses
+- **`extractRequestParams(req)`**: Converts Express `Request` objects into the
+  format expected by generated wrappers
+- **`sendWrapperResponse(res, result)`**: Sends wrapper results as Express
+  responses
 - **`createExpressAdapter()`**: Higher-order function for setting up routes
 
 ```typescript
@@ -146,7 +158,8 @@ The `extractRequestParams` function handles parameter transformation:
 - **Body**: Passed through from `req.body`
 - **Content-Type**: Extracted from request headers
 
-Parameter names are transformed from kebab-case to camelCase to match the generated schemas.
+Parameter names are transformed from kebab-case to camelCase to match the
+generated schemas.
 
 ### 4. Handler Implementation Pattern
 
@@ -212,8 +225,10 @@ if (response.success && response.status === 200) {
 
 Each operation generates:
 
-- **Handler type**: `operationNameHandler` - Function signature for your business logic
-- **Wrapper function**: `operationNameWrapper` - Validation and parameter extraction
+- **Handler type**: `operationNameHandler` - Function signature for your
+  business logic
+- **Wrapper function**: `operationNameWrapper` - Validation and parameter
+  extraction
 - **Route function**: `route()` - Returns path and HTTP method information
 - **Response types**: Discriminated unions for all possible responses
 
@@ -234,12 +249,16 @@ Each operation generates:
 
 ## Benefits of This Approach
 
-1. **Type Safety**: Full TypeScript coverage from API definition to implementation
-2. **Runtime Validation**: Opt‑in (`parse()` method) or automatic (`forceValidation: true` in config) response validation
-3. **Error Handling**: Structured, non‑throwing error objects with discriminated unions
+1. **Type Safety**: Full TypeScript coverage from API definition to
+   implementation
+2. **Runtime Validation**: Opt‑in (`parse()` method) or automatic
+   (`forceValidation: true` in config) response validation
+3. **Error Handling**: Structured, non‑throwing error objects with discriminated
+   unions
 4. **Framework Agnostic**: Server wrappers can work with any Node.js framework
 5. **Consistent APIs**: Generated client matches server implementation exactly
-6. **Development Experience**: IntelliSense, auto-completion, and compile-time checks
+6. **Development Experience**: IntelliSense, auto-completion, and compile-time
+   checks
 
 ## Customization
 
@@ -282,11 +301,15 @@ const handler: operationHandler = async (params) => {
 
 ### Generation Issues
 
-- **File not found**: Ensure you're running the generation task `pnpm generate:examples`
-- **Network issues**: Check your internet connection for downloading the OpenAPI spec
+- **File not found**: Ensure you're running the generation task
+  `pnpm generate:examples`
+- **Network issues**: Check your internet connection for downloading the OpenAPI
+  spec
 
 ### Runtime Issues
 
-- **Module not found**: Ensure generated code exists by running the generation task `pnpm generate:examples`
+- **Module not found**: Ensure generated code exists by running the generation
+  task `pnpm generate:examples`
 - **Type errors**: Regenerate code after OpenAPI specification changes
-- **Connection refused**: Make sure the Express server is running before running the client
+- **Connection refused**: Make sure the Express server is running before running
+  the client

@@ -1,10 +1,13 @@
 # yanogen-ts Performance Benchmarks
 
-This directory contains performance and memory benchmarking scripts for the yanogen-ts generated OpenAPI TypeScript client.
+This directory contains performance and memory benchmarking scripts for the
+yanogen-ts generated OpenAPI TypeScript client.
 
 ## Overview
 
-The benchmark suite evaluates the performance characteristics and memory usage patterns of the generated TypeScript client under various load conditions. It provides insights into:
+The benchmark suite evaluates the performance characteristics and memory usage
+patterns of the generated TypeScript client under various load conditions. It
+provides insights into:
 
 - Memory usage and potential memory leaks
 - Request latency and throughput
@@ -14,14 +17,16 @@ The benchmark suite evaluates the performance characteristics and memory usage p
 ## Prerequisites
 
 - Node.js 20.18.2+ (as specified in the project)
-- The Express server example must be available at `../src/express-server-example.ts`
+- The Express server example must be available at
+  `../src/express-server-example.ts`
 - Generated client code must be available at `../generated/client/`
 
 ## Scripts
 
 ### 1. Memory Benchmark (`memory-benchmark.ts`)
 
-Focuses on memory usage analysis by executing batches of requests and monitoring heap usage.
+Focuses on memory usage analysis by executing batches of requests and monitoring
+heap usage.
 
 **Features:**
 
@@ -48,7 +53,8 @@ node --expose-gc tsx memory-benchmark.ts
 
 ### 2. Performance Benchmark (`performance-benchmark.ts`)
 
-Focuses on latency, throughput, and response time analysis under various load conditions.
+Focuses on latency, throughput, and response time analysis under various load
+conditions.
 
 **Features:**
 
@@ -73,7 +79,8 @@ tsx performance-benchmark.ts
 
 ### 3. Integrated Benchmark (`integrated-benchmark.ts`)
 
-Combines memory and performance monitoring in a comprehensive load test with realistic usage patterns.
+Combines memory and performance monitoring in a comprehensive load test with
+realistic usage patterns.
 
 **Features:**
 
@@ -179,7 +186,8 @@ The integrated benchmark provides a health assessment:
 
 ## Configuration
 
-Each benchmark can be customized by modifying the `CONFIG` object at the top of each file:
+Each benchmark can be customized by modifying the `CONFIG` object at the top of
+each file:
 
 ```typescript
 const CONFIG = {
@@ -196,14 +204,18 @@ const CONFIG = {
 
 ### Common Issues
 
-1. **Server not starting**: Ensure the Express server example is available and dependencies are installed
-2. **Module not found**: Verify that the generated client exists at `../generated/client/`
+1. **Server not starting**: Ensure the Express server example is available and
+   dependencies are installed
+2. **Module not found**: Verify that the generated client exists at
+   `../generated/client/`
 3. **Permission errors**: Ensure Node.js has permission to spawn child processes
-4. **Memory warnings**: Consider running with `--expose-gc` for more accurate memory analysis
+4. **Memory warnings**: Consider running with `--expose-gc` for more accurate
+   memory analysis
 
 ### Server Dependencies
 
-The benchmarks automatically start and stop the Express server. If you encounter issues:
+The benchmarks automatically start and stop the Express server. If you encounter
+issues:
 
 1. Check that the generated client is up to date:
 
@@ -222,13 +234,15 @@ The benchmarks automatically start and stop the Express server. If you encounter
 
 1. **Run multiple times**: Performance can vary between runs
 2. **Use --expose-gc**: For accurate memory leak detection
-3. **Monitor production**: Benchmark results may differ from production environments
+3. **Monitor production**: Benchmark results may differ from production
+   environments
 4. **Regular testing**: Run benchmarks after client generation changes
 5. **Resource monitoring**: Watch system resources during testing
 
 ## Integration with CI/CD
 
-These benchmarks can be integrated into CI/CD pipelines to detect performance regressions:
+These benchmarks can be integrated into CI/CD pipelines to detect performance
+regressions:
 
 ```bash
 # Exit with error if memory growth exceeds threshold
@@ -264,4 +278,5 @@ When reporting performance issues, include:
 
 ---
 
-For more information about the yanogen-ts project, see the main [README.md](../../README.md).
+For more information about the yanogen-ts project, see the main
+[README.md](../../README.md).

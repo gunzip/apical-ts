@@ -26,17 +26,16 @@ seamless developer experience.
 Many existing generators lack flexibility and strong type safety. Most do not
 support multiple success responses or multiple content types, and their typings
 are often too loose—making it easy to accidentally access undefined properties.
-With **stricter** guardrails, YanoGen-Ts helps developers (and Gen-AIs) build more
-robust and reliable implementations.
+With **stricter** guardrails, YanoGen-Ts helps developers (and Gen-AIs) build
+more robust and reliable implementations.
 
 Curious why you should choose this generator over others? See
-[comparison](#comparison-with-alternative-libraries) for more details
-or check [supported features](#supported-features) for more information.
+[comparison](#comparison-with-alternative-libraries) for more details or check
+[supported features](#supported-features) for more information.
 
 ![Demo of OpenAPI TypeScript Generator](./demo.gif)
 
-- [YanoGen-Ts - Yet Another OpenAPI to TypeScript
-  Generator](#yanogen-ts---yet-another-openapi-to-typescript-generator)
+- [YanoGen-Ts - Yet Another OpenAPI to TypeScript Generator](#yanogen-ts---yet-another-openapi-to-typescript-generator)
   - [CLI Usage](#cli-usage)
     - [Watch mode](#watch-mode)
     - [CLI Options](#cli-options)
@@ -60,23 +59,17 @@ or check [supported features](#supported-features) for more information.
     - [Common Patterns](#common-patterns)
     - [Error Handling Summary](#error-handling-summary)
     - [Best Practices](#best-practices)
-  - [Handling Multiple Content Types (Request \&
-    Response)](#handling-multiple-content-types-request--response)
-    - [Example: Endpoint with Multiple Request Content
-      Types](#example-endpoint-with-multiple-request-content-types)
-    - [Example: Endpoint with Multiple Response Content
-      Types](#example-endpoint-with-multiple-response-content-types)
+  - [Handling Multiple Content Types (Request \& Response)](#handling-multiple-content-types-request--response)
+    - [Example: Endpoint with Multiple Request Content Types](#example-endpoint-with-multiple-request-content-types)
+    - [Example: Endpoint with Multiple Response Content Types](#example-endpoint-with-multiple-response-content-types)
   - [Using Generated Zod Schemas](#using-generated-zod-schemas)
 - [Server Routes Wrappers Generation](#server-routes-wrappers-generation)
-  - [How to Generate a Server Route
-    Wrapper](#how-to-generate-a-server-route-wrapper)
+  - [How to Generate a Server Route Wrapper](#how-to-generate-a-server-route-wrapper)
   - [Using the Wrapped Handler](#using-the-wrapped-handler)
     - [Handler Function Signature](#handler-function-signature)
 - [Supported Features](#supported-features)
-  - [Benefits of Operation-Based
-    Architecture](#benefits-of-operation-based-architecture)
-- [Comparison with alternative
-  libraries](#comparison-with-alternative-libraries)
+  - [Benefits of Operation-Based Architecture](#benefits-of-operation-based-architecture)
+- [Comparison with alternative libraries](#comparison-with-alternative-libraries)
   - [Conclusion](#conclusion)
 
 ## CLI Usage
@@ -318,8 +311,8 @@ Each operation returns a discriminated union: either a successful API response
 with a `kind` discriminator.
 
 Validation is opt-in by default (success responses expose a `parse()` method).
-You can enable automatic validation at runtime by providing `forceValidation:
-true` in the configuration you pass to an operation or via
+You can enable automatic validation at runtime by providing
+`forceValidation: true` in the configuration you pass to an operation or via
 `configureOperations`.
 
 Recommended pattern:
@@ -392,7 +385,7 @@ type ApiResponseError =
 const result = await getPetById({ petId: "123" });
 
 if (!result.success) {
-  // All error variants handled first (safe: unexpected-error lacks status)
+  // You don't have to handle all errors like this, but you can.
   switch (result.kind) {
     case "unexpected-response":
       console.error("Unexpected status:", result.status, result.error);
@@ -411,6 +404,7 @@ if (!result.success) {
       break;
   }
 } else if (result.status === 200) {
+  // result.data is the raw response payload
   console.log("Pet:", result.data);
 } else if (result.status === 404) {
   console.warn("Pet not found");
@@ -436,9 +430,10 @@ Different error types provide different context:
 
 ## Runtime Response Validation (Opt-In)
 
-Operations return raw data by default (no automatic Zod parsing). To perform
-runtime validation you must explicitly call the response object's `parse()`
-method. The `parse()` method now returns a discriminated union:
+Operations return raw data unless you enable automatic Zod parsing (setting
+`forceValidation` flag to `true`). To perform runtime validation, explicitly
+call the response object's `parse()` method, which returns a discriminated
+union:
 
 - `{ contentType, parsed }` on success
 - `{ kind: "parse-error", error: ZodError }` when validation fails
@@ -950,11 +945,10 @@ See [./examples](./examples) directory for more usage examples.
 
 The handler you provide to the wrapper receives a single argument:
 
-- For valid requests: `{ success: true, value: { query, path, headers, body, ...
-} }`
-- For validation errors: `{ success: false, kind: "query-error" | "body-error" |
-  ... , error:
-ZodError }`
+- For valid requests:
+  `{ success: true, value: { query, path, headers, body, ... } }`
+- For validation errors:
+  `{ success: false, kind: "query-error" | "body-error" |   ... , error: ZodError }`
 
 It must return an object with `{ status, contentType, data }`.
 
@@ -1012,10 +1006,10 @@ integration with other frameworks.
 
 # Comparison with alternative libraries
 
-After [evaluating several
-libraries](https://github.com/gunzip/openapi-generator-benchmark), we found that
-each has its [strengths and
-weaknesses](https://pagopa.github.io/dx/blog/typescript-openapi-generators-0.1-alpha),
+After
+[evaluating several libraries](https://github.com/gunzip/openapi-generator-benchmark),
+we found that each has its
+[strengths and weaknesses](https://pagopa.github.io/dx/blog/typescript-openapi-generators-0.1-alpha),
 but ultimately, we chose to build this project to address specific needs and use
 cases.
 

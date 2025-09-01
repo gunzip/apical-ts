@@ -2,7 +2,10 @@
 
 ## Repository Summary
 
-This repository is an **OpenAPI TypeScript Client Generator** that converts OpenAPI specifications into fully-typed Zod v4 schemas and type-safe REST API clients. It generates operation-based TypeScript clients with runtime validation capabilities, supporting OpenAPI 2.0, 3.0.x, and 3.1.x specifications.
+This repository is an **OpenAPI TypeScript Client Generator** that converts
+OpenAPI specifications into fully-typed Zod v4 schemas and type-safe REST API
+clients. It generates operation-based TypeScript clients with runtime validation
+capabilities, supporting OpenAPI 2.0, 3.0.x, and 3.1.x specifications.
 
 **Repository Size**: Medium (~33 TypeScript files, ~4,500 lines of code)  
 **Project Type**: CLI tool and library for code generation  
@@ -37,7 +40,8 @@ pnpm run build
 
 ### pnpm Tasks
 
-- `pnpm run build`: Build the project using tsup (compiles TypeScript to dist/ without type checking)
+- `pnpm run build`: Build the project using tsup (compiles TypeScript to dist/
+  without type checking)
 - `pnpm run build:docs`: Generate documentation by embedding code in README.md
 - `pnpm run lint`: Run eslint with autofix on `src/`
 - `pnpm run lint:check`: Run eslint on `src/` (no autofix)
@@ -61,7 +65,9 @@ The workspace provides the following VS Code tasks for common workflows:
 - **Run Tests**: `pnpm test`
 - **Test OpenAPI 3.1 Generation**: `pnpm generate`
 
-> **Note:** Always run `pnpm install` before any other command. Use `pnpm run typecheck` for type validation, and run `pnpm run lint` and `pnpm run format` before committing code.
+> **Note:** Always run `pnpm install` before any other command. Use
+> `pnpm run typecheck` for type validation, and run `pnpm run lint` and
+> `pnpm run format` before committing code.
 
 **Preconditions**:
 
@@ -80,7 +86,8 @@ The workspace provides the following VS Code tasks for common workflows:
 pnpm test
 ```
 
-**Test Configuration**: Uses Vitest with Node.js environment, tests located in `tests/`
+**Test Configuration**: Uses Vitest with Node.js environment, tests located in
+`tests/`
 
 ### CLI Usage
 
@@ -95,7 +102,8 @@ pnpm start generate -i <openapi-spec> -o <output-dir> --generate-client
 pnpm start generate -i test.yaml -o ./generated --generate-client
 ```
 
-**Note**: Use single command format (`pnpm start generate`) not double-dash format (`pnpm start -- generate`)
+**Note**: Use single command format (`pnpm start generate`) not double-dash
+format (`pnpm start -- generate`)
 
 ### Programmatic Usage
 
@@ -121,7 +129,8 @@ await generate({
 ### Known Issues and Workarounds
 
 - **CLI parsing**: Use `pnpm start generate` (not `pnpm start -- generate`)
-- **Error handling**: Generator is robust and continues processing even with invalid input files
+- **Error handling**: Generator is robust and continues processing even with
+  invalid input files
 
 ## Project Layout and Architecture
 
@@ -209,7 +218,8 @@ await generate({
 
 - Node.js environment, globals enabled
 - Includes: `tests/**/*.test.ts`
-- Coverage: text, json, html reporters, include `src/**/*`, exclude `src/tests/**/*`
+- Coverage: text, json, html reporters, include `src/**/*`, exclude
+  `src/tests/**/*`
 
 **Package Configuration** (`package.json`):
 
@@ -283,10 +293,12 @@ await generate({
 
 ## Trust These Instructions
 
-These instructions are comprehensive and tested. Only search for additional information if:
+These instructions are comprehensive and tested. Only search for additional
+information if:
 
 - The provided build/test commands fail unexpectedly
 - You encounter dependency issues not covered here
 - The project structure has significantly changed from what's documented
 
-Always prefer the documented commands and patterns over exploration when implementing changes.
+Always prefer the documented commands and patterns over exploration when
+implementing changes.

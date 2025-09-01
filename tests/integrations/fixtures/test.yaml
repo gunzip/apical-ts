@@ -24,7 +24,8 @@ paths:
             type: string
         - name: cursor
           in: query
-          description: An opaque identifier that points to the next item in the collection.
+          description:
+            An opaque identifier that points to the next item in the collection.
           schema:
             minLength: 1
             type: string
@@ -55,7 +56,8 @@ paths:
             type: string
         - name: cursor
           in: query
-          description: An opaque identifier that points to the next item in the collection.
+          description:
+            An opaque identifier that points to the next item in the collection.
           schema:
             minLength: 1
             type: string
@@ -502,12 +504,14 @@ components:
       type: boolean
       default: false
       description:
-        True if the recipient of a message wants to store its content for
-        later retrieval.
+        True if the recipient of a message wants to store its content for later
+        retrieval.
     IsWebhookEnabled:
       type: boolean
       default: false
-      description: True if the recipient of a message wants to forward the notifications to the default webhook.
+      description:
+        True if the recipient of a message wants to forward the notifications to
+        the default webhook.
     Profile:
       title: Profile
       description: Describes the user's profile.
@@ -686,11 +690,11 @@ components:
       items:
         $ref: "#/components/schemas/PreferredLanguage"
       description:
-        Indicates the User's preferred written or spoken languages in order
-        of preference. Generally used for selecting a localized User interface. Valid
-        values are concatenation of the ISO 639-1 two letter language code, an underscore,
-        and the ISO 3166-1 2 letter country code; e.g., 'en_US' specifies the language
-        English and country US.
+        Indicates the User's preferred written or spoken languages in order of
+        preference. Generally used for selecting a localized User interface.
+        Valid values are concatenation of the ISO 639-1 two letter language
+        code, an underscore, and the ISO 3166-1 2 letter country code; e.g.,
+        'en_US' specifies the language English and country US.
     AnObjectWithAnItemsField:
       description: |-
         What if a object has a field named items?
@@ -935,12 +939,17 @@ components:
           example: 504
         detail:
           type: string
-          description: A human-readable explanation specific to this occurrence of the problem.
-          example: The upstream service failed to respond within the allotted time.
+          description:
+            A human-readable explanation specific to this occurrence of the
+            problem.
+          example:
+            The upstream service failed to respond within the allotted time.
         instance:
           type: string
           format: uri
-          description: A URI reference that identifies the specific occurrence of the problem.
+          description:
+            A URI reference that identifies the specific occurrence of the
+            problem.
       required:
         - status
         - title
@@ -967,7 +976,8 @@ components:
     PaginationRequest:
       name: cursor
       in: query
-      description: An opaque identifier that points to the next item in the collection.
+      description:
+        An opaque identifier that points to the next item in the collection.
       schema:
         minimum: 1
         type: string

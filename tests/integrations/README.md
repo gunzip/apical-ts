@@ -1,6 +1,9 @@
 # Integration Test Suite
 
-This directory contains comprehensive integration tests for the TypeScript OpenAPI client generated from `test.yaml`. The tests use [@stoplight/prism-cli](https://github.com/stoplightio/prism) to create a mock HTTP server based on the OpenAPI specification.
+This directory contains comprehensive integration tests for the TypeScript
+OpenAPI client generated from `test.yaml`. The tests use
+[@stoplight/prism-cli](https://github.com/stoplightio/prism) to create a mock
+HTTP server based on the OpenAPI specification.
 
 ## Overview
 
@@ -14,7 +17,8 @@ The integration tests validate that:
 
 ## Working Test Demo
 
-See `simple.test.ts` for a complete working demonstration of the integration test capabilities:
+See `simple.test.ts` for a complete working demonstration of the integration
+test capabilities:
 
 ```bash
 # Run the working demo
@@ -167,7 +171,8 @@ The working demo covers these operation types:
 
 The OpenAPI spec defines several authentication schemes:
 
-1. **Global Security** (customToken): Applied to operations without explicit security
+1. **Global Security** (customToken): Applied to operations without explicit
+   security
 2. **Operation-specific Security**: Overrides global security
 3. **No Authentication**: `security: []` removes all authentication requirements
 4. **Parameter-based Authentication**: Tokens passed as operation parameters
@@ -195,13 +200,15 @@ await client.operationWithBody({
 - ✅ **Core Infrastructure**: Mock server, client configuration, test utilities
 - ✅ **Working Demo**: 7 comprehensive tests demonstrating all key features
 - ✅ **Documentation**: Complete setup and usage instructions
-- ⚠️ **Additional Tests**: Need parameter structure adjustments for full coverage
+- ⚠️ **Additional Tests**: Need parameter structure adjustments for full
+  coverage
 
 ## Next Steps
 
 To complete the full test suite:
 
-1. **Fix Parameter Structures**: Update remaining test files to use correct parameter formats
+1. **Fix Parameter Structures**: Update remaining test files to use correct
+   parameter formats
 2. **Authentication Helpers**: Add utilities for different auth schemes
 3. **Edge Cases**: Add tests for boundary conditions and error scenarios
 4. **Performance**: Add tests for large files and concurrent requests
@@ -214,4 +221,6 @@ To complete the full test suite:
 4. **Type Safety**: Leverage TypeScript for compile-time validation
 5. **Documentation**: Keep tests clear and well-documented
 
-The integration test suite successfully demonstrates that the generated TypeScript OpenAPI client works correctly against a real HTTP server using Prism mock, providing confidence in the generated code quality and functionality.
+The integration test suite successfully demonstrates that the generated
+TypeScript OpenAPI client works correctly against a real HTTP server using Prism
+mock, providing confidence in the generated code quality and functionality.

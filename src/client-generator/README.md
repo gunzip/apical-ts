@@ -4,11 +4,13 @@
 
 ### Core Types (`types.ts`)
 
-Contains all TypeScript interfaces and type definitions used throughout the client generator.
+Contains all TypeScript interfaces and type definitions used throughout the
+client generator.
 
 ### Utilities (`utils.ts`)
 
-Helper functions for string manipulation, path generation, and content type detection.
+Helper functions for string manipulation, path generation, and content type
+detection.
 
 ### Parameter Handling (`parameters.ts`)
 
@@ -82,11 +84,13 @@ File system operations:
 
 ### Main Entry Point (`index.ts`)
 
-Orchestrates the entire client generation process and provides the main public API.
+Orchestrates the entire client generation process and provides the main public
+API.
 
 ## Usage
 
-The main entry point is `generateOperations()` function exported from `index.ts`:
+The main entry point is `generateOperations()` function exported from
+`index.ts`:
 
 ```typescript
 import { generateOperations } from "./client-generator/index.js";
@@ -94,4 +98,5 @@ import { generateOperations } from "./client-generator/index.js";
 await generateOperations(openApiDoc, outputDirectory);
 ```
 
-This maintains the same API as the original monolithic module while providing a much cleaner internal structure.
+This maintains the same API as the original monolithic module while providing a
+much cleaner internal structure.

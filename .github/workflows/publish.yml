@@ -45,7 +45,9 @@ jobs:
 
       - name: Bump version
         if: github.event.inputs.version_bump
-        run: pnpm version ${{ github.event.inputs.version_bump }} --no-git-tag-version
+        run:
+          pnpm version ${{ github.event.inputs.version_bump }}
+          --no-git-tag-version
 
       - name: Publish to NPM
         run: pnpm publish --no-git-checks
