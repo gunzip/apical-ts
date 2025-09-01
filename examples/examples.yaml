@@ -340,7 +340,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseUpload"
+                $ref: "#/components/schemas/ApiResponse"
         "400":
           description: No file uploaded
         "404":
@@ -805,7 +805,7 @@ components:
                 - ACTIVATED
           required:
             - someXmlProp
-    ApiResponseUpload:
+    ApiResponse:
       type: object
       properties:
         code:

@@ -99,6 +99,22 @@ export async function generate(options: GenerationOptions): Promise<void> {
   applyGeneratedOperationIds(openApiDoc);
   console.log("✅ Applied generated operation IDs where missing");
 
+  /*
+   * Pre-process: rename component schemas whose names would collide with
+   * internal generator types or global / built-in JavaScript identifiers.
+   * This prevents name clashes in generated imports (e.g. user schema named
+   * ApiResponse, Blob, Buffer, etc.). Renamed schemas receive a stable
+   * 'Schema' suffix (or 'Schema2', 'Schema3', ... if needed to avoid further
+   * collisions). All $ref pointers are updated accordingly across the
+   * document before any generation steps begin.
+   */
+  const renamedCount = renameConflictingSchemas(openApiDoc);
+  if (renamedCount > 0) {
+    console.log(
+      "✅ Renamed conflicting schema names with 'Schema' suffix where necessary",
+    );
+  }
+
   const limit = pLimit(concurrency);
   const schemaGenerationPromises: Promise<void>[] = [];
 
@@ -397,4 +413,105 @@ function forEachOperation(
       }
     }
   }
+}
+
+/*
+ * Renames schemas in components/schemas that conflict with:
+ *  - Internal generator exported type names (e.g. ApiResponse)
+ *  - Global / built-in JavaScript constructors or DOM-like types (Blob, Buffer, File, etc.)
+ *  - Any explicitly reserved names defined below
+ * The renaming strategy appends 'Schema' (and numeric suffix if needed) and updates every
+ * $ref string pointing to the old schema name anywhere in the OpenAPI document.
+ */
+function renameConflictingSchemas(openApiDoc: OpenAPIObject) {
+  if (!openApiDoc.components || !openApiDoc.components.schemas) return 0;
+  const schemas = openApiDoc.components.schemas;
+
+  const reservedNames = new Set<string>([
+    /* Reserved & built-ins (sorted) */
+    "ApiResponse",
+    "ApiResponseError",
+    "ApiResponseWithForcedParse",
+    "ApiResponseWithParse",
+    "Blob",
+    "Buffer",
+    "Date",
+    "Error",
+    "File",
+    "FormData",
+    "Headers",
+    "Map",
+    "Promise",
+    "ReadableStream",
+    "Request",
+    "Response",
+    "Set",
+    "TransformStream",
+    "URL",
+    "URLSearchParams",
+    "WeakMap",
+    "WeakSet",
+    "WritableStream",
+  ]);
+
+  const renameMap = new Map<string, string>();
+
+  for (const originalName of Object.keys(schemas)) {
+    if (!reservedNames.has(originalName)) continue;
+    let candidate = `${originalName}Schema`;
+    let counter = 2;
+    while (
+      schemas[candidate as keyof typeof schemas] ||
+      renameMap.has(candidate)
+    ) {
+      candidate = `${originalName}Schema${counter++}`;
+    }
+    renameMap.set(originalName, candidate);
+  }
+
+  if (renameMap.size === 0) return 0; /* Nothing to do */
+
+  /* Perform the actual renames (reconstruct object to avoid dynamic delete issues) */
+  if (renameMap.size) {
+    const rebuilt: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(schemas)) {
+      const newKey = renameMap.get(key) ?? key;
+      rebuilt[newKey] = value as unknown;
+    }
+    // Remove existing keys
+    for (const key of Object.keys(schemas)) {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete (schemas as Record<string, unknown>)[key];
+    }
+    // Assign rebuilt
+    for (const [key, value] of Object.entries(rebuilt)) {
+      (schemas as Record<string, unknown>)[key] = value;
+    }
+  }
+
+  const refPrefix = "#/components/schemas/";
+
+  /* Walk entire document and rewrite $ref strings */
+  const visit = (node: unknown): void => {
+    if (!node) return;
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+    if (typeof node === "object") {
+      const obj = node as Record<string, unknown>;
+      if (typeof obj.$ref === "string") {
+        const ref: string = obj.$ref;
+        if (ref.startsWith(refPrefix)) {
+          const name = ref.substring(refPrefix.length);
+          const renamed = renameMap.get(name);
+          if (renamed) obj.$ref = refPrefix + renamed;
+        }
+      }
+      for (const value of Object.values(obj)) visit(value);
+    }
+  };
+
+  visit(openApiDoc);
+  return renameMap.size;
 }
