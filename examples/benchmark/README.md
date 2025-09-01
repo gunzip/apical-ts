@@ -205,17 +205,17 @@ const CONFIG = {
 
 The benchmarks automatically start and stop the Express server. If you encounter issues:
 
-1. Verify the server example works independently:
+1. Check that the generated client is up to date:
+
+   ```bash
+   pnpm generate:examples
+   ```
+
+2. Verify the server example works independently:
 
    ```bash
    cd ../src
    tsx express-server-example.ts
-   ```
-
-2. Check that the generated client is up to date:
-   ```bash
-   cd ..
-   ./generate-server-client.sh
    ```
 
 ## Best Practices

@@ -133,7 +133,7 @@ async function waitForServer(maxRetries = 10) {
         headers: { api_key: "test-key" },
       });
 
-      if (response.status === 200) {
+      if (response.success && response.status === 200) {
         console.log("✅ Server is ready and responding");
         return true;
       }
@@ -252,7 +252,7 @@ async function executeMemoryTest(requestCount) {
       const operation = operations[i % operations.length];
       const response = await operation();
 
-      if (response.status >= 200 && response.status < 300) {
+      if (response.success && response.status >= 200 && response.status < 300) {
         successfulRequests++;
       } else {
         failedRequests++;

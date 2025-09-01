@@ -25,10 +25,10 @@ First, generate the TypeScript code from the OpenAPI specification:
 
 ```bash
 # From the examples directory
-./generate-server-client.sh
+pnpm generate:examples
 ```
 
-This script will:
+This task will:
 
 - Clean any existing generated code
 - Run the TypeScript OpenAPI generator with both `--generate-server` and `--generate-client` flags
@@ -245,8 +245,8 @@ Each operation generates:
 
 ### Adding New Operations
 
-1. Update the OpenAPI specification (`openapi.yaml`)
-2. Regenerate code: `./generate-server-client.sh`
+1. Update the OpenAPI specification (`examples.yaml`)
+2. Regenerate code: `pnpm generate:examples`
 3. Implement the handler in your Express server
 4. Use the generated client to call the new endpoint
 
@@ -282,12 +282,11 @@ const handler: operationHandler = async (params) => {
 
 ### Generation Issues
 
-- **File not found**: Ensure you're running the generation script from the `examples/` directory
-- **Permission denied**: Make sure the script is executable: `chmod +x generate-server-client.sh`
+- **File not found**: Ensure you're running the generation task `pnpm generate:examples`
 - **Network issues**: Check your internet connection for downloading the OpenAPI spec
 
 ### Runtime Issues
 
-- **Module not found**: Ensure generated code exists by running the generation script
+- **Module not found**: Ensure generated code exists by running the generation task `pnpm generate:examples`
 - **Type errors**: Regenerate code after OpenAPI specification changes
 - **Connection refused**: Make sure the Express server is running before running the client

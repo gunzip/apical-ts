@@ -35,6 +35,10 @@ const API_CONFIG = {
 
 /* Performance measurement utilities */
 class PerformanceTracker {
+  private name: string;
+  private measurements: any[];
+  private errors: any[];
+
   constructor(name) {
     this.name = name;
     this.measurements = [];
@@ -186,7 +190,7 @@ async function waitForServer(maxRetries = 10) {
         headers: { api_key: "test-key" },
       });
 
-      if (response.status === 200) {
+      if (response.success && response.status === 200) {
         console.log("✅ Server is ready and responding");
         return true;
       }
@@ -347,12 +351,12 @@ async function testConcurrentRequests(api, concurrency, requestCount) {
     api.getInventory({ headers: { api_key: "test-key" } });
 
   const requestsPerBatch = Math.ceil(requestCount / concurrency);
-  const promises = [];
+  const promises: any[] = [];
 
   const startTime = performance.now();
 
   for (let batch = 0; batch < requestsPerBatch; batch++) {
-    const batchPromises = [];
+    const batchPromises: any[] = [];
 
     for (
       let concurrent = 0;

@@ -47,6 +47,10 @@ const API_CONFIG = {
 
 /* Utility classes */
 class MemoryMonitor {
+  private samples: any[];
+  private monitoring: boolean;
+  private interval: NodeJS.Timeout | null;
+
   constructor() {
     this.samples = [];
     this.monitoring = false;
@@ -130,6 +134,15 @@ class MemoryMonitor {
 }
 
 class PerformanceMonitor {
+  private measurements: any[];
+  private monitoring: boolean;
+  private interval: NodeJS.Timeout | null;
+  private requestCount: number;
+  private successCount: number;
+  private errorCount: number;
+  private lastSampleTime: number;
+  private lastRequestCount: number;
+
   constructor() {
     this.measurements = [];
     this.monitoring = false;
@@ -289,7 +302,7 @@ async function waitForServer(maxRetries = 10) {
         headers: { api_key: "test-key" },
       });
 
-      if (response.status === 200) {
+      if (response.success && response.status === 200) {
         console.log("✅ Server is ready and responding");
         return true;
       }
@@ -370,7 +383,8 @@ async function executePhase(api, phase, memoryMonitor, performanceMonitor) {
           const response = await operation();
           const duration = performance.now() - requestStart;
 
-          const success = response.status >= 200 && response.status < 300;
+          const success =
+            response.success && response.status >= 200 && response.status < 300;
           performanceMonitor.recordRequest(success, duration);
 
           requestsCompleted++;
@@ -544,8 +558,8 @@ function displayResults(results) {
   /* Health assessment */
   console.log(`\n🏥 Health Assessment:`);
 
-  const issues = [];
-  const warnings = [];
+  const issues: string[] = [];
+  const warnings: string[] = [];
 
   if (overallSuccessRate < 95) {
     issues.push(`Low success rate: ${overallSuccessRate.toFixed(1)}%`);
@@ -621,7 +635,7 @@ async function runIntegratedBenchmark() {
     `   GC available: ${global.gc ? "Yes" : "No (run with --expose-gc for better memory analysis)"}`,
   );
 
-  let serverProcess = null;
+  let serverProcess: any = null;
 
   try {
     /* Start server */
@@ -645,7 +659,7 @@ async function runIntegratedBenchmark() {
     forceGC();
     await delay(1000);
 
-    const results = [];
+    const results: any[] = [];
 
     /* Execute all phases */
     for (let i = 0; i < CONFIG.phases.length; i++) {
