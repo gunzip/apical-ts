@@ -6,6 +6,8 @@ import type {
   SchemaObject,
 } from "openapi3-ts/oas31";
 
+import { isReferenceObject } from "openapi3-ts/oas31";
+
 import type { ParameterGroups } from "../client-generator/models/parameter-models.js";
 
 import { zodSchemaToCode } from "../schema-generator/index.js";
@@ -15,6 +17,8 @@ import { sanitizeIdentifier } from "../schema-generator/utils.js";
  * Options for parameter schema generation
  */
 export interface ParameterSchemaGenerationOptions {
+  coercePrimitives?: boolean;
+  lowercaseHeaderKeys?: boolean;
   strictValidation?: boolean;
 }
 
@@ -54,7 +58,11 @@ export function generateParameterSchema(
   typeImports: Set<string>;
   typeName: string;
 } {
-  const { strictValidation = false } = options;
+  const {
+    coercePrimitives = false,
+    lowercaseHeaderKeys = false,
+    strictValidation = false,
+  } = options;
   const sanitizedId = sanitizeIdentifier(operationId);
   const typeImports = new Set<string>();
 
@@ -68,10 +76,19 @@ export function generateParameterSchema(
   const schemaName = `${sanitizedId}${suffix}Schema`;
   const typeName = `${sanitizedId}${suffix}`;
 
-  /* Helper to build property entry using zodSchemaToCode; fallback to z.string() */
-  const buildProp = (name: string, param: ParameterObject): string => {
+  /* Helper to build property entry using zodSchemaToCode; fallback to z.string()
+     For servers, applies parameter-specific transformations:
+       - Header parameter keys are lowercased (Express normalizes headers)
+       - Primitive number/integer/boolean schemas are coerced (z.coerce.*) to accept string inputs
+       - Original OpenAPI keys preserved verbatim (quoted) */
+  const buildProp = (originalName: string, param: ParameterObject): string => {
     const schema = param.schema as ReferenceObject | SchemaObject | undefined;
     const isRequired = param.required === true;
+    /* Lowercase header parameter keys to match server runtime headers */
+    const name =
+      lowercaseHeaderKeys && parameterType === "headers"
+        ? originalName.toLowerCase()
+        : originalName;
 
     let zodCode: string;
     if (schema) {
@@ -80,6 +97,20 @@ export function generateParameterSchema(
         strictValidation,
       });
       zodCode = result.code;
+
+      /* Apply coercion for primitive types when schema is a direct SchemaObject (not a $ref) */
+      if (coercePrimitives && !isReferenceObject(schema)) {
+        const schemaObj = schema as SchemaObject;
+        const hasEnum = Array.isArray(schemaObj.enum);
+        if (!hasEnum) {
+          if (schemaObj.type === "number" || schemaObj.type === "integer") {
+            /* Replace only leading z.number() occurrence */
+            zodCode = zodCode.replace(/^z\.number\(\)/, "z.coerce.number()");
+          } else if (schemaObj.type === "boolean") {
+            zodCode = zodCode.replace(/^z\.boolean\(\)/, "z.stringbool()");
+          }
+        }
+      }
     } else {
       zodCode = "z.string()";
     }
@@ -89,7 +120,7 @@ export function generateParameterSchema(
       zodCode = `${zodCode}.optional()`;
     }
 
-    return `"${name}": ${zodCode}`;
+    return `${JSON.stringify(name)}: ${zodCode}`;
   };
 
   let schemaCode: string;
@@ -116,15 +147,27 @@ export function generateParameterSchemas(
   parameterGroups: ParameterGroups,
   options: ParameterSchemaGenerationOptions = {},
 ): ParameterSchemaResult {
-  const { strictValidation = false } = options;
+  const {
+    coercePrimitives = false,
+    lowercaseHeaderKeys = false,
+    strictValidation = false,
+  } = options;
   const sanitizedId = sanitizeIdentifier(operationId);
   const typeImports = new Set<string>();
   const schemas: string[] = [];
 
-  /* Helper to build property entry using zodSchemaToCode; fallback to z.string() */
-  const buildProp = (name: string, param: ParameterObject): string => {
+  /* Helper to build property entry using zodSchemaToCode; fallback to z.string()
+     For servers, applies parameter-specific transformations:
+       - Preserve original OpenAPI key verbatim (quoted)
+       - Lowercase header parameter keys (Express normalizes)
+       - Coerce primitive number/integer/boolean to accept strings */
+  const buildProp = (originalName: string, param: ParameterObject): string => {
     const schema = param.schema as ReferenceObject | SchemaObject | undefined;
     const isRequired = param.required === true;
+    const name =
+      lowercaseHeaderKeys && param.in === "header"
+        ? originalName.toLowerCase()
+        : originalName;
 
     let zodCode: string;
     if (schema) {
@@ -133,16 +176,26 @@ export function generateParameterSchemas(
         strictValidation,
       });
       zodCode = result.code;
+      if (coercePrimitives && !isReferenceObject(schema)) {
+        const schemaObj = schema as SchemaObject;
+        const hasEnum = Array.isArray(schemaObj.enum);
+        if (!hasEnum) {
+          if (schemaObj.type === "number" || schemaObj.type === "integer") {
+            zodCode = zodCode.replace(/^z\.number\(\)/, "z.coerce.number()");
+          } else if (schemaObj.type === "boolean") {
+            zodCode = zodCode.replace(/^z\.boolean\(\)/, "z.stringbool()");
+          }
+        }
+      }
     } else {
       zodCode = "z.string()";
     }
 
-    /* Make parameter optional if not explicitly required */
     if (!isRequired) {
       zodCode = `${zodCode}.optional()`;
     }
 
-    return `"${name}": ${zodCode}`;
+    return `${JSON.stringify(name)}: ${zodCode}`;
   };
 
   /* Determine object method based on strict validation setting */
