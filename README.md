@@ -4,10 +4,18 @@
 schemas** ready for runtime (client or server) validation and TypeScript
 development.
 
-> **Disclaimer:** This project is currently in an early stage. Breaking changes
-> may occur at any time. The first stable release will be version **0.1.0**.
-> Nevertheless, it's already solid and you can still use it in your
-> projects, but be prepared for potential changes in the API.
+Need a **client**? 🚀 Instantly generate a type-safe, low-footprint,
+operation-based REST API client alongside your schemas.
+
+Need to **validate server requests and return typed responses**? 🛡️ We've got
+you covered with built-in support for request and response validation using Zod
+schemas.
+
+> **Disclaimer:** Breaking changes may occur until the first stable release
+> (0.1.0) is released. Nevertheless, the project is already solid and you can
+> still experiment with it in your projects.
+
+## Why another generator?
 
 We all like the developer experience of [tRPC](https://trpc.io/), but not always
 we're in control of the backend. OpenAPI specifications provide a powerful way
@@ -15,14 +23,15 @@ to define your API contracts, and with YanoGen-Ts, you can easily generate
 TypeScript code that strictly adheres to those contracts, all while enjoying a
 seamless developer experience.
 
-Need a **client**? 🚀 Instantly generate a type-safe, low-footprint, operation-based REST API client alongside your schemas.
+Many existing generators lack flexibility and strong type safety. Most do not
+support multiple success responses or multiple content types, and their typings
+are often too loose—making it easy to accidentally access undefined properties.
+With **stricter** guardrails, YanoGen-Ts helps developers (and Gen-AIs) build more
+robust and reliable implementations.
 
-Need to **validate server requests and return typed responses**? 🛡️ We've got you covered with built-in support for request and response validation using Zod schemas.
-
-Why choose this generator against alternatives? See
-[comparison](#comparison-with-alternative-libraries) for more details.
-
-See [supported features](#supported-features) for more information.
+Curious why you should choose this generator over others? See
+[comparison](#comparison-with-alternative-libraries) for more details
+or check [supported features](#supported-features) for more information.
 
 ![Demo of OpenAPI TypeScript Generator](./demo.gif)
 
@@ -213,8 +222,8 @@ const newPet = await client.createPet({
 });
 ```
 
-You can still override the configuration for individual operations,
-passing it as the second argument.
+You can still override the configuration for individual operations, passing it
+as the second argument.
 
 ### Lazy Validation vs Automatic Validation
 
@@ -225,15 +234,13 @@ depending on the value of the `config.forceValidation` flag. You can set this
 flag in the configuration passed to an individual operation or globally using
 `configureOperations`.
 
-- If you bind with `forceValidation: false` (or omit it),
-  success responses always expose a `.parse()` method after you
-  narrow on `success === true` and a specific `status`. You have to handle
-  parsing errors manually in this case.
-- If you bind with `forceValidation: true`, success responses expose a
-  `.parsed` field (and no `.parse()` method) because validation is performed
-  automatically during the request lifecycle. In case of parsing errors, the
-  returned result will include a `ZodError` instance instead of the `parsed`
-  field.
+- If you bind with `forceValidation: false` (or omit it), success responses
+  always expose a `.parse()` method after you narrow on `success === true` and a
+  specific `status`. You have to handle parsing errors manually in this case.
+- If you bind with `forceValidation: true`, success responses expose a `.parsed`
+  field (and no `.parse()` method) because validation is performed automatically
+  during the request lifecycle. In case of parsing errors, the returned result
+  will include a `ZodError` instance instead of the `parsed` field.
 
 Don't worry if it seems confusing at first, type inference will help you.
 
@@ -311,8 +318,8 @@ Each operation returns a discriminated union: either a successful API response
 with a `kind` discriminator.
 
 Validation is opt-in by default (success responses expose a `parse()` method).
-You can enable automatic validation at runtime by providing
-`forceValidation: true` in the configuration you pass to an operation or via
+You can enable automatic validation at runtime by providing `forceValidation:
+true` in the configuration you pass to an operation or via
 `configureOperations`.
 
 Recommended pattern:
@@ -340,7 +347,8 @@ of the `kind` field; both are valid.
 
 ### Error Types
 
-All operations return a union that includes `ApiResponseError`, which is a discriminated union covering all possible error scenarios:
+All operations return a union that includes `ApiResponseError`, which is a
+discriminated union covering all possible error scenarios:
 
 ```ts
 type ApiResponseError =
@@ -415,11 +423,16 @@ if (!result.success) {
 
 Different error types provide different context:
 
-- **unexpected-error**: Network failures, connection issues, or any unexpected exception (no `status`, `data`, or `response`)
-- **unexpected-response**: HTTP status codes not defined in OpenAPI spec (includes `status`, `data`, `response`)
-- **parse-error**: Zod validation failures when using `parse()` or automatic runtime validation (includes parsing details)
-- **deserialization-error**: Custom deserializer failures (includes original error)
-- **missing-schema**: No schema available for content type (includes attempted deserialization)
+- **unexpected-error**: Network failures, connection issues, or any unexpected
+  exception (no `status`, `data`, or `response`)
+- **unexpected-response**: HTTP status codes not defined in OpenAPI spec
+  (includes `status`, `data`, `response`)
+- **parse-error**: Zod validation failures when using `parse()` or automatic
+  runtime validation (includes parsing details)
+- **deserialization-error**: Custom deserializer failures (includes original
+  error)
+- **missing-schema**: No schema available for content type (includes attempted
+  deserialization)
 
 ## Runtime Response Validation (Opt-In)
 
@@ -429,8 +442,10 @@ method. The `parse()` method now returns a discriminated union:
 
 - `{ contentType, parsed }` on success
 - `{ kind: "parse-error", error: ZodError }` when validation fails
-- `{ kind: "deserialization-error", error: unknown }` when a custom deserializer throws
-- `{ kind: "missing-schema", error: string }` when no schema exists for the resolved content type
+- `{ kind: "deserialization-error", error: unknown }` when a custom deserializer
+  throws
+- `{ kind: "missing-schema", error: string }` when no schema exists for the
+  resolved content type
 
 These objects never throw; you inspect the returned value to act accordingly.
 
@@ -565,8 +580,10 @@ Enable `forceValidation: true` when:
 
 Use manual validation (omit or set `forceValidation: false`) when:
 
-- **Huge Payloads**: When dealing with large responses where validation overhead is a concern
-- **Untrusted APIs**: When APIs may return unexpected data that shouldn't crash your application
+- **Huge Payloads**: When dealing with large responses where validation overhead
+  is a concern
+- **Untrusted APIs**: When APIs may return unexpected data that shouldn't crash
+  your application
 - **Gradual Migration**: When incrementally adding validation to existing
   codebases
 - **Custom Validation Logic**: When you need more control over validation
@@ -933,9 +950,10 @@ See [./examples](./examples) directory for more usage examples.
 
 The handler you provide to the wrapper receives a single argument:
 
-- For valid requests: `{ success: true, value: { query, path, headers, body, ... }
-}`
-- For validation errors: `{ success: false, kind: "query-error" | "body-error" | ... , error:
+- For valid requests: `{ success: true, value: { query, path, headers, body, ...
+} }`
+- For validation errors: `{ success: false, kind: "query-error" | "body-error" |
+  ... , error:
 ZodError }`
 
 It must return an object with `{ status, contentType, data }`.
@@ -955,7 +973,9 @@ integration with other frameworks.
 - 🛠️ **Operation-based client generation**: Generates one function per
   operation, with strong typing and per-operation configuration—no need for
   blacklisting operations you don't need!
-- 🛡️ **Zod v4 runtime validation (opt-in or automatic)**: Invoke `response.parse()` manually, or enable `forceValidation: true` at runtime for automatic validation
+- 🛡️ **Zod v4 runtime validation (opt-in or automatic)**: Invoke
+  `response.parse()` manually, or enable `forceValidation: true` at runtime for
+  automatic validation
 - 📦 **Small footprint**: Generates each operation and schema/type in its own
   file for maximum tree-shaking and modularity
 - 🚀 **Fast code generation**: Optimized for quick generation times, even with
@@ -966,7 +986,9 @@ integration with other frameworks.
   Key, etc.), with dynamic header/query configuration
 - 🧩 **Discriminated union response types**: Each operation returns a
   discriminated union of possible responses, enabling exhaustive handling
-- ⚠️ **Comprehensive error handling**: No exceptions thrown - all errors (network, parsing, unexpected responses) are returned as typed error objects with detailed context
+- ⚠️ **Comprehensive error handling**: No exceptions thrown - all errors
+  (network, parsing, unexpected responses) are returned as typed error objects
+  with detailed context
 - 📁 **File upload/download & binary support**: Handles `multipart/form-data`
   and `application/octet-stream` uploads and downloads
 - 📦 **ESM output**: Generated code is ESM-first
