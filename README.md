@@ -55,7 +55,7 @@ or check [supported features](#supported-features) for more information.
   - [Custom Response Deserialization](#custom-response-deserialization)
     - [Why use `parse()`?](#why-use-parse)
     - [Basic Usage](#basic-usage)
-    - [Deserializer Map](#deserializer-map)
+    - [Deserializers](#deserializers)
     - [Returned Object Shapes](#returned-object-shapes)
     - [Common Patterns](#common-patterns)
     - [Error Handling Summary](#error-handling-summary)
@@ -161,7 +161,7 @@ const apiConfig = {
   // optional
   forceValidation: false,
   // optional
-  deserializersMap: {
+  deserializers: {
     "application/json": (data) => JSON.parse(data),
     "application/xml": (data) => {
       const parser = new DOMParser();
@@ -668,7 +668,7 @@ if (res.success && res.status === 200) {
 }
 ```
 
-### Deserializer Map
+### Deserializers
 
 The `deserializers` is a property of the config object that maps content types
 to deserializer functions:
