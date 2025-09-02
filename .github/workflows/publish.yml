@@ -45,11 +45,13 @@ jobs:
 
       - name: Bump version
         if: github.event.inputs.version_bump
+        working-directory: apps/craft
         run:
           pnpm version ${{ github.event.inputs.version_bump }}
           --no-git-tag-version
 
       - name: Publish to NPM
+        working-directory: apps/craft
         run: pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
