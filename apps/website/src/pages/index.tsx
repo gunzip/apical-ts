@@ -40,14 +40,14 @@ function HomepageHeader() {
         </div>
         <div className={styles.demoSection}>
           <div className={styles.codeExample}>
-            <div className={styles.codeBlockLabel}>CLI Example</div>
+            <div className={styles.codeBlockLabel}>CLI</div>
             <CodeBlock
               code={`pnpm @apical-ts/craft generate\n -i https://petstore.swagger.io/v2/swagger.json\n -o ./generated\n --generate-client\n`}
               language="bash"
             />
           </div>
           <div className={styles.codeExample}>
-            <div className={styles.codeBlockLabel}>TypeScript Example</div>
+            <div className={styles.codeBlockLabel}>TypeScript</div>
             <CodeBlock
               code={`import { findPetsByStatus } from './generated/operations/findPetsByStatus.js';
 
