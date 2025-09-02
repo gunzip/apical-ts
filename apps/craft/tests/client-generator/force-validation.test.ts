@@ -98,7 +98,9 @@ describe("force validation flag", () => {
       expect(result.responseHandlers[0]).toContain(
         'if ("parsed" in parseResult)',
       );
-      expect(result.responseHandlers[0]).toContain("parsed: parseResult");
+      expect(result.responseHandlers[0]).toContain(
+        "parsed: parseResult.parsed",
+      );
       expect(result.responseHandlers[0]).toContain("if (parseResult.kind)");
       expect(result.responseHandlers[0]).toContain("isValid: false");
 
