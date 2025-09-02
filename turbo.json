@@ -43,6 +43,9 @@
       "outputs": ["coverage"],
       "outputLogs": "errors-only"
     },
+    "clean": {
+      "dependsOn": ["^clean"]
+    },
     "start": {
       "dependsOn": ["^start"]
     },
