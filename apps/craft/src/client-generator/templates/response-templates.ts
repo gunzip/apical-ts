@@ -24,14 +24,14 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
         /* Force validation: automatically parse and return result */
         const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {});
         if ("parsed" in parseResult) {
-          const forcedResult = { success: true as const, status: ${statusCode} as const, data, response, parsed: parseResult } satisfies ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}>;
+          const forcedResult = { isValid: true as const, status: ${statusCode} as const, data, response, parsed: parseResult } satisfies ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}>;
           // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
           return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>);
         }
         if (parseResult.kind) {
           const errorResult = {
             ...parseResult,
-            success: false as const,
+            isValid: false as const,
             result: { data, status: ${statusCode}, response },
           } satisfies ApiResponseError;
           return errorResult;
@@ -40,7 +40,7 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       } else {
         /* Manual validation: provide parse method */
         const manualResult = {
-          success: true as const,
+          isValid: true as const,
           status: ${statusCode} as const,
           data,
           response,
@@ -53,13 +53,13 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       /* No schema or response map: return simple response */
       return `    case ${statusCode}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-  return { success: true as const, status: ${statusCode} as const, data, response };
+  return { isValid: true as const, status: ${statusCode} as const, data, response };
     }`;
     }
   }
 
   return `    case ${statusCode}:
-  return { success: true as const, status: ${statusCode} as const, data: undefined, response };`;
+  return { isValid: true as const, status: ${statusCode} as const, data: undefined, response };`;
 }
 
 /*

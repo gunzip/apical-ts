@@ -102,7 +102,7 @@ describe("force validation flag", () => {
       );
       expect(result.responseHandlers[0]).toContain("parsed: parseResult");
       expect(result.responseHandlers[0]).toContain("if (parseResult.kind)");
-      expect(result.responseHandlers[0]).toContain("success: false");
+      expect(result.responseHandlers[0]).toContain("isValid: false");
 
       /* Should also contain manual validation branch */
       expect(result.responseHandlers[0]).toContain("} else {");

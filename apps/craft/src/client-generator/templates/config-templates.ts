@@ -12,7 +12,7 @@ export function renderApiResponseTypes(): string {
  */
 export type ApiResponse<S extends number, T> =
   | {
-      readonly success: true;
+      readonly isValid: true;
       readonly status: S;
       readonly data: T;
       readonly response: Response;
@@ -32,7 +32,7 @@ type ApiResponseErrorResult = {
  * Represents all possible error conditions that can occur during an operation
  */
 export type ApiResponseError = {
-  readonly success: false;
+  readonly isValid: false;
 } & (
   | {
       readonly kind: "unexpected-error";
@@ -82,7 +82,7 @@ export type ApiResponseWithParse<
   S extends number,
   Map extends Record<string, Record<string, any>>,
 > = {
-  readonly success: true;
+  readonly isValid: true;
   readonly status: S;
   readonly data: unknown;
   readonly response: Response;
@@ -109,7 +109,7 @@ export type ApiResponseWithForcedParse<
   S extends number,
   Map extends Record<string, Record<string, any>>,
 > = {
-  readonly success: true;
+  readonly isValid: true;
   readonly status: S;
   readonly data: unknown;
   readonly response: Response;

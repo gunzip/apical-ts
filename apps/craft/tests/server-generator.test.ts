@@ -50,7 +50,7 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain('kind: "path-error"');
     expect(result.wrapperCode).toContain('kind: "headers-error"');
     expect(result.wrapperCode).toContain('kind: "body-error"');
-    expect(result.wrapperCode).toContain("success: true");
+    expect(result.wrapperCode).toContain("isValid: true");
   });
 
   it("should use strict validation for server input types (query, path, headers)", () => {

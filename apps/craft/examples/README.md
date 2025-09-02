@@ -167,7 +167,7 @@ Generated server wrappers expect handlers that follow this pattern:
 
 ```typescript
 const handler: getPetByIdHandler = async (params) => {
-  if (!params.success) {
+  if (!params.isValid) {
     // Handle validation errors
     return { status: 400 };
   }
@@ -207,7 +207,7 @@ const response = await findPetsByStatus(
   localConfig,
 );
 
-if (response.success && response.status === 200) {
+if (response.isValid && response.status === 200) {
   const data = response.parse();
   if (isParsed(data)) {
     console.log("Pets:", data.parsed);

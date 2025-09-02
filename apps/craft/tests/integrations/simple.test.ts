@@ -66,7 +66,7 @@ describe("Working Integration Test Demo", () => {
       },
     });
 
-    if ("success" in response && response.success) {
+    if ("isValid" in response && response.isValid) {
       // If it succeeds, verify response
       expect(response.status).toBe(201);
     } else if ("kind" in response) {
@@ -95,7 +95,7 @@ describe("Working Integration Test Demo", () => {
       body: formData,
     });
 
-    if ("success" in response && response.success) {
+    if ("isValid" in response && response.isValid) {
       expect(response.status).toBe(200);
     } else if ("kind" in response) {
       // Expected to fail with auth (401) or validation (400) error
@@ -114,7 +114,7 @@ describe("Working Integration Test Demo", () => {
     // Act - testBinaryFileDownload also requires global auth
     const response = await client.testBinaryFileDownload({});
 
-    if ("success" in response && response.success) {
+    if ("isValid" in response && response.isValid) {
       expect(response.status).toBe(200);
       expect(response.response.headers.get("content-type")).toContain(
         "application/octet-stream",
@@ -160,7 +160,7 @@ describe("Working Integration Test Demo", () => {
     // Should return an error object instead of throwing
     if ("kind" in result) {
       expect(result.kind).toBe("unexpected-response");
-      expect(result.success).toBe(false);
+      expect(result.isValid).toBe(false);
       expect(result.result.status).toBe(401);
       expect(result.error).toContain("Unexpected response status: 401");
       expect(result.result.data).toBeDefined();
