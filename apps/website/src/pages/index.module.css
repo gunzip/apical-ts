@@ -19,7 +19,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at 20% 80%,
       rgba(79, 140, 255, 0.1) 0%,
       transparent 50%
@@ -223,7 +224,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at 20% 20%,
       rgba(79, 140, 255, 0.1) 0%,
       transparent 50%
@@ -289,7 +291,10 @@
   flex-direction: column;
   align-items: flex-start;
   position: relative;
-  transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    background 0.2s;
   justify-self: center;
 }
 .whyChooseItem:hover {

@@ -49,7 +49,7 @@ const newPet = await createPet(
       ],
     },
   },
-  apiConfig
+  apiConfig,
 );
 
 if (newPet.success && newPet.status === 201) {
@@ -223,7 +223,7 @@ const xmlResult = await updatePet(
       ...apiConfig.headers,
       "Content-Type": "application/xml",
     },
-  }
+  },
 );
 
 // Response with different content types
@@ -235,7 +235,7 @@ const result = await getPetById(
       ...apiConfig.headers,
       Accept: "application/xml", // Request XML response
     },
-  }
+  },
 );
 ```
 
@@ -384,7 +384,7 @@ const result = await getPetById(
   {
     ...apiConfig,
     fetch: customFetch,
-  }
+  },
 );
 ```
 

@@ -159,7 +159,7 @@ class OpenAPIGeneratorPlugin {
         } catch (error) {
           callback(error);
         }
-      }
+      },
     );
   }
 }
