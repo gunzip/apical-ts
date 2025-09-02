@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write  # Required for npm provenance
+      id-token: write # Required for npm provenance
 
     steps:
       - name: Checkout code
