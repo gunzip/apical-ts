@@ -45,9 +45,6 @@ jobs:
       - name: Build project
         run: pnpm run build
 
-      - name: Generate integration test client and server
-        run: pnpm generate
-
       - name: Run format check
         run: pnpm format:check
 

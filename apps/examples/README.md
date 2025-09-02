@@ -219,6 +219,13 @@ if (response.isValid && response.status === 200) {
 }
 ```
 
+### Error Handling with `neverthrow`
+
+See
+[`neverthrow-error-handling.ts`](./client-examples/neverthrow-error-handling.ts)
+for an example of how to use `neverthrow` to handle errors from the generated
+client.
+
 ## Generated Code Structure
 
 ### Server Wrappers (`generated/server/`)

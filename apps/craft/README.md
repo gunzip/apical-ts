@@ -368,7 +368,7 @@ Don't worry if it seems confusing at first, type inference will help you.
 Examples:
 
 ```ts
-// examples/client-examples/force-validation.ts
+// ../examples/client-examples/force-validation.ts
 
 import {
   configureOperations,
@@ -412,7 +412,7 @@ async function demonstrateClient() {
   );
   if (greedyPetResponse.isValid === true && greedyPetResponse.status === 200) {
     // automatic validation: .parsed available
-    greedyPetResponse.parsed;
+    greedyPetResponse.parsed[0].name;
   }
 
   // Automatic validation bound client
@@ -810,7 +810,7 @@ The generated operation function will accept a `contentType` object to select
 the body and/or response format:
 
 ```ts
-// examples/client-examples/multi-content-types.ts#L5-L68
+// ../examples/client-examples/multi-content-types.ts#L5-L68
 
 const parseXml = () => {
   // Implement XML deserialization logic here
@@ -929,7 +929,7 @@ and customize error handling as needed.
 Example usage with Express and a helper for parameter extraction:
 
 ```ts
-// examples/server-examples/express-server-example.ts#L62-L91
+// ../examples/server-examples/express-server-example.ts#L62-L91
 
 /* Implementation of getPetById handler */
 const getPetByIdHandler: getPetByIdHandler = async (params) => {
