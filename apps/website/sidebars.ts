@@ -1,4 +1,4 @@
-import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
+import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -15,18 +15,18 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   // Manually define the sidebar structure to match the README organization
   docsSidebar: [
-    'introduction',
-    'cli-usage',
-    'supported-input-formats',
-    'programmatic-usage',
+    "introduction",
+    "cli-usage",
+    "supported-input-formats",
+    "programmatic-usage",
     // 'generated-architecture', // TODO: Fix MDX issues
     {
-      type: 'category',
-      label: 'Client Generation',
+      type: "category",
+      label: "Client Generation",
       items: [
-        'client-generation/define-configuration',
-        'client-generation/call-operations',
-        'client-generation/binding-configuration-to-operations',
+        "client-generation/define-configuration",
+        "client-generation/call-operations",
+        "client-generation/binding-configuration-to-operations",
         // TODO: Add remaining client generation pages
         // 'client-generation/response-handling',
         // 'client-generation/error-handling',
@@ -44,7 +44,5 @@ const sidebars: SidebarsConfig = {
     // 'conclusion',
   ],
 };
-
-export default sidebars;
 
 export default sidebars;
