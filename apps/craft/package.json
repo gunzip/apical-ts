@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "build:docs": "embedme README.md",
+    "build:docs": "embedme README.md && prettier --write README.md",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
     "format": "prettier --write .",
