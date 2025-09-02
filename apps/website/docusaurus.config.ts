@@ -6,7 +6,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
   title: "@apical-ts/craft",
-  tagline: "Yet Another OpenAPI to TypeScript Generator",
+  tagline: "Strictly-typed client and server from OpenAPI to Typescript",
   favicon: "img/favicon.ico",
 
   headTags: [
