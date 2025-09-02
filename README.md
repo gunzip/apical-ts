@@ -11,4 +11,4 @@ Need to **validate server requests and return typed responses**? 🛡️ We've g
 you covered with built-in support for request and response validation using Zod
 schemas.
 
-See https://apical-ts.github.io/apical-ts/craft for more information.
+See https://gunzip.github.io/apical-ts/ for more information.
