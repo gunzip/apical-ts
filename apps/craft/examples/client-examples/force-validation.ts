@@ -40,7 +40,7 @@ async function demonstrateClient() {
   );
   if (greedyPetResponse.isValid === true && greedyPetResponse.status === 200) {
     // automatic validation: .parsed available
-    greedyPetResponse.parsed;
+    greedyPetResponse.parsed[0].name;
   }
 
   // Automatic validation bound client
