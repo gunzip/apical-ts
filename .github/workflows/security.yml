@@ -1,0 +1,81 @@
+name: "Security Scan"
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Weekly on Mondays at 8:00 UTC
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-scan:
+    name: "Dependency Security Scan"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run npm audit
+        run: pnpm audit --audit-level moderate --json > audit-results.json || true
+
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-results
+          path: audit-results.json
+          retention-days: 30
+
+  license-scan:
+    name: "License Compliance Scan"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check licenses
+        run: |
+          echo "Checking for restrictive licenses..."
+          # Note: This is a basic check - consider using license-checker or similar tools
+          # for more comprehensive license analysis
+          pnpm licenses list > licenses.txt || true
+          
+      - name: Upload license results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: license-scan-results
+          path: licenses.txt
+          retention-days: 30

@@ -1,0 +1,50 @@
+version: 2
+updates:
+  # Enable version updates for npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "gunzip"
+    assignees:
+      - "gunzip"
+    commit-message:
+      prefix: "security"
+      include: "scope"
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "prettier*"
+          - "typescript*"
+          - "vitest*"
+          - "turbo*"
+      security-updates:
+        dependency-type: "production"
+        update-types:
+          - "version-update:semver-patch"
+          - "version-update:semver-minor"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "gunzip"
+    assignees:
+      - "gunzip"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
