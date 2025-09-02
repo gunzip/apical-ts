@@ -850,7 +850,7 @@ async function demonstrateClient() {
     },
   );
 
-  if (!ret.success) {
+  if (!ret.isValid) {
     console.error("Error:", ret.error);
   } else if (ret.status === 200) {
     console.log("Raw data:", ret.data);
@@ -933,7 +933,7 @@ Example usage with Express and a helper for parameter extraction:
 
 /* Implementation of getPetById handler */
 const getPetByIdHandler: getPetByIdHandler = async (params) => {
-  if (!params.success) {
+  if (!params.isValid) {
     /* Handle validation errors */
     console.error("Validation error in getPetById:", params);
     return {

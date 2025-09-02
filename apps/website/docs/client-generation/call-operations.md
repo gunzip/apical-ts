@@ -17,15 +17,14 @@ const apiConfig = {
   headers: {
     Authorization: "Bearer your-token",
   },
+  forceValidation: true,
 };
 
 // Call the operation
-const result = await getPetById({ petId: "123" }, apiConfig);
+const result = await getPetById({ path: { petId: "123" } }, apiConfig);
 
-if (result.success) {
-  console.log("Pet data:", result.data);
-} else {
-  console.error("Failed to get pet:", result.error);
+if (result.isValid) {
+  console.log("Pet data:", result.parsed);
 }
 ```
 
@@ -52,8 +51,8 @@ const newPet = await createPet(
   apiConfig,
 );
 
-if (newPet.success && newPet.status === 201) {
-  console.log("Pet created:", newPet.data);
+if (newPet.isValid && newPet.status === 201) {
+  console.log("Pet created:", newPet.parsed);
 }
 ```
 
@@ -158,10 +157,10 @@ type ErrorResponse = {
 ```typescript
 const result = await getPetById({ petId: "123" });
 
-if (result.success) {
+if (result.isValid) {
   // TypeScript knows this is a success response
   console.log("Status:", result.status);
-  console.log("Data:", result.data);
+  console.log("Data:", result.parsed);
 } else {
   // TypeScript knows this is an error response
   console.error("Error kind:", result.kind);
@@ -174,10 +173,10 @@ if (result.success) {
 ```typescript
 const result = await getPetById({ petId: "123" });
 
-if (!result.success) {
+if (!result.isValid) {
   console.error("Operation failed:", result.kind, result.error);
 } else if (result.status === 200) {
-  console.log("Pet found:", result.data);
+  console.log("Pet found:", result.parsed);
 } else if (result.status === 404) {
   console.warn("Pet not found");
 } else {
@@ -190,7 +189,7 @@ if (!result.success) {
 ```typescript
 const result = await getPetById({ petId: "123" });
 
-if (result.success) {
+if (result.isValid) {
   // Access response headers
   const contentType = result.response.headers.get("content-type");
   const lastModified = result.response.headers.get("last-modified");
@@ -246,12 +245,12 @@ The generated client automatically handles content type detection:
 ```typescript
 const result = await getPetById({ petId: "123" });
 
-if (result.success) {
+if (result.isValid) {
   const contentType = result.response.headers.get("content-type");
 
   if (contentType?.includes("application/json")) {
     // Handle JSON response
-    const jsonData = result.data;
+    const jsonData = result.parsed;
   } else if (contentType?.includes("application/xml")) {
     // Handle XML response (if deserializer is configured)
     const xmlData = result.data;
@@ -266,7 +265,7 @@ if (result.success) {
 ```typescript
 const result = await getPetById({ petId: "123" });
 
-if (!result.success && result.kind === "unexpected-error") {
+if (!result.isValid && result.kind === "unexpected-error") {
   // Network failure, connection timeout, etc.
   console.error("Network error:", result.error);
 }
@@ -277,10 +276,9 @@ if (!result.success && result.kind === "unexpected-error") {
 ```typescript
 const result = await getPetById({ petId: "123" });
 
-if (!result.success && result.kind === "unexpected-response") {
+if (!result.isValid && result.kind === "unexpected-response") {
   // HTTP status not defined in OpenAPI spec
   console.error(`HTTP ${result.status}: ${result.error}`);
-  console.log("Response data:", result.data);
 }
 ```
 
@@ -289,7 +287,7 @@ if (!result.success && result.kind === "unexpected-response") {
 ```typescript
 const result = await getPetById({ petId: "123" });
 
-if (result.success) {
+if (result.isValid) {
   const parsed = result.parse();
 
   if (parsed.kind === "parse-error") {
@@ -311,8 +309,8 @@ async function fetchPetData() {
   try {
     const result = await getPetById({ petId: "123" });
 
-    if (result.success && result.status === 200) {
-      return result.data;
+    if (result.isValid && result.status === 200) {
+      return result.parsed;
     } else {
       throw new Error("Failed to fetch pet");
     }
@@ -329,8 +327,8 @@ async function fetchPetData() {
 function fetchPetData() {
   return getPetById({ petId: "123" })
     .then((result) => {
-      if (result.success && result.status === 200) {
-        return result.data;
+      if (result.isValid && result.status === 200) {
+        return result.parsed;
       } else {
         throw new Error("Failed to fetch pet");
       }
@@ -353,7 +351,7 @@ const result = await getPetById({
   "If-None-Match": '"abc123"', // ETag from previous request
 });
 
-if (result.success && result.status === 304) {
+if (result.isValid && result.status === 304) {
   console.log("Pet data unchanged, use cached version");
 }
 
@@ -380,7 +378,7 @@ const customFetch = (url, options) => {
 };
 
 const result = await getPetById(
-  { petId: "123" },
+  path: { petId: "123" },
   {
     ...apiConfig,
     fetch: customFetch,
@@ -390,7 +388,7 @@ const result = await getPetById(
 
 ## Best Practices
 
-1. **Always check `result.success`** before accessing success-specific
+1. **Always check `result.isValid`** before accessing success-specific
    properties
 2. **Handle different status codes** explicitly rather than assuming success
    means 200
