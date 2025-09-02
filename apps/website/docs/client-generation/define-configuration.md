@@ -311,7 +311,7 @@ const fetchWithRetry = (maxRetries = 3) => {
           return response;
         }
         lastError = new Error(
-          `HTTP ${response.status}: ${response.statusText}`
+          `HTTP ${response.status}: ${response.statusText}`,
         );
       } catch (error) {
         lastError = error;
@@ -322,7 +322,7 @@ const fetchWithRetry = (maxRetries = 3) => {
 
       // Exponential backoff
       await new Promise((resolve) =>
-        setTimeout(resolve, Math.pow(2, i) * 1000)
+        setTimeout(resolve, Math.pow(2, i) * 1000),
       );
     }
 

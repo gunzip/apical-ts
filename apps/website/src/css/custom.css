@@ -14,21 +14,24 @@
   --ifm-color-primary-light: #3b82f6;
   --ifm-color-primary-lighter: #60a5fa;
   --ifm-color-primary-lightest: #93c5fd;
-  
+
   /* Enhanced typography */
   --ifm-code-font-size: 95%;
-  --ifm-font-family-base: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --ifm-font-family-monospace: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  
+  --ifm-font-family-base:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ifm-font-family-monospace:
+    "JetBrains Mono", "Fira Code", "SF Mono", Monaco, "Cascadia Code",
+    "Roboto Mono", Consolas, "Courier New", monospace;
+
   /* Code highlighting */
   --docusaurus-highlighted-code-line-bg: rgba(30, 58, 138, 0.1);
-  
+
   /* Accessibility improvements */
   --ifm-heading-color: #1f2937;
   --ifm-color-emphasis-300: #d1d5db;
   --ifm-color-emphasis-600: #6b7280;
   --ifm-color-emphasis-700: #374151;
-  
+
   /* Success and warning colors with good contrast */
   --ifm-color-success: #059669;
   --ifm-color-warning: #d97706;
@@ -37,7 +40,7 @@
 }
 
 /* Dark mode with professional colors and WCAG compliance */
-[data-theme='dark'] {
+[data-theme="dark"] {
   /* Primary colors optimized for dark backgrounds */
   --ifm-color-primary: #60a5fa;
   --ifm-color-primary-dark: #3b82f6;
@@ -46,14 +49,14 @@
   --ifm-color-primary-light: #93c5fd;
   --ifm-color-primary-lighter: #bfdbfe;
   --ifm-color-primary-lightest: #dbeafe;
-  
+
   /* Dark mode specific improvements */
   --docusaurus-highlighted-code-line-bg: rgba(96, 165, 250, 0.1);
   --ifm-heading-color: #f9fafb;
   --ifm-color-emphasis-300: #4b5563;
   --ifm-color-emphasis-600: #9ca3af;
   --ifm-color-emphasis-700: #d1d5db;
-  
+
   /* Dark mode success, warning, danger colors */
   --ifm-color-success: #10b981;
   --ifm-color-warning: #f59e0b;
@@ -62,7 +65,12 @@
 }
 
 /* Typography enhancements */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   letter-spacing: -0.025em;
 }
@@ -85,7 +93,11 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 3rem;
   font-weight: 700;
   letter-spacing: -0.05em;
-  background: linear-gradient(135deg, var(--ifm-color-primary), var(--ifm-color-primary-light));
+  background: linear-gradient(
+    135deg,
+    var(--ifm-color-primary),
+    var(--ifm-color-primary-light)
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -114,7 +126,7 @@ h1, h2, h3, h4, h5, h6 {
   .hero__title {
     font-size: 2rem;
   }
-  
+
   .hero__subtitle {
     font-size: 1.1rem;
   }

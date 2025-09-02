@@ -433,7 +433,6 @@ async function demonstrateClient() {
 }
 
 demonstrateClient();
-
 ```
 
 ### Manual Runtime Validation
