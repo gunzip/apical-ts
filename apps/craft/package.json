@@ -11,11 +11,12 @@
   },
   "files": [
     "dist",
+    "bin",
     "README.md",
     "LICENSE"
   ],
   "bin": {
-    "craft": "./dist/index.js"
+    "craft": "./bin/craft.js"
   },
   "scripts": {
     "build": "tsup",
