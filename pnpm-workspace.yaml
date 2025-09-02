@@ -17,3 +17,5 @@ cleanupUnusedCatalogs: true
 
 onlyBuiltDependencies:
   - esbuild
+
+packageImportMethod: "clone-or-copy"
