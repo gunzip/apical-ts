@@ -17,22 +17,31 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      TURBO_CACHE_DIR: .turbo/cache
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.15.1
+      - name: Enable corepack
+        run: corepack enable
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: ".node-version"
           cache: "pnpm"
+
+      - name: Setup turbo cache
+        if: ${{ env.TURBO_CACHE_DIR != '' }}
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/${{ env.TURBO_CACHE_DIR }}
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
