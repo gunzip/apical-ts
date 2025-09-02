@@ -95,7 +95,6 @@ describe("error handling in client generator", () => {
         typeImports,
         true,
         "TestOperationResponseMap",
-        false,
       );
 
       /* Should include parse method that calls parseApiResponseUnknownData */
@@ -130,7 +129,6 @@ describe("error handling in client generator", () => {
         typeImports,
         true,
         "TestOperationResponseMap",
-        true,
       );
 
       /* Should include error handling in force validation mode */
@@ -140,7 +138,7 @@ describe("error handling in client generator", () => {
       );
       expect(responseHandler).toContain('if ("parsed" in parseResult)');
       expect(responseHandler).toContain("if (parseResult.kind");
-      expect(responseHandler).toContain("success: false");
+      expect(responseHandler).toContain("isValid: false");
       /* Force validation should directly return parsed result or error, not provide a parse method */
     });
   });
