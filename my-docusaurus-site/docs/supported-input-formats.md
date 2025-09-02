@@ -1,22 +1,28 @@
 # Supported Input Formats
 
-@apical-ts/craft provides comprehensive support for various OpenAPI specification formats, automatically handling format conversion and normalization to ensure compatibility.
+@apical-ts/craft provides comprehensive support for various OpenAPI
+specification formats, automatically handling format conversion and
+normalization to ensure compatibility.
 
 ## Supported Versions
 
-The generator automatically detects and converts different OpenAPI specification versions:
+The generator automatically detects and converts different OpenAPI specification
+versions:
 
 ### OpenAPI 2.0 (Swagger)
+
 - **File extensions**: `.json`, `.yaml`, `.yml`
 - **Conversion**: Automatically converted to OpenAPI 3.0, then to 3.1
 - **Support level**: ✅ Full support with automatic conversion
 
 ### OpenAPI 3.0.x
+
 - **File extensions**: `.json`, `.yaml`, `.yml`
 - **Conversion**: Automatically converted to OpenAPI 3.1
 - **Support level**: ✅ Full support with automatic conversion
 
 ### OpenAPI 3.1.x
+
 - **File extensions**: `.json`, `.yaml`, `.yml`
 - **Conversion**: No conversion needed
 - **Support level**: ✅ Native support
@@ -25,7 +31,8 @@ The generator automatically detects and converts different OpenAPI specification
 
 The generator automatically detects the format based on:
 
-1. **File content analysis** - Examines the specification structure and version fields
+1. **File content analysis** - Examines the specification structure and version
+   fields
 2. **MIME type detection** - For remote URLs, respects content-type headers
 3. **File extension hints** - Uses file extensions as secondary indicators
 
@@ -68,7 +75,8 @@ pnpx @apical-ts/craft generate \
 
 ## Normalization Process
 
-All input formats undergo automatic normalization to OpenAPI 3.1.0 before code generation:
+All input formats undergo automatic normalization to OpenAPI 3.1.0 before code
+generation:
 
 ```mermaid
 graph LR
@@ -80,7 +88,8 @@ graph LR
 
 ### Benefits of Normalization
 
-1. **Consistent Processing** - All specifications are processed using the same logic
+1. **Consistent Processing** - All specifications are processed using the same
+   logic
 2. **Latest Features** - Takes advantage of OpenAPI 3.1.x enhancements
 3. **JSON Schema Compatibility** - OpenAPI 3.1.x uses JSON Schema draft 2020-12
 4. **Better Type Safety** - More precise type definitions and validations
@@ -90,6 +99,7 @@ graph LR
 The generator automatically resolves external references:
 
 ### Local References
+
 ```yaml
 # References to local files
 $ref: './schemas/user.yaml#/User'
@@ -97,6 +107,7 @@ $ref: '../common/errors.yaml#/Error'
 ```
 
 ### Remote References
+
 ```yaml
 # References to remote files
 $ref: 'https://api.example.com/schemas/common.yaml#/Error'
@@ -104,6 +115,7 @@ $ref: 'https://raw.githubusercontent.com/user/schemas/main/user.yaml#/User'
 ```
 
 ### Internal References
+
 ```yaml
 # References within the same document
 $ref: '#/components/schemas/User'
@@ -113,6 +125,7 @@ $ref: '#/components/responses/NotFound'
 ## File Format Examples
 
 ### YAML Format
+
 ```yaml
 openapi: 3.1.0
 info:
@@ -123,14 +136,14 @@ paths:
     get:
       summary: List users
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/User'
+                  $ref: "#/components/schemas/User"
 components:
   schemas:
     User:
@@ -143,6 +156,7 @@ components:
 ```
 
 ### JSON Format
+
 ```json
 {
   "openapi": "3.1.0",
@@ -194,15 +208,19 @@ components:
 
 The generator includes robust validation and error handling:
 
-- **Schema Validation** - Validates OpenAPI specifications against official schemas
+- **Schema Validation** - Validates OpenAPI specifications against official
+  schemas
 - **Reference Resolution** - Handles missing or invalid references gracefully
 - **Format Detection** - Provides clear error messages for unsupported formats
 - **Network Errors** - Handles timeouts and connection issues for remote URLs
 
 ## Best Practices
 
-1. **Use Specific Versions** - Pin OpenAPI versions in your specifications for consistency
+1. **Use Specific Versions** - Pin OpenAPI versions in your specifications for
+   consistency
 2. **Validate Before Generation** - Use OpenAPI validators to catch issues early
 3. **Organize References** - Keep external references organized and accessible
-4. **Version Control** - Store specifications in version control for reproducibility
-5. **Documentation** - Include clear descriptions and examples in your specifications
+4. **Version Control** - Store specifications in version control for
+   reproducibility
+5. **Documentation** - Include clear descriptions and examples in your
+   specifications
