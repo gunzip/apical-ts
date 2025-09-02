@@ -1,6 +1,7 @@
 # Repository Security Configuration
 
-This document outlines the recommended security configurations for the @apical-ts/apical-ts repository.
+This document outlines the recommended security configurations for the
+@apical-ts/apical-ts repository.
 
 ## Branch Protection Rules
 
@@ -9,6 +10,7 @@ This document outlines the recommended security configurations for the @apical-t
 The `main` branch should be protected with the following settings:
 
 #### Required Status Checks
+
 - ✅ Require status checks to pass before merging
 - ✅ Require branches to be up to date before merging
 - Required checks:
@@ -17,6 +19,7 @@ The `main` branch should be protected with the following settings:
   - `dependency-scan` (from security.yml workflow)
 
 #### Pull Request Requirements
+
 - ✅ Require a pull request before merging
 - ✅ Require at least 1 review from code owners
 - ✅ Dismiss stale PR reviews when new commits are pushed
@@ -24,6 +27,7 @@ The `main` branch should be protected with the following settings:
 - ✅ Restrict pushes that create files larger than 100MB
 
 #### Additional Protections
+
 - ✅ Restrict deletions
 - ✅ Allow force pushes: **Disabled**
 - ✅ Allow deletions: **Disabled**
@@ -32,12 +36,14 @@ The `main` branch should be protected with the following settings:
 ### Development Branch Patterns
 
 For feature branches (`feature/*`, `fix/*`, `security/*`):
+
 - No specific protection required
 - Will be covered by PR requirements to merge to main
 
 ## Repository Security Settings
 
 ### General Settings
+
 - ✅ Private vulnerability reporting: **Enabled**
 - ✅ Dependency graph: **Enabled**
 - ✅ Dependabot alerts: **Enabled**
@@ -45,43 +51,52 @@ For feature branches (`feature/*`, `fix/*`, `security/*`):
 - ✅ Code scanning alerts: **Enabled**
 
 ### Secret Scanning
+
 - ✅ Secret scanning: **Enabled**
 - ✅ Secret scanning for partner patterns: **Enabled**
 - ✅ Push protection: **Enabled**
 
 ### Actions Permissions
-- ✅ Actions permissions: **Allow actions created by GitHub, and select non-GitHub actions**
+
+- ✅ Actions permissions: **Allow actions created by GitHub, and select
+  non-GitHub actions**
 - ✅ Allow actions created by GitHub: **Enabled**
 - ✅ Allow Marketplace actions by verified creators: **Enabled**
 - ✅ Allow specified actions and reusable workflows
-- ✅ Fork pull request workflows: **Require approval for first-time contributors**
+- ✅ Fork pull request workflows: **Require approval for first-time
+  contributors**
 
 ## Secrets Management
 
 ### Repository Secrets
+
 - `NPM_TOKEN`: Used for publishing to npm registry
   - Should be a granular access token with minimal permissions
   - Only needs publish access to @apical-ts/craft package
   - Should be rotated regularly (every 90 days recommended)
 
 ### Environment Secrets
+
 Consider using environment-specific secrets for different deployment targets.
 
 ## Automated Security Measures
 
 ### Dependabot Configuration
+
 - Located in `.github/dependabot.yml`
 - Weekly dependency updates
 - Grouped updates for development dependencies
 - Automatic security patches
 
 ### CodeQL Scanning
+
 - Located in `.github/workflows/codeql.yml`
 - Runs on push to main, PRs, and weekly schedule
 - Analyzes JavaScript/TypeScript code
 - Results available in Security tab
 
 ### Security Workflow
+
 - Located in `.github/workflows/security.yml`
 - Dependency vulnerability scanning
 - License compliance checking
@@ -96,12 +111,14 @@ Consider using environment-specific secrets for different deployment targets.
 ## Compliance and Auditing
 
 ### Regular Security Tasks
+
 - [ ] Monthly review of dependency updates
 - [ ] Quarterly secret rotation
 - [ ] Annual security configuration review
 - [ ] Review and update security contacts
 
 ### Audit Trail
+
 - All security-related changes tracked in git history
 - Security scan results archived as workflow artifacts
 - Dependabot updates create audit trail via PRs
@@ -109,6 +126,7 @@ Consider using environment-specific secrets for different deployment targets.
 ## Implementation Checklist
 
 ### Repository Administrator Tasks
+
 - [ ] Enable branch protection rules for main branch
 - [ ] Configure repository security settings
 - [ ] Set up required status checks
@@ -117,6 +135,7 @@ Consider using environment-specific secrets for different deployment targets.
 - [ ] Review and update NPM_TOKEN permissions
 
 ### Team Tasks
+
 - [ ] Review security policy and procedures
 - [ ] Set up security notification preferences
 - [ ] Understand vulnerability reporting process
@@ -131,4 +150,5 @@ Consider using environment-specific secrets for different deployment targets.
 
 ---
 
-**Note**: This configuration assumes a public repository. For private repositories, some settings may need adjustment.
+**Note**: This configuration assumes a public repository. For private
+repositories, some settings may need adjustment.
