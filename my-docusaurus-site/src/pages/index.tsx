@@ -20,9 +20,21 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/intro">
-            Docusaurus Tutorial - 5min ⏱️
+            to="/docs/introduction">
+            Get Started - 5min ⏱️
           </Link>
+          <Link
+            className="button button--outline button--lg margin-left--md"
+            to="/docs/cli-usage">
+            View CLI Docs 📖
+          </Link>
+        </div>
+        <div className={styles.demoSection}>
+          <img
+            src="/img/demo.gif"
+            alt="Demo of @apical-ts/craft generating TypeScript code from OpenAPI specifications"
+            className={styles.demoGif}
+          />
         </div>
       </div>
     </header>
@@ -33,8 +45,8 @@ export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+      title="OpenAPI to TypeScript Generator"
+      description="Turn your OpenAPI specifications into fully-typed Zod v4 schemas and type-safe REST API clients">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

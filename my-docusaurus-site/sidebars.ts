@@ -19,7 +19,7 @@ const sidebars: SidebarsConfig = {
     'cli-usage',
     'supported-input-formats',
     'programmatic-usage',
-    'generated-architecture',
+    // 'generated-architecture', // TODO: Fix MDX issues
     {
       type: 'category',
       label: 'Client Generation',
@@ -27,19 +27,21 @@ const sidebars: SidebarsConfig = {
         'client-generation/define-configuration',
         'client-generation/call-operations',
         'client-generation/binding-configuration-to-operations',
-        'client-generation/response-handling',
-        'client-generation/error-handling',
-        'client-generation/response-payload-validation',
-        'client-generation/custom-response-deserialization',
-        'client-generation/handling-multiple-content-types',
-        'client-generation/using-generated-zod-schemas',
+        // TODO: Add remaining client generation pages
+        // 'client-generation/response-handling',
+        // 'client-generation/error-handling',
+        // 'client-generation/response-payload-validation',
+        // 'client-generation/custom-response-deserialization',
+        // 'client-generation/handling-multiple-content-types',
+        // 'client-generation/using-generated-zod-schemas',
       ],
     },
-    'server-routes-wrappers-generation',
-    'supported-features',
-    'benefits-of-operation-based-architecture',
-    'comparison-with-alternative-libraries',
-    'conclusion',
+    // TODO: Add remaining main pages
+    // 'server-routes-wrappers-generation',
+    // 'supported-features',
+    // 'benefits-of-operation-based-architecture',
+    // 'comparison-with-alternative-libraries',
+    // 'conclusion',
   ],
 };
 

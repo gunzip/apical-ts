@@ -20,7 +20,7 @@ We all like the developer experience of [tRPC](https://trpc.io/), but not always
 
 Many existing generators lack flexibility and strong type safety. Most do not support multiple success responses or multiple content types, and their typings are often too loose—making it easy to accidentally access undefined properties. With **stricter** guardrails, @apical-ts/craft helps developers (and Gen-AIs) build more robust and reliable implementations.
 
-Curious why you should choose this generator over others? See [comparison with alternative libraries](comparison-with-alternative-libraries) for more details or check [supported features](supported-features) for more information.
+Curious why you should choose this generator over others? See our comparison with alternative libraries for more details or check our comprehensive feature list for more information.
 
 ## Quick Start
 
@@ -55,4 +55,4 @@ This will create:
 - Learn how to use the [CLI tool](cli-usage)
 - Explore [programmatic usage](programmatic-usage) for build integrations
 - Dive into [client generation](client-generation/define-configuration) to build type-safe API clients
-- Check out the [supported features](supported-features) for a complete overview
+- Check out our comprehensive feature documentation for a complete overview
