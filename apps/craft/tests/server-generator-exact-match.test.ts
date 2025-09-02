@@ -76,21 +76,21 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify error handling with correct error types */
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "query-error", error: queryParse\.error, success: false \}\)/,
+      /return handler\(\{ kind: "query-error", error: queryParse\.error, isValid: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "path-error", error: pathParse\.error, success: false \}\)/,
+      /return handler\(\{ kind: "path-error", error: pathParse\.error, isValid: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "headers-error", error: headersParse\.error, success: false \}\)/,
+      /return handler\(\{ kind: "headers-error", error: headersParse\.error, isValid: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "body-error", error: bodyParse\.error, success: false \}\)/,
+      /return handler\(\{ kind: "body-error", error: bodyParse\.error, isValid: false \}\)/,
     );
 
     /* Verify success handler call with all parameters */
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{\s*success: true,\s*value: \{\s*query: queryParse\.data,\s*path: pathParse\.data,\s*headers: headersParse\.data,\s*body: parsedBody\s*\},?\s*\}\)/,
+      /return handler\(\{\s*isValid: true,\s*value: \{\s*query: queryParse\.data,\s*path: pathParse\.data,\s*headers: headersParse\.data,\s*body: parsedBody\s*\},?\s*\}\)/,
     );
 
     /* Verify discriminated union types are correctly defined */
@@ -108,7 +108,7 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify handler type includes both success and error cases */
     expect(result.wrapperCode).toMatch(
-      /petFindByStatusHandler = \(\s*params: \{ success: true; value: petFindByStatusParsedParams \} \| petFindByStatusValidationError,?\s*\) => Promise<petFindByStatusResponse>/,
+      /petFindByStatusHandler = \(\s*params: \{ isValid: true; value: petFindByStatusParsedParams \} \| petFindByStatusValidationError,?\s*\) => Promise<petFindByStatusResponse>/,
     );
   });
 

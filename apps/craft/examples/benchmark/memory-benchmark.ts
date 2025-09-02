@@ -133,7 +133,7 @@ async function waitForServer(maxRetries = 10) {
         headers: { api_key: "test-key" },
       });
 
-      if (response.success && response.status === 200) {
+      if (response.isValid && response.status === 200) {
         console.log("✅ Server is ready and responding");
         return true;
       }

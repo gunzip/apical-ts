@@ -13,13 +13,13 @@ describe("Strict validation behavior", () => {
 
     // @ts-expect-error
     const handler: testMultiContentTypesHandler = async (params) => {
-      if (params.success) {
+      if (params.isValid) {
         return {
           status: 200,
           contentType: "application/json",
           data: mockData.newModel(),
         };
-      } else if (!params.success && params.kind === "body-error") {
+      } else if (!params.isValid && params.kind === "body-error") {
         validationErrorReceived = true;
         actualError = params.error;
         return {
@@ -30,7 +30,7 @@ describe("Strict validation behavior", () => {
       }
 
       throw new Error(
-        `Unexpected validation error: ${!params.success ? params.kind : "unknown"}`,
+        `Unexpected validation error: ${!params.isValid ? params.kind : "unknown"}`,
       );
     };
 
@@ -64,7 +64,7 @@ describe("Strict validation behavior", () => {
 
   it("should accept request body without extra properties", async () => {
     const handler: testMultiContentTypesHandler = async (params) => {
-      if ("success" in params && params.success) {
+      if ("isValid" in params && params.isValid) {
         expect(params.value.body).toEqual({
           id: "test-123",
           name: "Test Object",
@@ -77,7 +77,7 @@ describe("Strict validation behavior", () => {
       }
 
       throw new Error(
-        `Unexpected validation error: ${"success" in params && !params.success ? params.kind : "unknown"}`,
+        `Unexpected validation error: ${"isValid" in params && !params.isValid ? params.kind : "unknown"}`,
       );
     };
 

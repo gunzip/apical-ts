@@ -40,7 +40,7 @@ async function demonstrateClient() {
     },
   );
 
-  if (!ret.success) {
+  if (!ret.isValid) {
     console.error("Error:", ret.error);
   } else if (ret.status === 200) {
     console.log("Raw data:", ret.data);

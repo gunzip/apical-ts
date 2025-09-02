@@ -238,7 +238,7 @@ Recommended pattern:
 ```ts
 const result = await getPetById({ petId: "123" });
 
-if (result.success === false) {
+if (result.isValid === false) {
   console.error("Operation failed:", result.kind, result.error);
 } else if (result.status === 200) {
   console.log("Pet (raw):", result.data);
@@ -253,7 +253,7 @@ if (result.success === false) {
 
 Client calls never throw exceptions. Instead, all errors are returned as part of
 the response union, providing a consistent and type-safe error handling
-experience. You can branch on either `result.success === false` or the presence
+experience. You can branch on either `result.isValid === false` or the presence
 of the `kind` field; both are valid.
 
 ### Error Types
@@ -302,7 +302,7 @@ type ApiResponseError =
 ```ts
 const result = await getPetById({ petId: "123" });
 
-if (!result.success) {
+if (!result.isValid) {
   // You don't have to handle all errors like this, but you can.
   switch (result.kind) {
     case "unexpected-response":
@@ -385,7 +385,7 @@ async function demonstrateClient() {
   const lazyPetsResponse = await findPetsByStatus({
     query: { status: "available" },
   });
-  if (lazyPetsResponse.success === true && lazyPetsResponse.status === 200) {
+  if (lazyPetsResponse.isValid === true && lazyPetsResponse.status === 200) {
     lazyPetsResponse.parse();
   }
 
@@ -398,7 +398,7 @@ async function demonstrateClient() {
   const petsResponse1 = await lazyClient.findPetsByStatus({
     query: { status: "available" },
   });
-  if (petsResponse1.success === true && petsResponse1.status === 200) {
+  if (petsResponse1.isValid === true && petsResponse1.status === 200) {
     petsResponse1.parse();
   }
 
@@ -410,7 +410,7 @@ async function demonstrateClient() {
     },
     { ...globalConfig, forceValidation: true },
   );
-  if (greedyPetResponse.success === true && greedyPetResponse.status === 200) {
+  if (greedyPetResponse.isValid === true && greedyPetResponse.status === 200) {
     // automatic validation: .parsed available
     greedyPetResponse.parsed;
   }
@@ -424,7 +424,7 @@ async function demonstrateClient() {
   const petsResponse2 = await greedyClient.findPetsByStatus({
     query: { status: "available" },
   });
-  if (petsResponse2.success === true && petsResponse2.status === 200) {
+  if (petsResponse2.isValid === true && petsResponse2.status === 200) {
     // bound automatic validation: .parsed available
     petsResponse2.parsed;
   }
@@ -452,7 +452,7 @@ These objects never throw; you inspect the returned value to act accordingly.
 ```ts
 const result = await getUserProfile({ userId: "123" });
 
-if (result.success) {
+if (result.isValid) {
   if (result.status === 200) {
     const outcome = result.parse();
     if ("parsed" in outcome) {
@@ -533,7 +533,7 @@ const client = configureOperations(
 );
 
 const result = await client.getUserProfile({ userId: "123" });
-if (result.success && result.status === 200) {
+if (result.isValid && result.status === 200) {
   if (isParsed(result)) {
     console.log("User:", result.parsed.name);
   } else if (result.kind === "parse-error") {
@@ -654,7 +654,7 @@ const res = await testMultiContentTypes(
   },
 );
 
-if (res.success && res.status === 200) {
+if (res.isValid && res.status === 200) {
   const outcome = res.parse();
   if (isParsed(outcome)) {
     console.log(outcome.parsed);
