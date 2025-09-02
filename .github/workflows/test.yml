@@ -38,6 +38,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Security audit
+        run: pnpm audit --audit-level moderate
+        continue-on-error: true
+
       - name: Build project
         run: pnpm run build
 
