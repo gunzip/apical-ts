@@ -19,9 +19,7 @@ function HomepageHeader() {
         >
           {siteConfig.title}
         </Heading>
-        <div className={styles.heroSubBold}>
-          Production-grade, blazing fast, fully-typed OpenAPI generator
-        </div>
+        <div className={styles.heroSubBold}></div>
         <p className={clsx("hero__subtitle", styles.heroSubtitle)}>
           {siteConfig.tagline}
         </p>
@@ -30,20 +28,24 @@ function HomepageHeader() {
             className="button button--primary button--lg"
             to="/docs/introduction"
           >
-            Get Started - 5min ⏱️
+            Get Started in 5min ⏱️
           </Link>
-          <Link
+          {/* <Link
             className="button button--secondary button--lg margin-left--md"
             to="/docs/cli-usage"
           >
             View CLI Docs 📖
-          </Link>
+          </Link> */}
         </div>
         <div className={styles.demoSection}>
           <div className={styles.codeExample}>
             <div className={styles.codeBlockLabel}>CLI Example</div>
             <pre className={styles.codeBlock}>
-              <code>{`pnpm start generate -i openapi.yaml -o ./generated --generate-client`}</code>
+              <code>{`pnpm @apical-ts/craft generate
+-i openapi.yaml
+-o ./generated
+--generate-client
+--generate-server`}</code>
             </pre>
           </div>
           <div className={styles.codeExample}>
@@ -64,82 +66,54 @@ console.log(result.data.name); // string
   );
 }
 
-function StatsSection() {
-  return (
-    <section className={styles.stats}>
-      <div className="container">
-        <div className={styles.statsGrid}>
-          <div className={styles.statItem}>
-            <div className={styles.statNumber}>100%</div>
-            <div className={styles.statLabel}>Type Safety</div>
-            <div className={styles.statDescription}>
-              Runtime validation with Zod
-            </div>
-          </div>
-          <div className={styles.statItem}>
-            <div className={styles.statNumber}>5x</div>
-            <div className={styles.statLabel}>Faster Development</div>
-            <div className={styles.statDescription}>
-              Compared to manual client creation
-            </div>
-          </div>
-          <div className={styles.statItem}>
-            <div className={styles.statNumber}>Zero</div>
-            <div className={styles.statLabel}>Configuration</div>
-            <div className={styles.statDescription}>Works out of the box</div>
-          </div>
-          <div className={styles.statItem}>
-            <div className={styles.statNumber}>∞</div>
-            <div className={styles.statLabel}>OpenAPI Support</div>
-            <div className={styles.statDescription}>
-              2.0, 3.0.x, 3.1.x compatible
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function WhyChooseUs() {
   return (
-    <section className={styles.whyChoose}>
-      <div className={styles.whyChooseTitle}>Why Choose @apical-ts/craft?</div>
-      <ul className={styles.whyChooseList}>
-        <li className={styles.whyChooseItem}>
-          <span className={styles.whyChooseIcon}>⚡</span>
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>Lightning Fast</div>
-          <div>
-            Concurrent code generation and optimized output for large specs.
-          </div>
-        </li>
-        <li className={styles.whyChooseItem}>
-          <span className={styles.whyChooseIcon}>🔒</span>
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>
-            Type-Safe by Design
-          </div>
-          <div>
-            All schemas and clients are fully typed and runtime validated with
-            Zod.
-          </div>
-        </li>
-        <li className={styles.whyChooseItem}>
-          <span className={styles.whyChooseIcon}>🧩</span>
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>
-            Modular & Tree-shakable
-          </div>
-          <div>Import only what you need. No bloat, no dead code.</div>
-        </li>
-        <li className={styles.whyChooseItem}>
-          <span className={styles.whyChooseIcon}>🌐</span>
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>
-            Universal OpenAPI Support
-          </div>
-          <div>
-            Works with OpenAPI 2.0, 3.0.x, 3.1.x, YAML & JSON, local or remote.
-          </div>
-        </li>
-      </ul>
+    <section className={styles.whyChooseSection}>
+      <div className="container">
+        {/* <div className={styles.whyChooseTitle}>Why @apical-ts/craft?</div> */}
+        <ul className={styles.whyChooseList}>
+          <li className={styles.whyChooseItem}>
+            <span className={styles.whyChooseIcon}>🧩</span>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>
+              Modular & Tree-shakable
+            </div>
+            <div>
+              Import only what you need. No bloat, minimal dependencies, no dead
+              code.
+            </div>
+          </li>
+          <li className={styles.whyChooseItem}>
+            <span className={styles.whyChooseIcon}>⚡</span>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>Performance</div>
+            <div>
+              Bring your own validator: choose Zod v4 for runtime validation,
+              swap in your own library, or skip validation entirely.
+            </div>
+          </li>
+          <li className={styles.whyChooseItem}>
+            <span className={styles.whyChooseIcon}>🔒</span>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>
+              Type-Safe by Design
+            </div>
+            <div>
+              All schemas are fully typed. Supports multiple success status
+              codes (2xx) and multiple content-types for both requests and
+              responses.
+            </div>
+          </li>
+          <li className={styles.whyChooseItem}>
+            <span className={styles.whyChooseIcon}>🌐</span>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>
+              Efficient error handling
+            </div>
+            <div>
+              Provides discriminated unions for errors that can occur at
+              different stages, such as during network requests or payload
+              validation. Client calls never throw.
+            </div>
+          </li>
+        </ul>
+      </div>
     </section>
   );
 }
@@ -151,11 +125,10 @@ export default function Home(): ReactNode {
       description="Turn your OpenAPI specifications into fully-typed Zod v4 schemas and type-safe REST API clients"
     >
       <HomepageHeader />
-      <StatsSection />
       <WhyChooseUs />
-      <main>
+      {/* <main>
         <HomepageFeatures />
-      </main>
+      </main> */}
     </Layout>
   );
 }
