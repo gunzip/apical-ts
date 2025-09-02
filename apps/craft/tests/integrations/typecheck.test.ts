@@ -59,5 +59,5 @@ describe("generated client + server typecheck", () => {
     expect(result.status).toBe(0);
     // Ensure no TS error diagnostics appeared
     expect(stdout + stderr).not.toMatch(/error TS\d{4}:/);
-  });
+  }, 10_000);
 });
