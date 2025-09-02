@@ -26,8 +26,8 @@
     {
       "label": "Remove old generated test",
       "type": "shell",
-      "command": "rm",
-      "args": ["-rf", "apps/craft/tests/integrations/generated"],
+      "command": "pnpm",
+      "args": ["clean"],
       "group": "build"
     }
   ]
