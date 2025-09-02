@@ -130,7 +130,7 @@ ${responseHandlers.join("\n")}
         /* Return error for unexpected status codes instead of throwing */
         return {
           kind: "unexpected-response",
-          success: false,
+          isValid: false,
           result: {
             data,
             status: response.status,
@@ -142,7 +142,7 @@ ${responseHandlers.join("\n")}
     }
   } catch (error) {
     return {
-      success: false,
+      isValid: false,
       kind: "unexpected-error",
       error,
     } as const;
@@ -159,7 +159,7 @@ export function renderHeadersObject(config: HeaderConfiguration): string {
       config.authHeaders &&
       config.authHeaders.length > 0
         ? `...Object.fromEntries(
-      Object.entries(config.headers).filter(([key]) => 
+      Object.entries(config.headers).filter(([key]) =>
         !['${config.authHeaders.join("', '")}'].includes(key)
       )
     ),`
@@ -177,7 +177,7 @@ ${config.acceptHeaderLogic}`
       config.authHeaders &&
       config.authHeaders.length > 0
         ? `...Object.fromEntries(
-      Object.entries(config.headers).filter(([key]) => 
+      Object.entries(config.headers).filter(([key]) =>
         !['${config.authHeaders.join("', '")}'].includes(key)
       )
     ),`

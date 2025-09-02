@@ -102,7 +102,7 @@ describe("Express server wrappers integration", () => {
           wrapper: testParameterWithDashWrapper,
         },
         async (params) => {
-          if (!params.success) {
+          if (!params.isValid) {
             /* Map validation errors to an allowed fallback status (500) */
             return { status: 500 } as const;
           }
@@ -118,7 +118,7 @@ describe("Express server wrappers integration", () => {
       const adapter = localCreateExpressAdapter(
         { path: r.path, method: r.method, wrapper: testWithTwoParamsWrapper },
         async (params) => {
-          if (!params.success) return { status: 500 } as const;
+          if (!params.isValid) return { status: 500 } as const;
           return { status: 200, data: params.value } as const;
         },
       );
@@ -131,7 +131,7 @@ describe("Express server wrappers integration", () => {
       const adapter = localCreateExpressAdapter(
         { path: r.path, method: r.method, wrapper: testCoercionWrapper },
         async (params) => {
-          if (!params.success) return { status: 500 } as const;
+          if (!params.isValid) return { status: 500 } as const;
           return { status: 200, data: params.value } as const;
         },
       );

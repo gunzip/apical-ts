@@ -27,7 +27,7 @@
       "label": "Remove old generated test",
       "type": "shell",
       "command": "rm",
-      "args": ["-rf", "tests/integrations/generated"],
+      "args": ["-rf", "apps/craft/tests/integrations/generated"],
       "group": "build"
     }
   ]

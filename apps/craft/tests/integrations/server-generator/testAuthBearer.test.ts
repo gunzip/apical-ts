@@ -11,7 +11,7 @@ describe("testAuthBearer operation integration tests", () => {
   it("should return 200 with valid Person when all required parameters are provided", async () => {
     // Arrange: Setup the Express route with the generated wrapper
     const handler: testAuthBearerHandler = async (params) => {
-      if ("success" in params && params.success) {
+      if ("isValid" in params && params.isValid) {
         // Validate that required query parameters are present
         expect(params.value.query.qr).toBeDefined();
         expect(params.value.query.qr).toBe("test-required");
@@ -62,8 +62,8 @@ describe("testAuthBearer operation integration tests", () => {
 
     const handler: testAuthBearerHandler = async (params) => {
       if (
-        "success" in params &&
-        !params.success &&
+        "isValid" in params &&
+        !params.isValid &&
         params.kind === "query-error"
       ) {
         validationErrorReceived = true;
@@ -121,8 +121,8 @@ describe("testAuthBearer operation integration tests", () => {
 
     const handler: testAuthBearerHandler = async (params) => {
       if (
-        "success" in params &&
-        !params.success &&
+        "isValid" in params &&
+        !params.isValid &&
         params.kind === "query-error"
       ) {
         cursorValidationFailed = true;
@@ -178,7 +178,7 @@ describe("testAuthBearer operation integration tests", () => {
     // Arrange
     // Note: After fixing the bug, optional parameters are now properly optional
     const handler: testAuthBearerHandler = async (params) => {
-      if ("success" in params && params.success) {
+      if ("isValid" in params && params.isValid) {
         // Only qr should be required according to OpenAPI spec
         expect(params.value.query.qr).toBe("required-only");
         // Optional parameters should be undefined when not provided

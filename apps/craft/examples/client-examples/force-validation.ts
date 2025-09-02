@@ -13,7 +13,7 @@ async function demonstrateClient() {
   const lazyPetsResponse = await findPetsByStatus({
     query: { status: "available" },
   });
-  if (lazyPetsResponse.success === true && lazyPetsResponse.status === 200) {
+  if (lazyPetsResponse.isValid === true && lazyPetsResponse.status === 200) {
     lazyPetsResponse.parse();
   }
 
@@ -26,7 +26,7 @@ async function demonstrateClient() {
   const petsResponse1 = await lazyClient.findPetsByStatus({
     query: { status: "available" },
   });
-  if (petsResponse1.success === true && petsResponse1.status === 200) {
+  if (petsResponse1.isValid === true && petsResponse1.status === 200) {
     petsResponse1.parse();
   }
 
@@ -38,7 +38,7 @@ async function demonstrateClient() {
     },
     { ...globalConfig, forceValidation: true },
   );
-  if (greedyPetResponse.success === true && greedyPetResponse.status === 200) {
+  if (greedyPetResponse.isValid === true && greedyPetResponse.status === 200) {
     // automatic validation: .parsed available
     greedyPetResponse.parsed;
   }
@@ -52,7 +52,7 @@ async function demonstrateClient() {
   const petsResponse2 = await greedyClient.findPetsByStatus({
     query: { status: "available" },
   });
-  if (petsResponse2.success === true && petsResponse2.status === 200) {
+  if (petsResponse2.isValid === true && petsResponse2.status === 200) {
     // bound automatic validation: .parsed available
     petsResponse2.parsed;
   }

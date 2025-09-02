@@ -380,7 +380,7 @@ describe("Security Operations", () => {
 
       // Assert - Should return error result instead of throwing
       expect(result).toBeDefined();
-      expect(result.success).toBe(false);
+      expect(result.isValid).toBe(false);
       expect(result.kind).toBe("unexpected-error");
       expect(result.error).toBeDefined();
     });
