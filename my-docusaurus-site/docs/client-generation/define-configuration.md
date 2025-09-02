@@ -159,7 +159,7 @@ const config = {
 };
 ```
 
-See [Response Payload Validation](response-payload-validation) for more details.
+See the Response Payload Validation documentation for more details.
 
 ### deserializers
 
@@ -197,7 +197,7 @@ const config = {
 };
 ```
 
-See [Custom Response Deserialization](custom-response-deserialization) for more details.
+See the Custom Response Deserialization documentation for more details.
 
 ## Environment-Specific Configuration
 
@@ -377,4 +377,4 @@ Modifying the default configuration affects all operations that don't explicitly
 
 - Learn how to [call operations](call-operations) using your configuration
 - Understand [binding configuration to operations](binding-configuration-to-operations) for better ergonomics
-- Explore [custom response deserialization](custom-response-deserialization) for advanced scenarios
+- Explore the custom response deserialization documentation for advanced scenarios

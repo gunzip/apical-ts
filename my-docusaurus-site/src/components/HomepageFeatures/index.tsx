@@ -11,32 +11,32 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
+    title: '🎯 Operation-Based Architecture',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Each API operation becomes a standalone, typed function. Import only what you need
+        with full tree-shaking support and crystal-clear separation of concerns.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: '🛡️ Runtime Type Safety',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Built on Zod v4 for robust runtime validation. Catch API contract violations
+        early with comprehensive schema validation and type inference.
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: '🔄 Universal OpenAPI Support',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Supports OpenAPI 2.0, 3.0.x, and 3.1.x with automatic normalization.
+        Works with local files, remote URLs, and complex reference resolution.
       </>
     ),
   },
