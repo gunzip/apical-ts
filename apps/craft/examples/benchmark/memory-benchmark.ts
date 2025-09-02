@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-/* Memory benchmark script for yanogen-ts generated client */
+/* Memory benchmark script for @apical-ts/craft generated client */
 
 import { performance } from "node:perf_hooks";
 import { spawn } from "node:child_process";
@@ -338,7 +338,9 @@ async function executeMemoryTest(requestCount) {
 
 /* Main execution */
 async function runMemoryBenchmark() {
-  console.log("🧪 Starting Memory Benchmark for yanogen-ts Generated Client");
+  console.log(
+    "🧪 Starting Memory Benchmark for @apical-ts/craft Generated Client",
+  );
   console.log(`📋 Configuration:`);
   console.log(`   Server: ${API_CONFIG.baseURL}`);
   console.log(`   Request counts: ${CONFIG.requestCounts.join(", ")}`);
@@ -438,7 +440,7 @@ process.on("SIGTERM", () => {
 /* CLI argument handling */
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
   console.log(`
-Memory Benchmark Script for yanogen-ts Generated Client
+Memory Benchmark Script for @apical-ts/craft Generated Client
 
 Usage: node memory-benchmark.js [options]
 

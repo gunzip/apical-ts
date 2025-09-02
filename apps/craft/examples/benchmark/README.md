@@ -1,7 +1,7 @@
-# yanogen-ts Performance Benchmarks
+# @apical-ts/craft Performance Benchmarks
 
 This directory contains performance and memory benchmarking scripts for the
-yanogen-ts generated OpenAPI TypeScript client.
+@apical-ts/craft generated OpenAPI TypeScript client.
 
 ## Overview
 
@@ -278,5 +278,5 @@ When reporting performance issues, include:
 
 ---
 
-For more information about the yanogen-ts project, see the main
+For more information about the @apical-ts/craft project, see the main
 [README.md](../../README.md).

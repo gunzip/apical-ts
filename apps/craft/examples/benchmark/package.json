@@ -1,7 +1,7 @@
 {
-  "name": "yanogen-ts-benchmarks",
+  "name": "@apical-ts/craft-benchmarks",
   "version": "1.0.0",
-  "description": "Performance and memory benchmarks for yanogen-ts generated client",
+  "description": "Performance and memory benchmarks for @apical-ts/craft generated client",
   "type": "module",
   "scripts": {
     "memory": "tsx memory-benchmark.ts",

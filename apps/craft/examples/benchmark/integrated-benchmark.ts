@@ -712,7 +712,7 @@ process.on("SIGTERM", () => {
 /* CLI argument handling */
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
   console.log(`
-Integrated Memory + Performance Benchmark for yanogen-ts Generated Client
+Integrated Memory + Performance Benchmark for @apical-ts/craft Generated Client
 
 Usage: node integrated-benchmark.js [options]
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-/* Performance benchmark script for yanogen-ts generated client */
+/* Performance benchmark script for @apical-ts/craft generated client */
 
 import { performance } from "node:perf_hooks";
 import { spawn } from "node:child_process";
@@ -424,7 +424,7 @@ function formatStats(stats) {
 /* Main execution */
 async function runPerformanceBenchmark() {
   console.log(
-    "⚡ Starting Performance Benchmark for yanogen-ts Generated Client",
+    "⚡ Starting Performance Benchmark for @apical-ts/craft Generated Client",
   );
   console.log(`📋 Configuration:`);
   console.log(`   Server: ${API_CONFIG.baseURL}`);
@@ -637,7 +637,7 @@ process.on("SIGTERM", () => {
 /* CLI argument handling */
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
   console.log(`
-Performance Benchmark Script for yanogen-ts Generated Client
+Performance Benchmark Script for @apical-ts/craft Generated Client
 
 Usage: node performance-benchmark.js [options]
 

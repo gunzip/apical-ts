@@ -1,80 +1,31 @@
 {
-  "name": "yanogen-ts",
-  "version": "0.0.18",
-  "description": "Generates fully-typed Zod v4 schemas and type-safe TypeScript REST API clients and server from OpenAPI 2.0, 3.0.x, and 3.1.x specifications.",
-  "main": "dist/index.js",
-  "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gunzip/yanogen-ts.git"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "bin": {
-    "yanogen-ts": "./dist/index.js"
-  },
+  "name": "@apical-ts/main",
+  "version": "0.0.1",
+  "private": true,
   "scripts": {
-    "build": "tsup",
-    "build:docs": "embedme README.md",
-    "lint": "eslint --fix src",
-    "lint:check": "eslint src",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit",
-    "typecheck:examples": "tsc -p examples/tsconfig.examples.json",
-    "typecheck:tests": "vitest run tests/integrations/typecheck.test.ts",
-    "test": "vitest run",
-    "test:coverage": "vitest --coverage",
-    "start": "node dist/index.js",
-    "generate": "node dist/index.js generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client --generate-server",
-    "generate:examples": "node dist/index.js generate -i examples/examples.yaml -o examples/generated --generate-server --generate-client",
-    "prepublishOnly": "pnpm build:docs && pnpm run build",
-    "release:patch": "pnpm version patch && git push && git push --tags",
-    "release:minor": "pnpm version minor && git push && git push --tags",
-    "release:major": "pnpm version major && git push && git push --tags"
+    "build": "turbo run build",
+    "build:docs": "turbo run build:docs",
+    "lint": "turbo run lint",
+    "lint:check": "turbo run lint:check",
+    "format": "turbo run format",
+    "format:check": "turbo run format:check",
+    "typecheck": "turbo run typecheck",
+    "typecheck:examples": "turbo run typecheck:examples",
+    "typecheck:tests": "turbo run typecheck:tests",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "start": "turbo run start",
+    "generate": "turbo run generate",
+    "generate:examples": "turbo run generate:examples",
+    "prepublishOnly": "turbo run prepublishOnly",
+    "release:patch": "turbo run release:patch",
+    "release:minor": "turbo run release:minor",
+    "release:major": "turbo run release:major"
   },
-  "keywords": [
-    "openapi",
-    "typescript",
-    "client",
-    "generator",
-    "zod"
-  ],
-  "author": "gunzip",
-  "license": "MIT",
   "devDependencies": {
-    "@pagopa/eslint-config": "^5.0.0",
-    "@stoplight/prism-cli": "^5.14.2",
-    "@tsconfig/node22": "^22.0.2",
-    "@types/express": "^5.0.3",
-    "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20.12.12",
-    "@types/supertest": "^6.0.3",
-    "@types/swagger2openapi": "^7.0.4",
-    "@vitest/coverage-v8": "^1.6.1",
-    "embedme": "^1.22.1",
-    "eslint": "^9.33.0",
-    "express": "^5.1.0",
-    "prettier": "^3.6.2",
-    "supertest": "^7.1.4",
-    "tsup": "^8.5.0",
-    "typescript": "^5.4.5",
-    "vitest": "^1.6.0"
+    "@changesets/cli": "^2.29.6",
+    "@devcontainers/cli": "^0.80.1",
+    "turbo": "^2.5.6"
   },
-  "dependencies": {
-    "@apidevtools/json-schema-ref-parser": "^14.2.0",
-    "commander": "^14.0.0",
-    "js-yaml": "^4.1.0",
-    "openapi3-ts": "^4.3.0",
-    "p-limit": "^7.1.0",
-    "swagger2openapi": "^7.0.8",
-    "zod": "^4.0.0"
-  },
-  "engines": {
-    "node": ">=22.0.0"
-  },
-  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
+  "packageManager": "pnpm@10.15.1"
 }
