@@ -1,0 +1,370 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+.heroBanner {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, #10172a 60%, #1a2970 100%);
+  animation: heroFadeIn 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.heroBanner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(79, 140, 255, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(160, 191, 255, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 40% 40%,
+      rgba(79, 140, 255, 0.05) 0%,
+      transparent 30%
+    );
+  animation: floatingBg 20s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes floatingBg {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(5px) rotate(-0.5deg);
+  }
+}
+
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.heroTitleGradient {
+  background: linear-gradient(90deg, #4f8cff 40%, #a0bfff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  /* text-fill-color: transparent; */
+  text-shadow: 0 4px 24px #0003;
+  animation: titlePop 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 900;
+  font-size: 3.2rem;
+  letter-spacing: -1px;
+}
+
+.heroSubtitle {
+  color: #eaf1fb;
+  font-size: 1.7rem;
+  margin-bottom: 28px;
+  font-weight: 500;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.demoSection {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  justify-content: center;
+  /* Stretch children so both code example boxes share the tallest height */
+  align-items: stretch;
+}
+
+.codeExample {
+  max-width: 420px;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the rendered <pre> from CodeBlock expands to fill remaining space */
+.codeExample pre {
+  flex: 1 1 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes titlePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.heroSubBold {
+  font-weight: 700;
+  color: #b6c6e3;
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  letter-spacing: 0.2px;
+  animation: fadeInUp 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.codeBlockLabel {
+  color: #4f8cff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+  text-align: left;
+  letter-spacing: 0.5px;
+}
+
+.codeBlock {
+  background: linear-gradient(100deg, #181f2e 80%, #232946 100%);
+  color: #eaf1fb;
+  border-radius: 10px;
+  padding: 18px 16px;
+  font-size: 15px;
+  overflow-x: auto;
+  border: 1px solid #334155;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  box-shadow: 0 2px 16px #0002;
+  transition: box-shadow 0.2s;
+}
+.codeBlock:hover {
+  box-shadow: 0 6px 32px #4f8cff22;
+}
+
+.codeBlock code {
+  font-family: "Fira Mono", "Menlo", "Monaco", "Consolas", monospace;
+  font-size: 15px;
+  color: #eaf1fb;
+}
+
+.buttons .button--primary:hover {
+  background: #1d4ed8;
+  color: #fff;
+  box-shadow: 0 4px 16px #2563eb44;
+  transform: translateY(-2px) scale(1.04);
+  transition: all 0.15s;
+}
+
+.buttons .button--primary {
+  background: linear-gradient(135deg, #2563eb, #4f8cff);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px #2563eb33;
+  transition: all 0.15s;
+}
+
+.buttons .button--secondary:hover {
+  background: #334155;
+  color: #fff;
+  opacity: 1;
+  transform: translateY(-2px) scale(1.04);
+  transition: all 0.15s;
+}
+
+.buttons .button--secondary {
+  color: #b6c6e3;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
+  transition: all 0.15s;
+}
+
+.whyChooseSection {
+  padding: 4rem 0;
+  background: linear-gradient(120deg, #0f1420 0%, #1a1f36 100%);
+  position: relative;
+}
+
+.whyChooseSection::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(79, 140, 255, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(160, 191, 255, 0.08) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+}
+
+.whyChooseSection .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.whyChooseTitle {
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 1.2rem;
+  letter-spacing: -1px;
+  text-align: center;
+}
+.whyChooseList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.5rem;
+  justify-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  max-width: 900px;
+  width: 100%;
+}
+@media screen and (max-width: 900px) {
+  .whyChooseList {
+    grid-template-columns: 1fr;
+  }
+}
+.whyChooseItem {
+  flex: 1 1 220px;
+  min-width: 200px;
+  /* Match hero code snippet width */
+  max-width: 420px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem 1.2rem;
+  color: #eaf1fb;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    background 0.2s;
+  justify-self: center;
+}
+.whyChooseItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(79, 140, 255, 0.3);
+  transform: translateY(-4px) scale(1.02);
+}
+.whyChooseIcon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #4f8cff;
+  filter: drop-shadow(0 2px 8px #4f8cff44);
+  transition: color 0.2s;
+}
+.whyChooseItem:hover .whyChooseIcon {
+  color: #a0bfff;
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 2rem;
+  }
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media screen and (max-width: 768px) {
+  .buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .demoSection {
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  .heroTitleGradient {
+    font-size: 2.5rem !important;
+  }
+
+  .heroSubBold {
+    font-size: 1rem;
+  }
+}
+
+.demoSection {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.demoGif {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  max-height: 400px;
+  object-fit: contain;
+}
+
+@media screen and (max-width: 768px) {
+  .demoGif {
+    max-height: 250px;
+  }
+}

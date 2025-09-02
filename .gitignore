@@ -29,3 +29,6 @@ security-report.json
 *.temp
 .vscode/settings.json
 .idea/
+
+.playwright-mcp
+

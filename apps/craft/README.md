@@ -11,10 +11,6 @@ Need to **validate server requests and return typed responses**? 🛡️ We've g
 you covered with built-in support for request and response validation using Zod
 schemas.
 
-> **Disclaimer:** Breaking changes may occur until the first stable release
-> (0.1.0) is released. Nevertheless, the project is already solid and you can
-> still experiment with it in your projects.
-
 ## Why another generator?
 
 We all like the developer experience of [tRPC](https://trpc.io/), but not always
@@ -377,6 +373,7 @@ Examples:
 import {
   configureOperations,
   globalConfig,
+  isParsed,
 } from "../generated/client/config.js";
 import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 import { getInventory } from "../generated/client/getInventory.js";
