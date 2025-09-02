@@ -24,9 +24,6 @@
     "typecheck:code": {
       "dependsOn": ["^typecheck:code"]
     },
-    "typecheck:examples": {
-      "dependsOn": ["^typecheck:examples"]
-    },
     "typecheck:tests": {
       "dependsOn": ["^typecheck:tests"]
     },
@@ -50,15 +47,12 @@
       "dependsOn": ["^start"]
     },
     "generate": {
-      "dependsOn": ["^generate"]
+      "dependsOn": ["^generate"],
+      "outputs": ["generated"]
     },
     "generate:tests": {
       "dependsOn": ["^generate:tests"],
       "outputs": ["tests/integrations/generated"]
-    },
-    "generate:examples": {
-      "dependsOn": ["^generate:examples"],
-      "outputs": ["examples/generated"]
     },
     "prepublishOnly": {
       "dependsOn": ["^prepublishOnly"]
