@@ -11,6 +11,8 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      TURBO_CACHE_DIR: .turbo-cache
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,8 +26,17 @@ jobs:
           node-version-file: ".node-version"
           cache: "pnpm"
 
+      - name: Setup turbo cache
+        if: ${{ env.TURBO_CACHE_DIR != '' }}
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/${{ env.TURBO_CACHE_DIR }}
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build project
         run: pnpm run build
@@ -39,14 +50,11 @@ jobs:
       - name: Run lint check
         run: pnpm lint:check
 
+      - name: Generate client and server
+        run: pnpm generate
+
       - name: Run typecheck
         run: pnpm typecheck
-
-      - name: Generate examples client and server
-        run: pnpm generate:examples
-
-      - name: Run typecheck examples
-        run: pnpm typecheck:examples
 
       - name: Run tests
         run: pnpm test
