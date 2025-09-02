@@ -31,7 +31,6 @@ describe("force validation flag", () => {
         typeImports,
         true,
         "GetUserResponseMap",
-        false, // forceValidation parameter is now ignored
       );
 
       /* Verify response handler includes conditional logic for both modes */
@@ -86,7 +85,6 @@ describe("force validation flag", () => {
         typeImports,
         true,
         "GetUserResponseMap",
-        true, // forceValidation parameter is now ignored, should generate same result
       );
 
       /* Verify response handler includes conditional logic for both force and manual validation */
@@ -100,7 +98,9 @@ describe("force validation flag", () => {
       expect(result.responseHandlers[0]).toContain(
         'if ("parsed" in parseResult)',
       );
-      expect(result.responseHandlers[0]).toContain("parsed: parseResult");
+      expect(result.responseHandlers[0]).toContain(
+        "parsed: parseResult.parsed",
+      );
       expect(result.responseHandlers[0]).toContain("if (parseResult.kind)");
       expect(result.responseHandlers[0]).toContain("isValid: false");
 
@@ -130,7 +130,6 @@ describe("force validation flag", () => {
         typeImports,
         false,
         undefined,
-        true, // forceValidation parameter is now ignored
       );
 
       /* Verify no conditional parsing logic is added for responses without schemas */

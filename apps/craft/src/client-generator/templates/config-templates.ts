@@ -114,17 +114,7 @@ export type ApiResponseWithForcedParse<
   readonly data: unknown;
   readonly response: Response;
   readonly parsed: ${"`${S}`"} extends keyof Map
-    ?
-        | {
-            [K in keyof Map[${"`${S}`"}]]: {
-              contentType: K;
-              /* Narrow parsed type to the specific schema for this content type */
-              parsed: z.infer<Map[${"`${S}`"}][K]>;
-            };
-          }[keyof Map[${"`${S}`"}]]
-  | { kind: "parse-error"; error: z.ZodError }
-  | { kind: "missing-schema"; error: string }
-  | { kind: "deserialization-error"; error: unknown }
+    ? z.infer<Map[${"`${S}`"}][keyof Map[${"`${S}`"}]]>
     : never;
 };`;
 }
