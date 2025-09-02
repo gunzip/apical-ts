@@ -47,7 +47,8 @@
       "dependsOn": ["^start"]
     },
     "generate": {
-      "dependsOn": ["^generate"]
+      "dependsOn": ["^generate"],
+      "outputs": ["generated"]
     },
     "generate:tests": {
       "dependsOn": ["^generate:tests"],
