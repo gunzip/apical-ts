@@ -1,6 +1,8 @@
 # Call Operations
 
-Once you have [defined your configuration](define-configuration), you can call the generated operation functions to interact with your API. Each operation function is type-safe and returns consistent response objects.
+Once you have [defined your configuration](define-configuration), you can call
+the generated operation functions to interact with your API. Each operation
+function is type-safe and returns consistent response objects.
 
 ## Basic Operation Calls
 
@@ -13,7 +15,7 @@ const apiConfig = {
   baseURL: "https://api.example.com/v1",
   fetch: fetch,
   headers: {
-    "Authorization": "Bearer your-token",
+    Authorization: "Bearer your-token",
   },
 };
 
@@ -47,7 +49,7 @@ const newPet = await createPet(
       ],
     },
   },
-  apiConfig,
+  apiConfig
 );
 
 if (newPet.success && newPet.status === 201) {
@@ -57,7 +59,9 @@ if (newPet.success && newPet.status === 201) {
 
 ### Using Default Configuration
 
-If you've set up a [default configuration](define-configuration#default-configuration), you can call operations without passing the config parameter:
+If you've set up a
+[default configuration](define-configuration#default-configuration), you can
+call operations without passing the config parameter:
 
 ```typescript
 // Assuming defaultConfig has been set up
@@ -119,16 +123,17 @@ const result = await updatePet({
 
 ## Response Objects
 
-All operations return a consistent response structure that is either a success or error object:
+All operations return a consistent response structure that is either a success
+or error object:
 
 ### Success Response
 
 ```typescript
 type SuccessResponse = {
   success: true;
-  status: number;           // HTTP status code
-  data: unknown;           // Raw response data
-  response: Response;      // Original fetch Response object
+  status: number; // HTTP status code
+  data: unknown; // Raw response data
+  response: Response; // Original fetch Response object
   parse: () => ParseResult; // Parse method for validation
 };
 ```
@@ -138,11 +143,11 @@ type SuccessResponse = {
 ```typescript
 type ErrorResponse = {
   success: false;
-  kind: string;            // Error type discriminator
-  error: unknown;          // Error details
-  status?: number;         // HTTP status (if available)
-  data?: unknown;          // Response data (if available)
-  response?: Response;     // Original Response (if available)
+  kind: string; // Error type discriminator
+  error: unknown; // Error details
+  status?: number; // HTTP status (if available)
+  data?: unknown; // Response data (if available)
+  response?: Response; // Original Response (if available)
 };
 ```
 
@@ -189,10 +194,10 @@ if (result.success) {
   // Access response headers
   const contentType = result.response.headers.get("content-type");
   const lastModified = result.response.headers.get("last-modified");
-  
+
   // Check if response was cached
   const wasCached = !result.response.ok && result.response.status === 304;
-  
+
   console.log("Content-Type:", contentType);
   console.log("Last-Modified:", lastModified);
   console.log("Was cached:", wasCached);
@@ -207,25 +212,31 @@ Operations can handle multiple request and response content types:
 
 ```typescript
 // Request with different content types
-const xmlResult = await updatePet({
-  petId: "123",
-  body: "<pet><name>Fluffy</name></pet>",
-}, {
-  ...apiConfig,
-  headers: {
-    ...apiConfig.headers,
-    "Content-Type": "application/xml",
+const xmlResult = await updatePet(
+  {
+    petId: "123",
+    body: "<pet><name>Fluffy</name></pet>",
   },
-});
+  {
+    ...apiConfig,
+    headers: {
+      ...apiConfig.headers,
+      "Content-Type": "application/xml",
+    },
+  }
+);
 
 // Response with different content types
-const result = await getPetById({ petId: "123" }, {
-  ...apiConfig,
-  headers: {
-    ...apiConfig.headers,
-    "Accept": "application/xml", // Request XML response
-  },
-});
+const result = await getPetById(
+  { petId: "123" },
+  {
+    ...apiConfig,
+    headers: {
+      ...apiConfig.headers,
+      Accept: "application/xml", // Request XML response
+    },
+  }
+);
 ```
 
 ### Content Type Detection
@@ -237,7 +248,7 @@ const result = await getPetById({ petId: "123" });
 
 if (result.success) {
   const contentType = result.response.headers.get("content-type");
-  
+
   if (contentType?.includes("application/json")) {
     // Handle JSON response
     const jsonData = result.data;
@@ -280,7 +291,7 @@ const result = await getPetById({ petId: "123" });
 
 if (result.success) {
   const parsed = result.parse();
-  
+
   if (parsed.kind === "parse-error") {
     // Zod validation failed
     console.error("Validation failed:", parsed.error.errors);
@@ -299,7 +310,7 @@ if (result.success) {
 async function fetchPetData() {
   try {
     const result = await getPetById({ petId: "123" });
-    
+
     if (result.success && result.status === 200) {
       return result.data;
     } else {
@@ -317,14 +328,14 @@ async function fetchPetData() {
 ```typescript
 function fetchPetData() {
   return getPetById({ petId: "123" })
-    .then(result => {
+    .then((result) => {
       if (result.success && result.status === 200) {
         return result.data;
       } else {
         throw new Error("Failed to fetch pet");
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error:", error);
       return null;
     });
@@ -368,17 +379,23 @@ const customFetch = (url, options) => {
   });
 };
 
-const result = await getPetById({ petId: "123" }, {
-  ...apiConfig,
-  fetch: customFetch,
-});
+const result = await getPetById(
+  { petId: "123" },
+  {
+    ...apiConfig,
+    fetch: customFetch,
+  }
+);
 ```
 
 ## Best Practices
 
-1. **Always check `result.success`** before accessing success-specific properties
-2. **Handle different status codes** explicitly rather than assuming success means 200
-3. **Use TypeScript's type narrowing** to get better intellisense and type safety
+1. **Always check `result.success`** before accessing success-specific
+   properties
+2. **Handle different status codes** explicitly rather than assuming success
+   means 200
+3. **Use TypeScript's type narrowing** to get better intellisense and type
+   safety
 4. **Configure timeouts and retries** at the fetch level for better reliability
 5. **Log errors appropriately** but don't expose sensitive information to users
 6. **Consider caching strategies** for frequently accessed data
@@ -387,7 +404,9 @@ const result = await getPetById({ petId: "123" }, {
 
 ## Next Steps
 
-- Learn about [binding configuration to operations](binding-configuration-to-operations) for better ergonomics
+- Learn about
+  [binding configuration to operations](binding-configuration-to-operations) for
+  better ergonomics
 - Understand response handling patterns in detail
 - Explore error handling strategies
 - See response payload validation documentation for runtime type safety

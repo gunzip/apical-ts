@@ -12,7 +12,7 @@ type FeatureItem = {
 const FeatureList: FeatureItem[] = [
   {
     title: '🎯 Operation-Based Architecture',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    Svg: require('@site/static/img/operation-architecture.svg').default,
     description: (
       <>
         Each API operation becomes a standalone, typed function. Import only what you need
@@ -22,7 +22,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     title: '🛡️ Runtime Type Safety',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    Svg: require('@site/static/img/type-safety.svg').default,
     description: (
       <>
         Built on Zod v4 for robust runtime validation. Catch API contract violations
@@ -32,7 +32,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     title: '🔄 Universal OpenAPI Support',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    Svg: require('@site/static/img/openapi-support.svg').default,
     description: (
       <>
         Supports OpenAPI 2.0, 3.0.x, and 3.1.x with automatic normalization.

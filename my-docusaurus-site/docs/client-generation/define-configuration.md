@@ -1,6 +1,8 @@
 # Define Configuration
 
-The generated client operations require configuration to specify how to connect to your API. This includes the base URL, authentication, custom headers, and other options that control how requests are made.
+The generated client operations require configuration to specify how to connect
+to your API. This includes the base URL, authentication, custom headers, and
+other options that control how requests are made.
 
 ## Configuration Interface
 
@@ -36,7 +38,7 @@ const apiConfig = {
   baseURL: "https://api.example.com/v1",
   fetch: fetch,
   headers: {
-    "Authorization": "Bearer your-token",
+    Authorization: "Bearer your-token",
     "Content-Type": "application/json",
     "X-Custom-Header": "custom-value",
   },
@@ -126,9 +128,9 @@ Default headers to include with every request. Common use cases include:
 ```typescript
 const config = {
   headers: {
-    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "Content-Type": "application/json",
-    "Accept": "application/json",
+    Accept: "application/json",
     "X-API-Key": "your-api-key",
     "User-Agent": "MyApp/1.0.0",
   },
@@ -136,9 +138,8 @@ const config = {
 };
 ```
 
-:::tip
-Headers defined in the configuration can be overridden on a per-operation basis if needed.
-:::
+:::tip Headers defined in the configuration can be overridden on a per-operation
+basis if needed. :::
 
 ### forceValidation
 
@@ -146,7 +147,8 @@ Headers defined in the configuration can be overridden on a per-operation basis 
 **Required**: No  
 **Default**: `false`
 
-When `true`, forces validation of response data even when the operation would normally skip it. This is useful for:
+When `true`, forces validation of response data even when the operation would
+normally skip it. This is useful for:
 
 - Development environments where you want strict validation
 - Testing scenarios where you need to ensure response correctness
@@ -167,7 +169,8 @@ See the Response Payload Validation documentation for more details.
 **Required**: No  
 **Default**: `{}`
 
-Custom deserializers for specific content types. This allows you to transform response data before validation occurs.
+Custom deserializers for specific content types. This allows you to transform
+response data before validation occurs.
 
 ```typescript
 const config = {
@@ -177,16 +180,19 @@ const config = {
       const parser = new DOMParser();
       return parser.parseFromString(data as string, "application/xml");
     },
-    
+
     // Handle CSV data
     "text/csv": (data) => {
-      return (data as string).split('\n').map(line => line.split(','));
+      return (data as string).split("\n").map((line) => line.split(","));
     },
-    
+
     // Custom JSON parsing with date handling
     "application/json": (data) => {
       return JSON.parse(data as string, (key, value) => {
-        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
+        if (
+          typeof value === "string" &&
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)
+        ) {
           return new Date(value);
         }
         return value;
@@ -208,7 +214,7 @@ const developmentConfig = {
   baseURL: "http://localhost:3000/api",
   fetch: fetch,
   headers: {
-    "Authorization": "Bearer dev-token",
+    Authorization: "Bearer dev-token",
   },
   forceValidation: true, // Strict validation in development
 };
@@ -221,7 +227,7 @@ const productionConfig = {
   baseURL: "https://api.production.com/v1",
   fetch: fetch,
   headers: {
-    "Authorization": `Bearer ${process.env.API_TOKEN}`,
+    Authorization: `Bearer ${process.env.API_TOKEN}`,
     "X-API-Version": "2024-01-01",
   },
   forceValidation: false, // Performance optimization
@@ -252,7 +258,7 @@ function createApiConfig(environment: "development" | "production") {
         baseURL: "https://api.production.com/v1",
         headers: {
           ...baseConfig.headers,
-          "Authorization": `Bearer ${process.env.API_TOKEN}`,
+          Authorization: `Bearer ${process.env.API_TOKEN}`,
         },
       };
   }
@@ -304,7 +310,9 @@ const fetchWithRetry = (maxRetries = 3) => {
         if (response.ok || i === maxRetries) {
           return response;
         }
-        lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+        lastError = new Error(
+          `HTTP ${response.status}: ${response.statusText}`
+        );
       } catch (error) {
         lastError = error;
         if (i === maxRetries) {
@@ -313,7 +321,9 @@ const fetchWithRetry = (maxRetries = 3) => {
       }
 
       // Exponential backoff
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.pow(2, i) * 1000)
+      );
     }
 
     throw lastError;
@@ -331,15 +341,15 @@ const config = {
 ```typescript
 const fetchWithLogging = (fetch) => {
   return async (url, options) => {
-    console.log(`🔄 ${options?.method || 'GET'} ${url}`);
-    console.log('📤 Request:', options);
+    console.log(`🔄 ${options?.method || "GET"} ${url}`);
+    console.log("📤 Request:", options);
 
     const start = Date.now();
     const response = await fetch(url, options);
     const duration = Date.now() - start;
 
     console.log(`📥 Response: ${response.status} (${duration}ms)`);
-    
+
     return response;
   };
 };
@@ -352,7 +362,8 @@ const config = {
 
 ## Default Configuration
 
-If you don't want to pass configuration to every operation call, you can use the default configuration:
+If you don't want to pass configuration to every operation call, you can use the
+default configuration:
 
 ```typescript
 import { defaultConfig } from "./generated/client/index.js";
@@ -361,7 +372,7 @@ import { defaultConfig } from "./generated/client/index.js";
 Object.assign(defaultConfig, {
   baseURL: "https://api.example.com/v1",
   headers: {
-    "Authorization": "Bearer your-token",
+    Authorization: "Bearer your-token",
   },
 });
 
@@ -369,12 +380,15 @@ Object.assign(defaultConfig, {
 const pet = await getPetById({ petId: "123" });
 ```
 
-:::warning
-Modifying the default configuration affects all operations that don't explicitly receive a config parameter. Use this approach carefully in shared codebases.
-:::
+:::warning Modifying the default configuration affects all operations that don't
+explicitly receive a config parameter. Use this approach carefully in shared
+codebases. :::
 
 ## Next Steps
 
 - Learn how to [call operations](call-operations) using your configuration
-- Understand [binding configuration to operations](binding-configuration-to-operations) for better ergonomics
-- Explore the custom response deserialization documentation for advanced scenarios
+- Understand
+  [binding configuration to operations](binding-configuration-to-operations) for
+  better ergonomics
+- Explore the custom response deserialization documentation for advanced
+  scenarios

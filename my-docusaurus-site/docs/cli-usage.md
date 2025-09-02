@@ -1,6 +1,7 @@
 # CLI Usage
 
-The @apical-ts/craft CLI tool allows you to generate TypeScript clients and schemas from OpenAPI specifications with a simple command-line interface.
+The @apical-ts/craft CLI tool allows you to generate TypeScript clients and
+schemas from OpenAPI specifications with a simple command-line interface.
 
 ## Basic Usage
 
@@ -15,6 +16,7 @@ pnpx @apical-ts/craft generate \
 ```
 
 This command will:
+
 1. Download the OpenAPI specification from the provided URL
 2. Generate Zod schemas for all data models
 3. Generate client operation functions (if `--generate-client` is specified)
@@ -23,7 +25,8 @@ This command will:
 
 ## Watch Mode
 
-You can run the CLI in watch mode to automatically regenerate code when your OpenAPI specification file changes:
+You can run the CLI in watch mode to automatically regenerate code when your
+OpenAPI specification file changes:
 
 ```bash
 pnpx chokidar-cli openapi.yaml -c \
@@ -34,23 +37,26 @@ pnpx chokidar-cli openapi.yaml -c \
   -o generated"
 ```
 
-This is particularly useful during development when you're iterating on your API specification.
+This is particularly useful during development when you're iterating on your API
+specification.
 
 ## CLI Options
 
 ### Required Options
 
-- `-i, --input <path>`: Path to the OpenAPI spec file (2.0, 3.0.x, or 3.1.x) in YAML or JSON format. Can be a local file path or a remote URL.
+- `-i, --input <path>`: Path to the OpenAPI spec file (2.0, 3.0.x, or 3.1.x) in
+  YAML or JSON format. Can be a local file path or a remote URL.
 - `-o, --output <path>`: Output directory for generated code
 
 ### Generation Options
 
-- `--generate-client`: Generate the operation functions for client-side usage (default: false)
-- `--generate-server`: Generate the operation wrapper functions for server-side usage (default: false)
+- `--generate-client`: Generate the operation functions for client-side usage
+  (default: false)
+- `--generate-server`: Generate the operation wrapper functions for server-side
+  usage (default: false)
 
-:::tip
-You can specify both `--generate-client` and `--generate-server` to generate both client and server code from the same specification.
-:::
+:::tip You can specify both `--generate-client` and `--generate-server` to
+generate both client and server code from the same specification. :::
 
 ## Examples
 
@@ -111,6 +117,7 @@ generated/
 ```
 
 Each directory contains:
+
 - An `index.ts` file that exports all the generated code
 - Individual files for each operation or schema
 - TypeScript declaration files for full type safety
@@ -120,4 +127,5 @@ Each directory contains:
 - Use absolute paths for better reliability across different environments
 - The output directory will be created if it doesn't exist
 - Existing files in the output directory will be overwritten
-- The generator is idempotent - running it multiple times with the same input produces the same output
+- The generator is idempotent - running it multiple times with the same input
+  produces the same output

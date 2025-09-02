@@ -58,7 +58,7 @@ const config: Config = {
       title: '@apical-ts/craft',
       logo: {
         alt: '@apical-ts/craft Logo',
-        src: 'img/logo.svg',
+        src: 'img/logo.png',
       },
       items: [
         {

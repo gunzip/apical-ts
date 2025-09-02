@@ -1,6 +1,8 @@
 # Programmatic Usage
 
-In addition to the CLI, @apical-ts/craft provides a programmatic API that allows you to integrate code generation directly into your build processes, scripts, or applications.
+In addition to the CLI, @apical-ts/craft provides a programmatic API that allows
+you to integrate code generation directly into your build processes, scripts, or
+applications.
 
 ## Installation
 
@@ -30,7 +32,8 @@ await generate({
 
 ## Configuration Options
 
-The `generate` function accepts a configuration object with the following options:
+The `generate` function accepts a configuration object with the following
+options:
 
 ### Required Options
 
@@ -39,8 +42,10 @@ The `generate` function accepts a configuration object with the following option
 
 ### Optional Options
 
-- **`generateClient`** (`boolean`): Generate client operation functions (default: `false`)
-- **`generateServer`** (`boolean`): Generate server handler wrappers (default: `false`)
+- **`generateClient`** (`boolean`): Generate client operation functions
+  (default: `false`)
+- **`generateServer`** (`boolean`): Generate server handler wrappers (default:
+  `false`)
 
 ## Examples
 
@@ -125,6 +130,7 @@ try {
 ```
 
 Common error scenarios:
+
 - Invalid or missing OpenAPI specification file
 - Network errors when fetching remote URLs
 - File system permission issues
@@ -140,18 +146,21 @@ import { generate } from "@apical-ts/craft";
 
 class OpenAPIGeneratorPlugin {
   apply(compiler) {
-    compiler.hooks.beforeRun.tapAsync('OpenAPIGeneratorPlugin', async (compiler, callback) => {
-      try {
-        await generate({
-          input: "./api/openapi.yaml",
-          output: "./src/generated",
-          generateClient: true,
-        });
-        callback();
-      } catch (error) {
-        callback(error);
+    compiler.hooks.beforeRun.tapAsync(
+      "OpenAPIGeneratorPlugin",
+      async (compiler, callback) => {
+        try {
+          await generate({
+            input: "./api/openapi.yaml",
+            output: "./src/generated",
+            generateClient: true,
+          });
+          callback();
+        } catch (error) {
+          callback(error);
+        }
       }
-    });
+    );
   }
 }
 
@@ -168,17 +177,17 @@ export default {
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from 'vite';
-import { generate } from '@apical-ts/craft';
+import { defineConfig } from "vite";
+import { generate } from "@apical-ts/craft";
 
 export default defineConfig({
   plugins: [
     {
-      name: 'openapi-generator',
+      name: "openapi-generator",
       buildStart: async () => {
         await generate({
-          input: './api/openapi.yaml',
-          output: './src/generated',
+          input: "./api/openapi.yaml",
+          output: "./src/generated",
           generateClient: true,
         });
       },
@@ -205,13 +214,13 @@ import { generate } from "@apical-ts/craft";
 
 async function main() {
   console.log("Generating API client...");
-  
+
   await generate({
     input: "./api/openapi.yaml",
     output: "./src/generated",
     generateClient: true,
   });
-  
+
   console.log("API client generated successfully!");
 }
 
@@ -231,7 +240,7 @@ name: Generate API Client
 on:
   push:
     paths:
-      - 'api/openapi.yaml'
+      - "api/openapi.yaml"
 
 jobs:
   generate:
@@ -240,12 +249,12 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
       - run: npm ci
       - run: npm run generate
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'Auto-generate API client'
+          commit_message: "Auto-generate API client"
 ```
 
 #### Docker
@@ -313,7 +322,10 @@ if (isDevelopment) {
 
 ## Performance Considerations
 
-- **Caching**: Consider caching generated files and only regenerating when the input changes
-- **Parallel Generation**: If generating multiple clients, consider running them in parallel
-- **File Watching**: Use file watchers to regenerate only when specifications change
+- **Caching**: Consider caching generated files and only regenerating when the
+  input changes
+- **Parallel Generation**: If generating multiple clients, consider running them
+  in parallel
+- **File Watching**: Use file watchers to regenerate only when specifications
+  change
 - **Output Comparison**: Compare generated output to avoid unnecessary rebuilds
