@@ -1,0 +1,17 @@
+# Global code ownership
+* @gunzip
+
+# Security-sensitive files require additional review
+SECURITY.md @gunzip
+.github/workflows/ @gunzip
+.github/dependabot.yml @gunzip
+docs/security-configuration.md @gunzip
+
+# Package configuration and publishing
+package.json @gunzip
+apps/craft/package.json @gunzip
+pnpm-lock.yaml @gunzip
+
+# Security-related source code
+apps/craft/src/client-generator/security.ts @gunzip
+apps/craft/src/client-generator/models/security-models.ts @gunzip

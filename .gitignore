@@ -15,3 +15,17 @@ generated*
 .npmrc.local
 
 .turbo
+
+# Security-related files that shouldn't be committed
+*.key
+*.pem
+*.p12
+*.pfx
+audit-results.json
+security-report.json
+
+# Additional temporary and sensitive files
+*.tmp
+*.temp
+.vscode/settings.json
+.idea/
