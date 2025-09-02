@@ -4,6 +4,7 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import HomepageFeatures from "@site/src/components/HomepageFeatures";
+import CodeBlock from "../components/CodeBlock";
 import Heading from "@theme/Heading";
 
 import styles from "./index.module.css";
@@ -40,25 +41,25 @@ function HomepageHeader() {
         <div className={styles.demoSection}>
           <div className={styles.codeExample}>
             <div className={styles.codeBlockLabel}>CLI Example</div>
-            <pre className={styles.codeBlock}>
-              <code>{`pnpm @apical-ts/craft generate
--i openapi.yaml
--o ./generated
---generate-client
---generate-server`}</code>
-            </pre>
+            <CodeBlock
+              code={`pnpm @apical-ts/craft generate\n -i https://petstore.swagger.io/v2/swagger.json\n -o ./generated\n --generate-client\n`}
+              language="bash"
+            />
           </div>
           <div className={styles.codeExample}>
             <div className={styles.codeBlockLabel}>TypeScript Example</div>
-            <pre className={styles.codeBlock}>
-              <code>{`import { getPetById } from './generated/operations';
+            <CodeBlock
+              code={`import { findPetsByStatus } from './generated/operations/findPetsByStatus.js';
 
-const result = await getPetById({ petId: '123' });
-
-// result.data is fully typed and validated by Zod!
-console.log(result.data.name); // string
-`}</code>
-            </pre>
+  const r = await findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (r.success === true && r.status === 200) {
+    // Zod v4 parsed payload
+    const pets = r.parsed;
+  }`}
+              language="typescript"
+            />
           </div>
         </div>
       </div>

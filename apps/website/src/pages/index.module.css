@@ -89,13 +89,24 @@
   flex-direction: row;
   gap: 2rem;
   justify-content: center;
-  align-items: flex-start;
+  /* Stretch children so both code example boxes share the tallest height */
+  align-items: stretch;
 }
 
 .codeExample {
   max-width: 420px;
   width: 100%;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the rendered <pre> from CodeBlock expands to fill remaining space */
+.codeExample pre {
+  flex: 1 1 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes titlePop {
@@ -264,7 +275,8 @@
 .whyChooseItem {
   flex: 1 1 220px;
   min-width: 200px;
-  max-width: 350px;
+  /* Match hero code snippet width */
+  max-width: 420px;
   width: 100%;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
