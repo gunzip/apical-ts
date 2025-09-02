@@ -1,0 +1,80 @@
+{
+  "name": "@apical-ts/craft",
+  "version": "0.0.18",
+  "description": "Generates fully-typed Zod v4 schemas and type-safe TypeScript REST API clients and server from OpenAPI 2.0, 3.0.x, and 3.1.x specifications.",
+  "main": "dist/index.js",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gunzip/apinionated.git"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "@apical-ts/craft": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "build:docs": "embedme README.md",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "typecheck:examples": "tsc -p examples/tsconfig.examples.json",
+    "typecheck:tests": "vitest run tests/integrations/typecheck.test.ts",
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage",
+    "start": "node dist/index.js",
+    "generate": "node dist/index.js generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client --generate-server",
+    "generate:examples": "node dist/index.js generate -i ../../examples/examples.yaml -o ../../examples/generated --generate-server --generate-client",
+    "prepublishOnly": "pnpm build:docs && pnpm run build",
+    "release:patch": "pnpm version patch && git push && git push --tags",
+    "release:minor": "pnpm version minor && git push && git push --tags",
+    "release:major": "pnpm version major && git push && git push --tags"
+  },
+  "keywords": [
+    "openapi",
+    "typescript",
+    "client",
+    "generator",
+    "zod"
+  ],
+  "author": "gunzip",
+  "license": "MIT",
+  "devDependencies": {
+    "@pagopa/eslint-config": "^5.0.0",
+    "@stoplight/prism-cli": "^5.14.2",
+    "@tsconfig/node22": "catalog:",
+    "@types/express": "^5.0.3",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "catalog:",
+    "@types/supertest": "^6.0.3",
+    "@types/swagger2openapi": "^7.0.4",
+    "@vitest/coverage-v8": "catalog:",
+    "embedme": "catalog:",
+    "eslint": "catalog:",
+    "express": "^5.1.0",
+    "prettier": "catalog:",
+    "supertest": "^7.1.4",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^14.2.0",
+    "commander": "^14.0.0",
+    "js-yaml": "^4.1.0",
+    "openapi3-ts": "^4.3.0",
+    "p-limit": "^7.1.0",
+    "swagger2openapi": "^7.0.8",
+    "zod": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
+}

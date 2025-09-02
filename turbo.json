@@ -1,0 +1,68 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["build:docs", "^build"],
+      "outputs": ["dist/**"]
+    },
+    "build:docs": {
+      "dependsOn": ["^build:docs"],
+      "outputs": ["README.md"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "lint:check": {
+      "dependsOn": ["^lint:check"]
+    },
+    "format": {
+      "dependsOn": ["^format"]
+    },
+    "format:check": {
+      "dependsOn": ["^format:check"]
+    },
+    "typecheck": {
+      "dependsOn": ["typecheck:examples", "^typecheck"]
+    },
+    "typecheck:examples": {
+      "dependsOn": ["^typecheck:examples"]
+    },
+    "typecheck:tests": {
+      "dependsOn": ["^typecheck:tests"]
+    },
+    "test": {
+      "dependsOn": ["^test"]
+    },
+    "//#test:coverage": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "apps/**/src/**/*.ts",
+        "packages/**/src/**/*.ts",
+        "actions/**/src/**/*.ts"
+      ],
+      "outputs": ["coverage"],
+      "outputLogs": "errors-only"
+    },
+    "start": {
+      "dependsOn": ["^start"]
+    },
+    "generate": {
+      "dependsOn": ["^generate"]
+    },
+    "generate:examples": {
+      "dependsOn": ["^generate:examples"]
+    },
+    "prepublishOnly": {
+      "dependsOn": ["^prepublishOnly"]
+    },
+    "release:patch": {
+      "dependsOn": ["^release:patch"]
+    },
+    "release:minor": {
+      "dependsOn": ["^release:minor"]
+    },
+    "release:major": {
+      "dependsOn": ["^release:major"]
+    }
+  }
+}

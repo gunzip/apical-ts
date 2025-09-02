@@ -8,7 +8,7 @@ import { generate } from "./core-generator/index.js";
 const program = new Command();
 
 program
-  .name("yanogen-ts")
+  .name("@apical-ts/craft")
   .description("Generate TypeScript from an OpenAPI specification.")
   .version("0.0.1");
 

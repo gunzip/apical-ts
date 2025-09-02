@@ -1,12 +1,13 @@
 # Publishing to NPM registry
 
-This document describes how to publish the `yanogen-ts` package to NPM registry.
+This document describes how to publish the `@apical-ts/craft` package to NPM
+registry.
 
 ## Setup
 
 The project is configured to publish to NPM registry with the following setup:
 
-- **Package name**: `yanogen-ts`
+- **Package name**: `@apical-ts/craft`
 
 ## Publishing Methods
 
@@ -15,6 +16,7 @@ The project is configured to publish to NPM registry with the following setup:
 The recommended way to publish is by creating a GitHub release:
 
 1. **Create a new release** on GitHub:
+
    - Go to the repository on GitHub
    - Click "Releases" → "Create a new release"
    - Create a new tag (e.g., `v1.0.0`, `v1.0.1`)
@@ -81,7 +83,7 @@ permissions to publish packages.
 ## Installation for Users
 
 ```bash
-pnpm add yanogen-ts
+pnpm add @apical-ts/craft
 ```
 
 ## Package Contents

@@ -13,3 +13,5 @@ generated*
 
 # Ignore .npmrc with tokens (but keep the template)
 .npmrc.local
+
+.turbo
