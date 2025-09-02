@@ -373,6 +373,7 @@ Examples:
 import {
   configureOperations,
   globalConfig,
+  isParsed,
 } from "../generated/client/config.js";
 import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 import { getInventory } from "../generated/client/getInventory.js";
@@ -411,7 +412,9 @@ async function demonstrateClient() {
   );
   if (greedyPetResponse.success === true && greedyPetResponse.status === 200) {
     // automatic validation: .parsed available
-    greedyPetResponse.parsed;
+    if (isParsed(greedyPetResponse.parsed)) {
+      greedyPetResponse.parsed.parsed;
+    }
   }
 
   // Automatic validation bound client
@@ -430,6 +433,7 @@ async function demonstrateClient() {
 }
 
 demonstrateClient();
+
 ```
 
 ### Manual Runtime Validation
