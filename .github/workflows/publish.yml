@@ -4,16 +4,6 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      version_bump:
-        description: "Version bump type"
-        required: false
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
-        default: patch
 
 jobs:
   publish:
@@ -46,12 +36,10 @@ jobs:
       - name: Bump version
         if: github.event.inputs.version_bump
         working-directory: apps/craft
-        run:
-          pnpm version ${{ github.event.inputs.version_bump }}
-          --no-git-tag-version
+        run: pnpm changeset version
 
       - name: Publish to NPM
         working-directory: apps/craft
-        run: pnpm publish --no-git-checks --access public
+        run: pnpm changeset publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
