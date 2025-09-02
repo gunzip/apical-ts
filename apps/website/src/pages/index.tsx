@@ -42,7 +42,7 @@ function HomepageHeader() {
           <div className={styles.codeExample}>
             <div className={styles.codeBlockLabel}>CLI</div>
             <CodeBlock
-              code={`pnpm @apical-ts/craft generate\n -i https://petstore.swagger.io/v2/swagger.json\n -o ./generated\n --generate-client\n`}
+              code={`pnpx @apical-ts/craft generate\n -i https://petstore.swagger.io/v2/swagger.json\n -o ./generated\n --generate-client\n`}
               language="bash"
             />
           </div>
