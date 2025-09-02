@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["build:docs", "^build"],
+      "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
     "build:docs": {
@@ -21,8 +21,8 @@
     "format:check": {
       "dependsOn": ["^format:check"]
     },
-    "typecheck": {
-      "dependsOn": ["typecheck:examples", "^typecheck"]
+    "typecheck:code": {
+      "dependsOn": ["^typecheck:code"]
     },
     "typecheck:examples": {
       "dependsOn": ["^typecheck:examples"]
@@ -49,8 +49,13 @@
     "generate": {
       "dependsOn": ["^generate"]
     },
+    "generate:tests": {
+      "dependsOn": ["^generate:tests"],
+      "outputs": ["tests/integrations/generated"]
+    },
     "generate:examples": {
-      "dependsOn": ["^generate:examples"]
+      "dependsOn": ["^generate:examples"],
+      "outputs": ["examples/generated"]
     },
     "prepublishOnly": {
       "dependsOn": ["^prepublishOnly"]
