@@ -61,7 +61,7 @@ const mockInventory = {
 
 /* Implementation of getPetById handler */
 const getPetByIdHandler: getPetByIdHandler = async (params) => {
-  if (!params.success) {
+  if (!params.isValid) {
     /* Handle validation errors */
     console.error("Validation error in getPetById:", params);
     return {
@@ -94,7 +94,7 @@ createExpressAdapter(getPetByIdRoute(), getPetByIdHandler)(app);
 /* We disable type checking to allow emitting an unexpected response */
 /* @ts-ignore */
 const getInventoryHandler: getInventoryHandler = async (params) => {
-  if (!params.success) {
+  if (!params.isValid) {
     /* Handle validation errors */
     console.error("Validation error in getInventory:", params);
     return {
@@ -115,7 +115,7 @@ createExpressAdapter(getInventoryRoute(), getInventoryHandler)(app);
 /* Setup routes manually using generated wrappers */
 
 const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
-  if (!params.success) {
+  if (!params.isValid) {
     /* Handle validation errors */
     console.error("Validation error in findPetsByStatus:", params);
     return {
