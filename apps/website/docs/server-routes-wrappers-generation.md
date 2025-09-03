@@ -10,7 +10,7 @@ Zod schemas and can return only responses of the expected types.
 To generate server-side code, use the CLI with the `--generate-server` flag:
 
 ```bash
-pnpx @apical-ts/craft generate \
+npx @apical-ts/craft generate \
   --generate-server \
   -i https://petstore.swagger.io/v2/swagger.json \
   -o generated
@@ -60,6 +60,7 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
     };
   }
 
+  // Response is typed here
   return {
     status: 200,
     contentType: "application/json",
@@ -76,7 +77,7 @@ createExpressAdapter(getPetByIdRoute(), getPetByIdHandler)(app);
 - All responses are type checked: you cannot return a response shape which is
   not valid according to the OpenAPI schema.
 
-See the examples directory in the repository for more usage examples.
+See the `apps/examples` directory in the repository for more usage examples.
 
 ### Handler Function Signature
 

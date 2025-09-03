@@ -53,19 +53,6 @@ export async function getPetById(
 }
 ```
 
-## Usage
-
-You can import and use the generated client and schemas in your TypeScript
-project:
-
-```ts
-import { getPetById } from "./operations";
-import { Pet } from "./schemas";
-
-const pet = await getPetById({ petId: 123 });
-Pet.parse(pet); // Runtime validation
-```
-
 ## Customization
 
 - The generator supports options to control output structure, naming, and client

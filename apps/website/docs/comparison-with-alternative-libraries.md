@@ -44,8 +44,15 @@ Here is a comparison of the key features and limitations of each library.
 - Strong typing with Zod v4
 - Minimal runtime dependencies
 - Operation-based architecture
+- Multiple success (2xx) responses handling
 - Multiple content types and response handling
 - Server-side validation support
+
+**Limitations:**
+
+- Project is still in early development
+- Still untested on real-world scenarios
+- No community
 
 **Best for:** Projects requiring maximum type safety, performance optimization,
 and flexibility
@@ -65,20 +72,21 @@ and flexibility
 - Slower generation on large specs
 - Limited content type support
 
-**Best for:** Projects where bundle size is not a concern and you need
-comprehensive io-ts integration
+**Best for:** Projects where bundle size is not a concern and you need io-ts
+integration
 
 ### openapi-zod-client
 
 **Strengths:**
 
-- Fast generation
-- Zod-based validation
+- Very simple to use
 - Good for simple use cases
 
 **Limitations:**
 
 - Loose schema quality
+- Throws unknown exceptions
+- Project looks unmaintained
 - Limited response type support
 - No security header support
 - Monolithic output
@@ -87,19 +95,24 @@ comprehensive io-ts integration
 
 ### openapi-ts
 
+While heyapi's openapi-ts is one of the most popular and effective tools for
+generating TypeScript clients from OpenAPI specifications, it does have certain
+limitations. These limitations motivated the development of this alternative to
+address additional use cases and requirements.
+
 **Strengths:**
 
-- Fast generation
 - Minimal dependencies
 - Good schema quality
 - Zod v4 support
+- Very strong community
 
 **Limitations:**
 
 - Limited response type support
 - No multiple content type support
+- Weak multiple success response support
 - Monolithic output
-- No server validation
 
 **Best for:** Projects needing basic client generation with minimal setup
 
@@ -127,10 +140,10 @@ comprehensive io-ts integration
 | Use Case            | @apical-ts/craft | openapi-codegen-ts | openapi-zod-client | openapi-ts |
 | ------------------- | :--------------: | :----------------: | :----------------: | :--------: |
 | Large APIs          |   ✅ Excellent   |      ⚠️ Slow       |      ⚠️ Basic      |  ⚠️ Basic  |
-| Bundle optimization |   ✅ Excellent   |      ❌ Poor       |      ❌ Poor       |  ❌ Poor   |
+| Bundle optimization |   ✅ Excellent   |      ❌ Poor       |      ❌ Poor       |  ⚠️ Basic  |
 | Type safety         |   ✅ Excellent   |    ✅ Excellent    |      ⚠️ Good       |  ✅ Good   |
-| Server validation   |      ✅ Yes      |       ❌ No        |       ❌ No        |   ❌ No    |
-| Multiple responses  |      ✅ Yes      |       ✅ Yes       |       ❌ No        |   ❌ No    |
+| Server validation   |      ✅ Yes      |       ❌ No        |       ❌ No        |   ✅ Yes   |
+| Multiple responses  |      ✅ Yes      |       ✅ Yes       |       ❌ No        |  ⚠️ Basic  |
 | File handling       |   ✅ Excellent   |      ✅ Good       |      ⚠️ Basic      |  ✅ Good   |
 | Setup complexity    |   ⚠️ Moderate    |    ⚠️ Moderate     |     ✅ Simple      | ✅ Simple  |
 

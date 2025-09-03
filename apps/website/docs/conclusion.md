@@ -48,13 +48,8 @@ architectural changes.
 Ready to experience the difference? Get started with @apical-ts/craft:
 
 ```bash
-pnpx @apical-ts/craft generate \
+npx @apical-ts/craft generate \
   --generate-client \
   -i https://petstore.swagger.io/v2/swagger.json \
   -o ./generated
 ```
-
-Join the growing community of developers who have chosen @apical-ts/craft for
-their OpenAPI TypeScript generation needs. Experience the combination of type
-safety, performance, and developer experience that makes building reliable APIs
-a joy rather than a chore.

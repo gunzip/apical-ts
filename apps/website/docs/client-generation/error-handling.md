@@ -80,14 +80,16 @@ if (!result.isValid) {
 }
 ```
 
+A more streamlined approach is to return early on errors, then handle successful
+responses by switching on the status code.
+
 ## Error Context
 
 Different error types provide different context:
 
 ### unexpected-error
 
-- **When it occurs**: Network failures, connection issues, or any unexpected
-  exception
+- **When it occurs**: Network failures and connection issues.
 - **Available data**: No `status`, `data`, or `response` fields
 - **Use case**: Handle network connectivity issues, timeouts, or other
   infrastructure problems
@@ -123,7 +125,7 @@ if (result.kind === "unexpected-response") {
 ```ts
 if (result.kind === "parse-error") {
   console.error("Response validation failed:");
-  console.error(result.error.issues); // Detailed validation errors
+  console.error(z.prettifyError(result.error)); // Detailed validation errors
   // Show validation error to user or log for debugging
 }
 ```
@@ -156,67 +158,6 @@ if (result.kind === "missing-schema") {
 }
 ```
 
-## Comprehensive Error Handling
-
-For robust applications, implement comprehensive error handling:
-
-```ts
-async function handleApiCall() {
-  const result = await getPetById({ petId: "123" });
-
-  if (!result.isValid) {
-    switch (result.kind) {
-      case "unexpected-error":
-        // Network or infrastructure issues
-        showErrorMessage("Service temporarily unavailable. Please try again.");
-        logError("Network error", result.error);
-        break;
-
-      case "unexpected-response":
-        // Undocumented API responses
-        showErrorMessage("Unexpected server response. Please contact support.");
-        logError(`Undocumented status ${result.status}`, result.error);
-        break;
-
-      case "parse-error":
-        // Schema validation failures
-        showErrorMessage("Invalid data received from server.");
-        logError("Validation error", result.error.issues);
-        break;
-
-      case "deserialization-error":
-        // Custom deserializer failures
-        showErrorMessage("Unable to process server response.");
-        logError("Deserialization error", result.error);
-        break;
-
-      case "missing-schema":
-        // Missing schema for content type
-        console.warn("Processing response without validation");
-        // Continue with raw data if appropriate
-        break;
-    }
-    return null;
-  }
-
-  // Handle successful responses
-  switch (result.status) {
-    case 200:
-      return result.data;
-    case 404:
-      showErrorMessage("Pet not found.");
-      return null;
-    case 400:
-      showErrorMessage("Invalid request. Please check your input.");
-      return null;
-    default:
-      showErrorMessage("Unexpected response from server.");
-      logError(`Unexpected status ${result.status}`, result.data);
-      return null;
-  }
-}
-```
-
 ## Error Recovery Strategies
 
 ### Retry Logic
@@ -244,32 +185,12 @@ async function getPetWithRetry(petId: string, maxRetries = 3) {
 }
 ```
 
-### Fallback Data
-
-```ts
-async function getPetWithFallback(petId: string) {
-  const result = await getPetById({ petId });
-
-  if (result.isValid && result.status === 200) {
-    return result.data;
-  }
-
-  // Return fallback data for certain error types
-  if (!result.isValid && result.kind === "unexpected-error") {
-    return getDefaultPetData(petId);
-  }
-
-  throw new Error(`Unable to get pet: ${result.kind}`);
-}
-```
-
 ## Best Practices
 
 1. **Never ignore errors** - Always check `isValid` before proceeding
-2. **Handle errors appropriately** - Different error types require different
+1. **Handle errors appropriately** - Different error types require different
    handling strategies
-3. **Provide user feedback** - Show meaningful error messages to users
-4. **Log for debugging** - Include relevant context in error logs
-5. **Implement retry logic** - For transient network errors
-6. **Use fallback strategies** - When appropriate for your use case
-7. **Monitor error patterns** - Track error types to identify API issues
+1. **Provide user feedback** - Show meaningful error messages to users
+1. **Log for debugging** - Include relevant context in error logs
+1. **Implement retry logic** - For transient network errors
+1. **Monitor error patterns** - Track error types to identify API issues

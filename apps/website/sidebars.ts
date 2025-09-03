@@ -26,7 +26,6 @@ const sidebars: SidebarsConfig = {
       items: [
         "client-generation/define-configuration",
         "client-generation/call-operations",
-        "client-generation/binding-configuration-to-operations",
         "client-generation/response-handling",
         "client-generation/error-handling",
         "client-generation/response-payload-validation",

@@ -1,14 +1,14 @@
 # Introduction
 
-Effortlessly turn your OpenAPI specifications into **fully-typed Zod v4
-schemas** ready for runtime (client or server) validation and TypeScript
-development. 🚀
+@apical-ts/craft effortlessly turn your OpenAPI specifications into
+**fully-typed Zod v4 schemas** ready for runtime (client or server) validation
+and TypeScript development.
 
 Need a **client**? Instantly generate a type-safe, low-footprint,
 operation-based REST API client alongside your schemas.
 
-Need to **validate server requests and return typed responses**? 🛡️ We've got
-you covered with built-in support for request and response validation using Zod
+Need to **validate server requests and return typed responses**? We've got you
+covered with built-in support for request and response validation using Zod
 schemas.
 
 <!-- ![Demo of OpenAPI TypeScript Generator](../static/img/demo.gif) -->
@@ -21,15 +21,16 @@ to define your API contracts, and with @apical-ts/craft, you can easily generate
 TypeScript code that strictly adheres to those contracts, all while enjoying a
 seamless developer experience.
 
-Many existing generators lack flexibility and strong type safety. Most do not
-support multiple success responses or multiple content types, and their typings
-are often too loose—making it easy to accidentally access undefined properties.
-With **stricter** guardrails, @apical-ts/craft helps developers (and Gen-AIs)
-build more robust and reliable implementations.
+Many [existing generators](./comparison-with-alternative-libraries.md) lack
+flexibility and strong type safety. Most do not support multiple success
+responses or multiple content types, and their typings are often too
+loose—making it easy to accidentally access undefined properties. With
+**stricter** guardrails, @apical-ts/craft helps developers (and Gen-AIs) build
+more robust and reliable implementations.
 
-Curious why you should choose this generator over others? See our comparison
-with alternative libraries for more details or check our comprehensive feature
-list for more information.
+Curious why you should choose this generator over others? See our
+[comparison with alternative libraries](./comparison-with-alternative-libraries.md)
+for more details or check our comprehensive feature list for more information.
 
 ## Quick Start
 
@@ -37,7 +38,7 @@ Get started with @apical-ts/craft in just a few commands:
 
 ```bash
 # Generate schemas and client from an OpenAPI specification
-pnpx @apical-ts/craft generate \
+npx @apical-ts/craft generate \
   --generate-server \
   --generate-client \
   -i https://petstore.swagger.io/v2/swagger.json \
