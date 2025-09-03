@@ -11,7 +11,7 @@ object and you haven't overridden it with `configureOperations` (see
 [Binding Configuration to Operations](#binding-configuration-to-operations)).
 
 ```typescript
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 ```
 
 By default `baseURL` is set to the first server found in the OpenAPI
@@ -40,7 +40,7 @@ const apiConfig = {
 const client = configureOperations(operations, apiConfig);
 
 // Now you can call operations without passing config:
-const pet = await client.getPetById({ petId: "123" });
+const pet = await client.getPetById({ path: { petId: "123" } });
 const newPet = await client.createPet({
   body: { name: "Fluffy", status: "available" },
 });
@@ -74,7 +74,7 @@ const client = configureOperations(
 );
 
 // You won't forget to call operations on the client object now
-const pet = await client.getPetById({ petId: "123" });
+const pet = await client.getPetById({ path: { petId: "123" } });
 const newPet = await client.createPet({
   body: { name: "Fluffy", status: "available" },
 });

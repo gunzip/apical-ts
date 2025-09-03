@@ -49,7 +49,7 @@ type ApiResponseError =
 ## Error Handling Patterns
 
 ```ts
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 
 if (!result.isValid) {
   // You don't have to handle all errors like this, but you can.
@@ -165,7 +165,7 @@ if (result.kind === "missing-schema") {
 ```ts
 async function getPetWithRetry(petId: string, maxRetries = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const result = await getPetById({ petId });
+    const result = await getPetById({ path: { petId: "123" } });
 
     if (result.isValid) {
       return result;
