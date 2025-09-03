@@ -1,14 +1,20 @@
 # Handling Multiple Content Types (Request & Response)
 
-This generator fully supports OpenAPI endpoints that define multiple content types for both requests and responses. For each operation, the generated client:
+This generator fully supports OpenAPI endpoints that define multiple content
+types for both requests and responses. For each operation, the generated client:
 
-- Accepts a `contentType` property in the request object, which is an object with optional `request` and `response` keys, to specify which content type to use for the request and which to prefer for the response.
+- Accepts a `contentType` property in the request object, which is an object
+  with optional `request` and `response` keys, to specify which content type to
+  use for the request and which to prefer for the response.
 - Returns a response typed according to the selected response content type.
-- Validates and parses the response according to the content type actually returned by the server.
+- Validates and parses the response according to the content type actually
+  returned by the server.
 
 ## Example: Endpoint with Multiple Request Content Types
 
-Suppose your OpenAPI spec defines an operation that accepts both `application/json` and `application/x-www-form-urlencoded` for the request body and may return either `application/json` or `application/xml` for the response:
+Suppose your OpenAPI spec defines an operation that accepts both
+`application/json` and `application/x-www-form-urlencoded` for the request body
+and may return either `application/json` or `application/xml` for the response:
 
 ```yaml
 /pet:
@@ -43,7 +49,8 @@ Suppose your OpenAPI spec defines an operation that accepts both `application/js
         description: Unexpected error
 ```
 
-The generated operation function will accept a `contentType` object to select the body and/or response format:
+The generated operation function will accept a `contentType` object to select
+the body and/or response format:
 
 ```ts
 // ../examples/client-examples/multi-content-types.ts#L5-L68
@@ -124,19 +131,19 @@ Specify the content type for the request body:
 // Send JSON request body
 const result1 = await updatePet({
   body: { name: "Fluffy", id: 1, photoUrls: [] },
-  contentType: { request: "application/json" }
+  contentType: { request: "application/json" },
 });
 
 // Send XML request body
 const result2 = await updatePet({
   body: { name: "Fluffy", id: 1, photoUrls: [] },
-  contentType: { request: "application/xml" }
+  contentType: { request: "application/xml" },
 });
 
 // Send form data
 const result3 = await updatePet({
   body: { name: "Fluffy", id: 1, photoUrls: [] },
-  contentType: { request: "application/x-www-form-urlencoded" }
+  contentType: { request: "application/x-www-form-urlencoded" },
 });
 ```
 
@@ -148,13 +155,13 @@ Specify your preferred response content type:
 // Prefer JSON response
 const result1 = await updatePet({
   body: { name: "Fluffy", id: 1, photoUrls: [] },
-  contentType: { response: "application/json" }
+  contentType: { response: "application/json" },
 });
 
 // Prefer XML response
 const result2 = await updatePet({
   body: { name: "Fluffy", id: 1, photoUrls: [] },
-  contentType: { response: "application/xml" }
+  contentType: { response: "application/xml" },
 });
 ```
 
@@ -167,8 +174,8 @@ const result = await updatePet({
   body: { name: "Fluffy", id: 1, photoUrls: [] },
   contentType: {
     request: "application/xml",
-    response: "application/json"
-  }
+    response: "application/json",
+  },
 });
 ```
 
@@ -178,31 +185,34 @@ The client handles content type negotiation automatically:
 
 ### Accept Headers
 
-When you specify a response content type preference, the client sets the appropriate `Accept` header:
+When you specify a response content type preference, the client sets the
+appropriate `Accept` header:
 
 ```ts
 // This sets Accept: application/json
 const result = await getPet({
   petId: "123",
-  contentType: { response: "application/json" }
+  contentType: { response: "application/json" },
 });
 ```
 
 ### Content-Type Headers
 
-When you specify a request content type, the client sets the appropriate `Content-Type` header:
+When you specify a request content type, the client sets the appropriate
+`Content-Type` header:
 
 ```ts
 // This sets Content-Type: application/xml
 const result = await updatePet({
   body: petData,
-  contentType: { request: "application/xml" }
+  contentType: { request: "application/xml" },
 });
 ```
 
 ## Example: Endpoint with Multiple Response Content Types
 
-For endpoints that can return different content types based on client preferences:
+For endpoints that can return different content types based on client
+preferences:
 
 ```yaml
 /document/{id}:
@@ -239,7 +249,7 @@ For endpoints that can return different content types based on client preference
 // Get JSON representation
 const jsonResult = await getDocument({
   id: "doc123",
-  contentType: { response: "application/json" }
+  contentType: { response: "application/json" },
 });
 
 if (jsonResult.isValid && jsonResult.status === 200) {
@@ -253,7 +263,7 @@ if (jsonResult.isValid && jsonResult.status === 200) {
 // Get PDF binary
 const pdfResult = await getDocument({
   id: "doc123",
-  contentType: { response: "application/pdf" }
+  contentType: { response: "application/pdf" },
 });
 
 if (pdfResult.isValid && pdfResult.status === 200) {
@@ -266,7 +276,7 @@ if (pdfResult.isValid && pdfResult.status === 200) {
 // Get plain text
 const textResult = await getDocument({
   id: "doc123",
-  contentType: { response: "text/plain" }
+  contentType: { response: "text/plain" },
 });
 
 if (textResult.isValid && textResult.status === 200) {
@@ -281,7 +291,7 @@ The generated client provides type safety based on content types:
 ```ts
 const result = await getDocument({
   id: "doc123",
-  contentType: { response: "application/json" }
+  contentType: { response: "application/json" },
 });
 
 if (result.isValid && result.status === 200) {
@@ -304,7 +314,7 @@ For custom or vendor-specific content types, use deserializers:
 const result = await getDocument(
   {
     id: "doc123",
-    contentType: { response: "application/vnd.company+json" }
+    contentType: { response: "application/vnd.company+json" },
   },
   {
     ...globalConfig,
@@ -317,9 +327,9 @@ const result = await getDocument(
           documentId: obj.doc_id,
           createdAt: new Date(obj.created_timestamp),
         };
-      }
-    }
-  }
+      },
+    },
+  },
 );
 ```
 
@@ -333,7 +343,7 @@ When no content type is specified:
 ```ts
 // Uses default content types
 const result = await updatePet({
-  body: { name: "Fluffy", id: 1, photoUrls: [] }
+  body: { name: "Fluffy", id: 1, photoUrls: [] },
 });
 ```
 
@@ -344,7 +354,7 @@ Different content types may have different error response formats:
 ```ts
 const result = await updatePet({
   body: petData,
-  contentType: { response: "application/xml" }
+  contentType: { response: "application/xml" },
 });
 
 if (!result.isValid) {
@@ -370,7 +380,8 @@ if (!result.isValid) {
 4. **Use type guards** to safely access content-type-specific data
 5. **Test with all supported content types** to ensure compatibility
 6. **Document content type requirements** in your API integration code
-7. **Consider fallback strategies** when preferred content types aren't available
+7. **Consider fallback strategies** when preferred content types aren't
+   available
 
 ## Common Patterns
 
@@ -380,13 +391,13 @@ if (!result.isValid) {
 // Upload as multipart/form-data
 const uploadResult = await uploadFile({
   file: fileData,
-  contentType: { request: "multipart/form-data" }
+  contentType: { request: "multipart/form-data" },
 });
 
 // Upload as binary
 const binaryResult = await uploadFile({
   file: fileData,
-  contentType: { request: "application/octet-stream" }
+  contentType: { request: "application/octet-stream" },
 });
 ```
 
@@ -396,18 +407,18 @@ const binaryResult = await uploadFile({
 // Use v1 API format
 const v1Result = await getUser({
   id: "123",
-  contentType: { 
+  contentType: {
     request: "application/vnd.api.v1+json",
-    response: "application/vnd.api.v1+json"
-  }
+    response: "application/vnd.api.v1+json",
+  },
 });
 
 // Use v2 API format
 const v2Result = await getUser({
   id: "123",
-  contentType: { 
+  contentType: {
     request: "application/vnd.api.v2+json",
-    response: "application/vnd.api.v2+json"
-  }
+    response: "application/vnd.api.v2+json",
+  },
 });
 ```

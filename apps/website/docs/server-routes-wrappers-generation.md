@@ -1,6 +1,9 @@
 # Server Routes Wrappers Generation
 
-The generator can also produce a fully-typed server handler wrapper for your OpenAPI operations. This enables you to build type-safe HTTP servers (e.g., with Express, Fastify, or custom frameworks) that validate requests at runtime using Zod schemas and can return only responses of the expected types.
+The generator can also produce a fully-typed server handler wrapper for your
+OpenAPI operations. This enables you to build type-safe HTTP servers (e.g., with
+Express, Fastify, or custom frameworks) that validate requests at runtime using
+Zod schemas and can return only responses of the expected types.
 
 ## How to Generate a Server Route Wrapper
 
@@ -20,9 +23,15 @@ This will create a `server/` directory in your output folder, containing:
 
 ## Using the Wrapped Handler
 
-The generated route wrapper is a function that takes a request handler and returns an async function that can be used with any web framework. This allows you to ensure type safety and runtime validation for your request parameters (path, query, headers) and response data.
+The generated route wrapper is a function that takes a request handler and
+returns an async function that can be used with any web framework. This allows
+you to ensure type safety and runtime validation for your request parameters
+(path, query, headers) and response data.
 
-You are responsible for extracting parameters from the framework request and passing them to the wrapper, then handling the result (status, contentType, data) in your route handler. This allows you to integrate with any web framework and customize error handling as needed.
+You are responsible for extracting parameters from the framework request and
+passing them to the wrapper, then handling the result (status, contentType,
+data) in your route handler. This allows you to integrate with any web framework
+and customize error handling as needed.
 
 Example usage with Express and a helper for parameter extraction:
 
@@ -61,9 +70,11 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
 createExpressAdapter(getPetByIdRoute(), getPetByIdHandler)(app);
 ```
 
-- The wrapper receives a single params object containing validated query, path, headers, body, etc. or error details if validation fails
+- The wrapper receives a single params object containing validated query, path,
+  headers, body, etc. or error details if validation fails
 - You control the HTTP response based on the wrapper's result
-- All responses are type checked: you cannot return a response shape which is not valid according to the OpenAPI schema.
+- All responses are type checked: you cannot return a response shape which is
+  not valid according to the OpenAPI schema.
 
 See the examples directory in the repository for more usage examples.
 
@@ -71,8 +82,10 @@ See the examples directory in the repository for more usage examples.
 
 The handler you provide to the wrapper receives a single argument:
 
-- For valid requests: `{ success: true, value: { query, path, headers, body, ... } }`
-- For validation errors: `{ success: false, kind: "query-error" | "body-error" | ... , error: ZodError }`
+- For valid requests:
+  `{ success: true, value: { query, path, headers, body, ... } }`
+- For validation errors:
+  `{ success: false, kind: "query-error" | "body-error" | ... , error: ZodError }`
 
 It must return an object with `{ status, contentType, data }`.
 
@@ -83,4 +96,5 @@ It must return an object with `{ status, contentType, data }`.
 - Automatic error details for validation failures
 - Type-safe handler context
 
-You can use the generated types and schemas for further custom validation or integration with other frameworks.
+You can use the generated types and schemas for further custom validation or
+integration with other frameworks.
