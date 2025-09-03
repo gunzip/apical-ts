@@ -240,18 +240,11 @@ const config: Config = {
           ignorePatterns: ["/tags/**"],
           filename: "sitemap.xml",
         },
-        gtag: false, // Can be enabled later if needed
       } satisfies Preset.Options,
     ],
   ],
 
   themeConfig: {
-    metadata: [
-      {
-        name: "google-site-verification",
-        content: "placeholder_for_google_site_verification", // Replace with actual verification code when available
-      },
-    ],
     colorMode: {
       defaultMode: "dark",
     },
