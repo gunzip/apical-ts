@@ -25,24 +25,38 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
       language={language}
       theme={themes.github}
       children={({ className, style, tokens, getLineProps, getTokenProps }) => (
-        <div style={{ position: "relative" }}>
+        <div className="codeblock-group" style={{ position: "relative" }}>
+          <style>{`
+            .codeblock-copy-btn {
+              position: absolute;
+              top: 8px;
+              right: 8px;
+              z-index: 2;
+              background: #f3f4f6;
+              color: #111827;
+              border: 1px solid #e5e7eb;
+              border-radius: 4px;
+              padding: 2px 10px;
+              font-size: 12px;
+              cursor: pointer;
+              transition: background 0.2s, opacity 0.2s;
+              opacity: 0;
+              pointer-events: none;
+            }
+            .codeblock-group:hover .codeblock-copy-btn,
+            .codeblock-copy-btn:focus {
+              opacity: 1;
+              pointer-events: auto;
+            }
+            .codeblock-copy-btn.copied {
+              background: #d1fae5;
+            }
+          `}</style>
           <button
             onClick={handleCopy}
-            style={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              zIndex: 2,
-              background: copied ? "#d1fae5" : "#f3f4f6",
-              color: "#111827",
-              border: "1px solid #e5e7eb",
-              borderRadius: 4,
-              padding: "2px 10px",
-              fontSize: 12,
-              cursor: "pointer",
-              transition: "background 0.2s",
-            }}
+            className={`codeblock-copy-btn${copied ? " copied" : ""}`}
             aria-label="Copy code to clipboard"
+            tabIndex={0}
           >
             {copied ? "Copied!" : "Copy"}
           </button>
