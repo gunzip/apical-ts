@@ -132,50 +132,105 @@ await generate({
 - **Error handling**: Generator is robust and continues processing even with
   invalid input files
 
-## Project Layout and Architecture
+## Monorepo Layout and Architecture
 
-### Root Directory Structure
+### Top-Level Directory Structure
 
 ```
-├── .github/instructions/           # Copilot test guidelines
-├── src/                           # Source code
-│   ├── index.ts
-│   ├── client-generator/           # Client generator modules
-│   ├── core-generator/             # Core generator modules
-│   ├── operation-id-generator/     # Operation ID generator
-│   └── schema-generator/           # Zod schema generator
-├── tests/                         # Unit tests
-├── dist/                          # Build output (generated)
-├── package.json                   # Dependencies and scripts
-├── tsconfig.json                  # TypeScript configuration
-├── vitest.config.ts               # Test configuration
-├── .node-version                  # Node.js version requirement
-├── pnpm-lock.yaml                 # pnpm lockfile
-├── test.yaml                      # Sample OpenAPI spec for testing
-├── definitions.yaml               # Sample schema definitions
-├── README.md                      # Comprehensive documentation
-├── demo.gif                       # Demo animation
-├── eslint.config.js               # ESLint configuration
-├── tsup.config.js                 # tsup build config
-├── generated-bigspec.json         # Example generated output
-├── generated-genspec.ts           # Example generated output
+├── apps/                         # Main packages and applications
+│   ├── craft/                    # Core OpenAPI generator package
+│   │   ├── src/                  # Source code (client-generator, core-generator, etc.)
+│   │   ├── tests/                # Unit and integration tests
+│   │   ├── package.json          # Package manifest for craft
+│   │   └── ...                   # Build, config, and docs
+│   └── examples/                 # Example OpenAPI specs, generated output, and usage
+│       ├── generated/            # Example generated client/server/schemas
+│       ├── client-examples/      # Example client usage
+│       ├── server-examples/      # Example server usage
+│       └── ...                   # Benchmarks, fixtures, etc.
+├── website/                      # Docusaurus documentation site
+├── local/                        # Local experiments, generated files, and scratch
+├── .github/                      # GitHub workflows and Copilot instructions
+├── package.json                  # Monorepo root manifest (scripts, workspaces)
+├── pnpm-workspace.yaml           # pnpm workspace configuration
+├── pnpm-lock.yaml                # pnpm lockfile
+├── README.md                     # Monorepo overview and usage
+├── ...                           # Miscellaneous config, docs, and assets
 ```
 
-### Source Code Architecture (`src/`)
+### Key Packages
 
-**Main Entry Point**: `src/index.ts`
+- `apps/craft/`: Main OpenAPI TypeScript generator (CLI and library)
+- `apps/examples/`: Example OpenAPI specs, generated output, and usage
+- `apps/website/`: Documentation site (Docusaurus)
+- `local/`: Local development, generated files, and scratch
+
+### Top-Level (p)npm Tasks
+
+All commands should be run from the monorepo root unless otherwise noted. Use
+`pnpm` for all package management and scripts.
+
+#### Install Dependencies
+
+```bash
+pnpm install
+```
+
+#### Build All Packages
+
+```bash
+pnpm build
+# or to build a specific package:
+pnpm --filter craft build
+```
+
+#### Run All Tests
+
+```bash
+pnpm test
+# or to test a specific package:
+pnpm --filter craft test
+```
+
+#### Lint and Format
+
+```bash
+pnpm lint
+pnpm format
+```
+
+#### Generate Example Output
+
+```bash
+pnpm --filter craft generate
+# or use the CLI directly:
+pnpx @apical-ts/craft generate -i <spec> -o <output> --generate-client
+```
+
+#### Other Useful Tasks
+
+- `pnpm typecheck` – TypeScript type checking for all packages
+- `pnpm build:docs` – Build documentation (Docusaurus)
+- `pnpm run start` – Run the CLI (see package-level README for details)
+
+> **Tip:** Use `pnpm --filter <package>` to run scripts in a specific workspace
+> package.
+
+### Source Code Architecture (`apps/craft/`)
+
+**Main Entry Point**: `apps/craft/src/index.ts`
 
 - CLI interface using Commander.js
 - Exports `generate` function for programmatic usage
 
-**Core Generator** (`src/core-generator/`):
+**Core Generator** (`apps/craft/src/core-generator/`):
 
 - `index.ts`: Main orchestration and generation logic
 - `parser.ts`: OpenAPI specification parsing
 - `converter.ts`: OpenAPI version conversion
 - `file-writer.ts`: File writing utilities and formatting
 
-**Client Generator** (`src/client-generator/`):
+**Client Generator** (`apps/craft/src/client-generator/`):
 
 - `index.ts`: Operation client generation orchestration
 - `operation-function-generator.ts`: Individual operation function generation
@@ -185,9 +240,9 @@ await generate({
 - `config-generator.ts`: Configuration types and globals
 - `operation-extractor.ts`: OpenAPI metadata extraction
 - `file-writer.ts`: Operation file writing
-- Detailed module documentation in `src/client-generator/README.md`
+- Detailed module documentation in `apps/craft/src/client-generator/README.md`
 
-**Schema Generator** (`src/schema-generator/`):
+**Schema Generator** (`apps/craft/src/schema-generator/`):
 
 - `index.ts`: Main schema generation exports
 - `schema-converter.ts`: OpenAPI to Zod schema conversion
@@ -195,16 +250,16 @@ await generate({
 - `utils.ts`: Schema utilities and type inference
 - Generates Zod v4 schemas for runtime validation
 
-**Operation ID Generator** (`src/operation-id-generator/`):
+**Operation ID Generator** (`apps/craft/src/operation-id-generator/`):
 
 - Generates operation IDs for OpenAPI specs that lack them
 
-**Tests** (`tests/`):
+**Tests** (`apps/craft/tests/`):
 
 - Unit tests for core functionality and all generators
 - Use Vitest with descriptive test names
 - Follow Arrange-Act-Assert pattern
-- Test helpers and fixtures in `src/tests/integrations/fixtures/`
+- Test helpers and fixtures in `apps/craft/tests/integrations/fixtures/`
 
 ### Configuration Files
 
