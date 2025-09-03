@@ -54,9 +54,9 @@ function HomepageHeader() {
   const r = await findPetsByStatus({
     query: { status: "available" },
   });
-  if (r.success === true && r.status === 200) {
+  if (r.isValid === true && r.status === 200) {
     // Zod v4 parsed payload
-    const pets = r.parsed;
+    console.log(r.parsed[0].name);
   }`}
               language="typescript"
             />
