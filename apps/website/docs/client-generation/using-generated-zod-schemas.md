@@ -13,7 +13,9 @@ if (!result.success) {
 
 ## Schema Structure
 
-The generated schemas are self-contained Zod v4 schemas that can be used independently for validation, parsing, and type inference. Each schema file contains:
+The generated schemas are self-contained Zod v4 schemas that can be used
+independently for validation, parsing, and type inference. Each schema file
+contains:
 
 - **Zod schema definition** for runtime validation
 - **TypeScript type** derived from the schema
@@ -26,15 +28,21 @@ import { z } from "zod";
 export const Pet = z.object({
   id: z.number().int(),
   name: z.string(),
-  category: z.object({
-    id: z.number().int(),
-    name: z.string(),
-  }).optional(),
+  category: z
+    .object({
+      id: z.number().int(),
+      name: z.string(),
+    })
+    .optional(),
   photoUrls: z.array(z.string()),
-  tags: z.array(z.object({
-    id: z.number().int(),
-    name: z.string(),
-  })).optional(),
+  tags: z
+    .array(
+      z.object({
+        id: z.number().int(),
+        name: z.string(),
+      }),
+    )
+    .optional(),
   status: z.enum(["available", "pending", "sold"]).optional(),
 });
 
@@ -116,10 +124,10 @@ const PetForm = () => {
     <form onSubmit={handleSubmit(onSubmit)}>
       <input {...register("name")} placeholder="Pet name" />
       {errors.name && <span>Name is required</span>}
-      
+
       <input {...register("photoUrls.0")} placeholder="Photo URL" />
       {errors.photoUrls && <span>At least one photo URL is required</span>}
-      
+
       <button type="submit">Submit</button>
     </form>
   );
@@ -138,7 +146,9 @@ export const usePetForm = () => {
 
   const isValid = computed(() => {
     const result = Pet.safeParse(formData.value);
-    errors.value = result.success ? [] : result.error.issues.map(i => i.message);
+    errors.value = result.success
+      ? []
+      : result.error.issues.map((i) => i.message);
     return result.success;
   });
 
@@ -162,16 +172,20 @@ Use the schemas for server-side request validation:
 import { Request, Response, NextFunction } from "express";
 import { Pet } from "./generated/schemas/Pet.js";
 
-export const validatePet = (req: Request, res: Response, next: NextFunction) => {
+export const validatePet = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const result = Pet.safeParse(req.body);
-  
+
   if (!result.success) {
     return res.status(400).json({
       error: "Validation failed",
       details: result.error.issues,
     });
   }
-  
+
   req.body = result.data; // Attach validated data
   next();
 };
@@ -191,22 +205,26 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { Pet } from "./generated/schemas/Pet.js";
 
 export const registerPetRoutes = (fastify: FastifyInstance) => {
-  fastify.post("/pets", {
-    schema: {
-      body: zodToJsonSchema(Pet),
+  fastify.post(
+    "/pets",
+    {
+      schema: {
+        body: zodToJsonSchema(Pet),
+      },
+      preHandler: async (request, reply) => {
+        const result = Pet.safeParse(request.body);
+        if (!result.success) {
+          reply.code(400).send({ error: result.error.issues });
+          return;
+        }
+        request.body = result.data;
+      },
     },
-    preHandler: async (request, reply) => {
-      const result = Pet.safeParse(request.body);
-      if (!result.success) {
-        reply.code(400).send({ error: result.error.issues });
-        return;
-      }
-      request.body = result.data;
+    async (request, reply) => {
+      // request.body is validated
+      return { message: `Pet ${request.body.name} created` };
     },
-  }, async (request, reply) => {
-    // request.body is validated
-    return { message: `Pet ${request.body.name} created` };
-  });
+  );
 };
 ```
 
@@ -224,7 +242,7 @@ const sanitizePetData = (rawData: unknown) => {
   const SanitizedPet = Pet.transform((data) => ({
     ...data,
     name: data.name.trim().toLowerCase(),
-    photoUrls: data.photoUrls.filter(url => url.startsWith('http')),
+    photoUrls: data.photoUrls.filter((url) => url.startsWith("http")),
   }));
 
   return SanitizedPet.safeParse(rawData);
@@ -265,7 +283,7 @@ const PetWithBusinessRules = Pet.refine(
   {
     message: "Sold pets must have at least one photo",
     path: ["photoUrls"],
-  }
+  },
 );
 ```
 
@@ -275,19 +293,21 @@ const PetWithBusinessRules = Pet.refine(
 import { z } from "zod";
 import { User, Pet } from "./generated/schemas/index.js";
 
-const PetOwnership = z.object({
-  user: User,
-  pet: Pet,
-}).refine(
-  (data) => {
-    // Business rule: user must be over 18 to own a pet
-    return data.user.age >= 18;
-  },
-  {
-    message: "User must be over 18 to own a pet",
-    path: ["user", "age"],
-  }
-);
+const PetOwnership = z
+  .object({
+    user: User,
+    pet: Pet,
+  })
+  .refine(
+    (data) => {
+      // Business rule: user must be over 18 to own a pet
+      return data.user.age >= 18;
+    },
+    {
+      message: "User must be over 18 to own a pet",
+      path: ["user", "age"],
+    },
+  );
 ```
 
 ## Testing with Schemas
@@ -349,7 +369,7 @@ const petArbitrary = fc.record({
   status: fc.oneof(
     fc.constant("available"),
     fc.constant("pending"),
-    fc.constant("sold")
+    fc.constant("sold"),
   ),
 });
 
@@ -359,7 +379,7 @@ describe("Pet Schema Property Tests", () => {
       fc.property(petArbitrary, (pet) => {
         const result = Pet.safeParse(pet);
         expect(result.success).toBe(true);
-      })
+      }),
     );
   });
 });

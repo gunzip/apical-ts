@@ -1,9 +1,19 @@
 # Response Payload Validation
 
-When you call a generated operation that has a response body defined within the OpenAPI specification for some status codes, the returned Promise resolves to a result object that provides either a `.parsed` field or a `.parse()` method, depending on the value of the `config.forceValidation` flag. You can set this flag in the configuration passed to an individual operation or globally using `configureOperations`.
+When you call a generated operation that has a response body defined within the
+OpenAPI specification for some status codes, the returned Promise resolves to a
+result object that provides either a `.parsed` field or a `.parse()` method,
+depending on the value of the `config.forceValidation` flag. You can set this
+flag in the configuration passed to an individual operation or globally using
+`configureOperations`.
 
-- If you bind with `forceValidation: false` (or omit it), success responses always expose a `.parse()` method after you narrow on `success === true` and a specific `status`. You have to handle parsing errors manually in this case.
-- If you bind with `forceValidation: true`, success responses expose a `.parsed` field (and no `.parse()` method) because validation is performed automatically during the request lifecycle. In case of parsing errors, the returned result will include a `ZodError` instance instead of the `parsed` field.
+- If you bind with `forceValidation: false` (or omit it), success responses
+  always expose a `.parse()` method after you narrow on `success === true` and a
+  specific `status`. You have to handle parsing errors manually in this case.
+- If you bind with `forceValidation: true`, success responses expose a `.parsed`
+  field (and no `.parse()` method) because validation is performed automatically
+  during the request lifecycle. In case of parsing errors, the returned result
+  will include a `ZodError` instance instead of the `parsed` field.
 
 Don't worry if it seems confusing at first, type inference will help you.
 
@@ -77,12 +87,17 @@ demonstrateClient();
 
 ## Manual Runtime Validation
 
-Operations return raw data unless you enable automatic Zod parsing (setting `forceValidation` flag to `true`). To perform runtime validation, explicitly call the response object's `parse()` method, which returns a discriminated union:
+Operations return raw data unless you enable automatic Zod parsing (setting
+`forceValidation` flag to `true`). To perform runtime validation, explicitly
+call the response object's `parse()` method, which returns a discriminated
+union:
 
 - `{ contentType, parsed }` on success
 - `{ kind: "parse-error", error: ZodError }` when validation fails
-- `{ kind: "deserialization-error", error: unknown }` when a custom deserializer throws
-- `{ kind: "missing-schema", error: string }` when no schema exists for the resolved content type
+- `{ kind: "deserialization-error", error: unknown }` when a custom deserializer
+  throws
+- `{ kind: "missing-schema", error: string }` when no schema exists for the
+  resolved content type
 
 These objects never throw; you inspect the returned value to act accordingly.
 
@@ -107,7 +122,8 @@ if (result.isValid) {
 }
 ```
 
-For operations with mixed content types, validation only applies when you call `parse()` and a schema exists for the selected content type:
+For operations with mixed content types, validation only applies when you call
+`parse()` and a schema exists for the selected content type:
 
 ```ts
 const result = await getDocument({
@@ -123,7 +139,8 @@ if (result.status === 200) {
 }
 ```
 
-Non-JSON responses (like `text/plain`, `application/octet-stream`) are still left raw unless you supply a custom deserializer in the config:
+Non-JSON responses (like `text/plain`, `application/octet-stream`) are still
+left raw unless you supply a custom deserializer in the config:
 
 ```ts
 const result = await downloadFile(
@@ -150,7 +167,9 @@ if (result.status === 200) {
 
 ## Automatic Runtime Validation
 
-Enable automatic validation per request by setting `forceValidation: true` in the config you pass to an operation, or globally by binding a config with `configureOperations`:
+Enable automatic validation per request by setting `forceValidation: true` in
+the config you pass to an operation, or globally by binding a config with
+`configureOperations`:
 
 ```ts
 import {
@@ -177,38 +196,59 @@ if (result.isValid && result.status === 200) {
 
 ## Why is Runtime Validation Opt-In?
 
-TypeScript client generator uses Zod for payload validation and parsing, but we've made this feature opt-in rather than mandatory. This design choice provides several key advantages:
+TypeScript client generator uses Zod for payload validation and parsing, but
+we've made this feature opt-in rather than mandatory. This design choice
+provides several key advantages:
 
-- **Integration with Existing Systems**: This approach allows for seamless integration with other validation mechanisms already present in your codebase. If you have existing business logic that handles data validation, disabled runtime parsing at the client level avoids redundancy and streamlines your data flow.
+- **Integration with Existing Systems**: This approach allows for seamless
+  integration with other validation mechanisms already present in your codebase.
+  If you have existing business logic that handles data validation, disabled
+  runtime parsing at the client level avoids redundancy and streamlines your
+  data flow.
 
-- **Robustness in the Real World**: APIs responses can be unpredictable. You might encounter non-documented fields or slight deviations from the OpenAPI specification. Making validation optional prevents the client from crashing on unexpected—but often harmless—payloads, ensuring your application remains resilient.
+- **Robustness in the Real World**: APIs responses can be unpredictable. You
+  might encounter non-documented fields or slight deviations from the OpenAPI
+  specification. Making validation optional prevents the client from crashing on
+  unexpected—but often harmless—payloads, ensuring your application remains
+  resilient.
 
-- **Performance**: Parsing and validating a payload comes with a computational cost. By allowing you to opt-in, you can decide to skip validation for non-critical API calls, leading to better performance, especially in high-volume scenarios.
+- **Performance**: Parsing and validating a payload comes with a computational
+  cost. By allowing you to opt-in, you can decide to skip validation for
+  non-critical API calls, leading to better performance, especially in
+  high-volume scenarios.
 
-This approach gives you more control, allowing you to balance strict type-safety with the practical demands of working with real-world APIs.
+This approach gives you more control, allowing you to balance strict type-safety
+with the practical demands of working with real-world APIs.
 
 ## When to Enable Automatic Validation
 
 Enable `forceValidation: true` when:
 
 - **Trusted APIs**: When responses always match the OpenAPI specification
-- **Performance is Not Critical**: When the validation overhead is acceptable for your use case
+- **Performance is Not Critical**: When the validation overhead is acceptable
+  for your use case
 
 ## When to Use Manual Validation
 
 Use manual validation (omit or set `forceValidation: false`) when:
 
-- **Huge Payloads**: When dealing with large responses where validation overhead is a concern
-- **Untrusted APIs**: When APIs may return unexpected data that shouldn't crash your application
-- **Gradual Migration**: When incrementally adding validation to existing codebases
-- **Custom Validation Logic**: When you need more control over validation behavior and error handling or you have your own validation already in place
+- **Huge Payloads**: When dealing with large responses where validation overhead
+  is a concern
+- **Untrusted APIs**: When APIs may return unexpected data that shouldn't crash
+  your application
+- **Gradual Migration**: When incrementally adding validation to existing
+  codebases
+- **Custom Validation Logic**: When you need more control over validation
+  behavior and error handling or you have your own validation already in place
 
 ## Best Practices
 
-1. **Start with manual validation** for new integrations to understand the API behavior
+1. **Start with manual validation** for new integrations to understand the API
+   behavior
 2. **Enable automatic validation** for trusted, well-documented APIs
 3. **Use the `isParsed` helper** to check validation results safely
-4. **Handle validation errors gracefully** - don't let them crash your application
+4. **Handle validation errors gracefully** - don't let them crash your
+   application
 5. **Log validation failures** for debugging and monitoring
 6. **Consider performance implications** when choosing validation strategies
 7. **Test both validation modes** to ensure your error handling works correctly

@@ -1,14 +1,21 @@
 # Custom Response Deserialization
 
-For advanced scenarios (e.g. XML parsing, vendor-specific media types, binary post-processing) you can provide custom deserializers through the config object. The `parse()` method will automatically use these deserializers before schema validation occurs.
+For advanced scenarios (e.g. XML parsing, vendor-specific media types, binary
+post-processing) you can provide custom deserializers through the config object.
+The `parse()` method will automatically use these deserializers before schema
+validation occurs.
 
-Deserializers are methods that transform the raw response data into a format suitable for validation. They can be defined for specific content types and are applied automatically during the parsing process.
+Deserializers are methods that transform the raw response data into a format
+suitable for validation. They can be defined for specific content types and are
+applied automatically during the parsing process.
 
 ## Why use Deserializers?
 
-- Apply transformations (e.g. date reviver, case normalization) prior to Zod validation
+- Apply transformations (e.g. date reviver, case normalization) prior to Zod
+  validation
 - Decode non‑JSON types (XML → JS object, CSV → array, binary → metadata)
-- Gracefully handle vendor or unknown content types without modifying generated code
+- Gracefully handle vendor or unknown content types without modifying generated
+  code
 
 ## Example of Custom Deserializers
 
@@ -72,14 +79,17 @@ if (res.isValid && res.status === 200) {
 
 ## Configuring Deserializers
 
-The `deserializers` is a property of the config object that maps content types to deserializer functions:
+The `deserializers` is a property of the config object that maps content types
+to deserializer functions:
 
 ```ts
 type Deserializer = (data: unknown, contentType?: string) => unknown;
 type DeserializerMap = Record<string, Deserializer>;
 ```
 
-When provided in the config, the raw response body is passed to your function before schema validation. Whatever you return becomes the input to schema validation (if a schema for that content type exists).
+When provided in the config, the raw response body is passed to your function
+before schema validation. Whatever you return becomes the input to schema
+validation (if a schema for that content type exists).
 
 ### Global Configuration
 
@@ -112,7 +122,7 @@ const result = await getDocument(
         pages: estimatePageCount(blob as Blob),
       }),
     },
-  }
+  },
 );
 ```
 
@@ -129,9 +139,12 @@ The result of `parse()` is a discriminated object you can pattern match on:
 
 Notes:
 
-- If the deserializer throws, validation is skipped (you get `deserializationError`).
-- If no schema exists, the transformed value is returned under `deserialized` and flagged with `missingSchema: true`.
-- Content type normalization strips any charset parameters (e.g. `application/json; charset=utf-8` → `application/json`).
+- If the deserializer throws, validation is skipped (you get
+  `deserializationError`).
+- If no schema exists, the transformed value is returned under `deserialized`
+  and flagged with `missingSchema: true`.
+- Content type normalization strips any charset parameters (e.g.
+  `application/json; charset=utf-8` → `application/json`).
 
 ## Common Patterns
 
@@ -195,15 +208,18 @@ const config = {
 ```ts
 const csvDeserializer = (data: unknown) => {
   const csv = data as string;
-  const lines = csv.split('\n').filter(line => line.trim());
-  const headers = lines[0].split(',');
-  
-  return lines.slice(1).map(line => {
-    const values = line.split(',');
-    return headers.reduce((obj, header, index) => {
-      obj[header.trim()] = values[index]?.trim() || '';
-      return obj;
-    }, {} as Record<string, string>);
+  const lines = csv.split("\n").filter((line) => line.trim());
+  const headers = lines[0].split(",");
+
+  return lines.slice(1).map((line) => {
+    const values = line.split(",");
+    return headers.reduce(
+      (obj, header, index) => {
+        obj[header.trim()] = values[index]?.trim() || "";
+        return obj;
+      },
+      {} as Record<string, string>,
+    );
   });
 };
 
@@ -222,7 +238,7 @@ const config = {
 const imageDeserializer = async (blob: unknown) => {
   const file = blob as Blob;
   const arrayBuffer = await file.arrayBuffer();
-  
+
   return {
     size: file.size,
     type: file.type,
@@ -258,7 +274,7 @@ const result = await getDocument({ docId: "123" });
 
 if (result.isValid && result.status === 200) {
   const outcome = result.parse();
-  
+
   if ("parsed" in outcome) {
     console.log("Success:", outcome.parsed);
   } else if (outcome.kind === "deserialization-error") {
@@ -292,15 +308,15 @@ if (result.isValid && result.status === 200) {
 
 ```ts
 // Test your deserializers independently
-describe('XML Deserializer', () => {
-  it('should parse valid XML', () => {
-    const xml = '<user><name>John</name><age>30</age></user>';
+describe("XML Deserializer", () => {
+  it("should parse valid XML", () => {
+    const xml = "<user><name>John</name><age>30</age></user>";
     const result = xmlDeserializer(xml);
-    expect(result).toEqual({ name: 'John', age: 30 });
+    expect(result).toEqual({ name: "John", age: 30 });
   });
 
-  it('should handle invalid XML gracefully', () => {
-    const invalidXml = '<user><name>John</age></user>';
+  it("should handle invalid XML gracefully", () => {
+    const invalidXml = "<user><name>John</age></user>";
     expect(() => xmlDeserializer(invalidXml)).not.toThrow();
   });
 });

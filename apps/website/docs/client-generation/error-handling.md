@@ -1,10 +1,14 @@
 # Error Handling
 
-Client calls never throw exceptions. Instead, all errors are returned as part of the response union, providing a consistent and type-safe error handling experience. You can branch on either `result.isValid === false` or the presence of the `kind` field; both are valid.
+Client calls never throw exceptions. Instead, all errors are returned as part of
+the response union, providing a consistent and type-safe error handling
+experience. You can branch on either `result.isValid === false` or the presence
+of the `kind` field; both are valid.
 
 ## Error Types
 
-All operations return a union that includes `ApiResponseError`, which is a discriminated union covering all possible error scenarios:
+All operations return a union that includes `ApiResponseError`, which is a
+discriminated union covering all possible error scenarios:
 
 ```ts
 type ApiResponseError =
@@ -81,9 +85,12 @@ if (!result.isValid) {
 Different error types provide different context:
 
 ### unexpected-error
-- **When it occurs**: Network failures, connection issues, or any unexpected exception
+
+- **When it occurs**: Network failures, connection issues, or any unexpected
+  exception
 - **Available data**: No `status`, `data`, or `response` fields
-- **Use case**: Handle network connectivity issues, timeouts, or other infrastructure problems
+- **Use case**: Handle network connectivity issues, timeouts, or other
+  infrastructure problems
 
 ```ts
 if (result.kind === "unexpected-error") {
@@ -93,6 +100,7 @@ if (result.kind === "unexpected-error") {
 ```
 
 ### unexpected-response
+
 - **When it occurs**: HTTP status codes not defined in OpenAPI spec
 - **Available data**: Includes `status`, `data`, `response`
 - **Use case**: Handle undocumented API responses or API changes
@@ -106,7 +114,9 @@ if (result.kind === "unexpected-response") {
 ```
 
 ### parse-error
-- **When it occurs**: Zod validation failures when using `parse()` or automatic runtime validation
+
+- **When it occurs**: Zod validation failures when using `parse()` or automatic
+  runtime validation
 - **Available data**: Includes parsing details via `z.ZodError`
 - **Use case**: Handle schema validation failures
 
@@ -119,6 +129,7 @@ if (result.kind === "parse-error") {
 ```
 
 ### deserialization-error
+
 - **When it occurs**: Custom deserializer failures
 - **Available data**: Includes original error from deserializer
 - **Use case**: Handle custom content type parsing failures
@@ -132,6 +143,7 @@ if (result.kind === "deserialization-error") {
 ```
 
 ### missing-schema
+
 - **When it occurs**: No schema available for content type
 - **Available data**: Includes attempted deserialization details
 - **Use case**: Handle content types without defined schemas
@@ -254,7 +266,8 @@ async function getPetWithFallback(petId: string) {
 ## Best Practices
 
 1. **Never ignore errors** - Always check `isValid` before proceeding
-2. **Handle errors appropriately** - Different error types require different handling strategies
+2. **Handle errors appropriately** - Different error types require different
+   handling strategies
 3. **Provide user feedback** - Show meaningful error messages to users
 4. **Log for debugging** - Include relevant context in error logs
 5. **Implement retry logic** - For transient network errors

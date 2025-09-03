@@ -1,8 +1,13 @@
 # Response Handling
 
-Each operation returns a discriminated union: either a successful API response (`success: true` with a `status` code) or an error object (`success: false`) with a `kind` discriminator.
+Each operation returns a discriminated union: either a successful API response
+(`success: true` with a `status` code) or an error object (`success: false`)
+with a `kind` discriminator.
 
-Validation is opt-in by default (success responses expose a `parse()` method). You can enable automatic validation at runtime by providing `forceValidation: true` in the configuration you pass to an operation or via `configureOperations`.
+Validation is opt-in by default (success responses expose a `parse()` method).
+You can enable automatic validation at runtime by providing
+`forceValidation: true` in the configuration you pass to an operation or via
+`configureOperations`.
 
 ## Recommended Pattern
 
@@ -29,7 +34,8 @@ When an operation succeeds, the response object includes:
 - **`isValid: true`**: Indicates the operation was successful
 - **`status`**: The HTTP status code returned by the server
 - **`data`**: The raw response payload from the server
-- **`parse()`**: Method to validate and parse the response (when `forceValidation: false`)
+- **`parse()`**: Method to validate and parse the response (when
+  `forceValidation: false`)
 - **`parsed`**: Pre-validated data (when `forceValidation: true`)
 
 ### Error Responses
@@ -66,7 +72,7 @@ Enable automatic validation by setting `forceValidation: true`:
 ```ts
 const result = await getPetById(
   { petId: "123" },
-  { ...globalConfig, forceValidation: true }
+  { ...globalConfig, forceValidation: true },
 );
 
 if (result.isValid && result.status === 200) {
@@ -77,7 +83,8 @@ if (result.isValid && result.status === 200) {
 
 ## Status Code Handling
 
-The discriminated union allows you to handle different response status codes type-safely:
+The discriminated union allows you to handle different response status codes
+type-safely:
 
 ```ts
 const result = await getPetById({ petId: "123" });
@@ -104,7 +111,8 @@ switch (result.status) {
 
 ## Multiple Response Types
 
-When an operation can return different data types for the same status code, the response is properly typed:
+When an operation can return different data types for the same status code, the
+response is properly typed:
 
 ```ts
 // Operation that returns either User or AdminUser for status 200
@@ -124,12 +132,13 @@ if (result.isValid && result.status === 200) {
 
 ## Content Type Handling
 
-For operations with multiple content types, the response includes content type information:
+For operations with multiple content types, the response includes content type
+information:
 
 ```ts
 const result = await getDocument({
   docId: "123",
-  contentType: { response: "application/json" }
+  contentType: { response: "application/json" },
 });
 
 if (result.isValid && result.status === 200) {
@@ -145,6 +154,7 @@ if (result.isValid && result.status === 200) {
 
 1. **Always check `isValid`** before accessing response data
 2. **Handle all expected status codes** explicitly
-3. **Use automatic validation** for trusted APIs where performance isn't critical
+3. **Use automatic validation** for trusted APIs where performance isn't
+   critical
 4. **Use manual validation** for large payloads or untrusted APIs
 5. **Log unexpected status codes** for debugging and monitoring
