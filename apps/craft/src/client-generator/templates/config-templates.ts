@@ -3,6 +3,97 @@
 import type { ConfigStructure } from "../models/config-models.js";
 
 /*
+ * Renders API response parsing utilities
+ */
+export function renderApiResponseParsingUtilities(): string {
+  return `/* Overload without deserializers */
+export function parseApiResponseUnknownData<
+  TSchemaMap extends Record<string, { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }>
+>(
+  response: MinimalResponse,
+  data: unknown,
+  schemaMap: TSchemaMap,
+): (
+  | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
+  | { kind: "parse-error"; error: z.ZodError }
+  | { kind: "missing-schema"; error: string }
+  | { kind: "deserialization-error"; error: unknown }
+);
+
+/* Overload with deserializers */
+export function parseApiResponseUnknownData<
+  TSchemaMap extends Record<string, { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }>
+>(
+  response: MinimalResponse,
+  data: unknown,
+  schemaMap: TSchemaMap,
+  deserializers: DeserializerMap,
+): (
+  | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
+  | { kind: "parse-error"; error: z.ZodError }
+  | { kind: "missing-schema"; error: string }
+  | { kind: "deserialization-error"; error: unknown }
+);
+
+/* Implementation */
+export function parseApiResponseUnknownData<
+  TSchemaMap extends Record<
+    string,
+    { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }
+  >
+>(
+  response: MinimalResponse,
+  data: unknown,
+  schemaMap: TSchemaMap,
+  deserializers?: DeserializerMap,
+) {
+  const contentType = getResponseContentType(response);
+
+  /* Apply custom deserializer if provided */
+  let deserializedData = data;
+  let deserializationError: unknown = undefined;
+
+  if (deserializers && deserializers[contentType]) {
+    try {
+      deserializedData = deserializers[contentType](data, contentType);
+    } catch (error) {
+      deserializationError = error;
+    }
+  }
+
+  const schema = schemaMap[contentType];
+  if (!schema || typeof schema.safeParse !== "function") {
+    if (deserializationError) {
+      return { kind: "deserialization-error", error: deserializationError } as const;
+    }
+  return { kind: "missing-schema", error: \`No schema found for content-type: \${contentType}\` } as const;
+  }
+
+  /* Only proceed with Zod validation if deserialization succeeded */
+  if (deserializationError) {
+    return { kind: "deserialization-error", error: deserializationError } as const;
+  }
+
+  const result = schema.safeParse(deserializedData);
+  if (result.success) {
+    return { contentType, parsed: result.data };
+  }
+  return { kind: "parse-error", error: result.error } as const;
+}
+
+/* Type guard helpers for narrowing parse() results */
+export function isParsed<
+  T extends
+    | { contentType: string; parsed: unknown }
+    | { kind: "parse-error"; error: z.ZodError }
+    | { kind: "missing-schema"; error: string }
+    | { kind: "deserialization-error"; error: unknown }
+>(value: T): value is Extract<T, { parsed: unknown }> {
+  return !!value && "parsed" in (value as Record<string, unknown>);
+}`;
+}
+
+/*
  * Renders the API response type definitions
  */
 export function renderApiResponseTypes(): string {
@@ -194,6 +285,98 @@ export function renderConfigSupport(): string {
 }
 
 /*
+ * Renders deserializer type definitions
+ */
+export function renderDeserializerTypes(): string {
+  return `/* Type definitions for pluggable deserialization */
+export type Deserializer = (data: unknown, contentType?: string) => unknown;
+export type DeserializerMap = Record<string, Deserializer>;`;
+}
+
+/*
+ * Renders FormData utility functions
+ */
+export function renderFormDataUtilities(): string {
+  return `/* Helper to build FormData from a plain object. */
+export function buildFormData(input: unknown): FormData {
+  const fd = new FormData();
+  if (!input || typeof input !== "object") {
+    return fd;
+  }
+  const obj = input as Record<string, unknown>;
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined) {
+      continue;
+    }
+    // Detect blob-like objects using duck-typing
+    const isBlobLike = value instanceof Blob || (
+      typeof (value as { arrayBuffer?: unknown })?.arrayBuffer === "function" &&
+      typeof (value as { stream?: unknown })?.stream === "function"
+    );
+    if (isBlobLike) {
+      fd.append(key, value as Blob);
+    } else if (typeof value === "string") {
+      fd.append(key, value);
+    } else {
+      // For numbers, booleans, null, arrays, and objects
+      fd.append(key, JSON.stringify(value));
+    }
+  }
+  return fd;
+}`;
+}
+
+/*
+ * Renders form URL encoding utilities
+ */
+export function renderFormUrlEncodeUtilities(): string {
+  return `/*
+ * Serialize a complex object into application/x-www-form-urlencoded form using
+ * URLSearchParams. Arrays are represented by repeating the key for each value
+ * (e.g. key=a&key=b). Objects are JSON-stringified as a safe fallback.
+ */
+export type ArrayFormat = "repeat" | "brackets";
+
+export interface FormUrlEncodeOptions {
+  arrayFormat?: ArrayFormat;
+}
+
+export function formUrlEncode(
+  input: unknown,
+  options: FormUrlEncodeOptions = {},
+): string {
+  const { arrayFormat = "repeat" } = options; // 'repeat' by default
+  const params = new URLSearchParams();
+
+  if (!input || typeof input !== "object") {
+    return params.toString();
+  }
+
+  const obj = input as Record<string, unknown>;
+
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined || v === null) {
+      continue;
+    }
+
+    if (Array.isArray(v)) {
+      const arrayKey = arrayFormat === "brackets" ? \`\${k}[]\` : k;
+      for (const item of v) {
+        if (item !== undefined && item !== null) {
+          params.append(arrayKey, String(item));
+        }
+      }
+    } else if (typeof v === "object") {
+      params.append(k, JSON.stringify(v));
+    } else {
+      params.append(k, String(v));
+    }
+  }
+  return params.toString();
+}`;
+}
+
+/*
  * Renders operation binding utilities
  */
 export function renderOperationUtilities(): string {
@@ -285,39 +468,10 @@ export type RequestBody = string | Blob | ArrayBuffer | FormData | undefined;`;
 }
 
 /*
- * Renders utility functions for response handling
+ * Renders response parsing utility functions
  */
-// eslint-disable-next-line max-lines-per-function
-export function renderUtilityFunctions(): string {
-  return `/* Helper to build FormData from a plain object. */
-export function buildFormData(input: unknown): FormData {
-  const fd = new FormData();
-  if (!input || typeof input !== "object") {
-    return fd;
-  }
-  const obj = input as Record<string, unknown>;
-  for (const [key, value] of Object.entries(obj)) {
-    if (value === undefined) {
-      continue;
-    }
-    // Detect blob-like objects using duck-typing
-    const isBlobLike = value instanceof Blob || (
-      typeof (value as { arrayBuffer?: unknown })?.arrayBuffer === "function" &&
-      typeof (value as { stream?: unknown })?.stream === "function"
-    );
-    if (isBlobLike) {
-      fd.append(key, value as Blob);
-    } else if (typeof value === "string") {
-      fd.append(key, value);
-    } else {
-      // For numbers, booleans, null, arrays, and objects
-      fd.append(key, JSON.stringify(value));
-    }
-  }
-  return fd;
-}
-
-export async function parseResponseBody(response: Response): Promise<unknown | Blob | FormData | ReadableStream | Response> {
+export function renderResponseParsingUtilities(): string {
+  return `export async function parseResponseBody(response: Response): Promise<unknown | Blob | FormData | ReadableStream | Response> {
   const contentType = response.headers.get('content-type') || '';
   if (contentType.includes('application/json') ||
       contentType.includes('+json')) {
@@ -353,140 +507,22 @@ export async function parseResponseBody(response: Response): Promise<unknown | B
 export function getResponseContentType(response: MinimalResponse): string {
   const raw = response.headers.get("content-type");
   return raw ? raw.split(";")[0].trim().toLowerCase() : "";
+}`;
 }
 
-/* Type definitions for pluggable deserialization */
-export type Deserializer = (data: unknown, contentType?: string) => unknown;
-export type DeserializerMap = Record<string, Deserializer>;
-
-/* Overload without deserializers */
-export function parseApiResponseUnknownData<
-  TSchemaMap extends Record<string, { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }>
->(
-  response: MinimalResponse,
-  data: unknown,
-  schemaMap: TSchemaMap,
-): (
-  | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
-  | { kind: "parse-error"; error: z.ZodError }
-  | { kind: "missing-schema"; error: string }
-  | { kind: "deserialization-error"; error: unknown }
-);
-
-/* Overload with deserializers */
-export function parseApiResponseUnknownData<
-  TSchemaMap extends Record<string, { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }>
->(
-  response: MinimalResponse,
-  data: unknown,
-  schemaMap: TSchemaMap,
-  deserializers: DeserializerMap,
-): (
-  | { [K in keyof TSchemaMap]: { contentType: K; parsed: z.infer<TSchemaMap[K]> } }[keyof TSchemaMap]
-  | { kind: "parse-error"; error: z.ZodError }
-  | { kind: "missing-schema"; error: string }
-  | { kind: "deserialization-error"; error: unknown }
-);
-
-/* Implementation */
-export function parseApiResponseUnknownData<
-  TSchemaMap extends Record<
-    string,
-    { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }
-  >
->(
-  response: MinimalResponse,
-  data: unknown,
-  schemaMap: TSchemaMap,
-  deserializers?: DeserializerMap,
-) {
-  const contentType = getResponseContentType(response);
-
-  /* Apply custom deserializer if provided */
-  let deserializedData = data;
-  let deserializationError: unknown = undefined;
-
-  if (deserializers && deserializers[contentType]) {
-    try {
-      deserializedData = deserializers[contentType](data, contentType);
-    } catch (error) {
-      deserializationError = error;
-    }
-  }
-
-  const schema = schemaMap[contentType];
-  if (!schema || typeof schema.safeParse !== "function") {
-    if (deserializationError) {
-      return { kind: "deserialization-error", error: deserializationError } as const;
-    }
-  return { kind: "missing-schema", error: \`No schema found for content-type: \${contentType}\` } as const;
-  }
-
-  /* Only proceed with Zod validation if deserialization succeeded */
-  if (deserializationError) {
-    return { kind: "deserialization-error", error: deserializationError } as const;
-  }
-
-  const result = schema.safeParse(deserializedData);
-  if (result.success) {
-    return { contentType, parsed: result.data };
-  }
-  return { kind: "parse-error", error: result.error } as const;
-}
-
-/* Type guard helpers for narrowing parse() results */
-export function isParsed<
-  T extends
-    | { contentType: string; parsed: unknown }
-    | { kind: "parse-error"; error: z.ZodError }
-    | { kind: "missing-schema"; error: string }
-    | { kind: "deserialization-error"; error: unknown }
->(value: T): value is Extract<T, { parsed: unknown }> {
-  return !!value && "parsed" in (value as Record<string, unknown>);
-}
 /*
- * Serialize a complex object into application/x-www-form-urlencoded form using
- * URLSearchParams. Arrays are represented by repeating the key for each value
- * (e.g. key=a&key=b). Objects are JSON-stringified as a safe fallback.
+ * Renders utility functions for response handling
  */
-export type ArrayFormat = "repeat" | "brackets";
-
-export interface FormUrlEncodeOptions {
-  arrayFormat?: ArrayFormat;
-}
-
-export function formUrlEncode(
-  input: unknown,
-  options: FormUrlEncodeOptions = {},
-): string {
-  const { arrayFormat = "repeat" } = options; // 'repeat' by default
-  const params = new URLSearchParams();
-
-  if (!input || typeof input !== "object") {
-    return params.toString();
-  }
-
-  const obj = input as Record<string, unknown>;
-
-  for (const [k, v] of Object.entries(obj)) {
-    if (v === undefined || v === null) {
-      continue;
-    }
-
-    if (Array.isArray(v)) {
-      const arrayKey = arrayFormat === "brackets" ? ${"`${k}[]`"} : k;
-      for (const item of v) {
-        if (item !== undefined && item !== null) {
-          params.append(arrayKey, String(item));
-        }
-      }
-    } else if (typeof v === "object") {
-      params.append(k, JSON.stringify(v));
-    } else {
-      params.append(k, String(v));
-    }
-  }
-  return params.toString();
-}
-`;
+export function renderUtilityFunctions(): string {
+  return [
+    renderFormDataUtilities(),
+    "",
+    renderResponseParsingUtilities(),
+    "",
+    renderDeserializerTypes(),
+    "",
+    renderApiResponseParsingUtilities(),
+    "",
+    renderFormUrlEncodeUtilities(),
+  ].join("\n");
 }
