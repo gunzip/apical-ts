@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.23
+
+### Patch Changes
+
+- Point readme to documentation website
+
 ## 0.0.22
 
 ### Patch Changes
