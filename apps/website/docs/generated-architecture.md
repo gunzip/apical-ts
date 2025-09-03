@@ -19,8 +19,8 @@ and purpose of the generated files and directories.
 │   ├── config.ts                 # Global configuration types and helpers
 │   └── <operationId>.ts          # Individual operation function for each endpoint
 └── schemas/                      # Zod v4 schemas for all models
-		├── <SchemaName>.ts           # Individual schema files (one per model)
-		└── index.ts                  # Exports all schemas
+    ├── <SchemaName>.ts           # Individual schema files (one per model)
+    └── index.ts                  # Exports all schemas
 ```
 
 ## Key Concepts

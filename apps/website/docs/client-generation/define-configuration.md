@@ -4,20 +4,6 @@ The generated client operations require configuration to specify how to connect
 to your API. This includes the base URL, authentication, custom headers, and
 other options that control how requests are made.
 
-## Configuration Interface
-
-The `ApiConfig` interface defines all available configuration options:
-
-```typescript
-interface ApiConfig {
-  baseURL: string;
-  fetch: typeof fetch;
-  headers?: Record<string, string>;
-  forceValidation?: boolean;
-  deserializers?: Record<string, (data: unknown) => unknown>;
-}
-```
-
 ## Using the Default Configuration
 
 Operations will use a **default configuration** if you don't pass a config
@@ -60,7 +46,7 @@ const newPet = await client.createPet({
 });
 ```
 
-::: tip
+:::tip
 
 When using a configured client object, always call operations on this new object
 rather than directly on the original imported methods. To prevent confusion or

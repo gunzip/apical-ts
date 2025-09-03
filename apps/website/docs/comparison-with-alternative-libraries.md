@@ -134,19 +134,3 @@ address additional use cases and requirements.
    alternatives
 2. **Legacy projects** already using io-ts might benefit from openapi-codegen-ts
 3. **Rapid prototyping** where setup time is more important than optimization
-
-## Feature Matrix
-
-| Use Case            | @apical-ts/craft | openapi-codegen-ts | openapi-zod-client | openapi-ts |
-| ------------------- | :--------------: | :----------------: | :----------------: | :--------: |
-| Large APIs          |   ✅ Excellent   |      ⚠️ Slow       |      ⚠️ Basic      |  ⚠️ Basic  |
-| Bundle optimization |   ✅ Excellent   |      ❌ Poor       |      ❌ Poor       |  ⚠️ Basic  |
-| Type safety         |   ✅ Excellent   |    ✅ Excellent    |      ⚠️ Good       |  ✅ Good   |
-| Server validation   |      ✅ Yes      |       ❌ No        |       ❌ No        |   ✅ Yes   |
-| Multiple responses  |      ✅ Yes      |       ✅ Yes       |       ❌ No        |  ⚠️ Basic  |
-| File handling       |   ✅ Excellent   |      ✅ Good       |      ⚠️ Basic      |  ✅ Good   |
-| Setup complexity    |   ⚠️ Moderate    |    ⚠️ Moderate     |     ✅ Simple      | ✅ Simple  |
-
-The choice of generator depends on your specific requirements, but
-@apical-ts/craft excels in scenarios requiring high performance, comprehensive
-type safety, and modern development practices.

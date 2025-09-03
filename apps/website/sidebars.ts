@@ -21,6 +21,7 @@ const sidebars: SidebarsConfig = {
     "programmatic-usage",
     "generated-architecture",
     {
+      collapsed: false,
       type: "category",
       label: "Client Generation",
       items: [
