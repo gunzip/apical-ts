@@ -1,6 +1,18 @@
 ---
 id: generated-architecture
 title: Generated Architecture
+description:
+  Understanding the structure and organization of generated TypeScript code,
+  schemas, and client operations from @apical-ts/craft.
+keywords:
+  [
+    generated code,
+    architecture,
+    TypeScript structure,
+    Zod schemas,
+    operation functions,
+    code organization,
+  ]
 ---
 
 # Generated Architecture
