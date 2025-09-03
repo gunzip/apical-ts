@@ -55,6 +55,11 @@ export function buildOperationImports(
     configImports.push("formUrlEncode");
   }
 
+  /* Add buildFormData helper import when multipart/form-data handling is used */
+  if (functionCode && functionCode.includes("buildFormData(")) {
+    configImports.push("buildFormData");
+  }
+
   /* RequestBody alias used by generated operation body typing */
   if (functionCode && functionCode.includes("RequestBody")) {
     configImports.push("RequestBody");
