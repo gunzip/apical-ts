@@ -1,4 +1,4 @@
-# Handling Multiple Content Types (Request & Response)
+# Handling Multiple Content Types
 
 This generator fully supports OpenAPI endpoints that define multiple content
 types for both requests and responses. For each operation, the generated client:
