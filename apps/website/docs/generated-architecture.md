@@ -75,6 +75,5 @@ Pet.parse(pet); // Runtime validation
 
 ## Learn More
 
-- See the [README](../../craft/README.md) for CLI and programmatic usage.
 - See the [Client Generation](./client-generation/call-operations.md) docs for
   advanced usage patterns.
