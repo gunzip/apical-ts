@@ -1,3 +1,22 @@
+---
+id: introduction
+title: Introduction
+description:
+  Learn how @apical-ts/craft transforms OpenAPI specifications into fully-typed
+  Zod v4 schemas and type-safe REST API clients. Generate robust TypeScript code
+  with runtime validation.
+keywords:
+  [
+    OpenAPI,
+    TypeScript,
+    Zod,
+    code generation,
+    API client,
+    type safety,
+    schema validation,
+  ]
+---
+
 # Introduction
 
 @apical-ts/craft effortlessly turn your OpenAPI specifications into

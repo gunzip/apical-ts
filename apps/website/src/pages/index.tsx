@@ -24,10 +24,11 @@ function HomepageHeader() {
         <p className={clsx("hero__subtitle", styles.heroSubtitle)}>
           {siteConfig.tagline}
         </p>
-        <div className={styles.buttons}>
+        <nav className={styles.buttons} aria-label="Main navigation">
           <Link
             className="button button--primary button--lg"
             to="/docs/introduction"
+            aria-label="Get started with @apical-ts/craft documentation"
           >
             Get Started in 5min ⏱️
           </Link>
@@ -37,8 +38,8 @@ function HomepageHeader() {
           >
             View CLI Docs 📖
           </Link> */}
-        </div>
-        <div className={styles.demoSection}>
+        </nav>
+        <section className={styles.demoSection} aria-label="Code examples">
           <div className={styles.codeExample}>
             <div className={styles.codeBlockLabel}>CLI</div>
             <CodeBlock
@@ -61,7 +62,7 @@ function HomepageHeader() {
               language="typescript"
             />
           </div>
-        </div>
+        </section>
       </div>
     </header>
   );
@@ -69,49 +70,57 @@ function HomepageHeader() {
 
 function WhyChooseUs() {
   return (
-    <section className={styles.whyChooseSection}>
+    <section className={styles.whyChooseSection} aria-label="Key features">
       <div className="container">
         {/* <div className={styles.whyChooseTitle}>Why @apical-ts/craft?</div> */}
         <ul className={styles.whyChooseList}>
           <li className={styles.whyChooseItem}>
-            <span className={styles.whyChooseIcon}>🧩</span>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>
+            <span className={styles.whyChooseIcon} aria-hidden="true">
+              🧩
+            </span>
+            <h3 style={{ fontWeight: 700, marginBottom: 4 }}>
               Modular & Tree-shakable
-            </div>
-            <div>
+            </h3>
+            <p>
               Import only what you need. No bloat, minimal dependencies, no dead
               code.
-            </div>
+            </p>
           </li>
           <li className={styles.whyChooseItem}>
-            <span className={styles.whyChooseIcon}>⚡</span>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>Performance</div>
-            <div>
+            <span className={styles.whyChooseIcon} aria-hidden="true">
+              ⚡
+            </span>
+            <h3 style={{ fontWeight: 700, marginBottom: 4 }}>Performance</h3>
+            <p>
               Bring your own validator: choose Zod v4 for runtime validation,
               swap in your own library, or skip validation entirely.
-            </div>
+            </p>
           </li>
           <li className={styles.whyChooseItem}>
-            <span className={styles.whyChooseIcon}>🔒</span>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>
+            <span className={styles.whyChooseIcon} aria-hidden="true">
+              🔒
+            </span>
+            <h3 style={{ fontWeight: 700, marginBottom: 4 }}>
               Type-Safe by Design
-            </div>
-            <div>
+            </h3>
+            <p>
               All schemas are fully typed. Supports multiple success status
               codes (2xx) and multiple content-types for both requests and
               responses.
-            </div>
+            </p>
           </li>
           <li className={styles.whyChooseItem}>
-            <span className={styles.whyChooseIcon}>🌐</span>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>
+            <span className={styles.whyChooseIcon} aria-hidden="true">
+              🌐
+            </span>
+            <h3 style={{ fontWeight: 700, marginBottom: 4 }}>
               Efficient error handling
-            </div>
-            <div>
+            </h3>
+            <p>
               Provides discriminated unions for errors that can occur at
               different stages, such as during network requests or payload
               validation. Client calls never throw.
-            </div>
+            </p>
           </li>
         </ul>
       </div>
@@ -122,8 +131,8 @@ function WhyChooseUs() {
 export default function Home(): ReactNode {
   return (
     <Layout
-      title="OpenAPI to TypeScript Generator"
-      description="Turn your OpenAPI specifications into fully-typed Zod v4 schemas and type-safe REST API clients"
+      title="OpenAPI to TypeScript Generator | @apical-ts/craft"
+      description="Generate fully-typed Zod v4 schemas and type-safe REST API clients from OpenAPI specifications. Supports OpenAPI 2.0, 3.0.x, and 3.1.x with comprehensive validation, error handling, and minimal dependencies."
     >
       <HomepageHeader />
       <WhyChooseUs />

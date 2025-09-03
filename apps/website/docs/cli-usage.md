@@ -1,3 +1,21 @@
+---
+id: cli-usage
+title: CLI Usage
+description:
+  Complete guide to using @apical-ts/craft CLI tool. Generate TypeScript clients
+  and schemas from OpenAPI specifications with command-line options and
+  examples.
+keywords:
+  [
+    CLI,
+    command line,
+    OpenAPI generator,
+    TypeScript client,
+    schema generation,
+    command options,
+  ]
+---
+
 # CLI Usage
 
 The @apical-ts/craft CLI tool allows you to generate TypeScript clients and

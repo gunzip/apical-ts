@@ -1,3 +1,21 @@
+---
+id: supported-features
+title: Supported Features
+description:
+  Comprehensive list of @apical-ts/craft features including OpenAPI version
+  support, type safety, validation, authentication, and performance
+  optimizations.
+keywords:
+  [
+    OpenAPI features,
+    TypeScript features,
+    Zod validation,
+    API client features,
+    schema generation,
+    type safety,
+  ]
+---
+
 # Supported Features
 
 @apical-ts/craft provides comprehensive support for modern OpenAPI
