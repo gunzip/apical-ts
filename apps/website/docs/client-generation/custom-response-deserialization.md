@@ -157,19 +157,17 @@ Notes:
 
 ## Error Handling Summary
 
-| Field                         | Meaning                                             |
-| ----------------------------- | --------------------------------------------------- |
-| Variant / Field               | Meaning                                             |
-| ----------------------        | --------------------------------------------------- |
-| `parsed`                      | Successfully deserialized & schema-validated data   |
-| `kind: parse-error`           | Validation failed (`error` is a `ZodError`)         |
-| `kind: deserialization-error` | Custom deserializer threw an exception              |
-| `kind: missing-schema`        | No schema found for that content type               |
+| Variant / Field               | Meaning                                           |
+| ----------------------------- | ------------------------------------------------- |
+| `parsed`                      | Successfully deserialized & schema-validated data |
+| `kind: parse-error`           | Validation failed (`error` is a `ZodError`)       |
+| `kind: deserialization-error` | Custom deserializer threw an exception            |
+| `kind: missing-schema`        | No schema found for that content type             |
 
 ### Handling Deserialization Errors
 
 ```ts
-const result = await getDocument({ docId: "123" });
+const result = await getDocument({ path: { docId: "123" } });
 
 if (result.isValid && result.status === 200) {
   const outcome = result.parse();
