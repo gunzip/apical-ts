@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.24
+
+### Patch Changes
+
+- Fix handling of forma data
+
 ## 0.0.23
 
 ### Patch Changes
