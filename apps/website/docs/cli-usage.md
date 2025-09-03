@@ -8,7 +8,7 @@ schemas from OpenAPI specifications with a simple command-line interface.
 Generate schemas and client code from an OpenAPI specification:
 
 ```bash
-pnpx @apical-ts/craft generate \
+npx @apical-ts/craft generate \
   --generate-server \
   --generate-client \
   -i https://petstore.swagger.io/v2/swagger.json \
@@ -29,7 +29,8 @@ You can run the CLI in watch mode to automatically regenerate code when your
 OpenAPI specification file changes:
 
 ```bash
-pnpx chokidar-cli openapi.yaml -c \
+npm install chokidar-cli @apical-ts/craft
+npm exec chokidar-cli openapi.yaml -c \
   "@apical-ts/craft generate \
   --generate-server \
   --generate-client \
@@ -55,56 +56,6 @@ specification.
 - `--generate-server`: Generate the operation wrapper functions for server-side
   usage (default: false)
 
-:::tip You can specify both `--generate-client` and `--generate-server` to
-generate both client and server code from the same specification. :::
-
-## Examples
-
-### Generate Only Schemas
-
-```bash
-pnpx @apical-ts/craft generate \
-  -i ./openapi.yaml \
-  -o ./generated
-```
-
-### Generate Client Only
-
-```bash
-pnpx @apical-ts/craft generate \
-  --generate-client \
-  -i ./openapi.yaml \
-  -o ./generated
-```
-
-### Generate Server Only
-
-```bash
-pnpx @apical-ts/craft generate \
-  --generate-server \
-  -i ./openapi.yaml \
-  -o ./generated
-```
-
-### Generate Everything
-
-```bash
-pnpx @apical-ts/craft generate \
-  --generate-client \
-  --generate-server \
-  -i ./openapi.yaml \
-  -o ./generated
-```
-
-### Using Remote URLs
-
-```bash
-pnpx @apical-ts/craft generate \
-  --generate-client \
-  -i https://petstore.swagger.io/v2/swagger.json \
-  -o ./petstore-client
-```
-
 ## Output Structure
 
 The generated output follows a consistent structure:
@@ -122,10 +73,5 @@ Each directory contains:
 - Individual files for each operation or schema
 - TypeScript declaration files for full type safety
 
-## Tips
-
-- Use absolute paths for better reliability across different environments
-- The output directory will be created if it doesn't exist
-- Existing files in the output directory will be overwritten
-- The generator is idempotent - running it multiple times with the same input
-  produces the same output
+The output directory will be created if it doesn't exist and existing files will
+be overwritten.

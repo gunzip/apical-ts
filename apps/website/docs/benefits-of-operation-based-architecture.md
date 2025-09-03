@@ -61,53 +61,13 @@ import { getPetById } from "./generated/client/getPetById.js";
 // Only this operation is bundled
 const result = await getPetById(
   {
-    petId: "123",
+    path: {
+      petId: "123",
+    },
   },
   config,
 );
 ```
-
-## Performance Advantages
-
-### Bundle Size
-
-- **Smaller bundles**: Only include operations you actually use
-- **Better compression**: Isolated functions compress more efficiently
-- **Faster loading**: Reduced payload size improves page load times
-
-### Runtime Performance
-
-- **Lower memory usage**: No large client objects in memory
-- **Faster initialization**: No client instantiation overhead
-- **Optimized execution**: Direct function calls without method resolution
-
-### Development Performance
-
-- **Faster builds**: Changes to one operation don't trigger rebuilds of others
-- **Better caching**: Individual files cache independently
-- **Quicker iteration**: Work on specific operations without affecting others
-
-## Developer Experience Benefits
-
-### Intellisense & Autocomplete
-
-Each operation function has dedicated types, providing better IDE support and
-more accurate autocomplete suggestions.
-
-### Error Messages
-
-Type errors point to specific operations and parameters, making them easier to
-understand and fix.
-
-### Documentation
-
-Each operation can have its own documentation and examples, improving
-discoverability and understanding.
-
-### Refactoring
-
-Changes to operation signatures are isolated, making refactoring safer and more
-predictable.
 
 ## Scalability Advantages
 
@@ -130,17 +90,3 @@ manageable.
 
 Operations can be deployed and updated independently, enabling more granular
 release strategies.
-
-## Framework Integration
-
-The operation-based architecture integrates seamlessly with modern frameworks
-and patterns:
-
-- **React**: Easy to use with hooks and components
-- **Vue**: Simple integration with composables
-- **Angular**: Works well with services and dependency injection
-- **Node.js**: Perfect for server-side API consumption
-- **Edge functions**: Minimal overhead for serverless environments
-
-This architecture ensures that your generated client code is not only type-safe
-and performant but also maintainable and scalable as your application grows.

@@ -98,21 +98,6 @@ experience.
 
 ### Node.js
 
-- Full Node.js support (requires Node.js 22+)
+- Full Node.js support (requires Node.js 20+)
 - Works with popular frameworks (Express, Fastify, etc.)
 - Custom fetch implementations supported
-
-### Build Tools
-
-- Webpack integration
-- Vite plugins
-- Package.json scripts
-- CI/CD pipeline support
-
-## Quality Assurance
-
-- **Comprehensive test suite**: Vitest-based tests cover all major features
-- **Type safety**: Full TypeScript coverage with strict mode
-- **Runtime validation**: Zod schemas ensure data integrity
-- **Error resilience**: Graceful handling of malformed inputs
-- **Documentation**: Complete documentation with examples

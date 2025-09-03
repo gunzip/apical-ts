@@ -18,6 +18,86 @@ interface ApiConfig {
 }
 ```
 
+## Using the Default Configuration
+
+Operations will use a **default configuration** if you don't pass a config
+object and you haven't overridden it with `configureOperations` (see
+[Binding Configuration to Operations](#binding-configuration-to-operations)).
+
+```typescript
+const result = await getPetById({ petId: "123" });
+```
+
+By default `baseURL` is set to the first server found in the OpenAPI
+specification.
+
+## Binding Configuration to Operations
+
+You can use the `configureOperations` helper to bind a configuration object to
+one or more generated operations, so you don't have to pass the config each
+time. The method returns a new object with the same operations, but with the
+provided config applied.
+
+```typescript
+import * as operations from "./generated/client/index.js";
+import { configureOperations } from "./generated/client/index.js";
+
+const apiConfig = {
+  baseURL: "https://api.example.com/v1",
+  fetch: fetch,
+  headers: {
+    Authorization: "Bearer <your-token>",
+  },
+};
+
+// You may consider to only pass operations you use
+const client = configureOperations(operations, apiConfig);
+
+// Now you can call operations without passing config:
+const pet = await client.getPetById({ petId: "123" });
+const newPet = await client.createPet({
+  body: { name: "Fluffy", status: "available" },
+});
+```
+
+::: tip
+
+When using a configured client object, always call operations on this new object
+rather than directly on the original imported methods. To prevent confusion or
+accidental misuse, consider aliasing the imported operations if you import them
+individually.
+
+:::
+
+```typescript
+import { getPetById as _getPetById } from "./generated/client/getPetById.js";
+import { createPet as _createPet } from "./generated/client/createPet.js";
+import { configureOperations } from "./generated/client/index.js";
+
+const apiConfig = {
+  baseURL: "https://api.example.com/v1",
+  fetch: fetch,
+  headers: {
+    Authorization: "Bearer <your-token>",
+  },
+};
+
+const client = configureOperations(
+  { getPetById: _getPetById, createPet: _createPet },
+  apiConfig,
+);
+
+// You won't forget to call operations on the client object now
+const pet = await client.getPetById({ petId: "123" });
+const newPet = await client.createPet({
+  body: { name: "Fluffy", status: "available" },
+});
+```
+
+You can still override the configuration for individual operations, passing it
+as the second argument. Useful, for example, when you have to change the headers
+for a specific request.
+
 ## Basic Configuration
 
 ### Minimal Configuration
@@ -39,12 +119,11 @@ const apiConfig = {
   fetch: fetch,
   headers: {
     Authorization: "Bearer your-token",
-    "Content-Type": "application/json",
     "X-Custom-Header": "custom-value",
   },
-  forceValidation: false,
+  forceValidation: true,
   deserializers: {
-    "application/json": (data) => JSON.parse(data),
+    "application/json": (data) => data,
     "application/xml": (data) => {
       const parser = new DOMParser();
       return parser.parseFromString(data, "application/xml");
@@ -138,8 +217,12 @@ const config = {
 };
 ```
 
-:::tip Headers defined in the configuration can be overridden on a per-operation
-basis if needed. :::
+:::tip
+
+Headers defined in the configuration can be overridden on a per-operation basis
+if needed.
+
+:::
 
 ### forceValidation
 
@@ -161,7 +244,8 @@ const config = {
 };
 ```
 
-See the Response Payload Validation documentation for more details.
+See the [Response Payload Validation](response-payload-validation) documentation
+for more details.
 
 ### deserializers
 
@@ -172,223 +256,11 @@ See the Response Payload Validation documentation for more details.
 Custom deserializers for specific content types. This allows you to transform
 response data before validation occurs.
 
-```typescript
-const config = {
-  deserializers: {
-    // Parse XML responses
-    "application/xml": (data) => {
-      const parser = new DOMParser();
-      return parser.parseFromString(data as string, "application/xml");
-    },
-
-    // Handle CSV data
-    "text/csv": (data) => {
-      return (data as string).split("\n").map((line) => line.split(","));
-    },
-
-    // Custom JSON parsing with date handling
-    "application/json": (data) => {
-      return JSON.parse(data as string, (key, value) => {
-        if (
-          typeof value === "string" &&
-          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)
-        ) {
-          return new Date(value);
-        }
-        return value;
-      });
-    },
-  },
-  // Other options...
-};
-```
-
-See the Custom Response Deserialization documentation for more details.
-
-## Environment-Specific Configuration
-
-### Development Configuration
-
-```typescript
-const developmentConfig = {
-  baseURL: "http://localhost:3000/api",
-  fetch: fetch,
-  headers: {
-    Authorization: "Bearer dev-token",
-  },
-  forceValidation: true, // Strict validation in development
-};
-```
-
-### Production Configuration
-
-```typescript
-const productionConfig = {
-  baseURL: "https://api.production.com/v1",
-  fetch: fetch,
-  headers: {
-    Authorization: `Bearer ${process.env.API_TOKEN}`,
-    "X-API-Version": "2024-01-01",
-  },
-  forceValidation: false, // Performance optimization
-};
-```
-
-### Configuration Factory
-
-```typescript
-function createApiConfig(environment: "development" | "production") {
-  const baseConfig = {
-    fetch: fetch,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-
-  switch (environment) {
-    case "development":
-      return {
-        ...baseConfig,
-        baseURL: "http://localhost:3000/api",
-        forceValidation: true,
-      };
-    case "production":
-      return {
-        ...baseConfig,
-        baseURL: "https://api.production.com/v1",
-        headers: {
-          ...baseConfig.headers,
-          Authorization: `Bearer ${process.env.API_TOKEN}`,
-        },
-      };
-  }
-}
-
-const config = createApiConfig(process.env.NODE_ENV);
-```
-
-## Advanced Configuration
-
-### Request Timeouts
-
-```typescript
-const fetchWithTimeout = (timeout = 5000) => {
-  return async (url, options) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
-    }
-  };
-};
-
-const config = {
-  baseURL: "https://api.example.com/v1",
-  fetch: fetchWithTimeout(10000), // 10 second timeout
-};
-```
-
-### Retry Logic
-
-```typescript
-const fetchWithRetry = (maxRetries = 3) => {
-  return async (url, options) => {
-    let lastError;
-
-    for (let i = 0; i <= maxRetries; i++) {
-      try {
-        const response = await fetch(url, options);
-        if (response.ok || i === maxRetries) {
-          return response;
-        }
-        lastError = new Error(
-          `HTTP ${response.status}: ${response.statusText}`,
-        );
-      } catch (error) {
-        lastError = error;
-        if (i === maxRetries) {
-          throw error;
-        }
-      }
-
-      // Exponential backoff
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.pow(2, i) * 1000),
-      );
-    }
-
-    throw lastError;
-  };
-};
-
-const config = {
-  baseURL: "https://api.example.com/v1",
-  fetch: fetchWithRetry(3),
-};
-```
-
-### Request/Response Logging
-
-```typescript
-const fetchWithLogging = (fetch) => {
-  return async (url, options) => {
-    console.log(`🔄 ${options?.method || "GET"} ${url}`);
-    console.log("📤 Request:", options);
-
-    const start = Date.now();
-    const response = await fetch(url, options);
-    const duration = Date.now() - start;
-
-    console.log(`📥 Response: ${response.status} (${duration}ms)`);
-
-    return response;
-  };
-};
-
-const config = {
-  baseURL: "https://api.example.com/v1",
-  fetch: fetchWithLogging(fetch),
-};
-```
-
-## Default Configuration
-
-If you don't want to pass configuration to every operation call, you can use the
-default configuration:
-
-```typescript
-import { defaultConfig } from "./generated/client/index.js";
-
-// Modify the default configuration
-Object.assign(defaultConfig, {
-  baseURL: "https://api.example.com/v1",
-  headers: {
-    Authorization: "Bearer your-token",
-  },
-});
-
-// Now you can call operations without passing config
-const pet = await getPetById({ petId: "123" });
-```
-
-:::warning Modifying the default configuration affects all operations that don't
-explicitly receive a config parameter. Use this approach carefully in shared
-codebases. :::
+See the [Custom Response Deserialization](custom-response-deserialization)
+documentation for more details.
 
 ## Next Steps
 
 - Learn how to [call operations](call-operations) using your configuration
-- Understand
-  [binding configuration to operations](binding-configuration-to-operations) for
-  better ergonomics
 - Explore the custom response deserialization documentation for advanced
   scenarios
