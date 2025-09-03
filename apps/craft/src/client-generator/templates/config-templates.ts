@@ -300,7 +300,7 @@ export function buildFormData(input: unknown): FormData {
       const isBlobLike = typeof (v as { arrayBuffer?: unknown })?.arrayBuffer === "function"
         || typeof (v as { stream?: unknown })?.stream === "function";
       if (isBlobLike) {
-        fd.append(k, v as unknown as FormDataEntryValue);
+        fd.append(k, v as unknown);
       } else if (typeof v === "string") {
         fd.append(k, v);
       } else {
