@@ -32,23 +32,9 @@ export const DEFAULT_CONTENT_TYPE_HANDLERS: ContentTypeHandlerConfig = {
     requiresFormData: false,
   },
   "multipart/form-data": {
-    bodyProcessing: `(() => {
-      const formData = new FormData();
-      if (body) {
-        Object.entries(body).forEach(([key, value]) => {
-          if (value !== undefined) {
-            if (value instanceof File || value instanceof Blob) {
-              formData.append(key, value);
-            } else if (typeof value === 'string') {
-              formData.append(key, value);
-            } else {
-              formData.append(key, JSON.stringify(value));
-            }
-          }
-        });
-      }
-      return formData;
-    })()`,
+    /* Use generated helper to build FormData; this avoids emitting
+     environment-dependent instanceof checks inline in generated files. */
+    bodyProcessing: "buildFormData(body)",
     contentTypeHeader: "",
     requiresFormData: true,
   },
