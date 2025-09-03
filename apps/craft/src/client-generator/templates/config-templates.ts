@@ -287,27 +287,31 @@ export type RequestBody = string | Blob | ArrayBuffer | FormData | undefined;`;
 /*
  * Renders utility functions for response handling
  */
+// eslint-disable-next-line max-lines-per-function
 export function renderUtilityFunctions(): string {
   return `/* Helper to build FormData from a plain object. */
 export function buildFormData(input: unknown): FormData {
   const fd = new FormData();
-  if (!input || typeof input !== "object") return fd;
+  if (!input || typeof input !== "object") {
+    return fd;
+  }
   const obj = input as Record<string, unknown>;
-  for (const [k, v] of Object.entries(obj)) {
-    if (v === undefined) continue;
-    try {
-      // Detect blob-like objects using duck-typing rather than instanceof checks
-      const isBlobLike = typeof (v as { arrayBuffer?: unknown })?.arrayBuffer === "function"
-        || typeof (v as { stream?: unknown })?.stream === "function";
-      if (isBlobLike) {
-        fd.append(k, v as unknown);
-      } else if (typeof v === "string") {
-        fd.append(k, v);
-      } else {
-        fd.append(k, JSON.stringify(v));
-      }
-    } catch {
-      fd.append(k, JSON.stringify(v));
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined) {
+      continue;
+    }
+    // Detect blob-like objects using duck-typing
+    const isBlobLike = value instanceof Blob || (
+      typeof (value as { arrayBuffer?: unknown })?.arrayBuffer === "function" &&
+      typeof (value as { stream?: unknown })?.stream === "function"
+    );
+    if (isBlobLike) {
+      fd.append(key, value as Blob);
+    } else if (typeof value === "string") {
+      fd.append(key, value);
+    } else {
+      // For numbers, booleans, null, arrays, and objects
+      fd.append(key, JSON.stringify(value));
     }
   }
   return fd;
