@@ -45,7 +45,7 @@ describe("Request Body Template Functions", () => {
       const result = renderBodyHandling(strategy);
 
       expect(result).toContain("FormData");
-      expect(result).toContain("formData.append");
+      expect(result).toContain("buildFormData");
     });
   });
 

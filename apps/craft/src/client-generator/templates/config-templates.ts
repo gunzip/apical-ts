@@ -288,32 +288,31 @@ export type RequestBody = string | Blob | ArrayBuffer | FormData | undefined;`;
  * Renders utility functions for response handling
  */
 export function renderUtilityFunctions(): string {
-  return `/* Helper function to parse response body based on content type */
-/* Helper to build FormData from a plain object. Kept in config to avoid
-   repeating environment-dependent checks in generated operation files. */
+  return `/* Helper to build FormData from a plain object. */
 export function buildFormData(input: unknown): FormData {
   const fd = new FormData();
-  if (!input || typeof input !== 'object') return fd;
+  if (!input || typeof input !== "object") return fd;
   const obj = input as Record<string, unknown>;
   for (const [k, v] of Object.entries(obj)) {
     if (v === undefined) continue;
     try {
-      // File and Blob constructors may not be available in all runtimes;
-      // use duck-typing: if it has a 'arrayBuffer' function or 'stream' use as blob-like
-      if (typeof (v as any)?.arrayBuffer === 'function' || typeof (v as any)?.stream === 'function') {
-        fd.append(k, v as any);
-      } else if (typeof v === 'string') {
+      // Detect blob-like objects using duck-typing rather than instanceof checks
+      const isBlobLike = typeof (v as { arrayBuffer?: unknown })?.arrayBuffer === "function"
+        || typeof (v as { stream?: unknown })?.stream === "function";
+      if (isBlobLike) {
+        fd.append(k, v as unknown as FormDataEntryValue);
+      } else if (typeof v === "string") {
         fd.append(k, v);
       } else {
         fd.append(k, JSON.stringify(v));
       }
     } catch {
-      // Fallback for values that cannot be appended directly
       fd.append(k, JSON.stringify(v));
     }
   }
   return fd;
 }
+
 export async function parseResponseBody(response: Response): Promise<unknown | Blob | FormData | ReadableStream | Response> {
   const contentType = response.headers.get('content-type') || '';
   if (contentType.includes('application/json') ||

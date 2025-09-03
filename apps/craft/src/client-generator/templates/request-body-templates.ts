@@ -32,8 +32,6 @@ export const DEFAULT_CONTENT_TYPE_HANDLERS: ContentTypeHandlerConfig = {
     requiresFormData: false,
   },
   "multipart/form-data": {
-    /* Use generated helper to build FormData; this avoids emitting
-     environment-dependent instanceof checks inline in generated files. */
     bodyProcessing: "buildFormData(body)",
     contentTypeHeader: "",
     requiresFormData: true,
