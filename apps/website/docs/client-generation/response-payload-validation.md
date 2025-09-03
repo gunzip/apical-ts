@@ -168,8 +168,9 @@ if (result.status === 200) {
 ## Automatic Runtime Validation
 
 Enable automatic validation per request by setting `forceValidation: true` in
-the config you pass to an operation, or globally by binding a config with
-`configureOperations`:
+the config you pass to an operation, or globally by
+[binding a config](define-configuration#binding-configuration-to-operations)
+with `configureOperations`:
 
 ```ts
 import {
@@ -186,11 +187,9 @@ const client = configureOperations(
 
 const result = await client.getUserProfile({ userId: "123" });
 if (result.isValid && result.status === 200) {
-  if (isParsed(result)) {
-    console.log("User:", result.parsed.name);
-  } else if (result.kind === "parse-error") {
-    console.error("Validation failed", result.error);
-  }
+  console.log("User:", result.parsed.name);
+} else if (result.kind === "parse-error") {
+  console.error("Validation failed", z.prettifyError(result.error));
 }
 ```
 

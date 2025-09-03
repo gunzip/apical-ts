@@ -57,17 +57,19 @@ const result = await getPetById({ petId: "123" });
 
 if (result.isValid && result.status === 200) {
   const outcome = result.parse();
-  if ("parsed" in outcome) {
+  if (isParsed(outcome)) {
     console.log("Pet:", outcome.parsed);
   } else {
-    console.error("Validation failed:", outcome.error);
+    console.error("Validation failed:", z.prettifyError(outcome.error));
   }
 }
 ```
 
 ### Automatic Validation
 
-Enable automatic validation by setting `forceValidation: true`:
+Enable automatic validation by setting `forceValidation: true` per operation or
+globally using `configureOperations`, see
+[Define Configuration](./define-configuration.md) section for more details.
 
 ```ts
 const result = await getPetById(
@@ -96,57 +98,16 @@ if (!result.isValid) {
 
 switch (result.status) {
   case 200:
-    console.log("Pet found:", result.data);
+    console.log("Pet found (raw):", result.data);
     break;
   case 404:
     console.log("Pet not found");
     break;
   case 400:
-    console.log("Invalid request:", result.data);
+    console.log("Invalid request (raw):", result.data);
     break;
   default:
     console.log("Unexpected status:", result.status);
-}
-```
-
-## Multiple Response Types
-
-When an operation can return different data types for the same status code, the
-response is properly typed:
-
-```ts
-// Operation that returns either User or AdminUser for status 200
-const result = await getUser({ userId: "123" });
-
-if (result.isValid && result.status === 200) {
-  // result.data is typed as User | AdminUser
-  if (result.data.role === "admin") {
-    // TypeScript knows this is AdminUser
-    console.log("Admin permissions:", result.data.permissions);
-  } else {
-    // TypeScript knows this is User
-    console.log("User name:", result.data.name);
-  }
-}
-```
-
-## Content Type Handling
-
-For operations with multiple content types, the response includes content type
-information:
-
-```ts
-const result = await getDocument({
-  docId: "123",
-  contentType: { response: "application/json" },
-});
-
-if (result.isValid && result.status === 200) {
-  const outcome = result.parse();
-  if ("parsed" in outcome) {
-    console.log("Content type:", outcome.contentType);
-    console.log("Parsed data:", outcome.parsed);
-  }
 }
 ```
 
@@ -156,5 +117,6 @@ if (result.isValid && result.status === 200) {
 2. **Handle all expected status codes** explicitly
 3. **Use automatic validation** for trusted APIs where performance isn't
    critical
-4. **Use manual validation** for large payloads or untrusted APIs
+4. **Use manual validation** for large payloads, untrusted APIs or when you have
+   specific validation needs
 5. **Log unexpected status codes** for debugging and monitoring
