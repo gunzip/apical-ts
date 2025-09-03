@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.25
+
+### Patch Changes
+
+- Changed Node engine constraints
+
 ## 0.0.24
 
 ### Patch Changes
