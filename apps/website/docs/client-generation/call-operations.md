@@ -153,7 +153,7 @@ type ErrorResponse = {
 ### Checking Success
 
 ```typescript
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 
 if (result.isValid) {
   // TypeScript knows this is a compliant response
@@ -172,7 +172,7 @@ if (result.isValid) {
 ### Handling Different Status Codes
 
 ```typescript
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 
 if (!result.isValid) {
   console.error("Operation failed:", result.kind, result.error);
@@ -188,7 +188,7 @@ if (!result.isValid) {
 ### Accessing Raw Response object
 
 ```typescript
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 
 if (result.isValid) {
   // Access response headers
@@ -226,7 +226,7 @@ const xmlResult = await updatePet({
 The generated client automatically handles content type detection:
 
 ```typescript
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 
 if (result.isValid) {
   // Response content type may only be known at runtime
@@ -242,7 +242,7 @@ if (result.isValid) {
 ### Network Errors
 
 ```typescript
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 
 if (!result.isValid && result.kind === "unexpected-error") {
   // Network failure, connection timeout, etc.
@@ -253,7 +253,7 @@ if (!result.isValid && result.kind === "unexpected-error") {
 ### Non Compliant Responses
 
 ```typescript
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 
 if (!result.isValid && result.kind === "unexpected-response") {
   // ie. HTTP status not defined in OpenAPI spec
@@ -266,7 +266,7 @@ if (!result.isValid && result.kind === "unexpected-response") {
 #### With Manual Response Parsing
 
 ```typescript
-const response = await getPetById({ petId: "123" });
+const response = await getPetById({ path: { petId: "123" } });
 
 if (response.isValid) {
   // Assume forceValidation=false
@@ -285,7 +285,7 @@ if (response.isValid) {
 #### With Automatic Response Parsing
 
 ```typescript
-const response = await getPetById({ petId: "123" });
+const response = await getPetById({ path: { petId: "123" } });
 
 if (response.isValid) {
   if (response.status == 200) {
@@ -304,7 +304,7 @@ if (response.isValid) {
 or, more concisely:
 
 ```typescript
-const response = await getPetById({ petId: "123" });
+const response = await getPetById({ path: { petId: "123" } });
 
 if (!response.isValid) {
   // handle errors and early return

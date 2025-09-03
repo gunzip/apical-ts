@@ -12,7 +12,7 @@ You can enable automatic validation at runtime by providing
 ## Recommended Pattern
 
 ```ts
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 
 if (result.isValid === false) {
   console.error("Operation failed:", result.kind, result.error);
@@ -53,7 +53,7 @@ When an operation fails, the response object includes:
 By default, responses provide a `parse()` method that you can call when needed:
 
 ```ts
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 
 if (result.isValid && result.status === 200) {
   const outcome = result.parse();
@@ -89,7 +89,7 @@ The discriminated union allows you to handle different response status codes
 type-safely:
 
 ```ts
-const result = await getPetById({ petId: "123" });
+const result = await getPetById({ path: { petId: "123" } });
 
 if (!result.isValid) {
   console.error("Operation failed:", result.error);
