@@ -30,7 +30,7 @@ OpenAPI specification file changes:
 
 ```bash
 npm install chokidar-cli @apical-ts/craft
-npm exec chokidar-cli openapi.yaml -c \
+npm exec -- chokidar-cli openapi.yaml -c \
   "@apical-ts/craft generate \
   --generate-server \
   --generate-client \
