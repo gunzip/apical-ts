@@ -15,9 +15,10 @@ export function renderResponseHandler(
   const { contentType, statusCode, typeName } = responseInfo;
   const statusCodeKey =
     statusCode === "default" ? `"${statusCode}"` : statusCode;
-  
+
   /* For default responses, use the actual runtime status code; for specific responses, use the literal */
-  const returnStatusCode = statusCode === "default" ? "response.status" : statusCodeKey;
+  const returnStatusCode =
+    statusCode === "default" ? "response.status" : statusCodeKey;
   /* For default responses, don't use 'as const' since it's a runtime value */
   const statusConstModifier = statusCode === "default" ? "" : " as const";
 
@@ -82,7 +83,10 @@ export function renderResponseHandlers(
   for (const responseInfo of responses) {
     if (responseInfo.statusCode === "default") {
       /* Store default response handler separately - it will be used in the switch's default case */
-      defaultHandler = renderDefaultResponseHandler(responseInfo, responseMapName);
+      defaultHandler = renderDefaultResponseHandler(
+        responseInfo,
+        responseMapName,
+      );
     } else {
       /* Generate normal case handlers for numeric status codes */
       const handler = renderResponseHandler(responseInfo, responseMapName);

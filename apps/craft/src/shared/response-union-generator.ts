@@ -162,7 +162,9 @@ function generateUnionTypeDefinition(
   const memberStrings = members.map((member) => {
     /* Properly quote "default" status codes for server response types */
     const statusCode =
-      member.statusCode === "default" ? `"${member.statusCode}"` : member.statusCode;
+      member.statusCode === "default"
+        ? `"${member.statusCode}"`
+        : member.statusCode;
     return `  | { status: ${statusCode}; ${member.contentType ? `contentType: "${member.contentType}";` : ""} ${member.dataType ? `data: ${member.dataType};` : ""} }`;
   });
 
