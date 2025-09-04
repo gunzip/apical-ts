@@ -87,6 +87,7 @@ export function renderFunctionBody(
   method: string,
   hasBody: boolean,
   responseHandlers: string[],
+  defaultResponseHandler?: string,
   headerParamLines?: string,
   securityHeaderLines?: string,
   queryParamLines?: string,
@@ -127,7 +128,7 @@ ${headersContent}
     switch (response.status) {
 ${responseHandlers.join("\n")}
       default: {
-        /* Return error for unexpected status codes instead of throwing */
+        ${defaultResponseHandler ? `/* Handle default response */\n        ${defaultResponseHandler}` : `/* Return error for unexpected status codes instead of throwing */
         return {
           kind: "unexpected-response",
           isValid: false,
@@ -137,7 +138,7 @@ ${responseHandlers.join("\n")}
             response,
           },
           error: \`Unexpected response status: \${response.status}\`,
-        } as const;
+        } as const;`}
       }
     }
   } catch (error) {

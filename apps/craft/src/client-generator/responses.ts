@@ -36,6 +36,7 @@ export interface ResponseHandlerResult {
   responseMapName?: string;
   responseMapType?: string;
   returnType: string;
+  defaultHandler?: string;
 }
 
 /**
@@ -97,7 +98,7 @@ export function generateResponseHandlers(
   });
 
   /* Generate response handlers using templates */
-  const responseHandlers = renderResponseHandlers(
+  const responseHandlerResult = renderResponseHandlers(
     analysis.responses,
     responseMapName,
   );
@@ -111,10 +112,11 @@ export function generateResponseHandlers(
   return {
     discriminatedUnionTypeDefinition: analysis.discriminatedUnionTypeDefinition,
     discriminatedUnionTypeName: analysis.discriminatedUnionTypeName,
-    responseHandlers,
+    responseHandlers: responseHandlerResult.caseHandlers,
     responseMapName: analysis.responseMapName,
     responseMapType: analysis.responseMapType,
     returnType,
+    defaultHandler: responseHandlerResult.defaultHandler,
   };
 }
 

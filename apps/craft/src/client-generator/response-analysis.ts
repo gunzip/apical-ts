@@ -104,13 +104,16 @@ export function analyzeResponseStructure(
         responseInfo.statusCode === "default"
           ? `"${responseInfo.statusCode}"`
           : responseInfo.statusCode;
+      /* Use number type for default responses since they represent any unspecified status code */
+      const statusCodeType =
+        responseInfo.statusCode === "default" ? "number" : statusCodeKey;
       if (responseInfo.hasSchema) {
         unionTypes.push(
-          `(TForceValidation extends true ? ApiResponseWithForcedParse<${statusCodeKey}, typeof ${discriminatedUnionResult.responseMapName}> : ApiResponseWithParse<${statusCodeKey}, typeof ${discriminatedUnionResult.responseMapName}>)`,
+          `(TForceValidation extends true ? ApiResponseWithForcedParse<${statusCodeType}, typeof ${discriminatedUnionResult.responseMapName}> : ApiResponseWithParse<${statusCodeType}, typeof ${discriminatedUnionResult.responseMapName}>)`,
         );
       } else {
         const dataType = responseInfo.contentType ? "unknown" : "void";
-        unionTypes.push(`ApiResponse<${statusCodeKey}, ${dataType}>`);
+        unionTypes.push(`ApiResponse<${statusCodeType}, ${dataType}>`);
       }
     }
   } else {
@@ -120,11 +123,14 @@ export function analyzeResponseStructure(
         responseInfo.statusCode === "default"
           ? `"${responseInfo.statusCode}"`
           : responseInfo.statusCode;
+      /* Use number type for default responses since they represent any unspecified status code */
+      const statusCodeType =
+        responseInfo.statusCode === "default" ? "number" : statusCodeKey;
       if (responseInfo.hasSchema) {
-        unionTypes.push(`ApiResponse<${statusCodeKey}, unknown>`);
+        unionTypes.push(`ApiResponse<${statusCodeType}, unknown>`);
       } else {
         const dataType = responseInfo.contentType ? "unknown" : "void";
-        unionTypes.push(`ApiResponse<${statusCodeKey}, ${dataType}>`);
+        unionTypes.push(`ApiResponse<${statusCodeType}, ${dataType}>`);
       }
     }
   }

@@ -1,6 +1,7 @@
 /* Shared response union type generation logic */
 
 import type { OperationObject } from "openapi3-ts/oas31";
+import { isReferenceObject } from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
 import { resolveSchemaTypeName } from "../client-generator/responses.js";
@@ -89,7 +90,7 @@ export function generateResponseUnion(
     /* Handle default response if present */
     if (operation.responses.default) {
       const defaultResponse = operation.responses.default;
-      if (defaultResponse.content) {
+      if (!isReferenceObject(defaultResponse) && defaultResponse.content) {
         /* Default response has content */
         const contentTypes = Object.keys(defaultResponse.content);
         for (const contentType of contentTypes) {
@@ -158,10 +159,12 @@ function generateUnionTypeDefinition(
     return `export type ${typeName} = never;`;
   }
 
-  const memberStrings = members.map(
-    (member) =>
-      `  | { status: ${member.statusCode}; ${member.contentType ? `contentType: "${member.contentType}";` : ""} ${member.dataType ? `data: ${member.dataType};` : ""} }`,
-  );
+  const memberStrings = members.map((member) => {
+    /* Properly quote "default" status codes for server response types */
+    const statusCode =
+      member.statusCode === "default" ? `"${member.statusCode}"` : member.statusCode;
+    return `  | { status: ${statusCode}; ${member.contentType ? `contentType: "${member.contentType}";` : ""} ${member.dataType ? `data: ${member.dataType};` : ""} }`;
+  });
 
   return `export type ${typeName} =
 ${memberStrings.join("\n")};`;

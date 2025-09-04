@@ -33,6 +33,7 @@ export interface GenerateFunctionBodyOptions {
   requestContentType?: string;
   requestContentTypes?: string[];
   responseHandlers: string[];
+  defaultResponseHandler?: string;
   shouldGenerateRequestMap: boolean;
   shouldGenerateResponseMap: boolean;
 }
@@ -54,6 +55,7 @@ export function generateFunctionBody({
   pathKey,
   requestContentTypes,
   responseHandlers,
+  defaultResponseHandler,
   shouldGenerateRequestMap,
   shouldGenerateResponseMap,
 }: GenerateFunctionBodyOptions): string {
@@ -107,6 +109,7 @@ export function generateFunctionBody({
     method,
     hasBody,
     responseHandlers,
+    defaultResponseHandler,
     headerParamLines,
     securityHeaderLines,
     queryParamLines,
