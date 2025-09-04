@@ -464,7 +464,7 @@ describe("client-generator operation-extractor", () => {
       expect(result[1].contentTypes[1].contentType).toBe("text/plain");
     });
 
-    it("should ignore default responses", () => {
+    it("should include default responses", () => {
       const operation: OperationObject = {
         operationId: "testOp",
         responses: {
@@ -489,8 +489,9 @@ describe("client-generator operation-extractor", () => {
 
       const result = extractResponseContentTypes(operation);
 
-      expect(result).toHaveLength(1);
+      expect(result).toHaveLength(2);
       expect(result[0].statusCode).toBe("200");
+      expect(result[1].statusCode).toBe("default");
     });
 
     it("should handle responses without content", () => {

@@ -69,6 +69,19 @@ export function analyzeResponseStructure(
 
       responses.push(responseInfo);
     }
+
+    /* Handle default response if present */
+    if (operation.responses.default) {
+      const defaultResponse = operation.responses.default as ResponseObject;
+      const defaultResponseInfo = buildResponseTypeInfo(
+        "default",
+        defaultResponse,
+        operation,
+        typeImports,
+        hasResponseContentTypeMap,
+      );
+      responses.push(defaultResponseInfo);
+    }
   }
 
   /* Generate discriminated union types if operation has an operationId. The resulting
@@ -87,23 +100,25 @@ export function analyzeResponseStructure(
   const unionTypes: string[] = [];
   if (discriminatedUnionResult?.responseMapName) {
     for (const responseInfo of responses) {
+      const statusCodeKey = responseInfo.statusCode === "default" ? `"${responseInfo.statusCode}"` : responseInfo.statusCode;
       if (responseInfo.hasSchema) {
         unionTypes.push(
-          `(TForceValidation extends true ? ApiResponseWithForcedParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}> : ApiResponseWithParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>)`,
+          `(TForceValidation extends true ? ApiResponseWithForcedParse<${statusCodeKey}, typeof ${discriminatedUnionResult.responseMapName}> : ApiResponseWithParse<${statusCodeKey}, typeof ${discriminatedUnionResult.responseMapName}>)`,
         );
       } else {
         const dataType = responseInfo.contentType ? "unknown" : "void";
-        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, ${dataType}>`);
+        unionTypes.push(`ApiResponse<${statusCodeKey}, ${dataType}>`);
       }
     }
   } else {
     /* Fallback to standard ApiResponse types */
     for (const responseInfo of responses) {
+      const statusCodeKey = responseInfo.statusCode === "default" ? `"${responseInfo.statusCode}"` : responseInfo.statusCode;
       if (responseInfo.hasSchema) {
-        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, unknown>`);
+        unionTypes.push(`ApiResponse<${statusCodeKey}, unknown>`);
       } else {
         const dataType = responseInfo.contentType ? "unknown" : "void";
-        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, ${dataType}>`);
+        unionTypes.push(`ApiResponse<${statusCodeKey}, ${dataType}>`);
       }
     }
   }
@@ -212,7 +227,8 @@ export function resolveResponseTypeName(
   /* Inline schema: synthesize a type name based on operationId and status code */
   assert(operation.operationId, "Invalid operationId");
   const sanitizedOperationId = sanitizeIdentifier(operation.operationId);
-  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${statusCode}Response`;
+  const statusSuffix = statusCode === "default" ? "Default" : statusCode;
+  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${statusSuffix}Response`;
   typeImports.add(typeName);
   return typeName;
 }

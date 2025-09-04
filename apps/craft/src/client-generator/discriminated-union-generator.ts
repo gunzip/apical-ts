@@ -21,8 +21,6 @@ export function extractResponseContentTypePairs(
 
   if (operation.responses) {
     for (const [statusCode, response] of Object.entries(operation.responses)) {
-      if (statusCode === "default") continue;
-
       const responseObj = response as ResponseObject;
 
       if (responseObj.content) {
@@ -65,13 +63,15 @@ export function generateDiscriminatedUnionFromConfig(
   const responseMapEntries: string[] = [];
 
   for (const responseType of responseTypes) {
+    const statusCodeKey = responseType.status === "default" ? `"${responseType.status}"` : responseType.status;
+    
     if (!responseType.contentType || responseType.contentType === "") {
       /* Void response */
-      unionComponents.push(`{ status: ${responseType.status}; }`);
+      unionComponents.push(`{ status: ${statusCodeKey}; }`);
     } else {
       /* Response with content */
       unionComponents.push(
-        `{ status: ${responseType.status}; contentType: "${responseType.contentType}"; data: ${responseType.dataType} }`,
+        `{ status: ${statusCodeKey}; contentType: "${responseType.contentType}"; data: ${responseType.dataType} }`,
       );
 
       /* Add to response map */
@@ -117,8 +117,6 @@ export function generateDiscriminatedUnionTypes(
   if (operation.responses) {
     /* Process each status code */
     for (const [statusCode, response] of Object.entries(operation.responses)) {
-      if (statusCode === "default") continue;
-
       const responseObj = response as ResponseObject;
 
       /* Handle responses with content */

@@ -13,26 +13,27 @@ export function renderResponseHandler(
   responseMapName?: string,
 ): string {
   const { contentType, statusCode, typeName } = responseInfo;
+  const statusCodeKey = statusCode === "default" ? `"${statusCode}"` : statusCode;
 
   if (typeName || contentType) {
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
     if (responseInfo.hasSchema && responseMapName) {
       /* Always generate dynamic validation logic (forceValidation flag removed) */
-      return `    case ${statusCode}: {
+      return `    case ${statusCodeKey}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       if (config.forceValidation) {
         /* Force validation: automatically parse and return result */
         const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {});
         if ("parsed" in parseResult) {
-          const forcedResult = { isValid: true as const, status: ${statusCode} as const, data, response, parsed: parseResult.parsed } satisfies ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}>;
+          const forcedResult = { isValid: true as const, status: ${statusCodeKey} as const, data, response, parsed: parseResult.parsed } satisfies ApiResponseWithForcedParse<${statusCodeKey}, typeof ${responseMapName}>;
           // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
-          return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>);
+          return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<${statusCodeKey}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCodeKey}, typeof ${responseMapName}>);
         }
         if (parseResult.kind) {
           const errorResult = {
             ...parseResult,
             isValid: false as const,
-            result: { data, status: ${statusCode}, response },
+            result: { data, status: ${statusCodeKey}, response },
           } satisfies ApiResponseError;
           return errorResult;
         }
@@ -41,25 +42,25 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
         /* Manual validation: provide parse method */
         const manualResult = {
           isValid: true as const,
-          status: ${statusCode} as const,
+          status: ${statusCodeKey} as const,
           data,
           response,
           parse: () => parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {})
-        } satisfies ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>;
-        return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>);
+        } satisfies ApiResponseWithParse<${statusCodeKey}, typeof ${responseMapName}>;
+        return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<${statusCodeKey}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCodeKey}, typeof ${responseMapName}>);
       }
     }`;
     } else {
       /* No schema or response map: return simple response */
-      return `    case ${statusCode}: {
+      return `    case ${statusCodeKey}: {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-  return { isValid: true as const, status: ${statusCode} as const, data, response };
+  return { isValid: true as const, status: ${statusCodeKey} as const, data, response };
     }`;
     }
   }
 
-  return `    case ${statusCode}:
-  return { isValid: true as const, status: ${statusCode} as const, data: undefined, response };`;
+  return `    case ${statusCodeKey}:
+  return { isValid: true as const, status: ${statusCodeKey} as const, data: undefined, response };`;
 }
 
 /*

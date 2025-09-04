@@ -85,6 +85,42 @@ export function generateResponseUnion(
         });
       }
     }
+
+    /* Handle default response if present */
+    if (operation.responses.default) {
+      const defaultResponse = operation.responses.default;
+      if (defaultResponse.content) {
+        /* Default response has content */
+        const contentTypes = Object.keys(defaultResponse.content);
+        for (const contentType of contentTypes) {
+          const mediaType = defaultResponse.content[contentType];
+          if (mediaType.schema) {
+            const dataType = resolveSchemaTypeName(
+              mediaType.schema,
+              operationId,
+              "DefaultResponse",
+              typeImports,
+            );
+            unionMembers.push({
+              contentType,
+              dataType,
+              statusCode: "default",
+            });
+          } else {
+            /* Default response has content but no schema */
+            unionMembers.push({
+              contentType,
+              statusCode: "default",
+            });
+          }
+        }
+      } else {
+        /* Default response has no content */
+        unionMembers.push({
+          statusCode: "default",
+        });
+      }
+    }
   }
 
   /* Generate the union type definition */

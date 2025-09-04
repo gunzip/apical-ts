@@ -126,8 +126,6 @@ export function extractResponseContentTypes(
 
   if (operation.responses) {
     for (const [statusCode, response] of Object.entries(operation.responses)) {
-      if (statusCode === "default") continue;
-
       const responseObj = response as ResponseObject;
       const contentTypes: ContentTypeMapping[] = [];
 
