@@ -23,17 +23,16 @@ keywords:
 **fully-typed Zod v4 schemas** ready for runtime (client or server) validation
 and TypeScript development.
 
-Need a **client**? Instantly generate a type-safe, low-footprint,
-operation-based REST API client alongside your schemas.
+You may ask,
+"[Why another Typescript OpenAPI generator?](#why-another-generator)" The answer
+lies in @apical-ts commitment to **strict type safety**. With @apical-ts/craft,
+you get:
 
-Need to **validate server requests and return typed responses**? We've got you
-covered with built-in support for request and response validation using Zod
-schemas.
-
-<iframe style={{ width: "100%", minHeight: "600px" }}
-src="https://stackblitz.com/edit/vitejs-vite-bls6sznb?embed=1&file=src%2Fclient.ts&view=editor&theme=dark"></iframe>
-
-<!-- ![Demo of OpenAPI TypeScript Generator](../static/img/demo.gif) -->
+- no more unknown exceptions at runtime
+- no more access to properties that can be `undefined`
+- full support for multiple success responses (2xx) with payload
+- full support for multiple content types (json, xml, form data, etc.)
+- easy to debug operations with rich errors
 
 ## Quick Start
 
@@ -54,6 +53,15 @@ This will create:
 - **`client/`** - Individual operation functions for each API endpoint
 - **`schemas/`** - Zod schemas and TypeScript types
 
+## Live Demo
+
+Explore the live demo to see @apical-ts/craft in action:
+
+<iframe style={{ width: "100%", minHeight: "600px" }}
+src="https://stackblitz.com/edit/vitejs-vite-bls6sznb?embed=1&file=src%2Fclient.ts&view=editor&theme=dark"></iframe>
+
+<!-- ![Demo of OpenAPI TypeScript Generator](../static/img/demo.gif) -->
+
 ## Why another generator?
 
 We all like the developer experience of [tRPC](https://trpc.io/), but not always
@@ -62,12 +70,11 @@ to define your API contracts, and with @apical-ts/craft, you can easily generate
 TypeScript code that strictly adheres to those contracts, all while enjoying a
 seamless developer experience.
 
-Many [existing generators](./comparison-with-alternative-libraries.md) lack
-flexibility and strong type safety. Most do not support multiple success
-responses or multiple content types, and their typings are often too
-loose—making it easy to accidentally access undefined properties. With
-**stricter** guardrails, @apical-ts/craft helps developers (and Gen-AIs) build
-more robust and reliable implementations.
+Many existing generators lack flexibility and strong type safety. Most do not
+support multiple success responses or multiple content types, and their typings
+are often too loose—making it easy to accidentally access undefined properties.
+With **stricter** guardrails, @apical-ts/craft helps developers (and Gen-AIs)
+build more robust and reliable implementations.
 
 Curious why you should choose this generator over others? See our
 [comparison with alternative libraries](./comparison-with-alternative-libraries.md)
