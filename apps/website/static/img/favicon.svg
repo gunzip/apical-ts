@@ -1,28 +1,37 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background circle with gradient -->
   <defs>
     <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#4f8cff;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="ts-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#e0e6f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0f4ff;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#93c5fd;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#60a5fa;stop-opacity:1" />
     </linearGradient>
   </defs>
 
-  <!-- Background -->
-  <rect width="32" height="32" rx="6" fill="url(#bg-gradient)"/>
+  <!-- Background - square for PNG compatibility -->
+  <rect width="32" height="32" fill="url(#bg-gradient)"/>
 
-  <!-- TypeScript "TS" letters -->
-  <text x="16" y="20" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="url(#ts-gradient)">TS</text>
+  <!-- Main icon: Code brackets with API arrows -->
+  <g transform="translate(6, 8)">
+    <!-- Left bracket -->
+    <path d="M2 2 L2 12 L4 12 L4 4 L2 4 Z" fill="url(#icon-gradient)"/>
+    <path d="M0 2 L0 12 L2 12 L2 4 L0 4 Z" fill="url(#accent-gradient)" opacity="0.8"/>
 
-  <!-- API connection lines/dots -->
-  <circle cx="8" cy="10" r="1.5" fill="white" opacity="0.8"/>
-  <circle cx="16" cy="8" r="1.5" fill="white" opacity="0.8"/>
-  <circle cx="24" cy="10" r="1.5" fill="white" opacity="0.8"/>
+    <!-- Right bracket -->
+    <path d="M14 2 L14 12 L16 12 L16 4 L14 4 Z" fill="url(#icon-gradient)"/>
+    <path d="M16 2 L16 12 L18 12 L18 4 L16 4 Z" fill="url(#accent-gradient)" opacity="0.8"/>
 
-  <!-- Connection lines -->
-  <line x1="9.5" y1="10" x2="14.5" y2="8" stroke="white" stroke-width="1" opacity="0.6"/>
-  <line x1="17.5" y1="8" x2="22.5" y2="10" stroke="white" stroke-width="1" opacity="0.6"/>
+    <!-- API connection arrows -->
+    <polygon points="6,6 10,4 10,8" fill="url(#icon-gradient)"/>
+    <polygon points="12,6 8,4 8,8" fill="url(#accent-gradient)"/>
+  </g>
+
+  <!-- Small accent dot -->
+  <circle cx="26" cy="6" r="2" fill="url(#accent-gradient)" opacity="0.9"/>
 </svg>
