@@ -63,8 +63,11 @@ export function generateDiscriminatedUnionFromConfig(
   const responseMapEntries: string[] = [];
 
   for (const responseType of responseTypes) {
-    const statusCodeKey = responseType.status === "default" ? `"${responseType.status}"` : responseType.status;
-    
+    const statusCodeKey =
+      responseType.status === "default"
+        ? `"${responseType.status}"`
+        : responseType.status;
+
     if (!responseType.contentType || responseType.contentType === "") {
       /* Void response */
       unionComponents.push(`{ status: ${statusCodeKey}; }`);

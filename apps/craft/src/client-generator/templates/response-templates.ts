@@ -13,7 +13,8 @@ export function renderResponseHandler(
   responseMapName?: string,
 ): string {
   const { contentType, statusCode, typeName } = responseInfo;
-  const statusCodeKey = statusCode === "default" ? `"${statusCode}"` : statusCode;
+  const statusCodeKey =
+    statusCode === "default" ? `"${statusCode}"` : statusCode;
 
   if (typeName || contentType) {
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */

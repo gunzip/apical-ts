@@ -100,7 +100,10 @@ export function analyzeResponseStructure(
   const unionTypes: string[] = [];
   if (discriminatedUnionResult?.responseMapName) {
     for (const responseInfo of responses) {
-      const statusCodeKey = responseInfo.statusCode === "default" ? `"${responseInfo.statusCode}"` : responseInfo.statusCode;
+      const statusCodeKey =
+        responseInfo.statusCode === "default"
+          ? `"${responseInfo.statusCode}"`
+          : responseInfo.statusCode;
       if (responseInfo.hasSchema) {
         unionTypes.push(
           `(TForceValidation extends true ? ApiResponseWithForcedParse<${statusCodeKey}, typeof ${discriminatedUnionResult.responseMapName}> : ApiResponseWithParse<${statusCodeKey}, typeof ${discriminatedUnionResult.responseMapName}>)`,
@@ -113,7 +116,10 @@ export function analyzeResponseStructure(
   } else {
     /* Fallback to standard ApiResponse types */
     for (const responseInfo of responses) {
-      const statusCodeKey = responseInfo.statusCode === "default" ? `"${responseInfo.statusCode}"` : responseInfo.statusCode;
+      const statusCodeKey =
+        responseInfo.statusCode === "default"
+          ? `"${responseInfo.statusCode}"`
+          : responseInfo.statusCode;
       if (responseInfo.hasSchema) {
         unionTypes.push(`ApiResponse<${statusCodeKey}, unknown>`);
       } else {

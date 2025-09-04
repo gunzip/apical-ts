@@ -220,11 +220,11 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "ApiResponse<200, void> | ApiResponse<\"default\", void> | ApiResponseError",
+        'ApiResponse<200, void> | ApiResponse<"default", void> | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(2);
       expect(result.responseHandlers[0]).toContain("case 200:");
-      expect(result.responseHandlers[1]).toContain("case \"default\":");
+      expect(result.responseHandlers[1]).toContain('case "default":');
     });
 
     it("should include default response with schema", () => {
@@ -257,12 +257,12 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof TestAuthBearerResponseMap> : ApiResponseWithParse<200, typeof TestAuthBearerResponseMap>) | ApiResponse<403, void> | (TForceValidation extends true ? ApiResponseWithForcedParse<\"default\", typeof TestAuthBearerResponseMap> : ApiResponseWithParse<\"default\", typeof TestAuthBearerResponseMap>) | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof TestAuthBearerResponseMap> : ApiResponseWithParse<200, typeof TestAuthBearerResponseMap>) | ApiResponse<403, void> | (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof TestAuthBearerResponseMap> : ApiResponseWithParse<"default", typeof TestAuthBearerResponseMap>) | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(3);
       expect(result.responseHandlers[0]).toContain("case 200:");
       expect(result.responseHandlers[1]).toContain("case 403:");
-      expect(result.responseHandlers[2]).toContain("case \"default\":");
+      expect(result.responseHandlers[2]).toContain('case "default":');
       expect(typeImports.has("Person")).toBe(true);
       expect(typeImports.has("ProblemDetails")).toBe(true);
     });
@@ -286,10 +286,10 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<\"default\", typeof TestOperationResponseMap> : ApiResponseWithParse<\"default\", typeof TestOperationResponseMap>) | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof TestOperationResponseMap> : ApiResponseWithParse<"default", typeof TestOperationResponseMap>) | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case \"default\":");
+      expect(result.responseHandlers[0]).toContain('case "default":');
       expect(typeImports.has("Error")).toBe(true);
     });
 
