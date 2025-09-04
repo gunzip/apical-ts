@@ -183,3 +183,20 @@ h6 {
 .skip-to-content:focus {
   top: 6px;
 }
+
+/* Skip link for screen readers */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--ifm-color-primary);
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+}
+
+.skip-to-content:focus {
+  top: 6px;
+}
