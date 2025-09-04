@@ -110,6 +110,14 @@
   flex-direction: column;
 }
 
+/* Make the codeblock-group fill the height */
+.codeblock-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 @keyframes titlePop {
   0% {
     opacity: 0;

@@ -25,7 +25,16 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
       language={language}
       theme={themes.github}
       children={({ className, style, tokens, getLineProps, getTokenProps }) => (
-        <div className="codeblock-group" style={{ position: "relative" }}>
+        <div
+          className="codeblock-group"
+          style={{
+            position: "relative",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+          }}
+        >
           <style>{`
             .codeblock-copy-btn {
               position: absolute;
@@ -67,6 +76,9 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
               padding: 16,
               borderRadius: 8,
               overflowX: "auto",
+              flex: 1,
+              height: "100%",
+              minHeight: 0,
             }}
           >
             {tokens.map((line, i) => (
