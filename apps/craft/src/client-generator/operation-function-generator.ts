@@ -111,6 +111,7 @@ export function extractOperationMetadata(
   const functionBodyCode = generateFunctionBody({
     authHeaders,
     contentTypeMaps: bodyInfo.contentTypeMaps,
+    defaultResponseHandler: responseHandlers.defaultHandler,
     hasBody,
     method,
     operationSecurityHeaders,
@@ -119,7 +120,6 @@ export function extractOperationMetadata(
     pathKey,
     requestContentTypes: bodyInfo.requestContentTypes,
     responseHandlers: responseHandlers.responseHandlers,
-    defaultResponseHandler: responseHandlers.defaultHandler,
     shouldGenerateRequestMap: bodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: bodyInfo.shouldGenerateResponseMap,
   });

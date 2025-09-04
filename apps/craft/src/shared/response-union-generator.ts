@@ -1,6 +1,7 @@
 /* Shared response union type generation logic */
 
 import type { OperationObject } from "openapi3-ts/oas31";
+
 import { isReferenceObject } from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";

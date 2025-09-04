@@ -24,6 +24,7 @@ import { generatePathInterpolation } from "./utils.js";
 export interface GenerateFunctionBodyOptions {
   authHeaders?: string[];
   contentTypeMaps: ContentTypeMaps;
+  defaultResponseHandler?: string;
   hasBody: boolean;
   method: string;
   operationSecurityHeaders?: SecurityHeader[];
@@ -33,7 +34,6 @@ export interface GenerateFunctionBodyOptions {
   requestContentType?: string;
   requestContentTypes?: string[];
   responseHandlers: string[];
-  defaultResponseHandler?: string;
   shouldGenerateRequestMap: boolean;
   shouldGenerateResponseMap: boolean;
 }
@@ -47,6 +47,7 @@ export interface GenerateFunctionBodyOptions {
 export function generateFunctionBody({
   authHeaders,
   contentTypeMaps,
+  defaultResponseHandler,
   hasBody,
   method,
   operationSecurityHeaders,
@@ -55,7 +56,6 @@ export function generateFunctionBody({
   pathKey,
   requestContentTypes,
   responseHandlers,
-  defaultResponseHandler,
   shouldGenerateRequestMap,
   shouldGenerateResponseMap,
 }: GenerateFunctionBodyOptions): string {
