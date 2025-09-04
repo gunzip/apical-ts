@@ -47,14 +47,15 @@ requirements.
 - Throws unknown exceptions
 - Monolithic output
 
-**Best for:** Simple projects with basic requirements
+**Best for:** Any project where you need a simple, effective client generator
+with good community support
 
 ## Massimo
 
-Massimo is the new kid on the block, offering a fresh approach to generating
-TypeScript clients from OpenAPI specifications. While it brings some innovative
-ideas to the table, at the time of writing, it also has its own set of
-limitations.
+[Massimo](https://massimohttp.dev/) is the new kid on the block, offering a
+fresh approach to generating TypeScript clients from OpenAPI specifications.
+While it brings some innovative ideas to the table, at the time of writing, it
+also has its own set of limitations.
 
 One notable aspect of Massimo is that, aside from @apical-ts/craft, it is the
 only client generator I have found that produces discriminated unions for
