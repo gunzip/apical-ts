@@ -41,6 +41,16 @@ This command will:
 4. Generate server handler wrappers (if `--generate-server` is specified)
 5. Output all generated files to the `generated` directory
 
+## Runtime Dependencies
+
+The generated client and server code requires `zod` as a runtime dependency for
+schema validation. After generation, install it in your output directory:
+
+```bash
+cd generated
+npm install
+```
+
 ## Watch Mode
 
 You can run the CLI in watch mode to automatically regenerate code when your

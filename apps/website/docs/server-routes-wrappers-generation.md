@@ -21,6 +21,16 @@ This will create a `server/` directory in your output folder, containing:
 - **`server/index.ts`**: Exports the server handler wrappers and types
 - **`server/<operationId>.ts`**: Individual operation handler wrappers
 
+## Runtime Dependencies
+
+The generated server code requires `zod` as a runtime dependency for request and
+response validation. After generation, install it in your output directory:
+
+```bash
+cd generated
+npm install
+```
+
 ## Using the Wrapped Handler
 
 The generated route wrapper is a function that takes a request handler and
