@@ -1,5 +1,12 @@
 # @apical-ts/craft
 
+## 0.0.26
+
+### Patch Changes
+
+- Remove prettier formatting for performance reason
+- Added support for default response
+
 ## 0.0.25
 
 ### Patch Changes
