@@ -14,6 +14,14 @@ export function renderResponseHandler(
 ): string {
   const { contentType, statusCode, typeName } = responseInfo;
 
+  // Special handling for the OpenAPI default response. We keep the switch "default" label
+  // for unexpected status codes, so we cannot literally use case "default". Instead
+  // we branch later: default responses are handled outside the switch (in analysis) by
+  // adding a union member. Here we skip emitting a handler for statusCode === "default".
+  if (statusCode === "default") {
+    return ""; // no direct case generation; handled by default branch fallback
+  }
+
   if (typeName || contentType) {
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
     if (responseInfo.hasSchema && responseMapName) {

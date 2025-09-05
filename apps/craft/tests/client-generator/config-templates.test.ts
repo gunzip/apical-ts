@@ -153,7 +153,9 @@ describe("client-generator config-templates", () => {
     it("should render API response types", () => {
       const result = renderApiResponseTypes();
 
-      expect(result).toContain("export type ApiResponse<S extends number, T>");
+      expect(result).toContain(
+        'export type ApiResponse<S extends number | "default", T>',
+      );
       expect(result).toContain("readonly status: S;");
       expect(result).toContain("readonly data: T;");
 
@@ -164,7 +166,7 @@ describe("client-generator config-templates", () => {
 
       /* The basic ApiResponse type should not contain error fields (they're in ApiResponseError) */
       expect(result).toContain(
-        "export type ApiResponse<S extends number, T> =",
+        'export type ApiResponse<S extends number | "default", T> =',
       );
     });
   });
