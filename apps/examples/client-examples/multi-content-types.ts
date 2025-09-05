@@ -44,11 +44,6 @@ async function demonstrateClient() {
     console.error("Error:", ret.error);
   } else if (ret.status === 200) {
     console.log("Raw data:", ret.data);
-    // ret may also be the generic ApiResponse<number, void> branch (no parse())
-    if (!("parse" in ret)) {
-      console.warn("No parse() available on this response variant");
-      return;
-    }
     const parsed = ret.parse();
     if (!isParsed(parsed)) {
       if (parsed.kind == "parse-error") {
