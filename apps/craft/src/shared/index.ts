@@ -35,5 +35,16 @@ export {
   renderUnionType,
 } from "./response-union-generator.js";
 
+// Schema type resolution exports
+export {
+  resolveSchemaTypeName,
+  resolveStrictSchemaTypeName,
+} from "./schema-type-resolver.js";
+
+// Server-specific request body mapping exports
+export type { ServerRequestBodyMapResult } from "./server-request-body-maps.js";
+
+export { generateServerRequestBodyMap } from "./server-request-body-maps.js";
+
 // Common types and interfaces
 export type { ContentTypeMapping, ParameterGroups } from "./types.js";

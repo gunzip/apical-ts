@@ -8,9 +8,9 @@ import type {
 import assert from "assert";
 
 import { extractOperationMetadata } from "../client-generator/operation-function-generator.js";
-import { extractParameterGroups } from "../client-generator/parameters.js"; /* Kept for ServerOperationMetadata type compatibility */
-import { resolveRequestBodyType } from "../client-generator/request-body.js"; /* Kept for ServerOperationMetadata type compatibility */
-import { generateContentTypeMaps } from "../client-generator/responses.js"; /* Kept for ServerOperationMetadata type compatibility */
+import { extractParameterGroups } from "../client-generator/parameters.js";
+import { resolveRequestBodyType } from "../client-generator/request-body.js";
+import { generateContentTypeMaps } from "../client-generator/responses.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateServerRequestBodyMap } from "../shared/server-request-body-maps.js";
 import {
