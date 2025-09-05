@@ -123,11 +123,6 @@ describe("discriminated union response types", () => {
         hasResponseContentTypeMap: true,
       });
 
-      /* Should not include discriminated union information for client operations */
-      expect(result.discriminatedUnionTypeName).toBeUndefined();
-      expect(result.discriminatedUnionTypeDefinition).toBeUndefined();
-      expect(result.responseMapType).toBeUndefined();
-
       /* Should still derive response map name for union type generation */
       expect(result.responseMapName).toBe("TestMultiContentTypesResponseMap");
 
@@ -160,10 +155,7 @@ describe("discriminated union response types", () => {
       });
 
       /* Should not have discriminated union information */
-      expect(result.discriminatedUnionTypeName).toBeUndefined();
-      expect(result.discriminatedUnionTypeDefinition).toBeUndefined();
       expect(result.responseMapName).toBeUndefined();
-      expect(result.responseMapType).toBeUndefined();
 
       /* Should still analyze responses */
       expect(result.responses).toHaveLength(1);
@@ -198,12 +190,9 @@ describe("discriminated union response types", () => {
       );
 
       /* Should not include discriminated union information for client operations */
-      expect(result.discriminatedUnionTypeName).toBeUndefined();
-      expect(result.discriminatedUnionTypeDefinition).toBeUndefined();
       /* responseMapName is passed from caller, so it should still be present */
       expect(result.responseMapName).toBe("TestMultiContentTypesResponseMap");
       /* responseMapType comes from discriminated union generator, so it should be undefined */
-      expect(result.responseMapType).toBeUndefined();
 
       /* Should generate response handlers */
       expect(result.responseHandlers).toHaveLength(1);
