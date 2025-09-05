@@ -91,7 +91,7 @@ export function buildGenericParams(
   const genericParts: string[] = [];
 
   /* Always include TForceValidation parameter for dynamic force validation */
-  genericParts.push("TForceValidation extends boolean = false");
+  genericParts.push("TForceValidation extends boolean = true");
 
   if (config.shouldGenerateRequestMap) {
     const defaultReq =
