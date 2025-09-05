@@ -57,17 +57,6 @@ export function generateServerRequestBodyMap(
   contentTypeCount = requestContentTypes.contentTypes.length;
   shouldGenerateRequestMap = contentTypeCount > 1;
 
-  if (contentTypeCount === 0) {
-    return {
-      contentTypeCount,
-      contentTypeMappings,
-      defaultContentType,
-      requestMapType,
-      shouldGenerateRequestMap,
-      typeImports: new Set(),
-    };
-  }
-
   /* First content-type is chosen as default */
   defaultContentType = requestContentTypes.contentTypes[0].contentType;
 
