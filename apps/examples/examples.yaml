@@ -65,7 +65,7 @@ paths:
                 $ref: "#/components/schemas/Pet"
             application/xml:
               schema:
-                $ref: "#/components/schemas/Pet"
+                $ref: "#/components/schemas/PetXml"
         "400":
           description: Invalid ID supplied
         "404":
