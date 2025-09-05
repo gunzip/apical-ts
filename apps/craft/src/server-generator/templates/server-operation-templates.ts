@@ -35,14 +35,14 @@ export function buildServerRequestMap(
 ): string {
   if (!metadata.bodyInfo.shouldGenerateRequestMap) return "";
 
-  const { contentTypeMaps } = metadata.bodyInfo;
+  const { serverRequestBodyMap } = metadata.bodyInfo;
   const mapName = metadata.bodyInfo.requestMapTypeName;
 
   /* Add imports for request schemas */
-  contentTypeMaps.typeImports.forEach((imp) => typeImports.add(imp));
+  serverRequestBodyMap.typeImports.forEach((imp) => typeImports.add(imp));
 
   /* Convert the client generator format (with semicolons) to object literal format (with commas) */
-  const fixedMapType = contentTypeMaps.requestMapType.replace(/;/g, ",");
+  const fixedMapType = serverRequestBodyMap.requestMapType.replace(/;/g, ",");
 
   return `export const ${mapName} = ${fixedMapType};
 export type ${mapName} = typeof ${mapName};`;
@@ -60,6 +60,7 @@ export function buildServerResponseMap(
     metadata.operation,
     metadata.operationId,
     typeImports,
+    { useStrictSchemas: true }, // Use strict schemas for server responses
   );
 
   /* Return the union type definition */
@@ -205,7 +206,7 @@ function renderValidationLogic(
   if (req.body !== undefined && req.contentType) {
     const schema = ${requestMapTypeName}[req.contentType];
     if (schema) {
-      const bodyParse = schema.strict().safeParse(req.body);
+      const bodyParse = schema.safeParse(req.body);
       if (!bodyParse.success) return handler({ kind: "body-error", error: bodyParse.error, isValid: false });
       parsedBody = bodyParse.data as ${bodyType};
     } else {

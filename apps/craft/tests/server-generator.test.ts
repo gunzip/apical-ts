@@ -165,8 +165,11 @@ describe("server-generator operation wrapper", () => {
       doc as any,
     );
 
-    /* Verify that request body validation uses .strict() method conditionally */
-    expect(result.wrapperCode).toContain("schema.strict().safeParse(req.body)");
+    /* Verify that request body validation uses strict schemas (no longer .strict() method) */
+    expect(result.wrapperCode).toContain("schema.safeParse(req.body)");
+    expect(result.wrapperCode).toContain(
+      "TestStrictBodyValidationRequestStrict",
+    );
     expect(result.wrapperCode).toContain("testStrictBodyValidationWrapper");
     expect(result.wrapperCode).toContain("body-error");
     expect(result.wrapperCode).toContain("parsedBody");

@@ -61,6 +61,20 @@ export interface GenerationOptions {
   strictValidation?: boolean;
 }
 
+interface SchemaGenerationContext {
+  generateServer: boolean;
+  limit: ReturnType<typeof pLimit>;
+  openApiDoc: OpenAPIObject;
+  schemasDir: string;
+  strictValidation: boolean;
+}
+
+type SchemaGeneratorFunction<T = SchemaObject> = (
+  name: string,
+  schema: T,
+  options: { strictValidation: boolean },
+) => Promise<{ content: string; fileName: string }>;
+
 /**
  * Generates TypeScript schemas and optional API client from OpenAPI specification
  */
@@ -76,135 +90,31 @@ export async function generate(options: GenerationOptions): Promise<void> {
 
   await fs.mkdir(output, { recursive: true });
 
-  // Pre-process: Resolve external $ref pointers before parsing to avoid parsing failures
-  let openApiDoc: OpenAPIObject;
-  try {
-    // Bundle external references first, then convert to OpenAPI 3.1
-    const bundled = await $RefParser.bundle(input, {
-      mutateInputSchema: false, // Don't modify the original
-    });
-    console.log("✅ Successfully resolved external $ref pointers");
+  const openApiDoc = await parseAndPreprocessOpenAPI(input);
 
-    // Convert the bundled document to OpenAPI 3.1
-    openApiDoc = await convertToOpenAPI31(bundled);
-  } catch (error) {
-    console.warn(
-      "⚠️ Failed to resolve external $ref pointers, falling back to regular parsing:",
-      error,
-    );
-    openApiDoc = await parseOpenAPI(input);
-  }
+  await generateAllSchemas(
+    openApiDoc,
+    output,
+    concurrency,
+    strictValidation,
+    genServer,
+  );
 
-  // Apply generated operation IDs for operations that don't have them
-  applyGeneratedOperationIds(openApiDoc);
-  console.log("✅ Applied generated operation IDs where missing");
+  await generateAllOperations(
+    openApiDoc,
+    output,
+    concurrency,
+    genClient,
+    genServer,
+  );
 
-  /*
-   * Pre-process: rename component schemas whose names would collide with
-   * internal generator types or global / built-in JavaScript identifiers.
-   * This prevents name clashes in generated imports (e.g. user schema named
-   * ApiResponse, Blob, Buffer, etc.). Renamed schemas receive a stable
-   * 'Schema' suffix (or 'Schema2', 'Schema3', ... if needed to avoid further
-   * collisions). All $ref pointers are updated accordingly across the
-   * document before any generation steps begin.
-   */
-  const renamedCount = renameConflictingSchemas(openApiDoc);
-  if (renamedCount > 0) {
-    console.log(
-      "✅ Renamed conflicting schema names with 'Schema' suffix where necessary",
-    );
-  }
+  await createPackageJson(output);
+}
 
-  const limit = pLimit(concurrency);
-  const schemaGenerationPromises: Promise<void>[] = [];
-
-  if (openApiDoc.components?.schemas) {
-    const schemasDir = path.join(output, "schemas");
-    await fs.mkdir(schemasDir, { recursive: true });
-
-    function isPlainSchemaObject(obj: unknown): obj is SchemaObject {
-      if (!obj || typeof obj !== "object") return false;
-      // Must have at least one OpenAPI schema property
-      return (
-        "type" in obj ||
-        "allOf" in obj ||
-        "anyOf" in obj ||
-        "oneOf" in obj ||
-        "properties" in obj ||
-        "additionalProperties" in obj ||
-        "array" in obj
-      );
-    }
-
-    // Generate schemas from components/schemas
-    for (const [name, schema] of Object.entries(
-      openApiDoc.components.schemas,
-    )) {
-      if (!isPlainSchemaObject(schema)) {
-        console.warn(
-          `⚠️ Skipping ${name}: not a plain OpenAPI schema object. Value:`,
-          schema,
-        );
-        continue;
-      }
-
-      const sanitizedName = sanitizeIdentifier(name);
-
-      const description = schema.description
-        ? schema.description.trim()
-        : undefined;
-      const promise = limit(() =>
-        generateSchemaFile(sanitizedName, schema, description, {
-          strictValidation,
-        }).then((schemaFile) => {
-          const filePath = path.join(schemasDir, schemaFile.fileName);
-          return fs.writeFile(filePath, schemaFile.content);
-        }),
-      );
-      schemaGenerationPromises.push(promise);
-    }
-
-    // Generate request schemas from operations
-    const requestSchemas = extractRequestSchemas(openApiDoc);
-    for (const [name, schema] of requestSchemas) {
-      const promise = limit(() =>
-        generateRequestSchemaFile(name, schema, { strictValidation }).then(
-          (schemaFile) => {
-            const filePath = path.join(schemasDir, schemaFile.fileName);
-            return fs.writeFile(filePath, schemaFile.content);
-          },
-        ),
-      );
-      schemaGenerationPromises.push(promise);
-    }
-
-    // Generate response schemas from operations
-    const responseSchemas = extractResponseSchemas(openApiDoc);
-    for (const [name, schema] of responseSchemas) {
-      const promise = limit(() =>
-        generateResponseSchemaFile(name, schema, { strictValidation }).then(
-          (schemaFile) => {
-            const filePath = path.join(schemasDir, schemaFile.fileName);
-            return fs.writeFile(filePath, schemaFile.content);
-          },
-        ),
-      );
-      schemaGenerationPromises.push(promise);
-    }
-  }
-
-  await Promise.all(schemaGenerationPromises);
-  console.log("✅ Schemas generated successfully");
-
-  if (genClient) {
-    await generateOperations(openApiDoc, output, concurrency);
-  }
-
-  if (genServer) {
-    await generateServerOperations(openApiDoc, output, concurrency);
-    console.log("✅ Server operations generated successfully");
-  }
-
+/**
+ * Creates the package.json file for the generated output
+ */
+async function createPackageJson(output: string): Promise<void> {
   const packageJsonContent = {
     dependencies: {
       zod: "^4.0.0",
@@ -218,6 +128,45 @@ export async function generate(options: GenerationOptions): Promise<void> {
     packageJsonPath,
     JSON.stringify(packageJsonContent, null, 2),
   );
+}
+
+/**
+ * Creates schema generation promises for both regular and strict variants
+ */
+function createSchemaGenerationPromises<T = SchemaObject>(
+  schemaMap: Map<string, T>,
+  context: SchemaGenerationContext,
+  generatorFn: SchemaGeneratorFunction<T>,
+): Promise<void>[] {
+  const promises: Promise<void>[] = [];
+
+  for (const [name, schema] of schemaMap) {
+    // Generate regular schema
+    const promise = context.limit(() =>
+      generatorFn(name, schema, {
+        strictValidation: context.strictValidation,
+      }).then((schemaFile) => {
+        const filePath = path.join(context.schemasDir, schemaFile.fileName);
+        return fs.writeFile(filePath, schemaFile.content);
+      }),
+    );
+    promises.push(promise);
+
+    // Generate strict schema for server when generateServer is enabled
+    if (context.generateServer) {
+      const strictPromise = context.limit(() =>
+        generatorFn(`${name}Strict`, schema, {
+          strictValidation: true,
+        }).then((schemaFile) => {
+          const filePath = path.join(context.schemasDir, schemaFile.fileName);
+          return fs.writeFile(filePath, schemaFile.content);
+        }),
+      );
+      promises.push(strictPromise);
+    }
+  }
+
+  return promises;
 }
 
 /**
@@ -418,6 +367,193 @@ function forEachOperation(
       }
     }
   }
+}
+
+/**
+ * Generates all operations (client and/or server)
+ */
+async function generateAllOperations(
+  openApiDoc: OpenAPIObject,
+  output: string,
+  concurrency: number,
+  generateClient: boolean,
+  generateServer: boolean,
+): Promise<void> {
+  if (generateClient) {
+    await generateOperations(openApiDoc, output, concurrency);
+  }
+
+  if (generateServer) {
+    await generateServerOperations(openApiDoc, output, concurrency);
+    console.log("✅ Server operations generated successfully");
+  }
+}
+
+/**
+ * Generates all schemas (component, request, and response schemas)
+ */
+async function generateAllSchemas(
+  openApiDoc: OpenAPIObject,
+  output: string,
+  concurrency: number,
+  strictValidation: boolean,
+  generateServer: boolean,
+): Promise<void> {
+  if (!openApiDoc.components?.schemas) {
+    return;
+  }
+
+  const schemasDir = path.join(output, "schemas");
+  await fs.mkdir(schemasDir, { recursive: true });
+
+  const limit = pLimit(concurrency);
+  const context: SchemaGenerationContext = {
+    generateServer,
+    limit,
+    openApiDoc,
+    schemasDir,
+    strictValidation,
+  };
+
+  const schemaGenerationPromises: Promise<void>[] = [
+    // Generate schemas from components/schemas
+    ...generateComponentSchemas(context),
+    // Generate request schemas from operations
+    ...createSchemaGenerationPromises(
+      extractRequestSchemas(openApiDoc),
+      context,
+      generateRequestSchemaFile,
+    ),
+    // Generate response schemas from operations
+    ...createSchemaGenerationPromises(
+      extractResponseSchemas(openApiDoc),
+      context,
+      generateResponseSchemaFile,
+    ),
+  ];
+
+  await Promise.all(schemaGenerationPromises);
+  console.log("✅ Schemas generated successfully");
+}
+
+/**
+ * Generates component schemas from the OpenAPI document
+ */
+function generateComponentSchemas(
+  context: SchemaGenerationContext,
+): Promise<void>[] {
+  const promises: Promise<void>[] = [];
+
+  if (!context.openApiDoc.components?.schemas) {
+    return promises;
+  }
+
+  for (const [name, schema] of Object.entries(
+    context.openApiDoc.components.schemas,
+  )) {
+    if (!isPlainSchemaObject(schema)) {
+      console.warn(
+        `⚠️ Skipping ${name}: not a plain OpenAPI schema object. Value:`,
+        schema,
+      );
+      continue;
+    }
+
+    const sanitizedName = sanitizeIdentifier(name);
+    const description = schema.description
+      ? schema.description.trim()
+      : undefined;
+
+    // Generate regular schema
+    const promise = context.limit(() =>
+      generateSchemaFile(sanitizedName, schema, description, {
+        strictValidation: context.strictValidation,
+      }).then((schemaFile) => {
+        const filePath = path.join(context.schemasDir, schemaFile.fileName);
+        return fs.writeFile(filePath, schemaFile.content);
+      }),
+    );
+    promises.push(promise);
+
+    // Generate strict schema for server when generateServer is enabled
+    if (context.generateServer) {
+      const strictPromise = context.limit(() =>
+        generateSchemaFile(`${sanitizedName}Strict`, schema, description, {
+          strictValidation: true,
+        }).then((schemaFile) => {
+          const filePath = path.join(context.schemasDir, schemaFile.fileName);
+          return fs.writeFile(filePath, schemaFile.content);
+        }),
+      );
+      promises.push(strictPromise);
+    }
+  }
+
+  return promises;
+}
+
+/**
+ * Determines if an object is a plain OpenAPI schema object
+ */
+function isPlainSchemaObject(obj: unknown): obj is SchemaObject {
+  if (!obj || typeof obj !== "object") return false;
+  // Must have at least one OpenAPI schema property
+  return (
+    "type" in obj ||
+    "allOf" in obj ||
+    "anyOf" in obj ||
+    "oneOf" in obj ||
+    "properties" in obj ||
+    "additionalProperties" in obj ||
+    "array" in obj
+  );
+}
+
+/**
+ * Parses and preprocesses the OpenAPI document
+ */
+async function parseAndPreprocessOpenAPI(
+  input: string,
+): Promise<OpenAPIObject> {
+  let openApiDoc: OpenAPIObject;
+  try {
+    // Bundle external references first, then convert to OpenAPI 3.1
+    const bundled = await $RefParser.bundle(input, {
+      mutateInputSchema: false, // Don't modify the original
+    });
+    console.log("✅ Successfully resolved external $ref pointers");
+
+    // Convert the bundled document to OpenAPI 3.1
+    openApiDoc = await convertToOpenAPI31(bundled);
+  } catch (error) {
+    console.warn(
+      "⚠️ Failed to resolve external $ref pointers, falling back to regular parsing:",
+      error,
+    );
+    openApiDoc = await parseOpenAPI(input);
+  }
+
+  // Apply generated operation IDs for operations that don't have them
+  applyGeneratedOperationIds(openApiDoc);
+  console.log("✅ Applied generated operation IDs where missing");
+
+  /*
+   * Pre-process: rename component schemas whose names would collide with
+   * internal generator types or global / built-in JavaScript identifiers.
+   * This prevents name clashes in generated imports (e.g. user schema named
+   * ApiResponse, Blob, Buffer, etc.). Renamed schemas receive a stable
+   * 'Schema' suffix (or 'Schema2', 'Schema3', ... if needed to avoid further
+   * collisions). All $ref pointers are updated accordingly across the
+   * document before any generation steps begin.
+   */
+  const renamedCount = renameConflictingSchemas(openApiDoc);
+  if (renamedCount > 0) {
+    console.log(
+      "✅ Renamed conflicting schema names with 'Schema' suffix where necessary",
+    );
+  }
+
+  return openApiDoc;
 }
 
 /*
