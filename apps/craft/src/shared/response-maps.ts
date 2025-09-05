@@ -1,6 +1,6 @@
 /* Shared response mapping logic with correct structure */
 
-import type { OperationObject } from "openapi3-ts/oas31";
+import { isReferenceObject, type OperationObject } from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
 import { resolveSchemaTypeName } from "../client-generator/responses.js";
@@ -95,7 +95,7 @@ export function generateResponseMap(
   // Handle default response (catch-all) if present with content
   if (operation.responses && "default" in operation.responses) {
     const defaultResponse = operation.responses.default;
-    if (defaultResponse && !("$ref" in defaultResponse)) {
+    if (defaultResponse && !isReferenceObject(defaultResponse)) {
       const content = defaultResponse.content;
       if (content) {
         const defaultContentTypes: { contentType: string; typeName: string }[] =
