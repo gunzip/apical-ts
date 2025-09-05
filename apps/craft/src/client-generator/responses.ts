@@ -3,6 +3,8 @@ import type { OperationObject } from "openapi3-ts/oas31";
 import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
+import type { ResponseInfo } from "./models/response-models.js";
+
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateRequestBodyMap } from "../shared/request-body-maps.js";
 import { generateResponseMap } from "../shared/response-maps.js";
@@ -30,6 +32,7 @@ export interface ContentTypeMaps {
  * Result of response handler generation
  */
 export interface ResponseHandlerResult {
+  defaultResponseInfo?: ResponseInfo;
   discriminatedUnionTypeDefinition?: string;
   discriminatedUnionTypeName?: string;
   responseHandlers: string[];
@@ -111,6 +114,7 @@ export function generateResponseHandlers(
   );
 
   return {
+    defaultResponseInfo: analysis.defaultResponseInfo,
     discriminatedUnionTypeDefinition: analysis.discriminatedUnionTypeDefinition,
     discriminatedUnionTypeName: analysis.discriminatedUnionTypeName,
     responseHandlers,

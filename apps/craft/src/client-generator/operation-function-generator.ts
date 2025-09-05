@@ -33,6 +33,7 @@ import {
   buildTypeAliases,
   renderOperationFunction,
 } from "./templates/operation-templates.js";
+import { renderDefaultResponseHandler } from "./templates/response-templates.js";
 
 /* Result of generating a function with imports */
 export interface GeneratedFunction {
@@ -106,11 +107,22 @@ export function extractOperationMetadata(
   const overridesSecurity = hasSecurityOverride(operation);
   const authHeaders = extractAuthHeaders(doc);
 
+  /* Generate default response handler if there is a default response */
+  const defaultResponseHandler = responseHandlers.defaultResponseInfo
+    ? renderDefaultResponseHandler(
+        responseHandlers.defaultResponseInfo,
+        bodyInfo.shouldExportResponseMap
+          ? bodyInfo.responseMapTypeName
+          : undefined,
+      )
+    : undefined;
+
   /* Function internal body code */
   /* Assemble the inner imperative body (headers, fetch call, switch over request content-type, parsing) */
   const functionBodyCode = generateFunctionBody({
     authHeaders,
     contentTypeMaps: bodyInfo.contentTypeMaps,
+    defaultResponseHandler,
     hasBody,
     method,
     operationSecurityHeaders,
