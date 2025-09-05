@@ -1,10 +1,10 @@
-/* Shared response union type generation logic */
+/* Shared response union generation logic */
 
 import type { OperationObject } from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
-import { resolveSchemaTypeName } from "../client-generator/responses.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { resolveSchemaTypeName } from "./schema-type-resolver.js";
 
 /**
  * Response union member for type generation

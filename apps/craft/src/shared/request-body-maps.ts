@@ -5,7 +5,7 @@ import type { OperationObject, RequestBodyObject } from "openapi3-ts/oas31";
 import type { ContentTypeMapping } from "./types.js";
 
 import { extractRequestContentTypes } from "../client-generator/operation-extractor.js";
-import { resolveSchemaTypeName } from "../client-generator/responses.js";
+import { resolveSchemaTypeName } from "./schema-type-resolver.js";
 
 /**
  * Options for request body map generation

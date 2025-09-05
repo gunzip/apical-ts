@@ -3,7 +3,7 @@
 import { isReferenceObject, type OperationObject } from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
-import { resolveSchemaTypeName } from "../client-generator/responses.js";
+import { resolveSchemaTypeName } from "./schema-type-resolver.js";
 
 /**
  * Options for response map generation
