@@ -12,8 +12,6 @@ import type {
   SecurityHeader,
 } from "./models/security-models.js";
 
-import { renderSecurityHeaderHandling } from "./templates/security-templates.js";
-
 /*
  * Pure security analysis functions - separate from code generation
  */
@@ -112,20 +110,6 @@ export function determineAuthHeaderRequirements(
 export function extractAuthHeaders(doc: OpenAPIObject): string[] {
   const analysis = analyzeGlobalSecuritySchemes(doc);
   return analysis.authHeaders;
-}
-
-/*
- * Legacy API compatibility functions - maintain existing public API
- */
-
-/**
- * Generates security header handling code from params
- * @deprecated Use renderSecurityHeaderHandling from templates/security-templates.ts
- */
-export function generateSecurityHeaderHandling(
-  operationSecurityHeaders: SecurityHeader[],
-): string {
-  return renderSecurityHeaderHandling(operationSecurityHeaders);
 }
 
 /**

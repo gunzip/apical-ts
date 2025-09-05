@@ -333,7 +333,7 @@ function extractResponseSchemas(
     assert(operationId, "Operation ID is missing");
 
     for (const [statusCode, response] of Object.entries(operation.responses)) {
-      if (statusCode === "default") continue;
+      // Process all status codes, including default responses
 
       // Handle both direct ResponseObject and ReferenceObject
       let responseObj: ResponseObject;
@@ -364,7 +364,11 @@ function extractResponseSchemas(
           if (content?.schema && !isReferenceObject(content.schema)) {
             // Only extract inline schemas, not $ref schemas
             const sanitizedOperationId = sanitizeIdentifier(operationId);
-            const responseTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${statusCode}Response`;
+            const suffix =
+              statusCode === "default"
+                ? "DefaultResponse"
+                : `${statusCode}Response`;
+            const responseTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${suffix}`;
             responseSchemas.set(responseTypeName, content.schema);
           }
           break; // Only process the first matching content type

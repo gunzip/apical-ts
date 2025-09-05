@@ -32,17 +32,12 @@ export interface ParsingStrategy {
  * Complete analysis of all responses for an operation
  */
 export interface ResponseAnalysis {
+  /* Optional default response catch-all */
+  defaultResponseInfo?: ResponseInfo;
   /* Default return type if no responses found */
   defaultReturnType: string;
-  /* Discriminated union type definition */
-  discriminatedUnionTypeDefinition?: string;
-  /* Discriminated union type name (if generated) */
-  discriminatedUnionTypeName?: string;
   /* Response map for parsing */
   responseMapName?: string;
-  /* Response map type definition */
-  responseMapType?: string;
-  /* Array of individual response type information */
   responses: ResponseInfo[];
   /* Union type components for the return type */
   unionTypes: string[];
@@ -56,6 +51,8 @@ export interface ResponseAnalysisConfig {
   hasResponseContentTypeMap?: boolean;
   /* The operation being analyzed */
   operation: OperationObject;
+  /* Response map name to use for union type generation */
+  responseMapName?: string;
   /* Set to collect type imports */
   typeImports: Set<string>;
 }
@@ -71,7 +68,7 @@ export interface ResponseInfo {
   /* Parsing strategy for this response */
   parsingStrategy: ParsingStrategy;
   /* HTTP status code */
-  statusCode: string;
+  statusCode: string; // may be numeric string or literal "default"
   /* TypeScript type name for the response */
   typeName: null | string;
 }

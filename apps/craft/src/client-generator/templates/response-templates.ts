@@ -6,6 +6,61 @@ import type { ResponseInfo } from "../models/response-models.js";
 export { renderUnionType } from "../../shared/response-union-generator.js";
 
 /*
+ * Renders a default response handler that handles OpenAPI default responses
+ */
+export function renderDefaultResponseHandler(
+  defaultResponseInfo: ResponseInfo,
+  responseMapName?: string,
+): string {
+  const { contentType, typeName } = defaultResponseInfo;
+
+  if (typeName || contentType) {
+    /* Use string-literal indexing for the default response */
+    if (defaultResponseInfo.hasSchema && responseMapName) {
+      /* Generate dynamic validation logic for default response */
+      return `      if (${responseMapName}["default"]) {
+        /* Handle OpenAPI default response with schema validation */
+        if (config.forceValidation) {
+          /* Force validation: automatically parse and return result */
+          const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {});
+          if ("parsed" in parseResult) {
+            const forcedResult = { isValid: true as const, status: "default" as const, data, response, parsed: parseResult.parsed } satisfies ApiResponseWithForcedParse<"default", typeof ${responseMapName}>;
+            // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
+            return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}> : ApiResponseWithParse<"default", typeof ${responseMapName}>);
+          }
+          if (parseResult.kind) {
+            const errorResult = {
+              ...parseResult,
+              isValid: false as const,
+              result: { data, status: response.status, response },
+            } satisfies ApiResponseError;
+            return errorResult;
+          }
+          throw new Error("Invalid parse result");
+        } else {
+          /* Manual validation: provide parse method */
+          const manualResult = {
+            isValid: true as const,
+            status: "default" as const,
+            data,
+            response,
+            parse: () => parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {})
+          } satisfies ApiResponseWithParse<"default", typeof ${responseMapName}>;
+          return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}> : ApiResponseWithParse<"default", typeof ${responseMapName}>);
+        }
+      }`;
+    } else {
+      /* No schema or response map: return simple response for default */
+      return `      /* Handle OpenAPI default response without schema */
+      return { isValid: true as const, status: "default" as const, data, response };`;
+    }
+  }
+
+  return `      /* Handle OpenAPI default response without content */
+      return { isValid: true as const, status: "default" as const, data: undefined, response };`;
+}
+
+/*
  * Renders a single response handler case for a switch statement
  */
 export function renderResponseHandler(
@@ -13,6 +68,12 @@ export function renderResponseHandler(
   responseMapName?: string,
 ): string {
   const { contentType, statusCode, typeName } = responseInfo;
+
+  // OpenAPI default responses are handled with a special case that excludes expected status codes
+  // We'll generate them in a special way later in the function body template
+  if (statusCode === "default") {
+    return ""; // Default responses are handled separately
+  }
 
   if (typeName || contentType) {
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */

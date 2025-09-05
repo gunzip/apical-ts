@@ -219,11 +219,64 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
+      // Now default is included as a union member with status literal "default"
       expect(result.returnType).toBe(
-        "ApiResponse<200, void> | ApiResponseError",
+        'ApiResponse<200, void> | ApiResponse<"default", void> | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).toContain("case 200:");
+    });
+
+    it("should include default response with schema in union", () => {
+      const operation: OperationObject = {
+        operationId: "testAuthBearer",
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Person" },
+              },
+            },
+          },
+          "403": { description: "Forbidden" },
+          default: {
+            description: "Error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ProblemDetails" },
+              },
+            },
+          },
+        },
+      };
+
+      const typeImports = new Set<string>();
+      const result = generateResponseHandlers(operation, typeImports);
+
+      expect(result.returnType).toBe(
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof TestAuthBearerResponseMap> : ApiResponseWithParse<200, typeof TestAuthBearerResponseMap>) | ApiResponse<403, void> | (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof TestAuthBearerResponseMap> : ApiResponseWithParse<"default", typeof TestAuthBearerResponseMap>) | ApiResponseError',
+      );
+      // Should have handlers only for explicit numeric codes (200 and 403)
+      expect(result.responseHandlers).toHaveLength(2);
+      expect(typeImports.has("Person")).toBe(true);
+      expect(typeImports.has("ProblemDetails")).toBe(true);
+    });
+
+    it("should include default response without schema as void/unknown", () => {
+      const operation: OperationObject = {
+        operationId: "testNoSchemaDefault",
+        responses: {
+          "204": { description: "No content" },
+          default: { description: "Fallback" },
+        },
+      };
+
+      const typeImports = new Set<string>();
+      const result = generateResponseHandlers(operation, typeImports);
+      expect(result.returnType).toBe(
+        'ApiResponse<204, void> | ApiResponse<"default", void> | ApiResponseError',
+      );
     });
 
     it("should handle operation without responses", () => {

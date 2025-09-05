@@ -3,6 +3,8 @@ import type { OperationObject } from "openapi3-ts/oas31";
 import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
+import type { ResponseInfo } from "./models/response-models.js";
+
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateRequestBodyMap } from "../shared/request-body-maps.js";
 import { generateResponseMap } from "../shared/response-maps.js";
@@ -30,11 +32,9 @@ export interface ContentTypeMaps {
  * Result of response handler generation
  */
 export interface ResponseHandlerResult {
-  discriminatedUnionTypeDefinition?: string;
-  discriminatedUnionTypeName?: string;
+  defaultResponseInfo?: ResponseInfo;
   responseHandlers: string[];
   responseMapName?: string;
-  responseMapType?: string;
   returnType: string;
 }
 
@@ -93,6 +93,7 @@ export function generateResponseHandlers(
   const analysis = analyzeResponseStructure({
     hasResponseContentTypeMap,
     operation,
+    responseMapName,
     typeImports,
   });
 
@@ -109,11 +110,9 @@ export function generateResponseHandlers(
   );
 
   return {
-    discriminatedUnionTypeDefinition: analysis.discriminatedUnionTypeDefinition,
-    discriminatedUnionTypeName: analysis.discriminatedUnionTypeName,
+    defaultResponseInfo: analysis.defaultResponseInfo,
     responseHandlers,
-    responseMapName: analysis.responseMapName,
-    responseMapType: analysis.responseMapType,
+    responseMapName: responseMapName || analysis.responseMapName, // Use parameter or derived value
     returnType,
   };
 }
