@@ -206,7 +206,6 @@ export function generateOperationFunction(
     parameterGroups: metadata.parameterGroups,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapName: metadata.responseHandlers.responseMapName,
-    responseMapType: metadata.responseHandlers.responseMapType,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap, // Use shouldGenerateResponseMap for type aliases

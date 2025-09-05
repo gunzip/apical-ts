@@ -14,63 +14,11 @@ import type {
 } from "./models/response-models.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { generateDiscriminatedUnionTypes } from "./discriminated-union-generator.js";
 import { getResponseContentType } from "./utils.js";
 
-interface BuildUnionTypesParams {
-  defaultResponseInfo?: ResponseInfo;
-  discriminatedUnionResult?: ReturnType<typeof generateDiscriminatedUnionTypes>;
-  responseMapName?: string;
-  responses: ResponseInfo[];
-}
-
-/*
- * Analyzes the complete response structure for an operation
-// Exported helper needed by server/client generators should appear before local helpers
-export function buildResponseTypeInfo(
-  statusCode: string,
-  response: ResponseObject,
-  operation: OperationObject,
-  typeImports: Set<string>,
-  hasResponseContentTypeMap: boolean,
-): ResponseInfo {
-  const contentType = getResponseContentType(response);
-  const contentTypeAnalysis = analyzeContentTypes(response);
-
-  let typeName: null | string = null;
-  let hasSchema = false;
-
-  if (contentType && response.content?.[contentType]?.schema) {
-    hasSchema = true;
-    typeName = resolveResponseTypeName(
-      response.content[contentType].schema,
-      operation,
-      statusCode,
-      typeImports,
-    );
-  }
-
-  const parsingStrategy = determineParsingStrategy(
-    contentType || "",
-    hasSchema,
-    contentTypeAnalysis,
-    hasResponseContentTypeMap,
-  );
-
-  return {
-    contentType,
-    hasSchema,
-    parsingStrategy,
-    statusCode,
-    typeName,
-  };
-}
-
- */
 // Interfaces (alphabetical keys inside)
 interface BuildUnionTypesParams {
   defaultResponseInfo?: ResponseInfo;
-  discriminatedUnionResult?: ReturnType<typeof generateDiscriminatedUnionTypes>;
   responseMapName?: string;
   responses: ResponseInfo[];
 }
@@ -104,7 +52,6 @@ export function analyzeResponseStructure(
   config: ResponseAnalysisConfig,
 ): ResponseAnalysis {
   const {
-    generateDiscriminatedUnion = false,
     hasResponseContentTypeMap = false,
     operation,
     responseMapName,
@@ -117,26 +64,15 @@ export function analyzeResponseStructure(
     hasResponseContentTypeMap,
   );
 
-  const discriminatedUnionResult =
-    operation.operationId && generateDiscriminatedUnion
-      ? generateDiscriminatedUnionTypes(
-          operation,
-          operation.operationId,
-          typeImports,
-        )
-      : undefined;
-
-  // Derive response map name for union types even if discriminated union generation is disabled
+  // Derive response map name for union types
   const effectiveResponseMapName =
     responseMapName ||
-    discriminatedUnionResult?.responseMapName ||
     (operation.operationId
       ? `${sanitizeIdentifier(operation.operationId).charAt(0).toUpperCase()}${sanitizeIdentifier(operation.operationId).slice(1)}ResponseMap`
       : undefined);
 
   const unionTypes = buildUnionTypes({
     defaultResponseInfo,
-    discriminatedUnionResult,
     responseMapName: effectiveResponseMapName,
     responses,
   });
@@ -144,11 +80,7 @@ export function analyzeResponseStructure(
   return {
     defaultResponseInfo,
     defaultReturnType: "ApiResponse<number, unknown>",
-    discriminatedUnionTypeDefinition:
-      discriminatedUnionResult?.unionTypeDefinition,
-    discriminatedUnionTypeName: discriminatedUnionResult?.unionTypeName,
     responseMapName: effectiveResponseMapName,
-    responseMapType: discriminatedUnionResult?.responseMapType,
     responses,
     unionTypes,
   };
@@ -255,12 +187,11 @@ export function resolveResponseTypeName(
 // Helpers (ordered alphabetically by name)
 function buildUnionTypes({
   defaultResponseInfo,
-  discriminatedUnionResult,
   responseMapName,
   responses,
 }: BuildUnionTypesParams): string[] {
   const unionTypes: string[] = [];
-  const mapName = responseMapName || discriminatedUnionResult?.responseMapName;
+  const mapName = responseMapName;
   const pushStandard = (info: ResponseInfo) => {
     const dataType = info.contentType ? "unknown" : "void";
     const statusLiteral =

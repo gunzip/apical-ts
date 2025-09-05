@@ -33,11 +33,8 @@ export interface ContentTypeMaps {
  */
 export interface ResponseHandlerResult {
   defaultResponseInfo?: ResponseInfo;
-  discriminatedUnionTypeDefinition?: string;
-  discriminatedUnionTypeName?: string;
   responseHandlers: string[];
   responseMapName?: string;
-  responseMapType?: string;
   returnType: string;
 }
 
@@ -94,7 +91,6 @@ export function generateResponseHandlers(
 ): ResponseHandlerResult {
   /* Analyze the response structure */
   const analysis = analyzeResponseStructure({
-    generateDiscriminatedUnion: false, // Client generator doesn't need discriminated union types
     hasResponseContentTypeMap,
     operation,
     responseMapName,
@@ -115,11 +111,8 @@ export function generateResponseHandlers(
 
   return {
     defaultResponseInfo: analysis.defaultResponseInfo,
-    discriminatedUnionTypeDefinition: analysis.discriminatedUnionTypeDefinition,
-    discriminatedUnionTypeName: analysis.discriminatedUnionTypeName,
     responseHandlers,
     responseMapName: responseMapName || analysis.responseMapName, // Use parameter or derived value
-    responseMapType: analysis.responseMapType,
     returnType,
   };
 }
