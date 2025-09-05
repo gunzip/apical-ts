@@ -131,12 +131,9 @@ ${responseHandlers.join("\n")}
         defaultResponseHandler
           ? `
         /* Handle OpenAPI default response */
-${defaultResponseHandler}
-
-        /* Return error for truly unexpected status codes */`
+${defaultResponseHandler}`
           : `
-        /* Return error for unexpected status codes instead of throwing */`
-      }
+        /* Return error for unexpected status codes instead of throwing */
         return {
           kind: "unexpected-response",
           isValid: false,
@@ -146,7 +143,8 @@ ${defaultResponseHandler}
             response,
           },
           error: \`Unexpected response status: \${response.status}\`,
-        } as const;
+        } as const;`
+      }
       }
     }
   } catch (error) {
