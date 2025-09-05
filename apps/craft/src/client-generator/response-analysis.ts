@@ -20,6 +20,7 @@ import { getResponseContentType } from "./utils.js";
 interface BuildUnionTypesParams {
   defaultResponseInfo?: ResponseInfo;
   discriminatedUnionResult?: ReturnType<typeof generateDiscriminatedUnionTypes>;
+  responseMapName?: string;
   responses: ResponseInfo[];
 }
 
@@ -70,6 +71,7 @@ export function buildResponseTypeInfo(
 interface BuildUnionTypesParams {
   defaultResponseInfo?: ResponseInfo;
   discriminatedUnionResult?: ReturnType<typeof generateDiscriminatedUnionTypes>;
+  responseMapName?: string;
   responses: ResponseInfo[];
 }
 
@@ -101,7 +103,13 @@ export function analyzeContentTypes(
 export function analyzeResponseStructure(
   config: ResponseAnalysisConfig,
 ): ResponseAnalysis {
-  const { hasResponseContentTypeMap = false, operation, typeImports } = config;
+  const {
+    generateDiscriminatedUnion = false,
+    hasResponseContentTypeMap = false,
+    operation,
+    responseMapName,
+    typeImports,
+  } = config;
 
   const { defaultResponseInfo, responses } = collectResponses(
     operation,
@@ -109,17 +117,27 @@ export function analyzeResponseStructure(
     hasResponseContentTypeMap,
   );
 
-  const discriminatedUnionResult = operation.operationId
-    ? generateDiscriminatedUnionTypes(
-        operation,
-        operation.operationId,
-        typeImports,
-      )
-    : undefined;
+  const discriminatedUnionResult =
+    operation.operationId && generateDiscriminatedUnion
+      ? generateDiscriminatedUnionTypes(
+          operation,
+          operation.operationId,
+          typeImports,
+        )
+      : undefined;
+
+  // Derive response map name for union types even if discriminated union generation is disabled
+  const effectiveResponseMapName =
+    responseMapName ||
+    discriminatedUnionResult?.responseMapName ||
+    (operation.operationId
+      ? `${sanitizeIdentifier(operation.operationId).charAt(0).toUpperCase()}${sanitizeIdentifier(operation.operationId).slice(1)}ResponseMap`
+      : undefined);
 
   const unionTypes = buildUnionTypes({
     defaultResponseInfo,
     discriminatedUnionResult,
+    responseMapName: effectiveResponseMapName,
     responses,
   });
 
@@ -129,7 +147,7 @@ export function analyzeResponseStructure(
     discriminatedUnionTypeDefinition:
       discriminatedUnionResult?.unionTypeDefinition,
     discriminatedUnionTypeName: discriminatedUnionResult?.unionTypeName,
-    responseMapName: discriminatedUnionResult?.responseMapName,
+    responseMapName: effectiveResponseMapName,
     responseMapType: discriminatedUnionResult?.responseMapType,
     responses,
     unionTypes,
@@ -227,7 +245,9 @@ export function resolveResponseTypeName(
   /* Inline schema: synthesize a type name based on operationId and status code */
   assert(operation.operationId, "Invalid operationId");
   const sanitizedOperationId = sanitizeIdentifier(operation.operationId);
-  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${statusCode}Response`;
+  const suffix =
+    statusCode === "default" ? "DefaultResponse" : `${statusCode}Response`;
+  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${suffix}`;
   typeImports.add(typeName);
   return typeName;
 }
@@ -236,10 +256,11 @@ export function resolveResponseTypeName(
 function buildUnionTypes({
   defaultResponseInfo,
   discriminatedUnionResult,
+  responseMapName,
   responses,
 }: BuildUnionTypesParams): string[] {
   const unionTypes: string[] = [];
-  const mapName = discriminatedUnionResult?.responseMapName;
+  const mapName = responseMapName || discriminatedUnionResult?.responseMapName;
   const pushStandard = (info: ResponseInfo) => {
     const dataType = info.contentType ? "unknown" : "void";
     const statusLiteral =

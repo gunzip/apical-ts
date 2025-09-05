@@ -32,7 +32,7 @@
     "start": "node dist/index.js",
     "generate:tests": "node dist/index.js generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client --generate-server",
     "prepublishOnly": "pnpm build:docs && pnpm run build",
-    "clean": "rm -rf examples/generated tests/integrations/generated"
+    "clean": "rm -rf tests/integrations/generated"
   },
   "keywords": [
     "openapi",

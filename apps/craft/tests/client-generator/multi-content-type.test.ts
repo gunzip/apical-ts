@@ -118,17 +118,17 @@ describe("Multi-content-type operation function generation", () => {
       "Promise<(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof PetFindByStatusResponseMap> : ApiResponseWithParse<200, typeof PetFindByStatusResponseMap>) | (TForceValidation extends true ? ApiResponseWithForcedParse<404, typeof PetFindByStatusResponseMap> : ApiResponseWithParse<404, typeof PetFindByStatusResponseMap>) | ApiResponseError>",
     );
 
-    // Check discriminated union type definition is generated
-    expect(result.functionCode).toContain(
+    // Check discriminated union type definition is NOT generated for client operations
+    expect(result.functionCode).not.toContain(
       "export type PetFindByStatusOperationResponse =",
     );
-    expect(result.functionCode).toContain(
+    expect(result.functionCode).not.toContain(
       '{ status: 200; contentType: "application/json"; data: PetFindByStatus200Response }',
     );
-    expect(result.functionCode).toContain(
+    expect(result.functionCode).not.toContain(
       '{ status: 200; contentType: "application/xml"; data: PetFindByStatus200Response }',
     );
-    expect(result.functionCode).toContain(
+    expect(result.functionCode).not.toContain(
       '{ status: 404; contentType: "text/plain"; data: PetFindByStatus404Response }',
     );
 
