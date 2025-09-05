@@ -25,6 +25,7 @@ async function demonstrateClient() {
           "http://example.com/photo1.jpg",
           "http://example.com/photo2.jpg",
         ],
+        someXmlProp: "<xml>data</xml>",
       },
       contentType: {
         // We Accept XML...
@@ -33,6 +34,7 @@ async function demonstrateClient() {
     },
     {
       ...globalConfig,
+      forceValidation: false,
       deserializers: {
         // ... so we Expect XML
         "application/xml": parseXml,
@@ -59,7 +61,7 @@ async function demonstrateClient() {
       }
     } else if (parsed.contentType == "application/xml") {
       // Only here we can access the parsed XML data properties!
-      console.log("Parsed XML data (name):", parsed.parsed.name);
+      console.log("Parsed XML data (name):", parsed.parsed.someXmlProp);
     } else if (parsed.contentType == "application/json") {
       // Shouldn't happen since we requested XML, but who knows!
       console.log("Parsed JSON data (name):", parsed.parsed.name);
