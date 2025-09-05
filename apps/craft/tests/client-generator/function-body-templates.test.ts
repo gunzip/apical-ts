@@ -218,9 +218,10 @@ describe("function-body-templates", () => {
         "POST",
         true,
         ['    case "200": return { status: 200, data };'],
-        "finalHeaders['X-Custom'] = customHeader;",
-        "finalHeaders['Authorization'] = token;",
-        "url.searchParams.append('filter', filter);",
+        undefined, // no defaultResponseHandler
+        "    finalHeaders['X-Custom'] = customHeader;",
+        "    finalHeaders['Authorization'] = token;",
+        "    url.searchParams.append('filter', filter);",
       );
 
       expect(result).toContain(
