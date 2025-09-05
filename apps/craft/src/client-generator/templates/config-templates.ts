@@ -101,7 +101,7 @@ export function renderApiResponseTypes(): string {
  * Represents a generic API response for the new discriminated union pattern.
  * @template S The HTTP status code.
  */
-export type ApiResponse<S extends number, T> =
+export type ApiResponse<S extends number | "default", T> =
   | {
       readonly isValid: true;
       readonly status: S;
@@ -170,7 +170,7 @@ export type ExtractResponseUnion<
  * Used when response map information is available for type-safe parsing
  */
 export type ApiResponseWithParse<
-  S extends number,
+  S extends number | "default",
   Map extends Record<string, Record<string, any>>,
 > = {
   readonly isValid: true;
@@ -197,7 +197,7 @@ export type ApiResponseWithParse<
  * Used when forceValidation flag is enabled for automatic response validation
  */
 export type ApiResponseWithForcedParse<
-  S extends number,
+  S extends number | "default",
   Map extends Record<string, Record<string, any>>,
 > = {
   readonly isValid: true;

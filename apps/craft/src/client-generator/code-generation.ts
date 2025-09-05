@@ -5,10 +5,7 @@ import {
   generateQueryParamHandling,
   type ParameterGroups,
 } from "./parameters.js";
-import {
-  generateSecurityHeaderHandling,
-  type SecurityHeader,
-} from "./security.js";
+import { type SecurityHeader } from "./security.js";
 import {
   determineFunctionBodyStructure,
   determineHeaderConfiguration,
@@ -16,6 +13,7 @@ import {
   renderHeadersObject,
 } from "./templates/function-body-templates.js";
 import { renderContentTypeSwitch } from "./templates/request-body-templates.js";
+import { renderSecurityHeaderHandling } from "./templates/security-templates.js";
 import { generatePathInterpolation } from "./utils.js";
 
 /**
@@ -24,6 +22,7 @@ import { generatePathInterpolation } from "./utils.js";
 export interface GenerateFunctionBodyOptions {
   authHeaders?: string[];
   contentTypeMaps: ContentTypeMaps;
+  defaultResponseHandler?: string;
   hasBody: boolean;
   method: string;
   operationSecurityHeaders?: SecurityHeader[];
@@ -46,6 +45,7 @@ export interface GenerateFunctionBodyOptions {
 export function generateFunctionBody({
   authHeaders,
   contentTypeMaps,
+  defaultResponseHandler,
   hasBody,
   method,
   operationSecurityHeaders,
@@ -64,7 +64,7 @@ export function generateFunctionBody({
   const headerParamLines = generateHeaderParamHandling(headerParams);
   const securityHeaderLines =
     operationSecurityHeaders && operationSecurityHeaders.length > 0
-      ? generateSecurityHeaderHandling(operationSecurityHeaders)
+      ? renderSecurityHeaderHandling(operationSecurityHeaders)
       : "";
 
   // Determine what components are needed for the function body
@@ -107,6 +107,7 @@ export function generateFunctionBody({
     method,
     hasBody,
     responseHandlers,
+    defaultResponseHandler,
     headerParamLines,
     securityHeaderLines,
     queryParamLines,

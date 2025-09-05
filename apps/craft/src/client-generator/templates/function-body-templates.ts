@@ -87,6 +87,7 @@ export function renderFunctionBody(
   method: string,
   hasBody: boolean,
   responseHandlers: string[],
+  defaultResponseHandler?: string,
   headerParamLines?: string,
   securityHeaderLines?: string,
   queryParamLines?: string,
@@ -126,8 +127,16 @@ ${headersContent}
 
     switch (response.status) {
 ${responseHandlers.join("\n")}
-      default: {
-        /* Return error for unexpected status codes instead of throwing */
+      default: {${
+        defaultResponseHandler
+          ? `
+        /* Handle OpenAPI default response */
+${defaultResponseHandler}
+
+        /* Return error for truly unexpected status codes */`
+          : `
+        /* Return error for unexpected status codes instead of throwing */`
+      }
         return {
           kind: "unexpected-response",
           isValid: false,

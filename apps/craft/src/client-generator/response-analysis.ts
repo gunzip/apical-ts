@@ -14,8 +14,14 @@ import type {
 } from "./models/response-models.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { generateDiscriminatedUnionTypes } from "./discriminated-union-generator.js";
 import { getResponseContentType } from "./utils.js";
+
+// Interfaces (alphabetical keys inside)
+interface BuildUnionTypesParams {
+  defaultResponseInfo?: ResponseInfo;
+  responseMapName?: string;
+  responses: ResponseInfo[];
+}
 
 /*
  * Analyzes the content type structure of a response
@@ -41,87 +47,46 @@ export function analyzeContentTypes(
   };
 }
 
-/*
- * Analyzes the complete response structure for an operation
- */
+// Main analysis entry
 export function analyzeResponseStructure(
   config: ResponseAnalysisConfig,
 ): ResponseAnalysis {
-  const { hasResponseContentTypeMap = false, operation, typeImports } = config;
-  const responses: ResponseInfo[] = [];
+  const {
+    hasResponseContentTypeMap = false,
+    operation,
+    responseMapName,
+    typeImports,
+  } = config;
 
-  if (operation.responses) {
-    const responseCodes = Object.keys(operation.responses).filter(
-      (code) => code !== "default",
-    );
-    responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  const { defaultResponseInfo, responses } = collectResponses(
+    operation,
+    typeImports,
+    hasResponseContentTypeMap,
+  );
 
-    for (const code of responseCodes) {
-      const response = operation.responses[code] as ResponseObject;
+  // Derive response map name for union types
+  const effectiveResponseMapName =
+    responseMapName ||
+    (operation.operationId
+      ? `${sanitizeIdentifier(operation.operationId).charAt(0).toUpperCase()}${sanitizeIdentifier(operation.operationId).slice(1)}ResponseMap`
+      : undefined);
 
-      const responseInfo = buildResponseTypeInfo(
-        code,
-        response,
-        operation,
-        typeImports,
-        hasResponseContentTypeMap,
-      );
-
-      responses.push(responseInfo);
-    }
-  }
-
-  /* Generate discriminated union types if operation has an operationId. The resulting
-   * union type now uses the suffix `OperationResponse` to avoid collisions with
-   * imported schema types (e.g. FooResponse). */
-  let discriminatedUnionResult;
-  if (operation.operationId) {
-    discriminatedUnionResult = generateDiscriminatedUnionTypes(
-      operation,
-      operation.operationId,
-      typeImports,
-    );
-  }
-
-  /* Generate union types - use conditional types when response map is available */
-  const unionTypes: string[] = [];
-  if (discriminatedUnionResult?.responseMapName) {
-    for (const responseInfo of responses) {
-      if (responseInfo.hasSchema) {
-        unionTypes.push(
-          `(TForceValidation extends true ? ApiResponseWithForcedParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}> : ApiResponseWithParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>)`,
-        );
-      } else {
-        const dataType = responseInfo.contentType ? "unknown" : "void";
-        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, ${dataType}>`);
-      }
-    }
-  } else {
-    /* Fallback to standard ApiResponse types */
-    for (const responseInfo of responses) {
-      if (responseInfo.hasSchema) {
-        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, unknown>`);
-      } else {
-        const dataType = responseInfo.contentType ? "unknown" : "void";
-        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, ${dataType}>`);
-      }
-    }
-  }
-
-  /* Always add ApiResponseError to the union for error handling */
-  unionTypes.push("ApiResponseError");
+  const unionTypes = buildUnionTypes({
+    defaultResponseInfo,
+    responseMapName: effectiveResponseMapName,
+    responses,
+  });
 
   return {
+    defaultResponseInfo,
     defaultReturnType: "ApiResponse<number, unknown>",
-    discriminatedUnionTypeDefinition:
-      discriminatedUnionResult?.unionTypeDefinition,
-    discriminatedUnionTypeName: discriminatedUnionResult?.unionTypeName,
-    responseMapName: discriminatedUnionResult?.responseMapName,
-    responseMapType: discriminatedUnionResult?.responseMapType,
+    responseMapName: effectiveResponseMapName,
     responses,
     unionTypes,
   };
 }
+
+/* ---------------- Internal helpers (extracted to reduce complexity) ---------------- */
 
 /*
  * Builds response type information for a single response
@@ -212,7 +177,106 @@ export function resolveResponseTypeName(
   /* Inline schema: synthesize a type name based on operationId and status code */
   assert(operation.operationId, "Invalid operationId");
   const sanitizedOperationId = sanitizeIdentifier(operation.operationId);
-  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${statusCode}Response`;
+  const suffix =
+    statusCode === "default" ? "DefaultResponse" : `${statusCode}Response`;
+  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${suffix}`;
   typeImports.add(typeName);
   return typeName;
+}
+
+// Helpers (ordered alphabetically by name)
+function buildUnionTypes({
+  defaultResponseInfo,
+  responseMapName,
+  responses,
+}: BuildUnionTypesParams): string[] {
+  const unionTypes: string[] = [];
+  const mapName = responseMapName;
+  const pushStandard = (info: ResponseInfo) => {
+    const dataType = info.contentType ? "unknown" : "void";
+    const statusLiteral =
+      info.statusCode === "default" ? '"default"' : info.statusCode;
+    unionTypes.push(`ApiResponse<${statusLiteral}, ${dataType}>`);
+  };
+  if (mapName) {
+    for (const info of responses) {
+      if (info.hasSchema) {
+        unionTypes.push(
+          `(TForceValidation extends true ? ApiResponseWithForcedParse<${info.statusCode}, typeof ${mapName}> : ApiResponseWithParse<${info.statusCode}, typeof ${mapName}>)`,
+        );
+      } else {
+        pushStandard(info);
+      }
+    }
+    if (defaultResponseInfo) {
+      if (defaultResponseInfo.hasSchema) {
+        unionTypes.push(
+          `(TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${mapName}> : ApiResponseWithParse<"default", typeof ${mapName}>)`,
+        );
+      } else {
+        pushStandard(defaultResponseInfo);
+      }
+    }
+  } else {
+    for (const info of responses) {
+      if (info.hasSchema) {
+        unionTypes.push(`ApiResponse<${info.statusCode}, unknown>`);
+      } else {
+        pushStandard(info);
+      }
+    }
+    if (defaultResponseInfo) {
+      if (defaultResponseInfo.hasSchema) {
+        unionTypes.push(`ApiResponse<"default", unknown>`);
+      } else {
+        pushStandard(defaultResponseInfo);
+      }
+    }
+  }
+  unionTypes.push("ApiResponseError");
+  return unionTypes;
+}
+
+function collectResponses(
+  operation: OperationObject,
+  typeImports: Set<string>,
+  hasResponseContentTypeMap: boolean,
+) {
+  const responses: ResponseInfo[] = [];
+  let defaultResponseInfo: ResponseInfo | undefined;
+
+  if (!operation.responses) {
+    return { defaultResponseInfo, responses };
+  }
+
+  const responseCodes = Object.keys(operation.responses).filter(
+    (code) => code !== "default",
+  );
+  responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+
+  for (const code of responseCodes) {
+    const response = operation.responses[code] as ResponseObject;
+    responses.push(
+      buildResponseTypeInfo(
+        code,
+        response,
+        operation,
+        typeImports,
+        hasResponseContentTypeMap,
+      ),
+    );
+  }
+
+  if (operation.responses.default) {
+    const response = operation.responses.default as ResponseObject;
+    defaultResponseInfo = buildResponseTypeInfo(
+      "default",
+      response,
+      operation,
+      typeImports,
+      hasResponseContentTypeMap,
+    );
+  }
+
+  return { defaultResponseInfo, responses };
 }

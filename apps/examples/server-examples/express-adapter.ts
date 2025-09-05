@@ -6,7 +6,8 @@ import type { Request, Response } from "express";
  * Standard response format from generated server wrappers
  */
 export interface ServerResponse {
-  status: number;
+  // Allow literal "default" produced by generators for OpenAPI default responses
+  status: number | "default";
   contentType?: string;
   data?: any;
 }
@@ -70,8 +71,10 @@ export function createExpressAdapter<
             ...params,
             path: remappedPath,
           });
+          const httpStatus =
+            typeof result.status === "number" ? result.status : 500;
           res
-            .status(result.status)
+            .status(httpStatus)
             .type(result.contentType || "application/json")
             .send(result.data);
         } catch (error) {

@@ -66,7 +66,7 @@ describe("precise ApiResponse types", () => {
       };
 
       const typeImports = new Set<string>();
-      const result = generateResponseHandlers(operation, typeImports);
+      const result = generateResponseHandlers(operation, typeImports, true);
 
       /* Should generate precise ApiResponseWithParse types */
       expect(result.returnType).toContain(
