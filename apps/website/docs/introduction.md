@@ -45,6 +45,10 @@ npx @apical-ts/craft generate \
   --generate-client \
   -i https://petstore.swagger.io/v2/swagger.json \
   -o generated
+
+# Install runtime dependencies for the generated code
+cd generated
+npm install
 ```
 
 This will create:
@@ -52,6 +56,9 @@ This will create:
 - **`server/`** - Typed handler wrappers
 - **`client/`** - Individual operation functions for each API endpoint
 - **`schemas/`** - Zod schemas and TypeScript types
+
+:::note The generated client and server code requires `zod` as a runtime
+dependency for schema validation. Make sure to install it in your project. :::
 
 ## Live Demo
 
