@@ -530,6 +530,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/DashedBodyTest"
 
+  /test-no-body:
+    get:
+      operationId: testNoBody
+      responses:
+        200:
+          description: Will send `Authenticated`
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+        default:
+          decription: Foo bar
+
 # -------------
 # Components
 # -------------
