@@ -2,7 +2,10 @@ import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 import { Result, err, ok } from "neverthrow";
 import { globalConfig } from "../generated/client/config.js";
 
-type ApiError<T> = Exclude<T, { isValid: true; status: 200 | 201 | 202 | 204 }>;
+type ApiError<T> = Exclude<
+  T,
+  { isValid: true; status: 200 | 201 | 202 | 204 } | { status: "default" }
+>;
 
 const getAvailablePets = async () =>
   safeCall(findPetsByStatus, { query: { status: "available" } });
@@ -38,7 +41,7 @@ const getAvailablePets = async () =>
 async function safeCall<
   TParams,
   TResponse extends { isValid: boolean } & Partial<{
-    status: number;
+    status: number | "default";
     parsed: any;
     error: any;
   }>,
@@ -68,6 +71,7 @@ async function safeCall<
   if (
     response.isValid === true &&
     "status" in response &&
+    response.status !== "default" &&
     typeof response.status === "number" &&
     response.status >= 200 &&
     response.status < 300 &&

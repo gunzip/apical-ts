@@ -240,7 +240,9 @@ describe("client-generator config-generator", () => {
       expect(result).toContain("export type AuthHeaders = 'custom-token';");
       expect(result).toContain("// Default global configuration - immutable");
       expect(result).toContain("export const globalConfig: GlobalConfig");
-      expect(result).toContain("export type ApiResponse<S extends number, T>");
+      expect(result).toContain(
+        'export type ApiResponse<S extends number | "default", T>',
+      );
       expect(result).toContain("export function configureOperations");
     });
   });

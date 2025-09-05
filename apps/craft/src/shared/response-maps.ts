@@ -92,6 +92,34 @@ export function generateResponseMap(
     }
   }
 
+  // Handle default response (catch-all) if present with content
+  if (operation.responses && "default" in operation.responses) {
+    const defaultResponse = operation.responses.default;
+    if (defaultResponse && !("$ref" in defaultResponse)) {
+      const content = defaultResponse.content;
+      if (content) {
+        const defaultContentTypes: { contentType: string; typeName: string }[] =
+          [];
+        for (const [contentType, mediaType] of Object.entries(content)) {
+          if (!mediaType.schema) continue;
+          const typeName = resolveSchemaTypeName(
+            mediaType.schema,
+            operationId,
+            `DefaultResponse`,
+            typeImports,
+          );
+          allContentTypes.add(contentType);
+          if (!defaultContentType) defaultContentType = contentType;
+          defaultContentTypes.push({ contentType, typeName });
+        }
+        if (defaultContentTypes.length > 0) {
+          statusCodes.push("default");
+          statusToContentTypes["default"] = defaultContentTypes;
+        }
+      }
+    }
+  }
+
   contentTypeCount = allContentTypes.size;
   shouldGenerateResponseMap = statusCodes.length > 1 || contentTypeCount > 1;
 
