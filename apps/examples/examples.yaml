@@ -51,7 +51,7 @@ paths:
               $ref: "#/components/schemas/Pet"
           application/xml:
             schema:
-              $ref: "#/components/schemas/Pet"
+              $ref: "#/components/schemas/PetXml"
           application/x-www-form-urlencoded:
             schema:
               $ref: "#/components/schemas/Pet"
