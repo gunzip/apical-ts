@@ -36,14 +36,8 @@ export interface ResponseAnalysis {
   defaultResponseInfo?: ResponseInfo;
   /* Default return type if no responses found */
   defaultReturnType: string;
-  /* Discriminated union type definition */
-  discriminatedUnionTypeDefinition?: string;
-  /* Discriminated union type name (if generated) */
-  discriminatedUnionTypeName?: string;
   /* Response map for parsing */
   responseMapName?: string;
-  /* Response map type definition */
-  responseMapType?: string;
   responses: ResponseInfo[];
   /* Union type components for the return type */
   unionTypes: string[];
@@ -53,8 +47,6 @@ export interface ResponseAnalysis {
  * Configuration for analyzing responses
  */
 export interface ResponseAnalysisConfig {
-  /* Whether to generate discriminated union types (disabled for client operations) */
-  generateDiscriminatedUnion?: boolean;
   /* Whether the operation has a response content type map */
   hasResponseContentTypeMap?: boolean;
   /* The operation being analyzed */
