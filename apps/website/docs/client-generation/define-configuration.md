@@ -231,14 +231,15 @@ if needed.
 
 **Type**: `boolean`  
 **Required**: No  
-**Default**: `false`
+**Default**: `true`
 
-When `true`, forces validation of response data even when the operation would
-normally skip it. This is useful for:
+When `false `, skips validation of response data even when the operation would
+normally validate it. This is useful for:
 
-- Development environments where you want strict validation
-- Testing scenarios where you need to ensure response correctness
-- APIs that might return unexpected data structures
+- Production environments where performance is critical and you trust the API to
+  return correct data
+- APIs with inconsistent response structures where strict validation may cause
+  issues
 
 ```typescript
 const config = {

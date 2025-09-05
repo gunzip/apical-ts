@@ -4,9 +4,9 @@ Each operation returns a discriminated union: either a successful API response
 (`success: true` with a `status` code) or an error object (`success: false`)
 with a `kind` discriminator.
 
-Validation is opt-in by default (success responses expose a `parse()` method).
-You can enable automatic validation at runtime by providing
-`forceValidation: true` in the configuration you pass to an operation or via
+Validation is opt-out by default (success responses expose a `parsed` field).
+You can disable automatic validation at runtime by providing
+`forceValidation: false` in the configuration you pass to an operation or via
 `configureOperations`.
 
 ## Recommended Pattern
@@ -36,7 +36,7 @@ When an operation succeeds, the response object includes:
 - **`data`**: The raw response payload from the server
 - **`parse()`**: Method to validate and parse the response (when
   `forceValidation: false`)
-- **`parsed`**: Pre-validated data (when `forceValidation: true`)
+- **`parsed`**: Pre-validated data (when `forceValidation: true` - default)
 
 ### Error Responses
 

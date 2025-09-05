@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.27
+
+### Patch Changes
+
+- Remove generated unreachable code
+
 ## 0.0.26
 
 ### Patch Changes
