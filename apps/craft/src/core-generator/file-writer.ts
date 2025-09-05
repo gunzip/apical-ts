@@ -95,9 +95,9 @@ export async function ensureDirectory(dirPath: string): Promise<void> {
 }
 
 /**
- * Writes TypeScript content to a file
+ * Writes TypeScript content to a file at the specified path.
  */
-export async function writeFormattedFile(
+export async function writeTypeScriptFile(
   filePath: string,
   content: string,
 ): Promise<void> {
