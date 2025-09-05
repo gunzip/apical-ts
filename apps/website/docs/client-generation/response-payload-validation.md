@@ -5,15 +5,16 @@ OpenAPI specification for some status codes, the returned Promise resolves to a
 result object that provides either a `.parsed` field or a `.parse()` method,
 depending on the value of the `config.forceValidation` flag. You can set this
 flag in the configuration passed to an individual operation or globally using
-`configureOperations`.
+`configureOperations`. By default, `forceValidation` is set to `true`.
 
-- If you bind with `forceValidation: false` (or omit it), success responses
-  always expose a `.parse()` method after you narrow on `success === true` and a
-  specific `status`. You have to handle parsing errors manually in this case.
-- If you bind with `forceValidation: true`, success responses expose a `.parsed`
-  field (and no `.parse()` method) because validation is performed automatically
-  during the request lifecycle. In case of parsing errors, the returned result
-  will include a `ZodError` instance instead of the `parsed` field.
+- If you bind with `forceValidation: true` (or omit it), success responses
+  always expose a `.parsed` field (and no `.parse()` method) as Zod validation
+  is performed automatically during the request lifecycle. In case of parsing
+  errors, the returned result will include a `error: ZodError` instance instead
+  of the `parsed` field.
+- If you bind with `forceValidation: false`, success responses expose a
+  `.parse()` method after you narrow on `success === true` and a specific
+  `status`. You may call it and handle parsing errors manually.
 
 Don't worry if it seems confusing at first, type inference will help you.
 
@@ -32,53 +33,56 @@ import { getInventory } from "../generated/client/getInventory.js";
 import { getPetById } from "../generated/client/getPetById.js";
 
 async function demonstrateClient() {
-  // Manual validation bound client
-  // default configuration forceValidation=false
-  const lazyPetsResponse = await findPetsByStatus({
-    query: { status: "available" },
-  });
-  if (lazyPetsResponse.isValid === true && lazyPetsResponse.status === 200) {
-    lazyPetsResponse.parse();
-  }
-
-  // Manual validation bound client
-  // using configureOperation with forceValidation=false
-  const lazyClient = configureOperations(
-    { findPetsByStatus, getInventory, getPetById },
-    { ...globalConfig, forceValidation: false },
-  );
-  const petsResponse1 = await lazyClient.findPetsByStatus({
-    query: { status: "available" },
-  });
-  if (petsResponse1.isValid === true && petsResponse1.status === 200) {
-    petsResponse1.parse();
-  }
-
   // Automatic validation bound client
-  // overridden per op configuration forceValidation=true
-  const greedyPetResponse = await findPetsByStatus(
-    {
-      query: { status: "available" },
-    },
-    { ...globalConfig, forceValidation: true },
-  );
-  if (greedyPetResponse.isValid === true && greedyPetResponse.status === 200) {
+  // default configuration forceValidation=true
+  const greedyPetsResponse = await findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (
+    greedyPetsResponse.isValid === true &&
+    greedyPetsResponse.status === 200
+  ) {
     // automatic validation: .parsed available
-    greedyPetResponse.parsed[0].name;
+    greedyPetsResponse.parsed[0].name;
   }
 
   // Automatic validation bound client
-  // with configureOperation and forceValidation=true
+  // using configureOperation with forceValidation=true
   const greedyClient = configureOperations(
     { findPetsByStatus, getInventory, getPetById },
     { ...globalConfig, forceValidation: true },
   );
-  const petsResponse2 = await greedyClient.findPetsByStatus({
+  const petsResponse1 = await greedyClient.findPetsByStatus({
+    query: { status: "available" },
+  });
+  if (petsResponse1.isValid === true && petsResponse1.status === 200) {
+    // bound automatic validation: .parsed available
+    petsResponse1.parsed;
+  }
+
+  // Manual validation bound client
+  // overridden per op configuration forceValidation=false
+  const lazyPetResponse = await findPetsByStatus(
+    {
+      query: { status: "available" },
+    },
+    { ...globalConfig, forceValidation: false },
+  );
+  if (lazyPetResponse.isValid === true && lazyPetResponse.status === 200) {
+    lazyPetResponse.parse();
+  }
+
+  // Manual validation bound client
+  // with configureOperation and forceValidation=false
+  const lazyClient = configureOperations(
+    { findPetsByStatus, getInventory, getPetById },
+    { ...globalConfig, forceValidation: false },
+  );
+  const petsResponse2 = await lazyClient.findPetsByStatus({
     query: { status: "available" },
   });
   if (petsResponse2.isValid === true && petsResponse2.status === 200) {
-    // bound automatic validation: .parsed available
-    petsResponse2.parsed;
+    petsResponse2.parse();
   }
 }
 
@@ -193,43 +197,42 @@ if (result.isValid && result.status === 200) {
 }
 ```
 
-## Why is Runtime Validation Opt-In?
+## Runtime Validation: Enabled or Disabled?
 
-TypeScript client generator uses Zod for payload validation and parsing, but
-we've made this feature opt-in rather than mandatory. This design choice
-provides several key advantages:
+TypeScript client generator uses Zod for payload validation and parsing. By
+default we've made payload parsing enabled by default.
 
-- **Integration with Existing Systems**: This approach allows for seamless
-  integration with other validation mechanisms already present in your codebase.
-  If you have existing business logic that handles data validation, disabled
-  runtime parsing at the client level avoids redundancy and streamlines your
-  data flow.
+This design choice provides some advantages:
 
-- **Robustness in the Real World**: APIs responses can be unpredictable. You
-  might encounter non-documented fields or slight deviations from the OpenAPI
-  specification. Making validation optional prevents the client from crashing on
-  unexpected—but often harmless—payloads, ensuring your application remains
-  resilient.
+- **Type Safety First**: With validation enabled by default, you get immediate
+  feedback when API responses don't match the OpenAPI specification, helping
+  catch integration issues early.
 
-- **Performance**: Parsing and validating a payload comes with a computational
-  cost. By allowing you to opt-in, you can decide to skip validation for
-  non-critical API calls, leading to better performance, especially in
-  high-volume scenarios.
+- **Development Experience**: Automatic validation means you can immediately
+  access validated data through the `.parsed` field without additional steps,
+  improving developer productivity.
 
-This approach gives you more control, allowing you to balance strict type-safety
-with the practical demands of working with real-world APIs.
+- **API Contract Enforcement**: By validating responses by default, the client
+  helps ensure that APIs adhere to their documented contracts, promoting better
+  API design and reliability.
 
-## When to Enable Automatic Validation
+However, you can still opt out of validation (globally or per-operation) for
+performance or compatibility reasons.
 
-Enable `forceValidation: true` when:
+### When to Keep Automatic Validation
 
-- **Trusted APIs**: When responses always match the OpenAPI specification
-- **Performance is Not Critical**: When the validation overhead is acceptable
-  for your use case
+Keep `forceValidation: true` (default) when:
 
-## When to Use Manual Validation
+- **Untrusted APIs**: When responses should always match the OpenAPI
+  specification
+- **Development and Testing**: When you want strict validation to catch contract
+  violations
+- **Type Safety Priority**: When you prefer compile-time guarantees about data
+  structure
 
-Use manual validation (omit or set `forceValidation: false`) when:
+### When to Switch to Manual Validation
+
+Switch to optional validation (set `forceValidation: false`) when:
 
 - **Huge Payloads**: When dealing with large responses where validation overhead
   is a concern
@@ -242,12 +245,11 @@ Use manual validation (omit or set `forceValidation: false`) when:
 
 ## Best Practices
 
-1. **Start with manual validation** for new integrations to understand the API
-   behavior
-2. **Enable automatic validation** for trusted, well-documented APIs
-3. **Use the `isParsed` helper** to check validation results safely
-4. **Handle validation errors gracefully** - don't let them crash your
+1. **Start with automatic validation** (default) for new integrations to ensure
+   API compliance
+2. **Disable validation selectively** for performance-critical or untrusted APIs
+3. **Handle validation errors gracefully** - don't let them crash your
    application
-5. **Log validation failures** for debugging and monitoring
-6. **Consider performance implications** when choosing validation strategies
-7. **Test both validation modes** to ensure your error handling works correctly
+4. **Log validation failures** for debugging and monitoring
+5. **Consider performance implications** when choosing validation strategies
+6. **Test both validation modes** to ensure your error handling works correctly

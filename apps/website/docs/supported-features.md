@@ -29,9 +29,8 @@ experience.
 - 🛠️ **Operation-based client generation**: Generates one function per
   operation, with strong typing and per-operation configuration—no need for
   blacklisting operations you don't need!
-- 🛡️ **Zod v4 runtime validation (opt-in or automatic)**: Invoke
-  `response.parse()` manually, or enable `forceValidation: true` at runtime for
-  automatic validation
+- 🛡️ **Zod v4 runtime validation (automatic or manual)**: Get parsed responses
+  automatically or call `response.parse()` as needed
 - 📦 **Small footprint**: Generates each operation and schema/type in its own
   file for maximum tree-shaking and modularity
 - 🚀 **Fast code generation**: Optimized for quick generation times, even with

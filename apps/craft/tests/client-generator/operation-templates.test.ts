@@ -34,7 +34,7 @@ describe("operation-templates", () => {
       const result = buildGenericParams(config);
 
       expect(result.genericParams).toBe(
-        "<TForceValidation extends boolean = false>",
+        "<TForceValidation extends boolean = true>",
       );
       expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
@@ -61,7 +61,7 @@ describe("operation-templates", () => {
       const result = buildGenericParams(config);
 
       expect(result.genericParams).toBe(
-        '<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">',
+        '<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">',
       );
       expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
@@ -88,7 +88,7 @@ describe("operation-templates", () => {
       const result = buildGenericParams(config);
 
       expect(result.genericParams).toBe(
-        '<TForceValidation extends boolean = false, TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/json">',
+        '<TForceValidation extends boolean = true, TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/json">',
       );
       expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
@@ -116,7 +116,7 @@ describe("operation-templates", () => {
       const result = buildGenericParams(config);
 
       expect(result.genericParams).toBe(
-        '<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/xml">',
+        '<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/xml">',
       );
       expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
@@ -142,7 +142,7 @@ describe("operation-templates", () => {
       const result = buildGenericParams(config);
 
       expect(result.genericParams).toBe(
-        '<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/json">',
+        '<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/json">',
       );
       expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
     });
@@ -340,7 +340,7 @@ describe("operation-templates", () => {
         functionName: "testOperation",
         summary: "/** Test operation */\n",
         genericParams:
-          '<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">',
+          '<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">',
         parameterDeclaration:
           "{ body }: { body: TestRequestMap[TRequestContentType] }",
         parameterInterface: "{ body: TestRequestMap[TRequestContentType] }",
@@ -355,19 +355,19 @@ describe("operation-templates", () => {
       expect(result).toBe(
         "export type TestRequestMap = { 'application/json': User; };\n\n" +
           "/** Test operation */\n" +
-          'export function testOperation<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
+          'export function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  params: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config: GlobalConfig & { forceValidation: true }\n" +
           "): Promise<ApiResponse<200, User>>;\n" +
-          'export function testOperation<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
+          'export function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  params: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config: GlobalConfig & { forceValidation: false }\n" +
           "): Promise<ApiResponse<200, User>>;\n" +
-          'export function testOperation<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
+          'export function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  params: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config?: GlobalConfig\n" +
           "): Promise<ApiResponse<200, User>>;\n" +
-          'export async function testOperation<TForceValidation extends boolean = false, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
+          'export async function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  { body }: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config: GlobalConfig = globalConfig\n" +
           "): Promise<ApiResponse<200, User>> {\n" +
@@ -380,7 +380,7 @@ describe("operation-templates", () => {
       const config: OperationFunctionRenderConfig = {
         functionName: "testOperation",
         summary: "",
-        genericParams: "<TForceValidation extends boolean = false>",
+        genericParams: "<TForceValidation extends boolean = true>",
         parameterDeclaration: "{}: {} = {}",
         parameterInterface: "{}",
         updatedReturnType: "ApiResponse<200, User>",
@@ -391,19 +391,19 @@ describe("operation-templates", () => {
       const result = renderOperationFunction(config);
 
       expect(result).toBe(
-        "export function testOperation<TForceValidation extends boolean = false>(\n" +
+        "export function testOperation<TForceValidation extends boolean = true>(\n" +
           "  params: {},\n" +
           "  config: GlobalConfig & { forceValidation: true }\n" +
           "): Promise<ApiResponse<200, User>>;\n" +
-          "export function testOperation<TForceValidation extends boolean = false>(\n" +
+          "export function testOperation<TForceValidation extends boolean = true>(\n" +
           "  params: {},\n" +
           "  config: GlobalConfig & { forceValidation: false }\n" +
           "): Promise<ApiResponse<200, User>>;\n" +
-          "export function testOperation<TForceValidation extends boolean = false>(\n" +
+          "export function testOperation<TForceValidation extends boolean = true>(\n" +
           "  params: {},\n" +
           "  config?: GlobalConfig\n" +
           "): Promise<ApiResponse<200, User>>;\n" +
-          "export async function testOperation<TForceValidation extends boolean = false>(\n" +
+          "export async function testOperation<TForceValidation extends boolean = true>(\n" +
           "  {}: {} = {},\n" +
           "  config: GlobalConfig = globalConfig\n" +
           "): Promise<ApiResponse<200, User>> {\n" +

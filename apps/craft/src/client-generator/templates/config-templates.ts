@@ -234,7 +234,7 @@ export const globalConfig: GlobalConfig = {
   baseURL: '${server.defaultBaseURL}',
   fetch: fetch,
   headers: {},
-  forceValidation: false
+  forceValidation: true
 };
 
 /* A minimal, serializable representation of a fetch Response */
