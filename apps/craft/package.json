@@ -1,6 +1,6 @@
 {
   "name": "@apical-ts/craft",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "private": false,
   "description": "Generates fully-typed Zod v4 schemas and type-safe TypeScript REST API clients and server from OpenAPI 2.0, 3.0.x, and 3.1.x specifications.",
   "main": "dist/index.js",

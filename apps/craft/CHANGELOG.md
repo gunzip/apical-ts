@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.28
+
+### Patch Changes
+
+- Enable Zod validation by default
+
 ## 0.0.27
 
 ### Patch Changes
