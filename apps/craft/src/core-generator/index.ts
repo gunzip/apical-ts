@@ -153,6 +153,8 @@ export async function generate(options: GenerationOptions): Promise<void> {
       const description = schema.description
         ? schema.description.trim()
         : undefined;
+
+      // Generate regular schema
       const promise = limit(() =>
         generateSchemaFile(sanitizedName, schema, description, {
           strictValidation,
@@ -162,11 +164,25 @@ export async function generate(options: GenerationOptions): Promise<void> {
         }),
       );
       schemaGenerationPromises.push(promise);
+
+      // Generate strict schema for server when generateServer is enabled
+      if (genServer) {
+        const strictPromise = limit(() =>
+          generateSchemaFile(`${sanitizedName}Strict`, schema, description, {
+            strictValidation: true,
+          }).then((schemaFile) => {
+            const filePath = path.join(schemasDir, schemaFile.fileName);
+            return fs.writeFile(filePath, schemaFile.content);
+          }),
+        );
+        schemaGenerationPromises.push(strictPromise);
+      }
     }
 
     // Generate request schemas from operations
     const requestSchemas = extractRequestSchemas(openApiDoc);
     for (const [name, schema] of requestSchemas) {
+      // Generate regular request schema
       const promise = limit(() =>
         generateRequestSchemaFile(name, schema, { strictValidation }).then(
           (schemaFile) => {
@@ -176,11 +192,25 @@ export async function generate(options: GenerationOptions): Promise<void> {
         ),
       );
       schemaGenerationPromises.push(promise);
+
+      // Generate strict request schema for server when generateServer is enabled
+      if (genServer) {
+        const strictPromise = limit(() =>
+          generateRequestSchemaFile(`${name}Strict`, schema, {
+            strictValidation: true,
+          }).then((schemaFile) => {
+            const filePath = path.join(schemasDir, schemaFile.fileName);
+            return fs.writeFile(filePath, schemaFile.content);
+          }),
+        );
+        schemaGenerationPromises.push(strictPromise);
+      }
     }
 
     // Generate response schemas from operations
     const responseSchemas = extractResponseSchemas(openApiDoc);
     for (const [name, schema] of responseSchemas) {
+      // Generate regular response schema
       const promise = limit(() =>
         generateResponseSchemaFile(name, schema, { strictValidation }).then(
           (schemaFile) => {
@@ -190,6 +220,19 @@ export async function generate(options: GenerationOptions): Promise<void> {
         ),
       );
       schemaGenerationPromises.push(promise);
+
+      // Generate strict response schema for server when generateServer is enabled
+      if (genServer) {
+        const strictPromise = limit(() =>
+          generateResponseSchemaFile(`${name}Strict`, schema, {
+            strictValidation: true,
+          }).then((schemaFile) => {
+            const filePath = path.join(schemasDir, schemaFile.fileName);
+            return fs.writeFile(filePath, schemaFile.content);
+          }),
+        );
+        schemaGenerationPromises.push(strictPromise);
+      }
     }
   }
 

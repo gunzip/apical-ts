@@ -118,6 +118,30 @@ export function generateResponseHandlers(
 }
 
 /*
+ * Resolves a schema to a TypeScript type name. Inline schemas get a synthetic
+ * operation-scoped name; referenced schemas reuse their component name.
+ */
+// Exported so server generator can reuse schema naming logic without duplication
+export function resolveSchemaTypeName(
+  schema: ContentTypeMapping["schema"],
+  operationId: string,
+  suffix: string,
+  typeImports: Set<string>,
+): string {
+  if (isReferenceObject(schema)) {
+    const originalSchemaName = schema.$ref.split("/").pop();
+    assert(originalSchemaName, "Invalid $ref in schema");
+    const typeName = sanitizeIdentifier(originalSchemaName as string);
+    typeImports.add(typeName);
+    return typeName;
+  }
+  const sanitizedOperationId = sanitizeIdentifier(operationId);
+  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${suffix}`;
+  typeImports.add(typeName);
+  return typeName;
+}
+
+/*
  * Build the request content-type map for an operation using shared logic.
  * Returns default request content type, count and the map type body.
  */
@@ -163,29 +187,3 @@ function buildResponseContentTypeMap(
     responseMapType: result.responseMapType,
   };
 }
-
-/*
- * Resolves a schema to a TypeScript type name. Inline schemas get a synthetic
- * operation-scoped name; referenced schemas reuse their component name.
- */
-// Exported so server generator can reuse schema naming logic without duplication
-function resolveSchemaTypeName(
-  schema: ContentTypeMapping["schema"],
-  operationId: string,
-  suffix: string,
-  typeImports: Set<string>,
-): string {
-  if (isReferenceObject(schema)) {
-    const originalSchemaName = schema.$ref.split("/").pop();
-    assert(originalSchemaName, "Invalid $ref in schema");
-    const typeName = sanitizeIdentifier(originalSchemaName as string);
-    typeImports.add(typeName);
-    return typeName;
-  }
-  const sanitizedOperationId = sanitizeIdentifier(operationId);
-  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${suffix}`;
-  typeImports.add(typeName);
-  return typeName;
-}
-
-export { resolveSchemaTypeName };

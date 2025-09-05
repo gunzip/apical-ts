@@ -25,6 +25,7 @@ async function demonstrateClient() {
           "http://example.com/photo1.jpg",
           "http://example.com/photo2.jpg",
         ],
+        someXmlProp: "some value",
       },
       contentType: {
         // We Accept XML...
