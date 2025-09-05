@@ -26,10 +26,7 @@ async function demonstrateCustomFetch() {
 
   if (response.isValid && response.status === 200) {
     console.log("Successfully fetched pets with credentials included");
-    const parsed = response.parse();
-    if (parsed && "parsed" in parsed) {
-      console.log(`Found ${parsed.parsed.length} pets`);
-    }
+    console.log(`Found ${response.parsed.length} pets`);
   } else if (!response.isValid) {
     console.error("Error fetching pets:", response.error);
   } else {
