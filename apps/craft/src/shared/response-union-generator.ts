@@ -1,10 +1,13 @@
-/* Shared response union type generation logic */
+/* Shared response union generation logic */
 
 import type { OperationObject } from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
-import { resolveSchemaTypeName } from "../client-generator/responses.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import {
+  resolveSchemaTypeName,
+  resolveStrictSchemaTypeName,
+} from "./schema-type-resolver.js";
 
 /**
  * Response union member for type generation
@@ -13,6 +16,14 @@ export interface ResponseUnionMember {
   contentType?: string | undefined;
   dataType?: string | undefined;
   statusCode: string;
+}
+
+/**
+ * Options for response union generation
+ */
+export interface ResponseUnionOptions {
+  /* Whether to use strict schemas (for server generation) */
+  useStrictSchemas?: boolean;
 }
 
 /**
@@ -33,6 +44,7 @@ export function generateResponseUnion(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
+  options: ResponseUnionOptions = {},
 ): ResponseUnionResult {
   const unionMembers: ResponseUnionMember[] = [];
   const responseTypeName = `${sanitizeIdentifier(operationId)}Response`;
@@ -65,12 +77,19 @@ export function generateResponseUnion(
         );
         if (responseGroup) {
           for (const mapping of responseGroup.contentTypes) {
-            const dataType = resolveSchemaTypeName(
-              mapping.schema,
-              operationId,
-              `${statusCode}Response`,
-              typeImports,
-            );
+            const dataType = options.useStrictSchemas
+              ? resolveStrictSchemaTypeName(
+                  mapping.schema,
+                  operationId,
+                  `${statusCode}Response`,
+                  typeImports,
+                )
+              : resolveSchemaTypeName(
+                  mapping.schema,
+                  operationId,
+                  `${statusCode}Response`,
+                  typeImports,
+                );
             unionMembers.push({
               contentType: mapping.contentType,
               dataType,

@@ -1,31 +1,23 @@
-/* Shared request body mapping logic */
+/* Server-specific request body mapping logic using strict schemas */
 
 import type { OperationObject, RequestBodyObject } from "openapi3-ts/oas31";
 
 import type { ContentTypeMapping } from "./types.js";
 
 import { extractRequestContentTypes } from "../client-generator/operation-extractor.js";
-import { resolveSchemaTypeName } from "./schema-type-resolver.js";
+import { resolveStrictSchemaTypeName } from "./schema-type-resolver.js";
 
 /**
- * Options for request body map generation
+ * Result of server request body map generation
  */
-export interface RequestBodyMapOptions {
-  /* Whether to generate TypeScript types */
-  generateTypes?: boolean;
-}
-
-/**
- * Result of request body map generation
- */
-export interface RequestBodyMapResult {
+export interface ServerRequestBodyMapResult {
   /* Number of content types */
   contentTypeCount: number;
   /* Content type mappings */
   contentTypeMappings: ContentTypeMapping[];
   /* Default content type if any */
   defaultContentType: null | string;
-  /* Map from content type to schema type */
+  /* Map from content type to schema type (using strict schemas) */
   requestMapType: string;
   /* Whether a request map should be generated */
   shouldGenerateRequestMap: boolean;
@@ -34,14 +26,14 @@ export interface RequestBodyMapResult {
 }
 
 /**
- * Generates request body content type mapping
- * Maps content type → Zod schema for request bodies
+ * Generates server request body content type mapping using strict schemas
+ * Maps content type → Strict Zod schema for request bodies
  */
-export function generateRequestBodyMap(
+export function generateServerRequestBodyMap(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
-): RequestBodyMapResult {
+): ServerRequestBodyMapResult {
   let defaultContentType: null | string = null;
   let contentTypeCount = 0;
   let requestMapType = "{}";
@@ -65,24 +57,13 @@ export function generateRequestBodyMap(
   contentTypeCount = requestContentTypes.contentTypes.length;
   shouldGenerateRequestMap = contentTypeCount > 1;
 
-  if (contentTypeCount === 0) {
-    return {
-      contentTypeCount,
-      contentTypeMappings,
-      defaultContentType,
-      requestMapType,
-      shouldGenerateRequestMap,
-      typeImports: new Set(),
-    };
-  }
-
   /* First content-type is chosen as default */
   defaultContentType = requestContentTypes.contentTypes[0].contentType;
 
   const requestMappings = requestContentTypes.contentTypes.map((mapping) => {
     contentTypeMappings.push(mapping);
 
-    const typeName = resolveSchemaTypeName(
+    const typeName = resolveStrictSchemaTypeName(
       mapping.schema,
       operationId,
       "Request",

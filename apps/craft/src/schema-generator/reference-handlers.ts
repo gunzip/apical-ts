@@ -15,6 +15,7 @@ interface ZodSchemaResult {
 export function handleReference(
   schema: ReferenceObject,
   result: ZodSchemaResult,
+  strictValidation = false,
 ): ZodSchemaResult {
   if ("$ref" in schema && schema.$ref) {
     const ref = schema.$ref;
@@ -22,8 +23,11 @@ export function handleReference(
     if (ref.startsWith("#/components/schemas/")) {
       const originalSchemaName = ref.replace("#/components/schemas/", "");
       const schemaName: string = sanitizeIdentifier(originalSchemaName);
-      result.imports.add(schemaName);
-      result.code = schemaName;
+      const finalSchemaName = strictValidation
+        ? `${schemaName}Strict`
+        : schemaName;
+      result.imports.add(finalSchemaName);
+      result.code = finalSchemaName;
       return result;
     }
   }

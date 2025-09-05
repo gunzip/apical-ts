@@ -62,7 +62,7 @@ export function zodSchemaToCode(
 
   /* References */
   if (!isSchemaObject(schema)) {
-    return handleReference(schema, result);
+    return handleReference(schema, result, strictValidation);
   }
 
   const effectiveType = inferEffectiveType(schema);

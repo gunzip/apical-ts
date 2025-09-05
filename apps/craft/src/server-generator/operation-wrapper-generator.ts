@@ -8,10 +8,11 @@ import type {
 import assert from "assert";
 
 import { extractOperationMetadata } from "../client-generator/operation-function-generator.js";
-import { extractParameterGroups } from "../client-generator/parameters.js"; /* Kept for ServerOperationMetadata type compatibility */
-import { resolveRequestBodyType } from "../client-generator/request-body.js"; /* Kept for ServerOperationMetadata type compatibility */
-import { generateContentTypeMaps } from "../client-generator/responses.js"; /* Kept for ServerOperationMetadata type compatibility */
+import { extractParameterGroups } from "../client-generator/parameters.js";
+import { resolveRequestBodyType } from "../client-generator/request-body.js";
+import { generateContentTypeMaps } from "../client-generator/responses.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { generateServerRequestBodyMap } from "../shared/server-request-body-maps.js";
 import {
   buildServerRequestMap,
   buildServerResponseMap,
@@ -34,6 +35,7 @@ export interface ServerOperationMetadata {
     hasBody: boolean;
     requestMapTypeName?: string;
     responseMapTypeName?: string;
+    serverRequestBodyMap: ReturnType<typeof generateServerRequestBodyMap>;
     shouldGenerateRequestMap: boolean;
     shouldGenerateResponseMap: boolean;
   };
@@ -73,6 +75,14 @@ export function extractServerOperationMetadata(
   const hasBody = clientMeta.hasBody;
   const bodyTypeInfo = clientMeta.bodyInfo.bodyTypeInfo;
 
+  /* Generate strict server request body map */
+  const typeImports = new Set<string>();
+  const serverRequestBodyMap = generateServerRequestBodyMap(
+    operation,
+    operationId,
+    typeImports,
+  );
+
   const shouldGenerateRequestMap = contentTypeMaps.requestContentTypeCount > 1;
   const shouldGenerateResponseMap =
     contentTypeMaps.responseContentTypeCount > 1;
@@ -93,6 +103,7 @@ export function extractServerOperationMetadata(
       hasBody,
       requestMapTypeName,
       responseMapTypeName,
+      serverRequestBodyMap,
       shouldGenerateRequestMap,
       shouldGenerateResponseMap,
     },
