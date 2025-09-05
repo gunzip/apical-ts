@@ -200,7 +200,7 @@ if (result.isValid && result.status === 200) {
 ## Runtime Validation: Enabled or Disabled?
 
 TypeScript client generator uses Zod for payload validation and parsing. By
-default we've made payload parsing enabled by default.
+default payload parsing is enabled during the request lifecycle.
 
 This design choice provides some advantages:
 
