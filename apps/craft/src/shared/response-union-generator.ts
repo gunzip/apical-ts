@@ -2,8 +2,6 @@
 
 import type { OperationObject } from "openapi3-ts/oas31";
 
-import { isReferenceObject } from "openapi3-ts/oas31";
-
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
 import { resolveSchemaTypeName } from "../client-generator/responses.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
@@ -87,42 +85,6 @@ export function generateResponseUnion(
         });
       }
     }
-
-    /* Handle default response if present */
-    if (operation.responses.default) {
-      const defaultResponse = operation.responses.default;
-      if (!isReferenceObject(defaultResponse) && defaultResponse.content) {
-        /* Default response has content */
-        const contentTypes = Object.keys(defaultResponse.content);
-        for (const contentType of contentTypes) {
-          const mediaType = defaultResponse.content[contentType];
-          if (mediaType.schema) {
-            const dataType = resolveSchemaTypeName(
-              mediaType.schema,
-              operationId,
-              "DefaultResponse",
-              typeImports,
-            );
-            unionMembers.push({
-              contentType,
-              dataType,
-              statusCode: "default",
-            });
-          } else {
-            /* Default response has content but no schema */
-            unionMembers.push({
-              contentType,
-              statusCode: "default",
-            });
-          }
-        }
-      } else {
-        /* Default response has no content */
-        unionMembers.push({
-          statusCode: "default",
-        });
-      }
-    }
   }
 
   /* Generate the union type definition */
@@ -160,14 +122,10 @@ function generateUnionTypeDefinition(
     return `export type ${typeName} = never;`;
   }
 
-  const memberStrings = members.map((member) => {
-    /* Properly quote "default" status codes for server response types */
-    const statusCode =
-      member.statusCode === "default"
-        ? `"${member.statusCode}"`
-        : member.statusCode;
-    return `  | { status: ${statusCode}; ${member.contentType ? `contentType: "${member.contentType}";` : ""} ${member.dataType ? `data: ${member.dataType};` : ""} }`;
-  });
+  const memberStrings = members.map(
+    (member) =>
+      `  | { status: ${member.statusCode}; ${member.contentType ? `contentType: "${member.contentType}";` : ""} ${member.dataType ? `data: ${member.dataType};` : ""} }`,
+  );
 
   return `export type ${typeName} =
 ${memberStrings.join("\n")};`;

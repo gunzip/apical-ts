@@ -82,15 +82,15 @@ describe("response-templates", () => {
 
       const result = renderResponseHandlers(responses);
 
-      expect(result).toHaveLength(2);
-      expect(result[0]).toContain("case 200:");
-      expect(result[1]).toContain("case 404:");
-      expect(result[1]).toContain("data: undefined");
+      expect(result.caseHandlers).toHaveLength(2);
+      expect(result.caseHandlers[0]).toContain("case 200:");
+      expect(result.caseHandlers[1]).toContain("case 404:");
+      expect(result.caseHandlers[1]).toContain("data: undefined");
     });
 
     it("should handle empty responses array", () => {
       const result = renderResponseHandlers([]);
-      expect(result).toHaveLength(0);
+      expect(result.caseHandlers).toHaveLength(0);
     });
   });
 

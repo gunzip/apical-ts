@@ -48,25 +48,32 @@ export function analyzeResponseStructure(
   config: ResponseAnalysisConfig,
 ): ResponseAnalysis {
   const { hasResponseContentTypeMap = false, operation, typeImports } = config;
+  const responses: ResponseInfo[] = [];
 
-  /* Process response codes and default response */
-  const responses = processResponseCodes(
-    operation,
-    typeImports,
-    hasResponseContentTypeMap,
-  );
+  if (operation.responses) {
+    const responseCodes = Object.keys(operation.responses).filter(
+      (code) => code !== "default",
+    );
+    responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 
-  const defaultResponse = processDefaultResponse(
-    operation,
-    typeImports,
-    hasResponseContentTypeMap,
-  );
+    for (const code of responseCodes) {
+      const response = operation.responses[code] as ResponseObject;
 
-  if (defaultResponse) {
-    responses.push(defaultResponse);
+      const responseInfo = buildResponseTypeInfo(
+        code,
+        response,
+        operation,
+        typeImports,
+        hasResponseContentTypeMap,
+      );
+
+      responses.push(responseInfo);
+    }
   }
 
-  /* Generate discriminated union types if operation has an operationId */
+  /* Generate discriminated union types if operation has an operationId. The resulting
+   * union type now uses the suffix `OperationResponse` to avoid collisions with
+   * imported schema types (e.g. FooResponse). */
   let discriminatedUnionResult;
   if (operation.operationId) {
     discriminatedUnionResult = generateDiscriminatedUnionTypes(
@@ -76,15 +83,29 @@ export function analyzeResponseStructure(
     );
   }
 
-  /* Generate union types based on available response map */
-  let unionTypes: string[];
+  /* Generate union types - use conditional types when response map is available */
+  const unionTypes: string[] = [];
   if (discriminatedUnionResult?.responseMapName) {
-    unionTypes = generateUnionTypesWithResponseMap(
-      responses,
-      discriminatedUnionResult.responseMapName,
-    );
+    for (const responseInfo of responses) {
+      if (responseInfo.hasSchema) {
+        unionTypes.push(
+          `(TForceValidation extends true ? ApiResponseWithForcedParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}> : ApiResponseWithParse<${responseInfo.statusCode}, typeof ${discriminatedUnionResult.responseMapName}>)`,
+        );
+      } else {
+        const dataType = responseInfo.contentType ? "unknown" : "void";
+        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, ${dataType}>`);
+      }
+    }
   } else {
-    unionTypes = generateFallbackUnionTypes(responses);
+    /* Fallback to standard ApiResponse types */
+    for (const responseInfo of responses) {
+      if (responseInfo.hasSchema) {
+        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, unknown>`);
+      } else {
+        const dataType = responseInfo.contentType ? "unknown" : "void";
+        unionTypes.push(`ApiResponse<${responseInfo.statusCode}, ${dataType}>`);
+      }
+    }
   }
 
   /* Always add ApiResponseError to the union for error handling */
@@ -191,107 +212,7 @@ export function resolveResponseTypeName(
   /* Inline schema: synthesize a type name based on operationId and status code */
   assert(operation.operationId, "Invalid operationId");
   const sanitizedOperationId = sanitizeIdentifier(operation.operationId);
-  const statusSuffix = statusCode === "default" ? "Default" : statusCode;
-  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${statusSuffix}Response`;
+  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${statusCode}Response`;
   typeImports.add(typeName);
   return typeName;
-}
-
-/*
- * Generates fallback union types without response map
- */
-function generateFallbackUnionTypes(responses: ResponseInfo[]): string[] {
-  return responses.map((responseInfo) => {
-    const statusCodeKey =
-      responseInfo.statusCode === "default"
-        ? `"${responseInfo.statusCode}"`
-        : responseInfo.statusCode;
-    /* Use number type for default responses since they represent any unspecified status code */
-    const statusCodeType =
-      responseInfo.statusCode === "default" ? "number" : statusCodeKey;
-
-    if (responseInfo.hasSchema) {
-      return `ApiResponse<${statusCodeType}, unknown>`;
-    } else {
-      const dataType = responseInfo.contentType ? "unknown" : "void";
-      return `ApiResponse<${statusCodeType}, ${dataType}>`;
-    }
-  });
-}
-
-/*
- * Generates union types using response map
- */
-function generateUnionTypesWithResponseMap(
-  responses: ResponseInfo[],
-  responseMapName: string,
-): string[] {
-  return responses.map((responseInfo) => {
-    const statusCodeKey =
-      responseInfo.statusCode === "default"
-        ? `"${responseInfo.statusCode}"`
-        : responseInfo.statusCode;
-    /* Use number type for default responses since they represent any unspecified status code */
-    const statusCodeType =
-      responseInfo.statusCode === "default" ? "number" : statusCodeKey;
-
-    if (responseInfo.hasSchema) {
-      return `(TForceValidation extends true ? ApiResponseWithForcedParse<${statusCodeType}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCodeType}, typeof ${responseMapName}>)`;
-    } else {
-      const dataType = responseInfo.contentType ? "unknown" : "void";
-      return `ApiResponse<${statusCodeType}, ${dataType}>`;
-    }
-  });
-}
-
-/*
- * Processes default response if present
- */
-function processDefaultResponse(
-  operation: OperationObject,
-  typeImports: Set<string>,
-  hasResponseContentTypeMap: boolean,
-): null | ResponseInfo {
-  if (!operation.responses?.default) {
-    return null;
-  }
-
-  const defaultResponse = operation.responses.default as ResponseObject;
-  return buildResponseTypeInfo(
-    "default",
-    defaultResponse,
-    operation,
-    typeImports,
-    hasResponseContentTypeMap,
-  );
-}
-
-/*
- * Processes regular response codes (excludes default)
- */
-function processResponseCodes(
-  operation: OperationObject,
-  typeImports: Set<string>,
-  hasResponseContentTypeMap: boolean,
-): ResponseInfo[] {
-  if (!operation.responses) {
-    return [];
-  }
-
-  const responses = operation.responses;
-  const responseCodes = Object.keys(responses).filter(
-    (code) => code !== "default",
-  );
-  responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-
-  return responseCodes.map((code) => {
-    const response = responses[code] as ResponseObject;
-    return buildResponseTypeInfo(
-      code,
-      response,
-      operation,
-      typeImports,
-      hasResponseContentTypeMap,
-    );
-  });
 }
