@@ -93,3 +93,19 @@ Each directory contains:
 
 The output directory will be created if it doesn't exist and existing files will
 be overwritten.
+
+## Formatting Generated Code
+
+For performance reasons, the CLI does not format the generated TypeScript files
+by default. To format them you may use [Biome](https://biomejs.dev/) running the
+following command in the output directory:
+
+```bash
+pnpx @biomejs/biome format --write .
+```
+
+Alternatively, you can use any other slower code formatter of your choice, e.g.
+
+```bash
+pnpx prettier --log-level=silent --write .
+```

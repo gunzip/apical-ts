@@ -1,6 +1,5 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
 
-import { format } from "prettier";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -10,11 +9,6 @@ import {
   type SchemaFileResult,
 } from "../../src/schema-generator/file-generators.js";
 import { zodSchemaToCode } from "../../src/schema-generator/schema-converter.js";
-
-// Mock prettier
-vi.mock("prettier", () => ({
-  format: vi.fn(),
-}));
 
 // Mock schema-converter
 vi.mock("../../src/schema-generator/schema-converter.js", () => ({
@@ -40,19 +34,12 @@ describe("schema-generator file-generators", () => {
         imports: new Set(),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\nexport const User = z.object({ name: z.string() });\nexport type User = z.infer<typeof User>;\n`,
-      );
-
       const result = await generateSchemaFile("User", schema);
 
       expect(result.fileName).toBe("User.ts");
       expect(result.content).toContain("export const User");
       expect(result.content).toContain("export type User");
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining("import { z } from 'zod';"),
-        { parser: "typescript" },
-      );
+      expect(result.content).toContain("import { z } from 'zod';");
     });
 
     it("should generate schema file with description", async () => {
@@ -65,20 +52,13 @@ describe("schema-generator file-generators", () => {
         imports: new Set(),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\n/**\n * User entity schema\n */\nexport const User = z.string();\nexport type User = z.infer<typeof User>;\n`,
-      );
-
       const result = await generateSchemaFile(
         "User",
         schema,
         "User entity schema",
       );
 
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining("/**\n * User entity schema\n */"),
-        { parser: "typescript" },
-      );
+      expect(result.content).toContain("/**\n * User entity schema\n */");
     });
 
     it("should generate schema file with multiline description", async () => {
@@ -91,21 +71,14 @@ describe("schema-generator file-generators", () => {
         imports: new Set(),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\n/**\n * User entity\n * Contains user information\n */\nexport const User = z.string();\nexport type User = z.infer<typeof User>;\n`,
-      );
-
       const result = await generateSchemaFile(
         "User",
         schema,
         "User entity\nContains user information",
       );
 
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "/**\n * User entity\n * Contains user information\n */",
-        ),
-        { parser: "typescript" },
+      expect(result.content).toContain(
+        "/**\n * User entity\n * Contains user information\n */",
       );
     });
 
@@ -119,20 +92,13 @@ describe("schema-generator file-generators", () => {
         imports: new Set(),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\n/**\n * Description with *\\/ delimiter\n */\nexport const User = z.string();\nexport type User = z.infer<typeof User>;\n`,
-      );
-
       const result = await generateSchemaFile(
         "User",
         schema,
         "Description with */ delimiter",
       );
 
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining("Description with *\\/ delimiter"),
-        { parser: "typescript" },
-      );
+      expect(result.content).toContain("Description with *\\/ delimiter");
     });
 
     it("should generate schema file with imports", async () => {
@@ -148,16 +114,9 @@ describe("schema-generator file-generators", () => {
         imports: new Set(["User"]),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\nimport { User } from "./User.js";\n\nexport const Profile = z.object({ user: User });\nexport type Profile = z.infer<typeof Profile>;\n`,
-      );
-
       const result = await generateSchemaFile("Profile", schema);
 
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining(`import { User } from "./User.js";`),
-        { parser: "typescript" },
-      );
+      expect(result.content).toContain(`import { User } from "./User.js";`);
     });
 
     it("should not import itself", async () => {
@@ -173,20 +132,10 @@ describe("schema-generator file-generators", () => {
         imports: new Set(["Profile", "User"]),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\nimport { Profile } from "./Profile.js";\n\nexport const User = z.object({ self: User });\nexport type User = z.infer<typeof User>;\n`,
-      );
-
       const result = await generateSchemaFile("User", schema);
 
-      expect(format).toHaveBeenCalledWith(
-        expect.stringMatching(/import \{ Profile \}/),
-        { parser: "typescript" },
-      );
-      expect(format).toHaveBeenCalledWith(
-        expect.not.stringMatching(/import \{ User \}/),
-        { parser: "typescript" },
-      );
+      expect(result.content).toMatch(/import \{ Profile \}/);
+      expect(result.content).not.toMatch(/import \{ User \}/);
     });
 
     it("should generate extensible enum schema", async () => {
@@ -201,17 +150,10 @@ describe("schema-generator file-generators", () => {
         imports: new Set(),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\nexport const Status = z.union([z.literal('value1'), z.literal('value2'), z.string()]);\nexport type Status = "value1" | "value2" | (string & {});\n`,
-      );
-
       const result = await generateSchemaFile("Status", schema);
 
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'export type Status = "value1" | "value2" | (string & {});',
-        ),
-        { parser: "typescript" },
+      expect(result.content).toContain(
+        'export type Status = "value1" | "value2" | (string & {});',
       );
     });
 
@@ -227,15 +169,10 @@ describe("schema-generator file-generators", () => {
         imports: new Set(),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\nexport const Type = z.union([z.literal('complex-value'), z.literal('another_value'), z.literal('123'), z.string()]);\nexport type Type = "complex-value" | "another_value" | "123" | (string & {});\n`,
-      );
-
       const result = await generateSchemaFile("Type", schema);
 
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining('"complex-value" | "another_value" | "123"'),
-        { parser: "typescript" },
+      expect(result.content).toContain(
+        '"complex-value" | "another_value" | "123"',
       );
     });
 
@@ -253,18 +190,10 @@ describe("schema-generator file-generators", () => {
         imports: new Set(["Role", "User"]),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\nimport { User } from "./User.js";\nimport { Role } from "./Role.js";\n\nexport const Profile = z.object({ user: User, role: Role });\nexport type Profile = z.infer<typeof Profile>;\n`,
-      );
-
       const result = await generateSchemaFile("Profile", schema);
 
-      expect(format).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /import \{ Role \} from "\.\/Role\.js";[\s\S]*import \{ User \} from "\.\/User\.js";/,
-        ),
-        { parser: "typescript" },
-      );
+      expect(result.content).toMatch(/import \{ Role \} from "\.\/Role\.js";/);
+      expect(result.content).toMatch(/import \{ User \} from "\.\/User\.js";/);
     });
   });
 
@@ -282,19 +211,14 @@ describe("schema-generator file-generators", () => {
         imports: new Set(),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\n/**\n * Request schema for createUser operation\n */\nexport const CreateUserRequest = z.object({ email: z.string() });\nexport type CreateUserRequest = z.infer<typeof CreateUserRequest>;\n`,
-      );
-
       const result = await generateRequestSchemaFile(
         "createUserRequest",
         schema,
       );
 
       expect(result.fileName).toBe("CreateUserRequest.ts");
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining("Request schema for createUser operation"),
-        { parser: "typescript" },
+      expect(result.content).toContain(
+        "Request schema for createUser operation",
       );
     });
 
@@ -307,10 +231,6 @@ describe("schema-generator file-generators", () => {
         code: "z.string()",
         imports: new Set(),
       });
-
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\n/**\n * Request schema for test operation\n */\nexport const TestRequest = z.string();\nexport type TestRequest = z.infer<typeof TestRequest>;\n`,
-      );
 
       const result = await generateRequestSchemaFile("testRequest", schema);
 
@@ -332,20 +252,13 @@ describe("schema-generator file-generators", () => {
         imports: new Set(),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\n/**\n * Response schema for CreateUser operation\n */\nexport const CreateUser200Response = z.object({ id: z.string() });\nexport type CreateUser200Response = z.infer<typeof CreateUser200Response>;\n`,
-      );
-
       const result = await generateResponseSchemaFile(
         "CreateUser200Response",
         schema,
       );
 
       expect(result.fileName).toBe("CreateUser200Response.ts");
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining("Response schema for CreateUser200"),
-        { parser: "typescript" },
-      );
+      expect(result.content).toContain("Response schema for CreateUser200");
     });
 
     it("should handle response names without Response suffix", async () => {
@@ -358,16 +271,9 @@ describe("schema-generator file-generators", () => {
         imports: new Set(),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\n/**\n * Response schema for User operation\n */\nexport const User = z.string();\nexport type User = z.infer<typeof User>;\n`,
-      );
-
       const result = await generateResponseSchemaFile("User", schema);
 
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining("Response schema for User"),
-        { parser: "typescript" },
-      );
+      expect(result.content).toContain("Response schema for User");
     });
 
     it("should handle numeric response codes in names", async () => {
@@ -380,19 +286,12 @@ describe("schema-generator file-generators", () => {
         imports: new Set(),
       });
 
-      vi.mocked(format).mockResolvedValue(
-        `import { z } from "zod";\n\n/**\n * Response schema for GetUser operation\n */\nexport const GetUser404Response = z.string();\nexport type GetUser404Response = z.infer<typeof GetUser404Response>;\n`,
-      );
-
       const result = await generateResponseSchemaFile(
         "GetUser404Response",
         schema,
       );
 
-      expect(format).toHaveBeenCalledWith(
-        expect.stringContaining("Response schema for GetUser404"),
-        { parser: "typescript" },
-      );
+      expect(result.content).toContain("Response schema for GetUser404");
     });
   });
 });

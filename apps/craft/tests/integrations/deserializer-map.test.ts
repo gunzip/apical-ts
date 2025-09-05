@@ -44,7 +44,7 @@ describe("DeserializerMap Integration Test", () => {
 
     /* Find the deserializer map type definition */
     const deserializerMapMatch = operationContent.match(
-      /export type TestAuthBearerHttpResponseDeserializerMap = Partial<\s*Record<\s*([\s\S]*?),\s*import\("\.\/config\.js"\)\.Deserializer\s*>\s*>;/,
+      /export type TestAuthBearerHttpResponseDeserializerMap = Partial<\s*Record<\s*([\s\S]*?),\s*import\('\.\/config\.js'\)\.Deserializer\s*>\s*>;/,
     );
 
     expect(deserializerMapMatch).toBeTruthy();
@@ -54,7 +54,7 @@ describe("DeserializerMap Integration Test", () => {
 
       /* Should extract content types from the nested response map */
       expect(typeDefinition).toContain(
-        "keyof (typeof TestAuthBearerHttpResponseMap)[Status]",
+        "[Status in keyof typeof TestAuthBearerHttpResponseMap]: keyof typeof TestAuthBearerHttpResponseMap[Status]",
       );
       expect(typeDefinition).toContain(
         "[keyof typeof TestAuthBearerHttpResponseMap]",
