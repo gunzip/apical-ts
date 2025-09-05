@@ -60,6 +60,7 @@ export function buildServerResponseMap(
     metadata.operation,
     metadata.operationId,
     typeImports,
+    { useStrictSchemas: true }, // Use strict schemas for server responses
   );
 
   /* Return the union type definition */

@@ -3,7 +3,10 @@
 import { isReferenceObject, type OperationObject } from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
-import { resolveSchemaTypeName } from "./schema-type-resolver.js";
+import {
+  resolveSchemaTypeName,
+  resolveStrictSchemaTypeName,
+} from "./schema-type-resolver.js";
 
 /**
  * Options for response map generation
@@ -11,6 +14,8 @@ import { resolveSchemaTypeName } from "./schema-type-resolver.js";
 export interface ResponseMapOptions {
   /* Whether to generate TypeScript types */
   generateTypes?: boolean;
+  /* Whether to use strict schemas (for server generation) */
+  useStrictSchemas?: boolean;
 }
 
 /**
@@ -40,6 +45,7 @@ export function generateResponseMap(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
+  options: ResponseMapOptions = {},
 ): ResponseMapResult {
   let defaultContentType: null | string = null;
   let contentTypeCount = 0;
@@ -78,12 +84,19 @@ export function generateResponseMap(
 
       if (!defaultContentType) defaultContentType = ct;
 
-      const typeName = resolveSchemaTypeName(
-        mapping.schema,
-        operationId,
-        `${group.statusCode}Response`,
-        typeImports,
-      );
+      const typeName = options.useStrictSchemas
+        ? resolveStrictSchemaTypeName(
+            mapping.schema,
+            operationId,
+            `${group.statusCode}Response`,
+            typeImports,
+          )
+        : resolveSchemaTypeName(
+            mapping.schema,
+            operationId,
+            `${group.statusCode}Response`,
+            typeImports,
+          );
 
       statusToContentTypes[group.statusCode].push({
         contentType: ct,
@@ -102,12 +115,19 @@ export function generateResponseMap(
           [];
         for (const [contentType, mediaType] of Object.entries(content)) {
           if (!mediaType.schema) continue;
-          const typeName = resolveSchemaTypeName(
-            mediaType.schema,
-            operationId,
-            `DefaultResponse`,
-            typeImports,
-          );
+          const typeName = options.useStrictSchemas
+            ? resolveStrictSchemaTypeName(
+                mediaType.schema,
+                operationId,
+                `DefaultResponse`,
+                typeImports,
+              )
+            : resolveSchemaTypeName(
+                mediaType.schema,
+                operationId,
+                `DefaultResponse`,
+                typeImports,
+              );
           allContentTypes.add(contentType);
           if (!defaultContentType) defaultContentType = contentType;
           defaultContentTypes.push({ contentType, typeName });
