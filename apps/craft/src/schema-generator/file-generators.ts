@@ -1,7 +1,5 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
 
-import { format } from "prettier";
-
 import { zodSchemaToCode } from "./schema-converter.js";
 
 /**
@@ -96,12 +94,8 @@ export async function generateSchemaFile(
     content = `import { z } from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
   }
 
-  const formattedContent = await format(content, {
-    parser: "typescript",
-  });
-
   return {
-    content: formattedContent,
+    content,
     fileName: `${name}.ts`,
   };
 }
