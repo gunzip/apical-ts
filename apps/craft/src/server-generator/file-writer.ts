@@ -1,6 +1,5 @@
 import { promises as fs } from "fs";
 import path from "path";
-import prettier from "prettier";
 
 import type { OperationMetadata } from "../client-generator/operation-extractor.js";
 
@@ -41,15 +40,8 @@ ${operations
   .join("\n")}
 `;
 
-  const formatted = await prettier.format(indexContent, {
-    parser: "typescript",
-    semi: true,
-    singleQuote: false,
-    trailingComma: "all",
-  });
-
   const filePath = path.join(serverOperationsDir, "index.ts");
-  await fs.writeFile(filePath, formatted);
+  await fs.writeFile(filePath, indexContent);
 }
 
 /**
@@ -68,14 +60,6 @@ export async function writeServerOperationFile(
 
   const fullCode = imports ? `${imports}\n\n${wrapperCode}` : wrapperCode;
 
-  /* Format with Prettier */
-  const formatted = await prettier.format(fullCode, {
-    parser: "typescript",
-    semi: true,
-    singleQuote: false,
-    trailingComma: "all",
-  });
-
   const filePath = path.join(serverOperationsDir, `${operationId}.ts`);
-  await fs.writeFile(filePath, formatted);
+  await fs.writeFile(filePath, fullCode);
 }

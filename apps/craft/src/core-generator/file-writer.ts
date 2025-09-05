@@ -1,5 +1,4 @@
 import { promises as fs } from "fs";
-import { format } from "prettier";
 
 /**
  * Builds the complete operation file content with imports and function code
@@ -96,22 +95,14 @@ export async function ensureDirectory(dirPath: string): Promise<void> {
 }
 
 /**
- * Formats TypeScript code using Prettier
+ * Writes TypeScript content to a file at the specified path.
  */
-export async function formatTypeScript(code: string): Promise<string> {
-  return format(code, { parser: "typescript" });
-}
-
-/**
- * Writes formatted TypeScript content to a file
- */
-export async function writeFormattedFile(
+export async function writeTypeScriptFile(
   filePath: string,
   content: string,
 ): Promise<void> {
   try {
-    const formattedContent = await formatTypeScript(content);
-    await fs.writeFile(filePath, formattedContent);
+    await fs.writeFile(filePath, content);
   } catch (error) {
     throw new Error(`Failed to write file ${filePath}: ${error}`);
   }

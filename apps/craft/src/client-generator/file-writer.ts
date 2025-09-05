@@ -5,7 +5,7 @@ import type { OperationMetadata } from "./operation-extractor.js";
 
 import {
   buildOperationFileContent,
-  writeFormattedFile,
+  writeTypeScriptFile,
 } from "../core-generator/file-writer.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateConfigTypes } from "./config-generator.js";
@@ -31,7 +31,7 @@ export async function writeConfigFile(
 ): Promise<void> {
   const configContent = generateConfigTypes(authHeaders, serverUrls);
   const configPath = path.join(operationsDir, "config.ts");
-  await writeFormattedFile(configPath, configContent);
+  await writeTypeScriptFile(configPath, configContent);
 }
 
 /**
@@ -65,7 +65,7 @@ export async function writeIndexFile(
   if (operationExports.length === 0) {
     const indexContent = `// No valid operations found to export`;
     const indexPath = path.join(operationsDir, "index.ts");
-    await writeFormattedFile(indexPath, indexContent);
+    await writeTypeScriptFile(indexPath, indexContent);
     return;
   }
 
@@ -75,7 +75,7 @@ export {
   ${operationExports.join(",\n  ")},
 };`;
   const indexPath = path.join(operationsDir, "index.ts");
-  await writeFormattedFile(indexPath, indexContent);
+  await writeTypeScriptFile(indexPath, indexContent);
 }
 
 /**
@@ -90,5 +90,5 @@ export async function writeOperationFile(
   const sanitizedOperationId = sanitizeIdentifier(operationId);
   const operationContent = buildOperationFileContent(typeImports, functionCode);
   const operationPath = path.join(operationsDir, `${sanitizedOperationId}.ts`);
-  await writeFormattedFile(operationPath, operationContent);
+  await writeTypeScriptFile(operationPath, operationContent);
 }
