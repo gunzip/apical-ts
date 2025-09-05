@@ -58,7 +58,9 @@ This will create:
 - **`schemas/`** - Zod schemas and TypeScript types
 
 :::note The generated client and server code requires `zod` as a runtime
-dependency for schema validation. Make sure to install it in your project. :::
+dependency for schema validation. Make sure to install it in your project.
+
+:::
 
 ## Live Demo
 
