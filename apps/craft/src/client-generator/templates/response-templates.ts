@@ -48,6 +48,18 @@ export function renderDefaultResponseHandler(
           } satisfies ApiResponseWithParse<"default", typeof ${responseMapName}>;
           return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}> : ApiResponseWithParse<"default", typeof ${responseMapName}>);
         }
+      } else {
+        /* Return error for unexpected status codes when no default response mapping exists */
+        return {
+          kind: "unexpected-response",
+          isValid: false,
+          result: {
+            data,
+            status: response.status,
+            response,
+          },
+          error: \`Unexpected response status: \${response.status}\`,
+        } as const;
       }`;
     } else {
       /* No schema or response map: return simple response for default */
