@@ -53,10 +53,14 @@ export interface ResponseAnalysis {
  * Configuration for analyzing responses
  */
 export interface ResponseAnalysisConfig {
+  /* Whether to generate discriminated union types (disabled for client operations) */
+  generateDiscriminatedUnion?: boolean;
   /* Whether the operation has a response content type map */
   hasResponseContentTypeMap?: boolean;
   /* The operation being analyzed */
   operation: OperationObject;
+  /* Response map name to use for union type generation */
+  responseMapName?: string;
   /* Set to collect type imports */
   typeImports: Set<string>;
 }

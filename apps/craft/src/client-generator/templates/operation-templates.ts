@@ -19,7 +19,6 @@ export interface ContentTypeMapsConfig {
 }
 
 export type GenericParamsConfig = ContentTypeMapsConfig & {
-  discriminatedUnionTypeName?: string;
   initialReturnType: string;
 };
 
@@ -72,8 +71,6 @@ export interface ParameterDeclarationConfig {
 }
 
 export type TypeAliasesConfig = ContentTypeMapsConfig & {
-  discriminatedUnionTypeDefinition?: string;
-  discriminatedUnionTypeName?: string;
   /* Parameter schema generation */
   operationId: string | undefined;
   parameterGroups: ReturnType<typeof extractParameterGroups>;
@@ -160,12 +157,11 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
     }
   }
 
-  /* Add discriminated union response type if available */
-  if (config.discriminatedUnionTypeDefinition) {
-    typeAliases += `${config.discriminatedUnionTypeDefinition}\n\n`;
-  }
-
-  /* Don't add discriminated union response map if we're already generating the normal response map to avoid duplicates */
+  /*
+   * Discriminated union response types (e.g., FindPetsByStatusOperationResponse) are not generated
+   * for client operations as they are unused in the generated client code. The server generator
+   * creates its own response union types using the shared response union generator.
+   */
 
   if (config.shouldGenerateRequestMap) {
     typeAliases += `export type ${config.requestMapTypeName} = ${config.contentTypeMaps.requestMapType};\n\n`;

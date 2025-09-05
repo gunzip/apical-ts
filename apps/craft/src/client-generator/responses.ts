@@ -91,8 +91,10 @@ export function generateResponseHandlers(
 ): ResponseHandlerResult {
   /* Analyze the response structure */
   const analysis = analyzeResponseStructure({
+    generateDiscriminatedUnion: false, // Client generator doesn't need discriminated union types
     hasResponseContentTypeMap,
     operation,
+    responseMapName,
     typeImports,
   });
 
@@ -112,7 +114,7 @@ export function generateResponseHandlers(
     discriminatedUnionTypeDefinition: analysis.discriminatedUnionTypeDefinition,
     discriminatedUnionTypeName: analysis.discriminatedUnionTypeName,
     responseHandlers,
-    responseMapName: analysis.responseMapName,
+    responseMapName: responseMapName || analysis.responseMapName, // Use parameter or derived value
     responseMapType: analysis.responseMapType,
     returnType,
   };

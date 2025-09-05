@@ -156,6 +156,12 @@ paths:
           description: Invalid status value
         default:
           description: Unexpected error
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pet"
       security:
         - petstore_auth:
             - write:pets

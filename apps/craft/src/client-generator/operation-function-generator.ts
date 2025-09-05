@@ -179,8 +179,6 @@ export function generateOperationFunction(
   /* Compute generic parameters and adjust return type if response map present */
   const { genericParams, updatedReturnType } = buildGenericParams({
     contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
-    discriminatedUnionTypeName:
-      metadata.responseHandlers.discriminatedUnionTypeName,
     initialReturnType: metadata.responseHandlers.returnType,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
@@ -191,10 +189,6 @@ export function generateOperationFunction(
   /* Emit request/response map type aliases (only when non-empty / applicable) */
   const typeAliases = buildTypeAliases({
     contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
-    discriminatedUnionTypeDefinition:
-      metadata.responseHandlers.discriminatedUnionTypeDefinition,
-    discriminatedUnionTypeName:
-      metadata.responseHandlers.discriminatedUnionTypeName,
     /* Parameter schema generation */
     operationId: operation.operationId,
     parameterGroups: metadata.parameterGroups,
