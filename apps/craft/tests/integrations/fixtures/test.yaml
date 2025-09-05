@@ -541,7 +541,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Person"
         default:
-          decription: Foo bar
+          description: Foo bar
 
 # -------------
 # Components
