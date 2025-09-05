@@ -1,14 +1,11 @@
-import type {
-  OpenAPIObject,
-  OperationObject,
-  SecuritySchemeObject,
-} from "openapi3-ts/oas31";
+import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 
 import { describe, expect, it } from "vitest";
 
+import { renderSecurityHeaderHandling } from "../../src/client-generator/templates/security-templates.js";
+
 import {
   extractAuthHeaders,
-  generateSecurityHeaderHandling,
   getOperationSecuritySchemes,
   hasSecurityOverride,
   type SecurityHeader,
@@ -344,7 +341,7 @@ describe("client-generator security", () => {
     });
   });
 
-  describe("generateSecurityHeaderHandling", () => {
+  describe("renderSecurityHeaderHandling", () => {
     it("should generate required header assignment", () => {
       const headers: SecurityHeader[] = [
         {
@@ -354,7 +351,7 @@ describe("client-generator security", () => {
         },
       ];
 
-      const result = generateSecurityHeaderHandling(headers);
+      const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe("finalHeaders['X-API-Key'] = XAPIKey;");
     });
 
@@ -367,7 +364,7 @@ describe("client-generator security", () => {
         },
       ];
 
-      const result = generateSecurityHeaderHandling(headers);
+      const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
         "if (XAPIKey !== undefined) finalHeaders['X-API-Key'] = XAPIKey;",
       );
@@ -387,7 +384,7 @@ describe("client-generator security", () => {
         },
       ];
 
-      const result = generateSecurityHeaderHandling(headers);
+      const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
         "finalHeaders['X-API-Key'] = XAPIKey;\n" +
           "    if (Authorization !== undefined) finalHeaders['Authorization'] = Authorization;",
@@ -403,14 +400,14 @@ describe("client-generator security", () => {
         },
       ];
 
-      const result = generateSecurityHeaderHandling(headers);
+      const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
         "finalHeaders['X-Custom-Auth-Token'] = XCustomAuthToken;",
       );
     });
 
     it("should return empty string for empty headers array", () => {
-      const result = generateSecurityHeaderHandling([]);
+      const result = renderSecurityHeaderHandling([]);
       expect(result).toBe("");
     });
 
@@ -423,7 +420,7 @@ describe("client-generator security", () => {
         },
       ];
 
-      const result = generateSecurityHeaderHandling(headers);
+      const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe("finalHeaders['X-Special@Header'] = XSpecialHeader;");
     });
   });

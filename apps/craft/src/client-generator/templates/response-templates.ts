@@ -32,7 +32,7 @@ export function renderDefaultResponseHandler(
             const errorResult = {
               ...parseResult,
               isValid: false as const,
-              result: { data, status: "default", response },
+              result: { data, status: response.status, response },
             } satisfies ApiResponseError;
             return errorResult;
           }
