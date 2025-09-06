@@ -52,11 +52,8 @@ When an operation fails, the response object includes:
 
 ### Automatic Validation (default)
 
-When using `forceValidation: true`, the response is automatically validated and
-
-Enable automatic validation by setting `forceValidation: true` per operation or
-globally using `configureOperations`, see
-[Define Configuration](./define-configuration.md) section for more details.
+Automatic validation is enabled by default, meaning that successful responses
+are validated against the OpenAPI schema and the `parsed` field is populated.
 
 ```ts
 const result = await getPetById({ path: { petId: "123" } });
@@ -70,6 +67,10 @@ if (result.isValid && result.status === 200) {
 ```
 
 ### Manual Validation
+
+Deferred manual validation is achieved by setting `forceValidation: false` per
+operation or globally using `configureOperations`. See
+[Define Configuration](./define-configuration.md) section for more details.
 
 When `forceValidation: false` is set, responses provide a `parse()` method that
 you can call when needed:
