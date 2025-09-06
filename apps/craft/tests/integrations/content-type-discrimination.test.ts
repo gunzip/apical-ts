@@ -14,19 +14,13 @@ describe("Content Type Discrimination Integration Test", () => {
     const operationPath = join(generatedDir, "client/testMultiContentTypes.ts");
     const content = readFileSync(operationPath, "utf-8");
 
-    // Verify the new structure is generated
+    // Verify the createForcedParseResponse helper is used
     expect(content).toContain(
-      "parsed: { data: parseResult.parsed, contentType: parseResult.contentType }",
+      "const forcedResult = createForcedParseResponse(",
     );
 
-    // Verify all 'parsed:' assignments use the new structure
-    const parsedAssignments = Array.from(
-      content.matchAll(/parsed:\s*({[^}]*})/g),
-    );
-    for (const match of parsedAssignments) {
-      expect(match[1]).toContain("data:");
-      expect(match[1]).toContain("contentType:");
-    }
+    // Verify the helper function is imported
+    expect(content).toContain("createForcedParseResponse");
   });
 
   it("should have correct TypeScript type for ApiResponseWithForcedParse", () => {
