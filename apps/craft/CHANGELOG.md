@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.30
+
+### Patch Changes
+
+- Refactor return type of client operations to handle multiple content types
+
 ## 0.0.29
 
 ### Patch Changes
