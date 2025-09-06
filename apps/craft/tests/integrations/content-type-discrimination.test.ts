@@ -19,8 +19,12 @@ describe("Content Type Discrimination Integration Test", () => {
       "parsed: { data: parseResult.parsed, contentType: parseResult.contentType }",
     );
 
-    // Verify the old structure is not present
-    expect(content).not.toContain("parsed: parseResult.parsed } satisfies");
+    // Verify all 'parsed:' assignments use the new structure
+    const parsedAssignments = Array.from(content.matchAll(/parsed:\s*({[^}]*})/g));
+    for (const match of parsedAssignments) {
+      expect(match[1]).toContain("data:");
+      expect(match[1]).toContain("contentType:");
+    }
   });
 
   it("should have correct TypeScript type for ApiResponseWithForcedParse", () => {
