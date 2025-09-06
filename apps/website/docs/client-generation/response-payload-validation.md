@@ -108,7 +108,7 @@ handling:
 
 ```ts
 const result = await getDocument({
-  docId: "123",
+  path: { docId: "123" },
   contentType: { response: "application/json" },
 });
 
@@ -136,117 +136,6 @@ if (result.isValid && result.status === 200) {
 This feature is particularly useful for APIs that return different data
 structures based on the requested content type, providing full TypeScript
 support for content type discrimination.
-
-## Manual Runtime Validation
-
-Operations return raw data unless you enable automatic Zod parsing (setting
-`forceValidation` flag to `true`). To perform runtime validation, explicitly
-call the response object's `parse()` method, which returns a discriminated
-union:
-
-- `{ contentType, parsed }` on success
-- `{ kind: "parse-error", error: ZodError }` when validation fails
-- `{ kind: "deserialization-error", error: unknown }` when a custom deserializer
-  throws
-- `{ kind: "missing-schema", error: string }` when no schema exists for the
-  resolved content type
-
-These objects never throw; you inspect the returned value to act accordingly.
-
-```ts
-const result = await getUserProfile({ userId: "123" });
-
-if (result.isValid) {
-  if (result.status === 200) {
-    const outcome = result.parse();
-    if ("parsed" in outcome) {
-      console.log("User:", outcome.parsed.name, outcome.parsed.email);
-    } else if (outcome.kind === "parse-error") {
-      console.error("Response validation failed:", outcome.error);
-    } else if (outcome.kind === "deserialization-error") {
-      console.error("Deserializer failed:", outcome.error);
-    } else if (outcome.kind === "missing-schema") {
-      console.warn("No schema – raw data retained:", result.data);
-    }
-  } else if (result.status === 404) {
-    console.warn("User not found");
-  }
-}
-```
-
-For operations with mixed content types, validation only applies when you call
-`parse()` and a schema exists for the selected content type:
-
-```ts
-const result = await getDocument({
-  docId: "123",
-  contentType: { response: "application/json" },
-});
-
-if (result.status === 200) {
-  const outcome = result.parse();
-  if (isParsed(outcome)) {
-    console.log("Document:", outcome.parsed);
-  }
-}
-```
-
-Non-JSON responses (like `text/plain`, `application/octet-stream`) are still
-left raw unless you supply a custom deserializer in the config:
-
-```ts
-const result = await downloadFile(
-  {
-    fileId: "123",
-  },
-  {
-    // You can provide custom deserializers for specific operations
-    // or even in the global configuration
-    deserializers: {
-      ...globalConfig,
-      "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
-    },
-  },
-);
-
-if (result.status === 200) {
-  const outcome = result.parse();
-  if ("parsed" in outcome) {
-    console.log("Downloaded file size:", outcome.parsed.size);
-  }
-}
-```
-
-## Automatic Runtime Validation
-
-Enable automatic validation per request by setting `forceValidation: true` in
-the config you pass to an operation, or globally by
-[binding a config](define-configuration#binding-configuration-to-operations)
-with `configureOperations`:
-
-```ts
-import {
-  configureOperations,
-  globalConfig,
-  getUserProfile,
-} from "./generated/client/index.js";
-
-// Bind config with automatic validation
-const client = configureOperations(
-  { getUserProfile },
-  { ...globalConfig, forceValidation: true },
-);
-
-const result = await client.getUserProfile({ userId: "123" });
-if (result.isValid && result.status === 200) {
-  // With forceValidation=true, parsed contains { data, contentType }
-  const { data, contentType } = result.parsed;
-  console.log("Content type:", contentType);
-  console.log("User:", data.name);
-} else if (result.kind === "parse-error") {
-  console.error("Validation failed", z.prettifyError(result.error));
-}
-```
 
 ## Runtime Validation: Enabled or Disabled?
 
