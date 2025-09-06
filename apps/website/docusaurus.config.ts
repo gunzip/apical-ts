@@ -10,6 +10,10 @@ const config: Config = {
     "Strictly-typed client and server from OpenAPI to Typescript with Zod v4 validation",
   favicon: "img/favicon.svg",
 
+  stylesheets: [
+    "https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap",
+  ],
+
   headTags: [
     {
       tagName: "link",
