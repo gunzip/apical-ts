@@ -57,7 +57,7 @@ function HomepageHeader() {
   });
   if (r.isValid === true && r.status === 200) {
     // Zod v4 parsed payload
-    console.log(r.parsed[0].name);
+    console.log(r.parsed.data[0].name);
   }`}
               language="typescript"
             />
