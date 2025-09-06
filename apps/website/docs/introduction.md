@@ -57,8 +57,10 @@ This will create:
 - **`client/`** - Individual operation functions for each API endpoint
 - **`schemas/`** - Zod schemas and TypeScript types
 
-:::note The generated client and server code requires `zod` as a runtime
-dependency for schema validation. Make sure to install it in your project.
+:::note
+
+The generated client and server code requires `zod` as a runtime dependency for
+schema validation. Make sure to install it in your project.
 
 :::
 
@@ -66,8 +68,8 @@ dependency for schema validation. Make sure to install it in your project.
 
 Explore the live demo to see @apical-ts/craft in action:
 
-<iframe style={{ width: "100%", minHeight: "600px" }}
-src="https://stackblitz.com/edit/vitejs-vite-bls6sznb?embed=1&file=src%2Fclient.ts&view=editor&theme=dark"></iframe>
+<iframe style={{ width: "100%", minHeight: "600px", height: "600px" }}
+src="https://stackblitz.com/edit/vitejs-vite-bls6sznb?ctl=1&embed=1&file=src%2Fclient.ts&view=editor&theme=dark"></iframe>
 
 <!-- ![Demo of OpenAPI TypeScript Generator](../static/img/demo.gif) -->
 
