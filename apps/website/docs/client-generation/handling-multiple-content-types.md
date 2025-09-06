@@ -68,7 +68,7 @@ const parseXml = () => {
 };
 
 async function demonstrateClient() {
-  const ret = await updatePet(
+  const r = await updatePet(
     {
       body: {
         name: "Fluffy",
@@ -92,29 +92,19 @@ async function demonstrateClient() {
     },
   );
 
-  if (!ret.isValid) {
-    console.error("Error:", ret.error);
-  } else if (ret.status === 200) {
-    console.log("Raw data:", ret.data);
-    const parsed = ret.parse();
-    if (!isParsed(parsed)) {
-      if (parsed.kind == "parse-error") {
-        // Here we can handle Zod parsing errors
-        // (if we want to)
-        console.error(
-          "Error: Cannot parse data",
-          z.prettifyError(parsed.error),
-        );
-      } else {
-        // All other error kind...
-        console.error("Error:", parsed.error);
-      }
-    } else if (parsed.contentType == "application/xml") {
+  if (!r.isValid) {
+    console.error("Error:", r.error);
+    return r.error;
+  }
+
+  if (r.status === 200) {
+    console.log("Raw data:", r.data);
+    if (r.parsed.contentType == "application/xml") {
       // Only here we can access the parsed XML data properties!
-      console.log("Parsed XML data (name):", parsed.parsed.name);
-    } else if (parsed.contentType == "application/json") {
+      console.log("Parsed XML data (name):", r.parsed.data.name);
+    } else if (r.parsed.contentType == "application/json") {
       // Shouldn't happen since we requested XML, but who knows!
-      console.log("Parsed JSON data (name):", parsed.parsed.name);
+      console.log("Parsed JSON data (name):", r.parsed.data.name);
     }
   }
 }
@@ -168,27 +158,43 @@ preferences:
               type: string
 ```
 
-## Type Safety with Content Types
+## Content Type Discrimination with Forced Validation
 
-The generated client provides type safety based on content types:
+When using `forceValidation: true` (the default), the response structure
+provides enhanced type discrimination based on content type. Instead of just the
+parsed data, you get both the data and the content type in a structured format:
 
 ```ts
-const result = await getDocument({
-  path: { id: "doc123" },
+const result = await updatePet({
+  body: { name: "Fluffy", id: 1, photoUrls: [] },
   contentType: { response: "application/xml" },
 });
 
 if (result.isValid && result.status === 200) {
-  const parsed = result.parse();
-  if (isParsed(parsed)) {
-    // TypeScript knows the structure based on content type
-    if (parsed.contentType === "application/xml") {
-      // parsed.parsed has the XML schema type
-      console.log(parsed.parsed.title); // ✅ Type-safe
-    }
+  // With forceValidation=true (default)
+  // parsed field contains both data and contentType
+  const { data, contentType } = result.parsed;
+
+  // Now you can discriminate types based on content type
+  switch (contentType) {
+    case "application/json":
+      // TypeScript knows 'data' is the JSON schema type
+      console.log("JSON pet:", data.name);
+      break;
+    case "application/xml":
+      // TypeScript knows 'data' is the XML schema type
+      console.log("XML pet:", data.name);
+      break;
+    default:
+      console.log("Unknown content type:", contentType);
   }
 }
 ```
+
+This feature enables type-safe content type discrimination, allowing you to
+handle different response formats with full TypeScript support. If the schemas
+for all supported content types are identical, your code can safely handle the
+response without discriminating by content type.
 
 ## Default Content Types
 
@@ -204,74 +210,9 @@ const result = await updatePet({
 });
 ```
 
-## Error Handling with Multiple Content Types
-
-Different content types may have different error response formats:
-
-```ts
-const result = await updatePet({
-  body: petData,
-  contentType: { response: "application/xml" },
-});
-
-if (!result.isValid) {
-  console.error("Request failed:", result.error);
-} else if (result.status === 400) {
-  // Handle validation error - format depends on content type
-  const parsed = result.parse();
-  if (isParsed(parsed)) {
-    if (parsed.contentType === "application/json") {
-      console.error("JSON:", parsed.parsed);
-    } else if (parsed.contentType === "application/xml") {
-      console.error("XML:", parsed.parsed);
-    }
-  }
-}
-```
-
 ## Best Practices
 
 1. **Provide deserializers** for non-JSON content types
 1. **Handle all possible response content types** in your code
 1. **Use type guards** to safely access content-type-specific data
 1. **Test with all supported content types** to ensure compatibility
-
-## Common Patterns
-
-### File Upload with Multiple Formats
-
-```ts
-// Upload as multipart/form-data
-const uploadResult = await uploadFile({
-  file: fileData,
-  contentType: { request: "multipart/form-data" },
-});
-
-// Upload as binary
-const binaryResult = await uploadFile({
-  file: fileData,
-  contentType: { request: "application/octet-stream" },
-});
-```
-
-### API Versioning via Content Type
-
-```ts
-// Use v1 API format
-const v1Result = await getUser({
-  id: "123",
-  contentType: {
-    request: "application/vnd.api.v1+json",
-    response: "application/vnd.api.v1+json",
-  },
-});
-
-// Use v2 API format
-const v2Result = await getUser({
-  id: "123",
-  contentType: {
-    request: "application/vnd.api.v2+json",
-    response: "application/vnd.api.v2+json",
-  },
-});
-```
