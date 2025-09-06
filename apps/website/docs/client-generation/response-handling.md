@@ -36,7 +36,9 @@ When an operation succeeds, the response object includes:
 - **`data`**: The raw response payload from the server
 - **`parse()`**: Method to validate and parse the response (when
   `forceValidation: false`)
-- **`parsed`**: Pre-validated data (when `forceValidation: true` - default)
+- **`parsed`**: Pre-validated data with content type (when
+  `forceValidation: true` - default)
+  - Contains `{ data: T, contentType: string }` structure
 
 ### Error Responses
 
@@ -78,8 +80,10 @@ const result = await getPetById(
 );
 
 if (result.isValid && result.status === 200) {
-  // Data is automatically validated
-  console.log("Pet:", result.parsed);
+  // Data is automatically validated and includes content type
+  const { data, contentType } = result.parsed;
+  console.log("Content type:", contentType);
+  console.log("Pet:", data);
 }
 ```
 
