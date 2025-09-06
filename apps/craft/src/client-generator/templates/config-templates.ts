@@ -90,6 +90,25 @@ export function isParsed<
     | { kind: "deserialization-error"; error: unknown }
 >(value: T): value is Extract<T, { parsed: unknown }> {
   return !!value && "parsed" in (value as Record<string, unknown>);
+}
+
+/* Type-safe helper function that lets TypeScript infer the correct forced parse result type */
+export function createForcedParseResponse<
+  S extends number | "default",
+  TParseResult extends { contentType: string; parsed: unknown }
+>(
+  status: S,
+  data: unknown,
+  response: Response,
+  parseResult: TParseResult
+) {
+  return {
+    isValid: true as const,
+    status,
+    data,
+    response,
+    parsed: parseResult,
+  };
 }`;
 }
 
@@ -207,8 +226,8 @@ export type ApiResponseWithForcedParse<
   readonly parsed: ${"`${S}`"} extends keyof Map
     ? {
         [K in keyof Map[${"`${S}`"}]]: {
-          data: z.infer<Map[${"`${S}`"}][K]>;
           contentType: K;
+          data: z.infer<Map[${"`${S}`"}][K]>;
         };
       }[keyof Map[${"`${S}`"}]]
     : never;

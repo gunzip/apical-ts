@@ -18,7 +18,9 @@ async function demonstrateClient() {
     greedyPetsResponse.status === 200
   ) {
     // automatic validation: .parsed available
-    greedyPetsResponse.parsed[0].name;
+    if (greedyPetsResponse.parsed.data.length > 0) {
+      greedyPetsResponse.parsed.data[0].name;
+    }
   }
 
   // Automatic validation bound client

@@ -24,7 +24,7 @@ export function renderDefaultResponseHandler(
           /* Force validation: automatically parse and return result */
           const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {});
           if ("parsed" in parseResult) {
-            const forcedResult = { isValid: true as const, status: "default" as const, data, response, parsed: { data: parseResult.parsed, contentType: parseResult.contentType } } satisfies ApiResponseWithForcedParse<"default", typeof ${responseMapName}>;
+            const forcedResult = createForcedParseResponse("default", data, response, parseResult);
             // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
             return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}> : ApiResponseWithParse<"default", typeof ${responseMapName}>);
           }
@@ -97,7 +97,7 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
         /* Force validation: automatically parse and return result */
         const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {});
         if ("parsed" in parseResult) {
-          const forcedResult = { isValid: true as const, status: ${statusCode} as const, data, response, parsed: { data: parseResult.parsed, contentType: parseResult.contentType } } satisfies ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}>;
+          const forcedResult = createForcedParseResponse(${statusCode}, data, response, parseResult);
           // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
           return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>);
         }
