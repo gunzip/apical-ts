@@ -12,6 +12,15 @@
   animation: heroFadeIn 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Optional inner constraint for very large screens */
+.heroInner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 2; /* above decorative backgrounds */
+}
+
 .heroBanner::before {
   content: "";
   position: absolute;
@@ -76,6 +85,49 @@
   letter-spacing: -1px;
 }
 
+@media (min-width: 1400px) {
+  .heroTitleGradient {
+    font-size: 3.6rem;
+  }
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #1e293b 0%, #233354 100%);
+  border: 1px solid #334155;
+  padding: 6px 14px 6px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  color: #c7d5e9;
+  box-shadow: 0 2px 8px #0006;
+  margin: 0 auto 1.2rem;
+  position: relative;
+  backdrop-filter: blur(6px);
+  animation: fadeInUp 0.9s ease;
+}
+
+.heroBadge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(90deg, #4f8cff66, #a0bfff33);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
 .heroSubtitle {
   color: #eaf1fb;
   font-size: 1.7rem;
@@ -84,14 +136,34 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+@media (max-width: 720px) {
+  .heroSubtitle {
+    font-size: 1.25rem;
+  }
+}
+
+/* Horizontal scroll container on small screens for code examples */
 .demoSection {
   margin-top: 2rem;
   display: flex;
   flex-direction: row;
   gap: 2rem;
   justify-content: center;
-  /* Stretch children so both code example boxes share the tallest height */
   align-items: stretch;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 880px) {
+  .demoSection {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scroll-snap-type: x mandatory;
+  }
+  .codeExample {
+    scroll-snap-align: start;
+    min-width: 82%;
+  }
 }
 
 .codeExample {
@@ -100,6 +172,13 @@
   text-align: left;
   display: flex;
   flex-direction: column;
+}
+
+.codeExample:first-child .codeBlock {
+  border-top-left-radius: 14px;
+}
+.codeExample:last-child .codeBlock {
+  border-top-right-radius: 14px;
 }
 
 /* Ensure the rendered <pre> from CodeBlock expands to fill remaining space */
@@ -163,20 +242,47 @@
 }
 
 .codeBlock {
-  background: linear-gradient(100deg, #181f2e 80%, #232946 100%);
+  position: relative;
+  background: radial-gradient(circle at 20% 10%, #233252 0%, #181f2e 70%)
+    border-box;
   color: #eaf1fb;
-  border-radius: 10px;
-  padding: 18px 16px;
+  border-radius: 14px;
+  padding: 18px 16px 20px;
   font-size: 15px;
   overflow-x: auto;
   border: 1px solid #334155;
   margin-bottom: 1.5rem;
   text-align: left;
-  box-shadow: 0 2px 16px #0002;
-  transition: box-shadow 0.2s;
+  box-shadow:
+    0 4px 24px -4px #0006,
+    0 0 0 1px #4f8cff22 inset;
+  transition:
+    box-shadow 0.25s,
+    transform 0.25s,
+    background 0.4s;
+}
+.codeBlock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, #4f8cff55, transparent 60%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 .codeBlock:hover {
-  box-shadow: 0 6px 32px #4f8cff22;
+  box-shadow:
+    0 8px 40px -6px #000a,
+    0 0 0 1px #4f8cff55 inset;
+  transform: translateY(-3px);
 }
 
 .codeBlock code {
@@ -220,9 +326,10 @@
 }
 
 .whyChooseSection {
-  padding: 4rem 0;
-  background: linear-gradient(120deg, #0f1420 0%, #1a1f36 100%);
+  padding: 4.5rem 0 5.5rem;
+  background: linear-gradient(145deg, #0e1320 0%, #151e31 50%, #1d2946 100%);
   position: relative;
+  border-top: 1px solid #1e293b;
 }
 
 .whyChooseSection::before {
@@ -267,48 +374,61 @@
 }
 .whyChooseList {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2.5rem;
-  justify-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2rem 2.2rem;
   justify-content: center;
   margin: 0 auto;
   padding: 0;
   list-style: none;
-  max-width: 900px;
+  max-width: 1100px;
   width: 100%;
-}
-@media screen and (max-width: 900px) {
-  .whyChooseList {
-    grid-template-columns: 1fr;
-  }
 }
 .whyChooseItem {
-  flex: 1 1 220px;
-  min-width: 200px;
-  /* Match hero code snippet width */
-  max-width: 420px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 1.5rem 1.2rem;
+  background: linear-gradient(160deg, #1a2436 0%, #1f2d46 100%);
+  border-radius: 18px;
+  padding: 1.6rem 1.4rem 1.55rem;
   color: #eaf1fb;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  box-shadow:
+    0 4px 18px -4px #0009,
+    0 0 0 1px #2a3a54 inset;
+  border: 1px solid #2b3d58;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   position: relative;
   transition:
-    box-shadow 0.2s,
-    transform 0.2s,
-    background 0.2s;
-  justify-self: center;
+    box-shadow 0.3s,
+    transform 0.3s,
+    background 0.4s;
+  isolation: isolate;
+  overflow: hidden;
+}
+.whyChooseItem::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, #4f8cff22, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+  z-index: 0;
+}
+.whyChooseItem:hover::before {
+  opacity: 1;
 }
 .whyChooseItem:hover {
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(79, 140, 255, 0.3);
-  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 10px 36px -8px #000c,
+    0 0 0 1px #4f8cff55 inset;
+  transform: translateY(-4px) scale(1.015);
+}
+.whyChooseItem h3 {
+  position: relative;
+  z-index: 1;
+}
+.whyChooseItem p {
+  position: relative;
+  z-index: 1;
+  line-height: 1.45;
 }
 .whyChooseIcon {
   font-size: 2rem;
@@ -319,6 +439,64 @@
 }
 .whyChooseItem:hover .whyChooseIcon {
   color: #a0bfff;
+}
+
+/* Install bar */
+.installBar {
+  margin: 1.75rem auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: linear-gradient(120deg, #1f2c46, #273552);
+  border: 1px solid #334155;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-family: "JetBrains Mono", "Fira Mono", monospace;
+  font-size: 0.85rem;
+  color: #dbe7f6;
+  max-width: 620px;
+  box-shadow: 0 4px 16px -4px #000a;
+  position: relative;
+}
+.installBar code {
+  font-size: 0.85rem;
+}
+.installBar button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  box-shadow: 0 2px 8px #1d4ed880;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+.installBar button:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+}
+.installBar button:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .installBar {
+    flex-direction: column;
+    align-items: stretch;
+    font-size: 0.75rem;
+  }
+  .installBar button {
+    align-self: flex-end;
+  }
 }
 
 @media screen and (max-width: 996px) {
@@ -375,4 +553,105 @@
   .demoGif {
     max-height: 250px;
   }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .heroBanner,
+  .heroTitleGradient,
+  .whyChooseItem,
+  .codeBlock {
+    animation: none !important;
+    transition: none !important;
+  }
+  .heroBanner::before {
+    animation: none !important;
+  }
+}
+
+/* Light mode adjustments for feature boxes readability */
+:global(.theme-light) .whyChooseSection {
+  background: linear-gradient(140deg, #f5f7fb 0%, #e8edf6 55%, #dfe7f3 100%);
+  border-top: 1px solid #d0d8e4;
+}
+:global(.theme-light) .whyChooseItem {
+  background: linear-gradient(155deg, #2a3c5a 0%, #324868 60%, #395277 100%);
+  color: #ffffff;
+  border-color: #49648a;
+  box-shadow:
+    0 4px 14px -4px rgba(17, 32, 56, 0.4),
+    0 0 0 1px #2f4b70 inset;
+}
+:global(.theme-light) .whyChooseItem::before {
+  background: radial-gradient(circle at 30% 20%, #6aa4ff33, transparent 70%);
+}
+:global(.theme-light) .whyChooseItem h3,
+:global(.theme-light) .whyChooseItem p {
+  color: #ffffff;
+}
+:global(.theme-light) .whyChooseIcon {
+  color: #6aa4ff;
+  filter: drop-shadow(0 2px 6px #6aa4ff55);
+}
+:global(.theme-light) .whyChooseItem:hover {
+  box-shadow:
+    0 10px 30px -8px rgba(20, 40, 70, 0.55),
+    0 0 0 1px #6aa4ff66 inset;
+}
+
+/* Ensure code blocks remain dark themed for contrast inside light feature section */
+:global(.theme-light) .codeBlock {
+  background: radial-gradient(circle at 20% 10%, #223551 0%, #1d293b 70%)
+    border-box;
+  color: #f1f6fd;
+}
+:global(.theme-light) .codeBlock code {
+  color: #f1f6fd;
+}
+
+/* Docusaurus v3 uses html[data-theme="light"], add proper selectors */
+:global(html[data-theme="light"]) .whyChooseSection {
+  background: linear-gradient(135deg, #eef3f9 0%, #e6edf6 60%, #dee8f4 100%);
+  border-top: 1px solid #cfd9e5;
+}
+:global(html[data-theme="light"]) .whyChooseItem {
+  background: linear-gradient(155deg, #27486d 0%, #2f537a 55%, #355d87 100%);
+  color: #ffffff;
+  border-color: #406691;
+  box-shadow:
+    0 4px 16px -4px rgba(27, 48, 73, 0.45),
+    0 0 0 1px #3a618c inset;
+}
+:global(html[data-theme="light"]) .whyChooseItem h3,
+:global(html[data-theme="light"]) .whyChooseItem p {
+  color: #f8fbff;
+}
+:global(html[data-theme="light"]) .whyChooseIcon {
+  color: #72b3ff;
+}
+:global(html[data-theme="light"]) .whyChooseItem:hover {
+  box-shadow:
+    0 10px 32px -8px rgba(32, 56, 89, 0.55),
+    0 0 0 1px #72b3ff80 inset;
+  background: linear-gradient(155deg, #2c5078 0%, #345c88 60%, #3a6693 100%);
+}
+:global(html[data-theme="light"]) .whyChooseItem::before {
+  background: radial-gradient(circle at 30% 20%, #6aa4ff33, transparent 70%);
+}
+:global(html[data-theme="light"]) .whyChooseSection .whyChooseTitle {
+  color: #1d2939;
+}
+
+/* Ensure paragraphs inside list have sufficient contrast even if inheritance changes */
+:global(html[data-theme="light"]) .whyChooseItem p {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* Maintain dark themed code blocks even in light mode (intentional contrast) */
+:global(html[data-theme="light"]) .codeBlock {
+  background: radial-gradient(circle at 20% 10%, #203048 0%, #1a2535 70%)
+    border-box;
+}
+:global(html[data-theme="light"]) .codeBlock code {
+  color: #f5f9ff;
 }

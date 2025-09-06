@@ -13,7 +13,11 @@ function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
   return (
     <header className={clsx("hero", styles.heroBanner)}>
-      <div className="container">
+      <div className={clsx("container", styles.heroInner)}>
+        {/* <div className={styles.heroBadge} aria-label="Project status badge">
+          <span style={{ fontSize: "0.95rem" }}>🚀</span>
+          <span>OpenAPI → TypeScript · Zod v4 Ready</span>
+        </div> */}
         <Heading
           as="h1"
           className={clsx("hero__title", styles.heroTitleGradient)}
@@ -30,15 +34,27 @@ function HomepageHeader() {
             to="/docs/introduction"
             aria-label="Get started with @apical-ts/craft documentation"
           >
-            Get Started in 5min ⏱️
+            Get Started in 5&nbsp;min <span aria-hidden="true">→</span>
           </Link>
-          {/* <Link
-            className="button button--secondary button--lg margin-left--md"
-            to="/docs/cli-usage"
-          >
-            View CLI Docs 📖
-          </Link> */}
         </nav>
+        {/* <div
+          className={styles.installBar}
+          role="group"
+          aria-label="Install command"
+        >
+          <code>pnpm add -D @apical-ts/craft</code>
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                navigator.clipboard?.writeText("pnpm add -D @apical-ts/craft");
+              } catch {}
+            }}
+            aria-label="Copy install command"
+          >
+            <span style={{ fontSize: "0.85rem" }}>📋</span> Copy
+          </button>
+        </div>*/}
         <section className={styles.demoSection} aria-label="Code examples">
           <div className={styles.codeExample}>
             <div className={styles.codeBlockLabel}>CLI</div>
@@ -50,15 +66,7 @@ function HomepageHeader() {
           <div className={styles.codeExample}>
             <div className={styles.codeBlockLabel}>TypeScript</div>
             <CodeBlock
-              code={`import { findPetsByStatus } from './generated/operations/findPetsByStatus.js';
-
-  const r = await findPetsByStatus({
-    query: { status: "available" },
-  });
-  if (r.isValid === true && r.status === 200) {
-    // Zod v4 parsed payload
-    console.log(r.parsed.data[0].name);
-  }`}
+              code={`import { findPetsByStatus } from './generated/operations/findPetsByStatus.js';\n\n  const r = await findPetsByStatus({\n    query: { status: "available" },\n  });\n  if (r.isValid === true && r.status === 200) {\n    // Zod v4 parsed payload\n    console.log(r.parsed.data[0].name);\n  }`}
               language="typescript"
             />
           </div>
