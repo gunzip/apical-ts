@@ -80,6 +80,11 @@ h6 {
   border-radius: 8px;
 }
 
+.theme-code-block {
+  max-width: 75ch;
+  overflow-x: auto;
+}
+
 /* Improved focus states for accessibility */
 .button:focus-visible,
 .navbar__link:focus-visible,
@@ -199,4 +204,9 @@ h6 {
 
 .skip-to-content:focus {
   top: 6px;
+}
+
+/* Limit paragraph length to 70 characters */
+.markdown p {
+  max-width: 75ch;
 }
