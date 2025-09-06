@@ -23,16 +23,17 @@ keywords:
 **fully-typed Zod v4 schemas** ready for runtime (client or server) validation
 and TypeScript development.
 
-You may ask,
-"[Why another Typescript OpenAPI generator?](#why-another-generator)" The answer
-lies in @apical-ts commitment to **strict type safety**. With @apical-ts/craft,
-you get:
+You may ask: why another Typescript OpenAPI generator? The answer lies in full
+commitment to **strict type safety**. With @apical-ts/craft, you get:
 
-- no more unknown exceptions at runtime
-- no more access to properties that can be `undefined`
+- no exceptions at runtime for client operations
+- no accidental access to properties that can be `undefined`
+- discriminated unions for polymorphic schemas
 - full support for multiple success responses (2xx) with payload
 - full support for multiple content types (json, xml, form data, etc.)
 - easy to debug operations with rich errors
+- precise Zod schemas for request and response validation with comprehensive
+  OpenAPI support
 
 ## Quick Start
 
