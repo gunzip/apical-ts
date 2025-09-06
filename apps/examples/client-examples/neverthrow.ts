@@ -16,7 +16,7 @@ const getAvailablePets = async () =>
       // here pets is Pet[]
       console.log(
         "Pets found:",
-        pets.map((pet) => pet.name),
+        pets.data.map((pet) => pet.name),
       );
     })
     .mapErr((err) => {

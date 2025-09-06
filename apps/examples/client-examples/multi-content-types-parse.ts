@@ -1,5 +1,6 @@
-import { globalConfig } from "../generated/client/config.js";
+import { globalConfig, isParsed } from "../generated/client/config.js";
 import { updatePet } from "../generated/client/updatePet.js";
+import z from "zod";
 
 const parseXml = () => {
   // Implement XML deserialization logic here
@@ -11,7 +12,6 @@ const parseXml = () => {
       "http://example.com/parsed_photo1.jpg",
       "http://example.com/parsed_photo2.jpg",
     ],
-    someXmlProp: "ACTIVATED", // Required for PetXml schema
   };
 };
 
@@ -34,6 +34,7 @@ async function demonstrateClient() {
     },
     {
       ...globalConfig,
+      forceValidation: false,
       deserializers: {
         // ... so we Expect XML
         "application/xml": parseXml,
@@ -44,15 +45,26 @@ async function demonstrateClient() {
   if (!ret.isValid) {
     console.error("Error:", ret.error);
   } else if (ret.status === 200) {
-    if (ret.parsed.contentType === "application/json") {
-      const parsed = ret.parsed;
-      console.log("Parsed JSON:", parsed.data.name);
-      // @ts-expect-error
-      // someXmlProp does not exist on JSON schema!
-      console.log("Parsed JSON:", parsed.data.someXmlProp);
-    } else if (ret.parsed.contentType === "application/xml") {
-      const parsed = ret.parsed;
-      console.log("Parsed XML:", parsed.data.someXmlProp);
+    console.log("Raw data:", ret.data);
+    const parsed = ret.parse();
+    if (!isParsed(parsed)) {
+      if (parsed.kind == "parse-error") {
+        // Here we can handle Zod parsing errors
+        // (if we want to)
+        console.error(
+          "Error: Cannot parse data",
+          z.prettifyError(parsed.error),
+        );
+      } else {
+        // All other error kind...
+        console.error("Error:", parsed.error);
+      }
+    } else if (parsed.contentType == "application/xml") {
+      // Only here we can access the parsed XML data properties!
+      console.log("Parsed XML data (name):", parsed.parsed.someXmlProp);
+    } else if (parsed.contentType == "application/json") {
+      // Shouldn't happen since we requested XML, but who knows!
+      console.log("Parsed JSON data (name):", parsed.parsed.name);
     }
   }
 }
