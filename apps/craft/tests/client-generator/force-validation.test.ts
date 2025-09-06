@@ -99,7 +99,7 @@ describe("force validation flag", () => {
         'if ("parsed" in parseResult)',
       );
       expect(result.responseHandlers[0]).toContain(
-        "parsed: parseResult.parsed",
+        "parsed: { data: parseResult.parsed, contentType: parseResult.contentType }",
       );
       expect(result.responseHandlers[0]).toContain("if (parseResult.kind)");
       expect(result.responseHandlers[0]).toContain("isValid: false");

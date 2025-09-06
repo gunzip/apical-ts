@@ -34,7 +34,9 @@ describe("Focused test for forced validation response structure", () => {
     );
 
     /* Verify that forced validation uses parseResult.parsed, not parseResult */
-    expect(result.responseHandlers[0]).toContain("parsed: parseResult.parsed");
+    expect(result.responseHandlers[0]).toContain(
+      "parsed: { data: parseResult.parsed, contentType: parseResult.contentType }",
+    );
     expect(result.responseHandlers[0]).not.toContain("parsed: parseResult,");
 
     /* Verify the structure includes conditional logic for force validation */

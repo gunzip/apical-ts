@@ -205,7 +205,12 @@ export type ApiResponseWithForcedParse<
   readonly data: unknown;
   readonly response: Response;
   readonly parsed: ${"`${S}`"} extends keyof Map
-    ? z.infer<Map[${"`${S}`"}][keyof Map[${"`${S}`"}]]>
+    ? {
+        [K in keyof Map[${"`${S}`"}]]: {
+          data: z.infer<Map[${"`${S}`"}][K]>;
+          contentType: K;
+        };
+      }[keyof Map[${"`${S}`"}]]
     : never;
 };`;
 }
