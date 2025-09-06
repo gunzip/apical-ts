@@ -208,6 +208,7 @@ h6 {
 }
 
 /* Limit paragraph length to 70 characters */
-.markdown p {
+.markdown p,
+.markdown li {
   max-width: 75ch;
 }
