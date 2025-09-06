@@ -20,7 +20,9 @@ describe("Content Type Discrimination Integration Test", () => {
     );
 
     // Verify all 'parsed:' assignments use the new structure
-    const parsedAssignments = Array.from(content.matchAll(/parsed:\s*({[^}]*})/g));
+    const parsedAssignments = Array.from(
+      content.matchAll(/parsed:\s*({[^}]*})/g),
+    );
     for (const match of parsedAssignments) {
       expect(match[1]).toContain("data:");
       expect(match[1]).toContain("contentType:");
