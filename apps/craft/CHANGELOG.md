@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.29
+
+### Patch Changes
+
+- Fix typings for configureOperations
+
 ## 0.0.28
 
 ### Patch Changes

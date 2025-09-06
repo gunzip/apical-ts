@@ -441,7 +441,7 @@ export function configureOperations<TOperations extends Record<string, Operation
 export function configureOperations<TOperations extends Record<string, Operation>>(
   operations: TOperations,
   config: Omit<GlobalConfig, 'forceValidation'>
-): { [K in keyof TOperations]: BoundOperation<TOperations[K], false> };
+): { [K in keyof TOperations]: BoundOperation<TOperations[K], true> };
 export function configureOperations<TOperations extends Record<string, Operation>>(
   operations: TOperations,
   config: (Omit<GlobalConfig, 'forceValidation'> & { forceValidation: boolean }) | Omit<GlobalConfig, 'forceValidation'>
