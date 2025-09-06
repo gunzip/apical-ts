@@ -2,8 +2,9 @@
 
 For advanced scenarios (e.g. XML parsing, vendor-specific media types, binary
 post-processing) you can provide custom deserializers through the config object.
-The `parse()` method will automatically use these deserializers before schema
-validation occurs.
+
+In case you're using manual validation (`forceValidation: false`), the `parse()`
+method will apply deserializers and validate the response on demand.
 
 Deserializers are methods that transform the raw response data into a format
 suitable for validation. They can be defined for specific content types and are
@@ -135,17 +136,6 @@ const result = await getDocument(
 );
 ```
 
-## Returned Object Shapes
-
-The result of `parse()` is a discriminated object you can pattern match on:
-
-| Scenario                              | Shape                                                                       |
-| ------------------------------------- | --------------------------------------------------------------------------- |
-| Schema + validation success           | `{ contentType, parsed }`                                                   |
-| Schema + validation failure           | `{ contentType, parseError }`                                               |
-| Schema present but deserializer threw | `{ contentType, deserializationError }`                                     |
-| No schema for content type            | `{ contentType, missingSchema: true, deserialized, deserializationError? }` |
-
 Notes:
 
 - If the deserializer throws, validation is skipped (you get
@@ -164,7 +154,17 @@ Notes:
 | `kind: deserialization-error` | Custom deserializer threw an exception            |
 | `kind: missing-schema`        | No schema found for that content type             |
 
-### Handling Deserialization Errors
+### Error Handling With Manual Validation
+
+When using `forceValidation: false`, the `parse()` method returns a union type.
+The result of `parse()` is a discriminated object you can pattern match on:
+
+| Scenario                              | Shape                                                                       |
+| ------------------------------------- | --------------------------------------------------------------------------- |
+| Schema + validation success           | `{ contentType, parsed }`                                                   |
+| Schema + validation failure           | `{ contentType, parseError }`                                               |
+| Schema present but deserializer threw | `{ contentType, deserializationError }`                                     |
+| No schema for content type            | `{ contentType, missingSchema: true, deserialized, deserializationError? }` |
 
 ```ts
 const result = await getDocument({ path: { docId: "123" } });

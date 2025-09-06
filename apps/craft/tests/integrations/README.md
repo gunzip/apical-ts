@@ -133,6 +133,7 @@ const responseWithForcedValidation = await client.testDeserialization(
   },
 );
 // When forceValidation=true parsed result is included automatically.
+// The parsed field contains { data, contentType } structure for type discrimination.
 ```
 
 ### 3. Response Structure
@@ -142,8 +143,12 @@ All operations return a consistent `ApiResponse<Status, Data>` structure:
 ```typescript
 {
   status: 200,           // HTTP status code
-  data: responseData,    // Parsed response body (undefined for void responses)
-  response: Response     // Raw fetch Response object with headers
+  data: responseData,    // Raw response body
+  response: Response,    // Raw fetch Response object with headers
+  parsed: {              // When forceValidation=true: { data, contentType } structure
+    data: parsedData,    // Validated response data
+    contentType: "application/json"  // Response content type for discrimination
+  }
 }
 ```
 

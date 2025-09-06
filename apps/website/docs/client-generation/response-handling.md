@@ -36,7 +36,9 @@ When an operation succeeds, the response object includes:
 - **`data`**: The raw response payload from the server
 - **`parse()`**: Method to validate and parse the response (when
   `forceValidation: false`)
-- **`parsed`**: Pre-validated data (when `forceValidation: true` - default)
+- **`parsed`**: Pre-validated data with content type (when
+  `forceValidation: true` - default)
+  - Contains `{ data: T, contentType: string }` structure
 
 ### Error Responses
 
@@ -48,9 +50,29 @@ When an operation fails, the response object includes:
 
 ## Validation Modes
 
-### Manual Validation (Default)
+### Automatic Validation (default)
 
-By default, responses provide a `parse()` method that you can call when needed:
+When using `forceValidation: true`, the response is automatically validated and
+
+Enable automatic validation by setting `forceValidation: true` per operation or
+globally using `configureOperations`, see
+[Define Configuration](./define-configuration.md) section for more details.
+
+```ts
+const result = await getPetById({ path: { petId: "123" } });
+
+if (result.isValid && result.status === 200) {
+  // Data is automatically validated and includes content type
+  const { data, contentType } = result.parsed;
+  console.log("Content type:", contentType);
+  console.log("Pet:", data);
+}
+```
+
+### Manual Validation
+
+When `forceValidation: false` is set, responses provide a `parse()` method that
+you can call when needed:
 
 ```ts
 const result = await getPetById({ path: { petId: "123" } });
@@ -62,24 +84,6 @@ if (result.isValid && result.status === 200) {
   } else {
     console.error("Validation failed:", z.prettifyError(outcome.error));
   }
-}
-```
-
-### Automatic Validation
-
-Enable automatic validation by setting `forceValidation: true` per operation or
-globally using `configureOperations`, see
-[Define Configuration](./define-configuration.md) section for more details.
-
-```ts
-const result = await getPetById(
-  { petId: "123" },
-  { ...globalConfig, forceValidation: true },
-);
-
-if (result.isValid && result.status === 200) {
-  // Data is automatically validated
-  console.log("Pet:", result.parsed);
 }
 ```
 
@@ -95,6 +99,8 @@ if (!result.isValid) {
   console.error("Operation failed:", result.error);
   return;
 }
+
+// result.data is untyped raw data here
 
 switch (result.status) {
   case 200:

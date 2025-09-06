@@ -1,20 +1,26 @@
 # Response Payload Validation
 
-When you call a generated operation that has a response body defined within the
-OpenAPI specification for some status codes, the returned Promise resolves to a
-result object that provides either a `.parsed` field or a `.parse()` method,
-depending on the value of the `config.forceValidation` flag. You can set this
-flag in the configuration passed to an individual operation or globally using
-`configureOperations`. By default, `forceValidation` is set to `true`.
+When you call a generated operation with a response body defined in the OpenAPI
+specification, the returned Promise resolves to a result object. How you access
+validated data depends on the `forceValidation` flag in the configuration (set
+per operation or globally via `configureOperations`). By default,
+`forceValidation` is `true`.
 
-- If you bind with `forceValidation: true` (or omit it), success responses
-  always expose a `.parsed` field (and no `.parse()` method) as Zod validation
-  is performed automatically during the request lifecycle. In case of parsing
-  errors, the returned result will include a `error: ZodError` instance instead
-  of the `parsed` field.
-- If you bind with `forceValidation: false`, success responses expose a
-  `.parse()` method after you narrow on `success === true` and a specific
-  `status`. You may call it and handle parsing errors manually.
+- **With `forceValidation: true` (default):**  
+  Successful responses include a `.parsed` field containing both the validated
+  data and the content type:  
+  `{ data: T, contentType: string }`  
+  Zod validation runs automatically during the request. If validation fails, the
+  result contains an `error: ZodError` instead of `.parsed`. There is no
+  `.parse()` method in this mode.
+
+- **With `forceValidation: false`:**  
+  Successful responses provide a `.parse()` method (instead of `.parsed`). After
+  checking `isValid === true` and the desired `status`, you can call `.parse()`
+  to manually validate the response. Handle any parsing errors yourself.
+
+This design lets you choose between automatic validation (for convenience and
+safety) or manual validation (for performance or custom error handling).
 
 Don't worry if it seems confusing at first, type inference will help you.
 
@@ -42,8 +48,10 @@ async function demonstrateClient() {
     greedyPetsResponse.isValid === true &&
     greedyPetsResponse.status === 200
   ) {
-    // automatic validation: .parsed available
-    greedyPetsResponse.parsed[0].name;
+    // automatic validation: .parsed contains { data, contentType }
+    const { data, contentType } = greedyPetsResponse.parsed;
+    console.log("Content type:", contentType);
+    console.log("First pet name:", data[0].name);
   }
 
   // Automatic validation bound client
@@ -56,8 +64,10 @@ async function demonstrateClient() {
     query: { status: "available" },
   });
   if (petsResponse1.isValid === true && petsResponse1.status === 200) {
-    // bound automatic validation: .parsed available
-    petsResponse1.parsed;
+    // bound automatic validation: .parsed contains { data, contentType }
+    const { data, contentType } = petsResponse1.parsed;
+    console.log("Response content type:", contentType);
+    console.log("Pets data:", data);
   }
 
   // Manual validation bound client
@@ -89,113 +99,43 @@ async function demonstrateClient() {
 demonstrateClient();
 ```
 
-## Manual Runtime Validation
+## Content Type Discrimination
 
-Operations return raw data unless you enable automatic Zod parsing (setting
-`forceValidation` flag to `true`). To perform runtime validation, explicitly
-call the response object's `parse()` method, which returns a discriminated
-union:
-
-- `{ contentType, parsed }` on success
-- `{ kind: "parse-error", error: ZodError }` when validation fails
-- `{ kind: "deserialization-error", error: unknown }` when a custom deserializer
-  throws
-- `{ kind: "missing-schema", error: string }` when no schema exists for the
-  resolved content type
-
-These objects never throw; you inspect the returned value to act accordingly.
-
-```ts
-const result = await getUserProfile({ userId: "123" });
-
-if (result.isValid) {
-  if (result.status === 200) {
-    const outcome = result.parse();
-    if ("parsed" in outcome) {
-      console.log("User:", outcome.parsed.name, outcome.parsed.email);
-    } else if (outcome.kind === "parse-error") {
-      console.error("Response validation failed:", outcome.error);
-    } else if (outcome.kind === "deserialization-error") {
-      console.error("Deserializer failed:", outcome.error);
-    } else if (outcome.kind === "missing-schema") {
-      console.warn("No schema – raw data retained:", result.data);
-    }
-  } else if (result.status === 404) {
-    console.warn("User not found");
-  }
-}
-```
-
-For operations with mixed content types, validation only applies when you call
-`parse()` and a schema exists for the selected content type:
+When `forceValidation: true` is enabled, the response structure provides
+enhanced type discrimination based on content type. The `.parsed` field contains
+both the validated data and the content type, enabling type-safe content type
+handling:
 
 ```ts
 const result = await getDocument({
-  docId: "123",
+  path: { docId: "123" },
   contentType: { response: "application/json" },
 });
 
-if (result.status === 200) {
-  const outcome = result.parse();
-  if (isParsed(outcome)) {
-    console.log("Document:", outcome.parsed);
-  }
-}
-```
-
-Non-JSON responses (like `text/plain`, `application/octet-stream`) are still
-left raw unless you supply a custom deserializer in the config:
-
-```ts
-const result = await downloadFile(
-  {
-    fileId: "123",
-  },
-  {
-    // You can provide custom deserializers for specific operations
-    // or even in the global configuration
-    deserializers: {
-      ...globalConfig,
-      "application/octet-stream": (blob: Blob) => ({ size: blob.size }),
-    },
-  },
-);
-
-if (result.status === 200) {
-  const outcome = result.parse();
-  if ("parsed" in outcome) {
-    console.log("Downloaded file size:", outcome.parsed.size);
-  }
-}
-```
-
-## Automatic Runtime Validation
-
-Enable automatic validation per request by setting `forceValidation: true` in
-the config you pass to an operation, or globally by
-[binding a config](define-configuration#binding-configuration-to-operations)
-with `configureOperations`:
-
-```ts
-import {
-  configureOperations,
-  globalConfig,
-  getUserProfile,
-} from "./generated/client/index.js";
-
-// Bind config with automatic validation
-const client = configureOperations(
-  { getUserProfile },
-  { ...globalConfig, forceValidation: true },
-);
-
-const result = await client.getUserProfile({ userId: "123" });
 if (result.isValid && result.status === 200) {
-  console.log("User:", result.parsed.name);
-} else if (result.kind === "parse-error") {
-  console.error("Validation failed", z.prettifyError(result.error));
+  const { data, contentType } = result.parsed;
+
+  // Type-safe discrimination based on content type
+  switch (contentType) {
+    case "application/json":
+      // TypeScript knows 'data' matches the JSON schema
+      console.log("JSON document:", data.title);
+      break;
+    case "application/xml":
+      // TypeScript knows 'data' matches the XML schema
+      console.log("XML document:", data.title);
+      break;
+    case "text/plain":
+      // TypeScript knows 'data' is a string
+      console.log("Plain text:", data);
+      break;
+  }
 }
 ```
+
+This feature is particularly useful for APIs that return different data
+structures based on the requested content type, providing full TypeScript
+support for content type discrimination.
 
 ## Runtime Validation: Enabled or Disabled?
 
