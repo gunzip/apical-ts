@@ -49,6 +49,11 @@ export function buildOperationImports(
     configImports.push("ApiResponseWithForcedParse");
   }
 
+  /* Add createForcedParseResponse helper function if used */
+  if (functionCode && functionCode.includes("createForcedParseResponse")) {
+    configImports.push("createForcedParseResponse");
+  }
+
   /* Add formUrlEncode helper import when operation body handling uses urlencoded serialization */
   if (functionCode && functionCode.includes("formUrlEncode(")) {
     configImports.push("formUrlEncode");

@@ -22,7 +22,9 @@ describe("Dynamic Force Validation Integration Test", () => {
     const content = readFileSync(operationPath, "utf-8");
     // Single file must include both manual and forced validation logic
     expect(content).toContain("if (config.forceValidation)");
-    expect(content).toContain("parsed: parseResult.parsed");
+    expect(content).toContain(
+      "const forcedResult = createForcedParseResponse(",
+    );
     expect(content).toContain("parse: () =>");
   });
 
@@ -40,7 +42,9 @@ describe("Dynamic Force Validation Integration Test", () => {
     const operationPath = join(generatedDir, "client/testMultiContentTypes.ts");
     const content = readFileSync(operationPath, "utf-8");
     expect(content).toContain("if (config.forceValidation)");
-    expect(content).toContain("parsed: parseResult.parsed");
+    expect(content).toContain(
+      "const forcedResult = createForcedParseResponse(",
+    );
     expect(content).toContain("parse: () =>");
     expect(content).toContain("TestMultiContentTypesResponseMap");
   });

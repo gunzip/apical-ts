@@ -15,9 +15,6 @@ const apiConfig = {
   headers: {
     Authorization: "Bearer your-token",
   },
-  // Forcing validation let us automatically validate responses
-  // and access the parsed data directly in case of success
-  forceValidation: true,
 };
 ```
 
@@ -29,15 +26,21 @@ import { getPetById } from "./generated/client/getPetById.js";
 // Call the operation, never throw errors
 const result = await getPetById({ path: { petId: "123" } }, apiConfig);
 
+// You must check for status code since
+// different status codes may have different response shapes
 // TypeScript will narrow the type based on the status code
 if (result.isValid && result.status === 200) {
-  // You must check for status code since
-  // different status codes may have different response shapes
-  console.log("Pet name:", result.parsed.name);
+  const { data, contentType } = result.parsed;
+  // Different content types may have different schemas
+  console.log("Content type:", contentType);
+  console.log("Pet name:", data.name);
 }
 ```
 
 ### Simple GET Operation with configured defaults
+
+You don't have to pass the config every time. You can bind one or more
+operations to a configuration using `configureOperations`:
 
 ```typescript
 import { getPetById } from "./generated/client/getPetById.js";
@@ -47,13 +50,6 @@ const api = configureOperations({ getPetById }, apiConfig);
 
 // Call the operation without config
 const result = await api.getPetById({ path: { petId: "123" } });
-
-// TypeScript will narrow the type based on the status code
-if (result.isValid && result.status === 200) {
-  // You must check for status code since
-  // different status codes may have different response shapes
-  console.log("Pet name:", result.parsed.name);
-}
 ```
 
 ## Parameter Types
@@ -160,7 +156,9 @@ if (result.isValid) {
   // but you still have to check for status
   console.log("Status:", result.status);
   if (result.status === 200) {
-    console.log("Data:", result.parsed);
+    const { data, contentType } = result.parsed;
+    console.log("Content type:", contentType);
+    console.log("Data:", data);
   }
 } else {
   // TypeScript knows this is an error response
@@ -177,7 +175,9 @@ const result = await getPetById({ path: { petId: "123" } });
 if (!result.isValid) {
   console.error("Operation failed:", result.kind, result.error);
 } else if (result.status === 200) {
-  console.log("Pet found:", result.parsed);
+  const { data, contentType } = result.parsed;
+  console.log("Content type:", contentType);
+  console.log("Pet found:", data);
 } else if (result.status === 404) {
   console.warn("Pet not found");
 } else {
@@ -263,6 +263,31 @@ if (!result.isValid && result.kind === "unexpected-response") {
 
 ### Payload Validation Errors
 
+#### With Automatic Response Parsing
+
+```typescript
+const response = await getPetById({ path: { petId: "123" } });
+
+if (!response.isValid) {
+  // handle errors and early return
+  console.error("Error:", response.error);
+  return response.error;
+}
+
+// Switch on status codes
+switch (response.status) {
+  case 200:
+    const { data, contentType } = response.parsed;
+    // Validation succeeded
+    console.log("Content type:", contentType);
+    console.log("Typed validated data:", data[0].name);
+    break;
+  case 404:
+    console.warn("Pet not found");
+    break;
+}
+```
+
 #### With Manual Response Parsing
 
 ```typescript
@@ -279,49 +304,6 @@ if (response.isValid) {
     // Validation succeeded
     console.log("Typed validated data:", pets[0].name);
   }
-}
-```
-
-#### With Automatic Response Parsing
-
-```typescript
-const response = await getPetById({ path: { petId: "123" } });
-
-if (response.isValid) {
-  if (response.status == 200) {
-    const pets = response.parsed;
-    // Validation succeeded
-    console.log("Typed validated data:", pets[0].name);
-  }
-} else {
-  if (response.kind === "parse-error") {
-    // Zod validation failed
-    console.error("Validation failed:", z.prettifyError(parseResult.error));
-  }
-}
-```
-
-or, more concisely:
-
-```typescript
-const response = await getPetById({ path: { petId: "123" } });
-
-if (!response.isValid) {
-  // handle errors and early return
-  console.error("Error:", response.error);
-  return response.error;
-}
-
-// Switch on status codes
-switch (response.status) {
-  case 200:
-    const pets = response.parsed;
-    // Validation succeeded
-    console.log("Typed validated data:", pets[0].name);
-    break;
-  case 404:
-    console.warn("Pet not found");
-    break;
 }
 ```
 

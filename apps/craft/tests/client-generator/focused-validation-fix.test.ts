@@ -33,8 +33,10 @@ describe("Focused test for forced validation response structure", () => {
       "TestOperationResponseMap",
     );
 
-    /* Verify that forced validation uses parseResult.parsed, not parseResult */
-    expect(result.responseHandlers[0]).toContain("parsed: parseResult.parsed");
+    /* Verify that forced validation uses createForcedParseResponse helper */
+    expect(result.responseHandlers[0]).toContain(
+      "const forcedResult = createForcedParseResponse(",
+    );
     expect(result.responseHandlers[0]).not.toContain("parsed: parseResult,");
 
     /* Verify the structure includes conditional logic for force validation */
