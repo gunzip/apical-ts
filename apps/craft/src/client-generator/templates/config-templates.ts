@@ -107,7 +107,7 @@ export function createForcedParseResponse<
     status,
     data,
     response,
-    parsed: parseResult,
+    parsed: { data: parseResult.parsed, contentType: parseResult.contentType },
   };
 }`;
 }
