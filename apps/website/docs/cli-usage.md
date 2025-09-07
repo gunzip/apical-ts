@@ -111,11 +111,11 @@ by default. To format them you may use [Biome](https://biomejs.dev/) running the
 following command in the output directory:
 
 ```bash
-pnpx @biomejs/biome format --write .
+npx @biomejs/biome format --write .
 ```
 
 Alternatively, you can use any other slower code formatter of your choice, e.g.
 
 ```bash
-pnpx prettier --log-level=silent --write .
+npx prettier --log-level=silent --write .
 ```
