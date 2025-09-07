@@ -119,7 +119,7 @@ or error object.
 
 ```typescript
 type SuccessResponse = {
-  success: true;
+  isValid: true;
   status: number; // HTTP status code
   data: unknown; // Raw response data
   response: Response; // Original fetch Response object
@@ -135,7 +135,7 @@ on the value of `forceValidation` flag. See
 
 ```typescript
 type ErrorResponse = {
-  success: false;
+  isValid: false;
   kind: string; // Error type discriminator
   error: unknown; // Error details
   status?: number; // HTTP status (if available)

@@ -1,10 +1,10 @@
 # Response Handling
 
-Each operation returns a discriminated union: either a successful API response
-(`success: true` with a `status` code) or an error object (`success: false`)
+Each operation returns a discriminated union: either a compliant API response
+(`isValid: true` with a `status` code) or an error object (`isValid: false`)
 with a `kind` discriminator.
 
-Validation is opt-out by default (success responses expose a `parsed` field).
+Validation is opt-out by default (compliant responses expose a `parsed` field).
 You can disable automatic validation at runtime by providing
 `forceValidation: false` in the configuration you pass to an operation or via
 `configureOperations`.
