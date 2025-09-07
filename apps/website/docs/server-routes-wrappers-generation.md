@@ -94,9 +94,9 @@ See the `apps/examples` directory in the repository for more usage examples.
 The handler you provide to the wrapper receives a single argument:
 
 - For valid requests:
-  `{ success: true, value: { query, path, headers, body, ... } }`
+  `{ isValid: true, value: { query, path, headers, body, ... } }`
 - For validation errors:
-  `{ success: false, kind: "query-error" | "body-error" | ... , error: ZodError }`
+  `{ isValid: false, kind: "query-error" | "body-error" | ... , error: ZodError }`
 
 It must return an object with `{ status, contentType, data }`.
 
