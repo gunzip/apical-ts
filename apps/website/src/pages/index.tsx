@@ -30,7 +30,11 @@ function HomepageHeader() {
         </p>
         <nav className={styles.buttons} aria-label="Main navigation">
           <Link
-            className="button button--primary button--lg"
+            className={clsx("button button--lg", styles.ctaButton)}
+            style={{
+              background: "linear-gradient(135deg, #2dd4bf, #22d3ee)",
+              color: "#0e1a2b",
+            }}
             to="/docs/introduction"
             aria-label="Get started with @apical-ts/craft documentation"
           >
@@ -59,6 +63,7 @@ function HomepageHeader() {
           <div className={styles.codeExample}>
             <div className={styles.codeBlockLabel}>CLI</div>
             <CodeBlock
+              className={styles.codeBlock}
               code={`npx @apical-ts/craft generate \\\n -i https://petstore.swagger.io/v2/swagger.json \\\n -o ./generated \\\n --generate-server \\\n --generate-client\n`}
               language="bash"
             />
@@ -66,6 +71,7 @@ function HomepageHeader() {
           <div className={styles.codeExample}>
             <div className={styles.codeBlockLabel}>TypeScript</div>
             <CodeBlock
+              className={styles.codeBlock}
               code={`import { findPetsByStatus } from './generated/operations/findPetsByStatus.js';\n\n  const r = await findPetsByStatus({\n    query: { status: "available" },\n  });\n  if (r.isValid === true && r.status === 200) {\n    // Zod v4 parsed payload\n    console.log(r.parsed.data[0].name);\n  }`}
               language="typescript"
             />
@@ -98,7 +104,7 @@ function WhyChooseUs() {
             <span className={styles.whyChooseIcon} aria-hidden="true">
               ⚡
             </span>
-            <h3 style={{ fontWeight: 700, marginBottom: 4 }}>Performance</h3>
+            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>Performance</h3>
             <p>
               Bring your own validator: choose Zod v4 for runtime validation,
               swap in your own library, or skip validation entirely.
