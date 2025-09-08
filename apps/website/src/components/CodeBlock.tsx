@@ -4,10 +4,13 @@ import { Highlight, themes } from "prism-react-renderer";
 interface CodeBlockProps {
   code: string;
   language: string;
+  className?: string;
 }
 
-const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
+const CodeBlock: React.FC<CodeBlockProps> = ({ code, language, className: outerClassName }) => {
   const [copied, setCopied] = useState(false);
+  // Use a vibrant dark theme that works well with our custom dark background
+  const resolvedTheme = themes.nightOwl;
 
   const handleCopy = async () => {
     try {
@@ -23,8 +26,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
     <Highlight
       code={code.trim()}
       language={language}
-      theme={themes.github}
-      children={({ className, style, tokens, getLineProps, getTokenProps }) => (
+  theme={resolvedTheme}
+  children={({ className, style, tokens, getLineProps, getTokenProps }) => (
         <div
           className="codeblock-group"
           style={{
@@ -70,7 +73,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
             {copied ? "Copied!" : "Copy"}
           </button>
           <pre
-            className={className}
+            className={[className, outerClassName].filter(Boolean).join(" ")}
             style={{
               ...style,
               padding: 16,
@@ -82,9 +85,9 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
             }}
           >
             {tokens.map((line, i) => (
-              <div key={i} {...getLineProps({ line, key: i })}>
-                {line.map((token, key) => (
-                  <span key={key} {...getTokenProps({ token, key })} />
+              <div key={i} {...getLineProps({ line })}>
+                {line.map((token, j) => (
+                  <span key={j} {...getTokenProps({ token })} />
                 ))}
               </div>
             ))}
