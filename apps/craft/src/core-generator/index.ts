@@ -119,9 +119,17 @@ async function createPackageJson(output: string): Promise<void> {
     dependencies: {
       zod: "^4.0.0",
     },
+    devDependencies: {
+      "@types/node": "^24.3.1",
+      typescript: "^5.4.5",
+    },
     name: "generated-client",
+    scripts: {
+      build:
+        "tsc --outDir ./dist --rootDir . --moduleResolution NodeNext --module NodeNext --target ES2022 --lib es2022 --strict --esModuleInterop --skipLibCheck --allowSyntheticDefaultImports --resolveJsonModule --forceConsistentCasingInFileNames --noEmitOnError false schemas/*.ts client/*.ts server/*.ts",
+    },
     type: "module",
-    version: "1.0.0",
+    version: "0.1.0",
   };
   const packageJsonPath = path.join(output, "package.json");
   await fs.writeFile(
