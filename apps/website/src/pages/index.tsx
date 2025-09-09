@@ -64,7 +64,7 @@ function HomepageHeader() {
             <div className={styles.codeBlockLabel}>CLI</div>
             <CodeBlock
               className={styles.codeBlock}
-              code={`npx @apical-ts/craft generate \\\n -i https://petstore.swagger.io/v2/swagger.json \\\n -o ./generated \\\n --generate-server \\\n --generate-client\n\ncd generated && npm run build`}
+              code={`npx @apical-ts/craft generate \\\n -i https://petstore.swagger.io/v2/swagger.json \\\n -o ./generated \\\n --generate-server \\\n --generate-client\n\ncd generated\n\nnpm install && npm run build`}
               language="bash"
             />
           </div>
@@ -72,7 +72,7 @@ function HomepageHeader() {
             <div className={styles.codeBlockLabel}>TypeScript</div>
             <CodeBlock
               className={styles.codeBlock}
-              code={`import { findPetsByStatus } from './generated/operations/findPetsByStatus.js';\n\nconst r = await findPetsByStatus({\n  query: { status: "available" },\n});\nif (r.isValid === true && r.status === 200) {\n  // Zod v4 parsed payload\n  console.log(r.parsed.data[0].name);\n}`}
+              code={`import { findPetsByStatus } from './generated/client/findPetsByStatus.js';\n\nconst r = await findPetsByStatus({\n  query: { status: "available" },\n});\nif (r.isValid === true && r.status === 200) {\n  // Zod v4 parsed payload\n  console.log(r.parsed.data[0].name);\n}`}
               language="typescript"
             />
           </div>
