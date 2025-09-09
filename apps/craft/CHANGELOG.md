@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.31
+
+### Patch Changes
+
+- Added build task to generated package
+
 ## 0.0.30
 
 ### Patch Changes
