@@ -7,7 +7,11 @@ interface CodeBlockProps {
   className?: string;
 }
 
-const CodeBlock: React.FC<CodeBlockProps> = ({ code, language, className: outerClassName }) => {
+const CodeBlock: React.FC<CodeBlockProps> = ({
+  code,
+  language,
+  className: outerClassName,
+}) => {
   const [copied, setCopied] = useState(false);
   // Use a vibrant dark theme that works well with our custom dark background
   const resolvedTheme = themes.nightOwl;
@@ -26,8 +30,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language, className: outerC
     <Highlight
       code={code.trim()}
       language={language}
-  theme={resolvedTheme}
-  children={({ className, style, tokens, getLineProps, getTokenProps }) => (
+      theme={resolvedTheme}
+      children={({ className, style, tokens, getLineProps, getTokenProps }) => (
         <div
           className="codeblock-group"
           style={{

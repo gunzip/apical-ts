@@ -14,6 +14,7 @@ keywords:
     API client,
     type safety,
     schema validation,
+    openapi-zod-client alternative,
   ]
 ---
 
