@@ -126,7 +126,7 @@ async function createPackageJson(output: string): Promise<void> {
     name: "generated-client",
     scripts: {
       build:
-        'tsc --outDir ./dist --rootDir . --moduleResolution NodeNext --module NodeNext --target ES2022 --lib es2022 --strict --esModuleInterop --skipLibCheck --allowSyntheticDefaultImports --resolveJsonModule --forceConsistentCasingInFileNames --noEmitOnError false $(find schemas/ client/ server/ -name "*.ts")',
+        'tsc --outDir ./dist --rootDir . --moduleResolution NodeNext --module NodeNext --target ES2022 --lib es2022 --strict --esModuleInterop --skipLibCheck --allowSyntheticDefaultImports --resolveJsonModule --forceConsistentCasingInFileNames --noEmitOnError false "schemas/**/*.ts" "client/**/*.ts" "server/**/*.ts"',
     },
     type: "module",
     version: "0.1.0",
