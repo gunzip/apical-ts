@@ -9,6 +9,7 @@ TypeScript OpenAPI client generators.
 
 - Modular, tree-shakable output
 - Exact typings with Zod v4
+- Does not throw exceptions
 - Minimal runtime dependencies (only Zod v4)
 - Operation-based architecture, easy to debug
 - Multiple success (2xx) responses handling
@@ -18,8 +19,6 @@ TypeScript OpenAPI client generators.
 **Limitations:**
 
 - Project is still in early development
-- Still untested on real-world scenarios
-- No community
 
 **Best for:** Projects requiring maximum type safety, performance optimization,
 and flexibility
