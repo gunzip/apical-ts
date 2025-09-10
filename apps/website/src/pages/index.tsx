@@ -92,7 +92,7 @@ function WhyChooseUs() {
             <span className={styles.whyChooseIcon} aria-hidden="true">
               🧩
             </span>
-            <h3 style={{ fontWeight: 700, marginBottom: 4 }}>
+            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>
               Modular & Tree-shakable
             </h3>
             <p>
@@ -114,7 +114,7 @@ function WhyChooseUs() {
             <span className={styles.whyChooseIcon} aria-hidden="true">
               🔒
             </span>
-            <h3 style={{ fontWeight: 700, marginBottom: 4 }}>
+            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>
               Type-Safe by Design
             </h3>
             <p>
@@ -127,7 +127,7 @@ function WhyChooseUs() {
             <span className={styles.whyChooseIcon} aria-hidden="true">
               🌐
             </span>
-            <h3 style={{ fontWeight: 700, marginBottom: 4 }}>
+            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>
               Efficient error handling
             </h3>
             <p>
