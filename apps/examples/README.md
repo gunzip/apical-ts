@@ -1,12 +1,17 @@
-# Express OpenAPI Server Wrapper Example
+# Express OpenAPI Server Wrapper Examples
 
-This example demonstrates how to use the generated OpenAPI server wrappers with
-Express.js, showcasing a complete integration that includes both server-side
-wrappers and client-side type-safe API calls.
+These examples demonstrate how to use the generated OpenAPI server wrappers with
+Express.js, showcasing complete integrations that include both server-side
+wrappers and client-side type-safe API calls. Two server implementations are
+provided:
+
+- **Express Server Example**: Full implementation with custom business logic
+- **Mock Server Example**: Automatic mock server using zocker for data
+  generation
 
 ## Overview
 
-This example uses the
+These examples use the
 [Swagger Petstore OpenAPI specification](https://raw.githubusercontent.com/swagger-api/swagger-petstore/refs/heads/master/src/main/resources/openapi.yaml)
 to generate:
 
@@ -14,7 +19,7 @@ to generate:
 - **Client functions**: Type-safe API client functions
 - **Zod schemas**: Runtime validation schemas for all data types
 
-The example shows how to bridge the generated server wrappers with Express.js
+The examples show how to bridge the generated server wrappers with Express.js
 using an adapter pattern, and how to call the resulting API using the generated
 client.
 
@@ -42,25 +47,28 @@ This task will:
 - Create the `generated/` directory with schemas, server wrappers, and client
   functions
 
-### 2. Install Dependencies
+### 2. Choose Your Server Implementation
 
-Install the required dependencies for running the examples:
+#### Option A: Full Express Server with Custom Logic
 
-```bash
-# Install Express and types (if not already available)
-pnpm add express @types/express
-```
-
-### 3. Start the Express Server
-
-Run the Express server that uses the generated server wrappers:
+Run the Express server that uses the generated server wrappers with custom
+business logic:
 
 ```bash
 # From the examples directory
 pnpx tsx server-examples/express-server-example.ts
 ```
 
-The server will start on `http://localhost:3000` and display available
+#### Option B: Mock Server with Auto-Generated Data
+
+Run the mock Express server that automatically generates responses using zocker:
+
+```bash
+# From the examples directory
+pnpx tsx server-examples/mock-server-example.ts
+```
+
+Both servers will start on `http://localhost:3000` and display available
 endpoints:
 
 ```
@@ -72,7 +80,14 @@ endpoints:
   GET /health
 ```
 
-### 4. Test with the Generated Client
+The mock server will additionally show:
+
+```
+📊 All OpenAPI operations are mocked with zocker-generated data for all status codes in responseMap
+🔍 Validation errors include detailed error messages
+```
+
+### 3. Test with the Generated Client
 
 In a new terminal, run the client example to test the API:
 
@@ -88,7 +103,7 @@ This will demonstrate:
 - Retrieving store inventory
 - Handling typed operation errors (e.g. network, validation, missing schema)
 
-### 5. Manual Testing
+### 4. Manual Testing
 
 You can also test the API manually using curl:
 
@@ -146,6 +161,55 @@ app.get("/pet/findByStatus", async (req, res) => {
 
 ```typescript
 setupRoute(getPetByIdWrapper, getPetByIdRoute(), getPetByIdHandler);
+```
+
+### 3. Mock Server Implementation (`server-examples/mock-server-example.ts`)
+
+Demonstrates automatic mock data generation using zocker:
+
+**Key features:**
+
+- **Automatic mock generation**: Uses zocker to generate realistic mock data for
+  all response schemas
+- **Status code coverage**: Mocks responses for all status codes defined in the
+  OpenAPI specification
+- **Validation error handling**: Provides detailed error messages for invalid
+  requests
+- **Generic handler factory**: `createMockHandler()` automatically creates
+  handlers for any operation
+
+**Mock handler pattern:**
+
+```typescript
+const createMockHandler = (routeInfo) => {
+  const handler = async (params) => {
+    if (!params.isValid) {
+      // Generate mock validation error response
+      const schema = routeInfo.responseMap["400"]["application/json"];
+      const mockData = zocker(schema).setSeed(123).generate();
+      return {
+        status: 400,
+        contentType: "application/json",
+        data: { ...mockData, message: prettifyValidationError(params) },
+      };
+    }
+
+    // Generate mock success response
+    const statusResponseMap = routeInfo.responseMap["200"];
+    const schema = statusResponseMap["application/json"];
+    const data = zocker(schema).setSeed(123).generate();
+    return { status: 200, contentType: "application/json", data };
+  };
+  return handler;
+};
+```
+
+**Automatic route registration:**
+
+```typescript
+Object.values(routes).forEach((routeFn) => {
+  registerRoute(routeFn());
+});
 ```
 
 ### 3. Request Parameter Extraction
@@ -266,14 +330,33 @@ Each operation generates:
 5. **Consistent APIs**: Generated client matches server implementation exactly
 6. **Development Experience**: IntelliSense, auto-completion, and compile-time
    checks
+7. **Mock Server Support**: Automatic mock data generation for rapid prototyping
+   and testing
+8. **Comprehensive Coverage**: Mock server supports all status codes and
+   response schemas from the OpenAPI specification
 
 ## Customization
+
+### Choosing Between Server Implementations
+
+- **Use Express Server Example** (`express-server-example.ts`) when:
+  - You need custom business logic implementation
+  - You want full control over response data
+  - You're building a production API
+  - You need to integrate with databases or external services
+
+- **Use Mock Server Example** (`mock-server-example.ts`) when:
+  - You need rapid prototyping and testing
+  - You want to explore API behavior without implementing business logic
+  - You're developing client applications and need realistic test data
+  - You want to validate OpenAPI specifications with comprehensive response
+    coverage
 
 ### Adding New Operations
 
 1. Update the OpenAPI specification (`examples.yaml`)
 2. Regenerate code: `pnpm generate:examples`
-3. Implement the handler in your Express server
+3. Implement the handler in your Express server (for custom logic)
 4. Use the generated client to call the new endpoint
 
 ### Custom Error Handling
