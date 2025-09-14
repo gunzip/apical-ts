@@ -68,9 +68,7 @@ export function extractServerOperationMetadata(
     doc,
   );
 
-  /* Server wrappers have slightly different heuristics:
-     - Only emit request/response maps when there is more than one content type.
-       (The client generator may still emit maps for a single entry for generic negotiation.) */
+  /* Server wrappers should always generate response maps like the client does */
   const contentTypeMaps = clientMeta.bodyInfo.contentTypeMaps;
   const hasBody = clientMeta.hasBody;
   const bodyTypeInfo = clientMeta.bodyInfo.bodyTypeInfo;
@@ -84,15 +82,14 @@ export function extractServerOperationMetadata(
   );
 
   const shouldGenerateRequestMap = contentTypeMaps.requestContentTypeCount > 1;
-  const shouldGenerateResponseMap =
-    contentTypeMaps.responseContentTypeCount > 1;
+  /* Always generate response maps for server like client does */
+  const shouldGenerateResponseMap = true;
 
   const requestMapTypeName = shouldGenerateRequestMap
     ? `${sanitizeIdentifier(operationId)}RequestMap`
     : undefined;
-  const responseMapTypeName = shouldGenerateResponseMap
-    ? `${sanitizeIdentifier(operationId)}ResponseMap`
-    : undefined;
+  /* Always define response map type name */
+  const responseMapTypeName = `${sanitizeIdentifier(operationId)}ResponseMap`;
 
   const parameterGroups = clientMeta.parameterGroups;
 
