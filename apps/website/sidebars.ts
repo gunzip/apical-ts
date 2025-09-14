@@ -17,10 +17,9 @@ const sidebars: SidebarsConfig = {
   docsSidebar: [
     "introduction",
     "cli-usage",
-    "supported-input-formats",
-    "programmatic-usage",
     "generated-architecture",
     {
+      collapsible: false,
       collapsed: false,
       type: "category",
       label: "Client Generation",
@@ -36,6 +35,7 @@ const sidebars: SidebarsConfig = {
       ],
     },
     "server-routes-wrappers-generation",
+    "supported-input-formats",
     "supported-features",
     "benefits-of-operation-based-architecture",
     "comparison-with-alternative-libraries",
