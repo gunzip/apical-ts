@@ -3,6 +3,7 @@ import type { ServerOperationMetadata } from "../operation-wrapper-generator.js"
 
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
 import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
+import { generateResponseMap } from "../../shared/response-maps.js";
 import { generateResponseUnion } from "../../shared/response-union-generator.js";
 
 /**
@@ -55,16 +56,39 @@ export function buildServerResponseMap(
   metadata: ServerOperationMetadata,
   typeImports: Set<string>,
 ): string {
-  /* Use shared response union generation to ensure consistency with client generator */
-  const result = generateResponseUnion(
+  /* Generate response union type using existing logic */
+  const unionResult = generateResponseUnion(
     metadata.operation,
     metadata.operationId,
     typeImports,
     { useStrictSchemas: true }, // Use strict schemas for server responses
   );
 
-  /* Return the union type definition */
-  return result.unionTypeDefinition;
+  /* Generate response map using shared logic */
+  const responseMapResult = generateResponseMap(
+    metadata.operation,
+    metadata.operationId,
+    typeImports,
+    { useStrictSchemas: true }, // Use strict schemas for server responses
+  );
+
+  /* Add type imports */
+  responseMapResult.typeImports.forEach((imp) => typeImports.add(imp));
+
+  /* Generate response map constant and type like client generator */
+  const responseMapName = `${sanitizeIdentifier(metadata.operationId)}ResponseMap`;
+
+  let responseMapCode = "";
+  if (responseMapResult.shouldGenerateResponseMap) {
+    responseMapCode = `export const ${responseMapName} = ${responseMapResult.responseMapType} as const;
+export type ${responseMapName} = typeof ${responseMapName};`;
+  } else {
+    responseMapCode = `export const ${responseMapName} = {} as const;
+export type ${responseMapName} = typeof ${responseMapName};`;
+  }
+
+  /* Combine both the union type and the response map */
+  return `${responseMapCode}\n\n${unionResult.unionTypeDefinition}`;
 }
 
 /**
@@ -83,7 +107,7 @@ export function renderServerOperationWrapper(
     requestMapCode,
     requestMapTypeName,
     responseMapCode,
-    // responseMapTypeName,
+    responseMapTypeName,
     // summary,
   } = params;
 
@@ -138,8 +162,19 @@ ${validationLogic}
   };
 }`;
 
+  /* Include responseMap in the route function return */
+  const responseMapFieldValue = responseMapTypeName
+    ? `${sanitizedId}ResponseMap`
+    : "{}";
   const routeFunction = `export function route() {
-  return { path: "${pathKey}", method: "${method}", wrapper: ${functionName}, operationId: "${sanitizedId}" } as const;
+  return {
+    path: "${pathKey}",
+    method: "${method}",
+    wrapper: ${functionName},
+    operationId: "${sanitizedId}",
+    requestMap: ${requestMapTypeName || "{}"},
+    responseMap: ${responseMapFieldValue},
+  } as const;
 }`;
 
   /* Combine all parts */

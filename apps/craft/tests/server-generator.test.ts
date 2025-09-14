@@ -281,8 +281,14 @@ describe("server-generator operation wrapper", () => {
 
     expect(result.wrapperCode).toContain("testAuthBearerWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
+    expect(result.wrapperCode).toContain("return {");
+    expect(result.wrapperCode).toContain('path: "/auth/{userId}"');
+    expect(result.wrapperCode).toContain('method: "get"');
+    expect(result.wrapperCode).toContain("wrapper: testAuthBearerWrapper");
+    expect(result.wrapperCode).toContain('operationId: "testAuthBearer"');
+    expect(result.wrapperCode).toContain("requestMap: {}");
     expect(result.wrapperCode).toContain(
-      'return { path: "/auth/{userId}", method: "get", wrapper: testAuthBearerWrapper, operationId: "testAuthBearer" } as const;',
+      "responseMap: testAuthBearerResponseMap",
     );
   });
 
@@ -321,9 +327,13 @@ describe("server-generator operation wrapper", () => {
 
     expect(result.wrapperCode).toContain("createPetWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
-    expect(result.wrapperCode).toContain(
-      'return { path: "/pets", method: "post", wrapper: createPetWrapper, operationId: "createPet" } as const;',
-    );
+    expect(result.wrapperCode).toContain("return {");
+    expect(result.wrapperCode).toContain('path: "/pets"');
+    expect(result.wrapperCode).toContain('method: "post"');
+    expect(result.wrapperCode).toContain("wrapper: createPetWrapper");
+    expect(result.wrapperCode).toContain('operationId: "createPet"');
+    expect(result.wrapperCode).toContain("requestMap: {}");
+    expect(result.wrapperCode).toContain("responseMap: createPetResponseMap");
   });
 
   it("should preserve complex path parameters in route function", () => {
@@ -362,8 +372,16 @@ describe("server-generator operation wrapper", () => {
 
     expect(result.wrapperCode).toContain("updatePetStatusWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
+    expect(result.wrapperCode).toContain("return {");
     expect(result.wrapperCode).toContain(
-      'return { path: "/pets/{petId}/status/{statusId}", method: "patch", wrapper: updatePetStatusWrapper, operationId: "updatePetStatus" } as const;',
+      'path: "/pets/{petId}/status/{statusId}"',
+    );
+    expect(result.wrapperCode).toContain('method: "patch"');
+    expect(result.wrapperCode).toContain("wrapper: updatePetStatusWrapper");
+    expect(result.wrapperCode).toContain('operationId: "updatePetStatus"');
+    expect(result.wrapperCode).toContain("requestMap: {}");
+    expect(result.wrapperCode).toContain(
+      "responseMap: updatePetStatusResponseMap",
     );
   });
 
@@ -405,8 +423,14 @@ describe("server-generator operation wrapper", () => {
 
     /* Check that route function includes all required fields */
     expect(result.wrapperCode).toContain("export function route() {");
+    expect(result.wrapperCode).toContain("return {");
+    expect(result.wrapperCode).toContain('path: "/test-auth-bearer-http"');
+    expect(result.wrapperCode).toContain('method: "get"');
+    expect(result.wrapperCode).toContain("wrapper: testAuthBearerHttpWrapper");
+    expect(result.wrapperCode).toContain('operationId: "testAuthBearerHttp"');
+    expect(result.wrapperCode).toContain("requestMap: {}");
     expect(result.wrapperCode).toContain(
-      'return { path: "/test-auth-bearer-http", method: "get", wrapper: testAuthBearerHttpWrapper, operationId: "testAuthBearerHttp" } as const;',
+      "responseMap: testAuthBearerHttpResponseMap",
     );
 
     /* Verify wrapper function is also generated */
