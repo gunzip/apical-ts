@@ -111,7 +111,6 @@ for more details or check our comprehensive feature list for more information.
 ## Next Steps
 
 - Learn how to use the [CLI tool](cli-usage)
-- Explore [programmatic usage](programmatic-usage) for build integrations
 - Dive into [client generation](client-generation/define-configuration) to build
   type-safe API clients
 - Check out our comprehensive feature documentation for a complete overview
