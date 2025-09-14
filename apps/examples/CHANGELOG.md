@@ -1,5 +1,11 @@
 # @apical-ts/examples
 
+## 0.0.4
+
+### Patch Changes
+
+- Add complete mock server example
+
 ## 0.0.3
 
 ### Patch Changes
