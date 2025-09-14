@@ -22,8 +22,9 @@
   },
   "dependencies": {
     "express": "^5.1.0",
-    "zod": "^4.0.0",
-    "neverthrow": "^8.2.0"
+    "neverthrow": "^8.2.0",
+    "zocker": "^3.0.0",
+    "zod": "^4.0.0"
   },
   "engines": {
     "node": ">=22.0.0"

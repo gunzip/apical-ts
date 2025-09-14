@@ -28,7 +28,24 @@ export async function writeServerIndexFile(
     )
     .join("\n");
 
-  const indexContent = `/* Server operation wrappers */
+  /* Generate routes object with all route functions properly aliased */
+  const routeImports = operations
+    .map(
+      ({ operationId }) =>
+        `import { route as ${operationId}Route } from "./${operationId}.js";`,
+    )
+    .join("\n");
+
+  const routesObject = `export const routes = {
+${operations
+  .map(({ operationId }) => `${operationId}: ${operationId}Route,`)
+  .join("\n")}
+} as const;`;
+
+  const indexContent = `/* Route imports for routes object */
+${routeImports}
+
+/* Server operation wrappers */
 ${exports}
 
 /* Re-export all handlers */
@@ -38,6 +55,9 @@ ${operations
       `export type { ${operationId}Handler } from "./${operationId}.js";`,
   )
   .join("\n")}
+
+/* Routes object with all route functions */
+${routesObject}
 `;
 
   const filePath = path.join(serverOperationsDir, "index.ts");

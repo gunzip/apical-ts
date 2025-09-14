@@ -35,16 +35,12 @@ export function extractRequestParams(req: Request) {
  * This simplifies the process of setting up routes
  */
 export function createExpressAdapter<
-  THandler extends Function,
-  TResponse extends ServerResponse,
->(
-  routeInfo: {
+  R extends {
     path: string;
     method: string;
-    wrapper: (handler: THandler) => (req: any) => Promise<TResponse>;
+    wrapper: (handler: any) => (req: any) => Promise<any>;
   },
-  handler: THandler,
-) {
+>(routeInfo: R, handler: Parameters<R["wrapper"]>[0]) {
   return (app: Express.Application) => {
     /* Build Express path replacing invalid param name chars with underscores while preserving mapping */
     const paramNameMap: Record<string, string> = {};
@@ -67,7 +63,9 @@ export function createExpressAdapter<
             }
           }
           const wrappedHandler = routeInfo.wrapper(handler);
-          const result: TResponse = await wrappedHandler({
+          type _Wrapped = ReturnType<R["wrapper"]>;
+          type _Response = Awaited<ReturnType<_Wrapped>>;
+          const result: _Response = await wrappedHandler({
             ...params,
             path: remappedPath,
           });
