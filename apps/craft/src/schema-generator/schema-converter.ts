@@ -9,8 +9,10 @@ export type OpenAPISchema = ReferenceObject | SchemaObject;
  * Options for zodSchemaToCode function
  */
 export interface ZodSchemaCodeOptions {
+  currentSchemaName?: string;
   imports?: Set<string>;
   isTopLevel?: boolean;
+  recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
   strictValidation?: boolean;
 }
 
@@ -40,7 +42,7 @@ import {
   handleNumberType,
   handleStringType,
 } from "./primitive-types.js";
-import { handleReference } from "./reference-handlers.js";
+import { handleReferenceWithContext } from "./reference-handlers.js";
 import { handleAllOfSchema, handleUnionSchema } from "./union-types.js";
 import {
   analyzeTypeArray,
@@ -57,12 +59,21 @@ export function zodSchemaToCode(
   schema: ReferenceObject | SchemaObject,
   options: ZodSchemaCodeOptions = {},
 ): ZodSchemaResult {
-  const { imports, strictValidation = false } = options;
+  const {
+    currentSchemaName,
+    imports,
+    recursiveContext,
+    strictValidation = false,
+  } = options;
   const result = createResult(imports);
 
   /* References */
   if (!isSchemaObject(schema)) {
-    return handleReference(schema, result, strictValidation);
+    return handleReferenceWithContext(schema, result, {
+      currentSchemaName,
+      recursiveContext,
+      strictValidation,
+    });
   }
 
   const effectiveType = inferEffectiveType(schema);
@@ -74,6 +85,8 @@ export function zodSchemaToCode(
       effectiveType,
       result,
       strictValidation,
+      recursiveContext,
+      currentSchemaName,
     );
   }
 
@@ -85,11 +98,23 @@ export function zodSchemaToCode(
 
   /* Nullable (OpenAPI 3.0) */
   if (isNullable(schema)) {
-    return handleNullableSchema(schema, result, strictValidation);
+    return handleNullableSchema(
+      schema,
+      result,
+      strictValidation,
+      recursiveContext,
+      currentSchemaName,
+    );
   }
 
   /* Composition: allOf / anyOf / oneOf */
-  const composition = tryHandleCompositions(schema, result, strictValidation);
+  const composition = tryHandleCompositions(
+    schema,
+    result,
+    strictValidation,
+    recursiveContext,
+    currentSchemaName,
+  );
   if (composition) return composition;
 
   /* Primitives & structured */
@@ -98,6 +123,8 @@ export function zodSchemaToCode(
     effectiveType,
     result,
     strictValidation,
+    recursiveContext,
+    currentSchemaName,
   );
   if (primitiveHandled) return primitiveHandled;
 
@@ -117,12 +144,16 @@ function handleMultiTypeArray(
   effectiveType: string[],
   result: ZodSchemaResult,
   strictValidation: boolean,
+  recursiveContext?: import("./recursive-handlers.js").RecursiveContext,
+  currentSchemaName?: string,
 ): ZodSchemaResult {
   const { isNullable: hasNull, nonNullTypes } = analyzeTypeArray(effectiveType);
   if (nonNullTypes.length === 1 && hasNull) {
     const clone = { ...schema, type: nonNullTypes[0] };
     const subResult = zodSchemaToCode(clone as SchemaObject, {
+      currentSchemaName,
       imports: result.imports,
+      recursiveContext,
       strictValidation,
     });
     result.code = `(${subResult.code}).nullable()`;
@@ -131,7 +162,9 @@ function handleMultiTypeArray(
   }
   const subResults = effectiveType.map((t: string) =>
     zodSchemaToCode({ ...schema, type: t } as SchemaObject, {
+      currentSchemaName,
       imports: result.imports,
+      recursiveContext,
       strictValidation,
     }),
   );
@@ -146,10 +179,14 @@ function handleNullableSchema(
   schema: SchemaObject,
   result: ZodSchemaResult,
   strictValidation: boolean,
+  recursiveContext?: import("./recursive-handlers.js").RecursiveContext,
+  currentSchemaName?: string,
 ): ZodSchemaResult {
   const clone = cloneWithoutNullable(schema);
   const subResult = zodSchemaToCode(clone, {
+    currentSchemaName,
     imports: result.imports,
+    recursiveContext,
     strictValidation,
   });
   result.code = `(${subResult.code}).nullable()`;
@@ -163,6 +200,8 @@ function handlePrimitive(
   effectiveType: string | undefined,
   result: ZodSchemaResult,
   strictValidation: boolean,
+  recursiveContext?: import("./recursive-handlers.js").RecursiveContext,
+  currentSchemaName?: string,
 ): undefined | ZodSchemaResult {
   if (effectiveType === "string") return handleStringType(schema, result);
   if (effectiveType === "number" || effectiveType === "integer") {
@@ -171,11 +210,15 @@ function handlePrimitive(
   if (effectiveType === "boolean") return handleBooleanType(schema, result);
   if (effectiveType === "array") {
     return handleArrayType(schema, result, zodSchemaToCode, {
+      currentSchemaName,
+      recursiveContext,
       strictValidation,
     });
   }
   if (effectiveType === "object") {
     return handleObjectType(schema, result, zodSchemaToCode, {
+      currentSchemaName,
+      recursiveContext,
       strictValidation,
     });
   }
@@ -187,9 +230,13 @@ function tryHandleCompositions(
   schema: SchemaObject,
   result: ZodSchemaResult,
   strictValidation: boolean,
+  recursiveContext?: import("./recursive-handlers.js").RecursiveContext,
+  currentSchemaName?: string,
 ): undefined | ZodSchemaResult {
   if (schema.allOf) {
     return handleAllOfSchema(schema.allOf, result, zodSchemaToCode, {
+      currentSchemaName,
+      recursiveContext,
       strictValidation,
     });
   }
@@ -200,7 +247,7 @@ function tryHandleCompositions(
       result,
       zodSchemaToCode,
       schema.discriminator,
-      { strictValidation },
+      { currentSchemaName, recursiveContext, strictValidation },
     );
   }
   if (schema.oneOf) {
@@ -210,7 +257,7 @@ function tryHandleCompositions(
       result,
       zodSchemaToCode,
       schema.discriminator,
-      { strictValidation },
+      { currentSchemaName, recursiveContext, strictValidation },
     );
   }
   return undefined;

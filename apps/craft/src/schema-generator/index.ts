@@ -5,6 +5,7 @@ export type { ExtensibleEnumResult } from "./enum-handlers.js";
 export { handleExtensibleEnum, handleRegularEnum } from "./enum-handlers.js";
 
 export {
+  generateRecursiveSchemaFile,
   generateRequestSchemaFile,
   generateResponseSchemaFile,
   generateSchemaFile,
@@ -19,6 +20,15 @@ export {
   handleNumberType,
   handleStringType,
 } from "./primitive-types.js";
+
+export type { RecursiveContext } from "./recursive-handlers.js";
+
+export {
+  analyzeRecursiveReference,
+  analyzeSchemaForRecursion,
+  createRecursiveContext,
+  generateRecursiveReference,
+} from "./recursive-handlers.js";
 
 export { handleReference } from "./reference-handlers.js";
 

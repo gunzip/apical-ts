@@ -17,6 +17,9 @@ import path from "path";
 import { generateOperations } from "../client-generator/index.js";
 import { applyGeneratedOperationIds } from "../operation-id-generator/index.js";
 import {
+  analyzeSchemaForRecursion,
+  createRecursiveContext,
+  generateRecursiveSchemaFile,
   generateRequestSchemaFile,
   generateResponseSchemaFile,
   generateSchemaFile,
@@ -456,6 +459,31 @@ function generateComponentSchemas(
     return promises;
   }
 
+  // Create a shared recursive context for all schemas
+  const recursiveContext = createRecursiveContext();
+
+  // First pass: analyze all schemas for recursive patterns
+  for (const [name, schema] of Object.entries(
+    context.openApiDoc.components.schemas,
+  )) {
+    if (!isPlainSchemaObject(schema)) {
+      continue;
+    }
+
+    const sanitizedName = sanitizeIdentifier(name);
+
+    // Analyze for recursion and update context
+    const isRecursive = analyzeSchemaForRecursion(name, schema);
+    if (isRecursive) {
+      recursiveContext.recursiveSchemas.add(sanitizedName);
+      // Also add the strict variant if server generation is enabled
+      if (context.generateServer) {
+        recursiveContext.recursiveSchemas.add(`${sanitizedName}Strict`);
+      }
+    }
+  }
+
+  // Second pass: generate schema files with recursive context
   for (const [name, schema] of Object.entries(
     context.openApiDoc.components.schemas,
   )) {
@@ -472,27 +500,70 @@ function generateComponentSchemas(
       ? schema.description.trim()
       : undefined;
 
-    // Generate regular schema
-    const promise = context.limit(() =>
-      generateSchemaFile(sanitizedName, schema, description, {
-        strictValidation: context.strictValidation,
-      }).then((schemaFile) => {
-        const filePath = path.join(context.schemasDir, schemaFile.fileName);
-        return fs.writeFile(filePath, schemaFile.content);
-      }),
+    const isRegularRecursive =
+      recursiveContext.recursiveSchemas.has(sanitizedName);
+    const isStrictRecursive = recursiveContext.recursiveSchemas.has(
+      `${sanitizedName}Strict`,
     );
+
+    // Generate regular schema with appropriate function
+    const promise = context.limit(() => {
+      if (isRegularRecursive) {
+        return generateRecursiveSchemaFile(
+          sanitizedName,
+          schema,
+          recursiveContext,
+          description,
+          {
+            strictValidation: context.strictValidation,
+          },
+        ).then((schemaFile) => {
+          const filePath = path.join(context.schemasDir, schemaFile.fileName);
+          return fs.writeFile(filePath, schemaFile.content);
+        });
+      } else {
+        return generateSchemaFile(sanitizedName, schema, description, {
+          recursiveContext,
+          strictValidation: context.strictValidation,
+        }).then((schemaFile) => {
+          const filePath = path.join(context.schemasDir, schemaFile.fileName);
+          return fs.writeFile(filePath, schemaFile.content);
+        });
+      }
+    });
     promises.push(promise);
 
     // Generate strict schema for server when generateServer is enabled
     if (context.generateServer) {
-      const strictPromise = context.limit(() =>
-        generateSchemaFile(`${sanitizedName}Strict`, schema, description, {
-          strictValidation: true,
-        }).then((schemaFile) => {
-          const filePath = path.join(context.schemasDir, schemaFile.fileName);
-          return fs.writeFile(filePath, schemaFile.content);
-        }),
-      );
+      const strictPromise = context.limit(() => {
+        if (isStrictRecursive) {
+          return generateRecursiveSchemaFile(
+            `${sanitizedName}Strict`,
+            schema,
+            recursiveContext,
+            description,
+            {
+              strictValidation: true,
+            },
+          ).then((schemaFile) => {
+            const filePath = path.join(context.schemasDir, schemaFile.fileName);
+            return fs.writeFile(filePath, schemaFile.content);
+          });
+        } else {
+          return generateSchemaFile(
+            `${sanitizedName}Strict`,
+            schema,
+            description,
+            {
+              recursiveContext,
+              strictValidation: true,
+            },
+          ).then((schemaFile) => {
+            const filePath = path.join(context.schemasDir, schemaFile.fileName);
+            return fs.writeFile(filePath, schemaFile.content);
+          });
+        }
+      });
       promises.push(strictPromise);
     }
   }

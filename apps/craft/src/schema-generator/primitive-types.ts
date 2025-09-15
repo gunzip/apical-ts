@@ -4,8 +4,10 @@ import { handleExtensibleEnum, handleRegularEnum } from "./enum-handlers.js";
 import { addDefaultValue } from "./utils.js";
 
 interface ZodSchemaCodeOptions {
+  currentSchemaName?: string;
   imports?: Set<string>;
   isTopLevel?: boolean;
+  recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
   strictValidation?: boolean;
 }
 
@@ -26,9 +28,17 @@ export function handleArrayType(
     schema: ReferenceObject | SchemaObject,
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
-  options: { strictValidation?: boolean } = {},
+  options: {
+    currentSchemaName?: string;
+    recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
+    strictValidation?: boolean;
+  } = {},
 ): ZodSchemaResult {
-  const { strictValidation = false } = options;
+  const {
+    currentSchemaName,
+    recursiveContext,
+    strictValidation = false,
+  } = options;
   if (!schema.items) {
     let code = "z.array(z.unknown())";
     code = addDefaultValue(code, schema.default);
@@ -37,7 +47,9 @@ export function handleArrayType(
   }
 
   const itemsResult = zodSchemaToCode(schema.items, {
+    currentSchemaName,
     imports: result.imports,
+    recursiveContext,
     strictValidation,
   });
   let code = `z.array(${itemsResult.code})`;

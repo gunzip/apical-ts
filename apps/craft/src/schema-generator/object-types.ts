@@ -6,6 +6,8 @@ import { addDefaultValue } from "./utils.js";
  * Options for object type generation
  */
 interface ObjectTypeOptions {
+  currentSchemaName?: string;
+  recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
   strictValidation?: boolean;
 }
 
@@ -33,14 +35,20 @@ export function handleObjectType(
   ) => ZodSchemaResult,
   options: ObjectTypeOptions = {},
 ): ZodSchemaResult {
-  const { strictValidation = false } = options;
+  const {
+    currentSchemaName,
+    recursiveContext,
+    strictValidation = false,
+  } = options;
   const shape: string[] = [];
   const requiredFields = schema.required || [];
 
   if (schema.properties) {
     for (const [key, propSchema] of Object.entries(schema.properties)) {
       const propResult = zodSchemaToCode(propSchema, {
+        currentSchemaName,
         imports: result.imports,
+        recursiveContext,
         strictValidation,
       });
       result.imports = new Set([...propResult.imports, ...result.imports]);
@@ -62,7 +70,9 @@ export function handleObjectType(
       code += ".catchall(z.unknown())";
     } else {
       const additionalResult = zodSchemaToCode(schema.additionalProperties, {
+        currentSchemaName,
         imports: result.imports,
+        recursiveContext,
         strictValidation,
       });
       result.imports = new Set([

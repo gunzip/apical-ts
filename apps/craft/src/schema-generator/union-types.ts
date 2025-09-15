@@ -16,8 +16,10 @@ export interface DiscriminatorConfig {
 export type UnionType = "anyOf" | "oneOf";
 
 interface ZodSchemaCodeOptions {
+  currentSchemaName?: string;
   imports?: Set<string>;
   isTopLevel?: boolean;
+  recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
   strictValidation?: boolean;
 }
 
@@ -38,11 +40,24 @@ export function handleAllOfSchema(
     schema: ReferenceObject | SchemaObject,
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
-  options: { strictValidation?: boolean } = {},
+  options: {
+    currentSchemaName?: string;
+    recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
+    strictValidation?: boolean;
+  } = {},
 ): ZodSchemaResult {
-  const { strictValidation = false } = options;
+  const {
+    currentSchemaName,
+    recursiveContext,
+    strictValidation = false,
+  } = options;
   const subResults = schemas.map((s) =>
-    zodSchemaToCode(s, { imports: result.imports, strictValidation }),
+    zodSchemaToCode(s, {
+      currentSchemaName,
+      imports: result.imports,
+      recursiveContext,
+      strictValidation,
+    }),
   );
   const schemaCodes = subResults.map((r) => r.code);
   subResults.forEach((r) => {
@@ -77,14 +92,27 @@ export function handleUnionSchema(
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
   discriminator?: DiscriminatorConfig,
-  options: { strictValidation?: boolean } = {},
+  options: {
+    currentSchemaName?: string;
+    recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
+    strictValidation?: boolean;
+  } = {},
 ): ZodSchemaResult {
-  const { strictValidation = false } = options;
+  const {
+    currentSchemaName,
+    recursiveContext,
+    strictValidation = false,
+  } = options;
   // Check if discriminator is present for discriminated unions
   if (discriminator && discriminator.propertyName) {
     const discriminatorProperty = discriminator.propertyName;
     const subResults = schemas.map((s) =>
-      zodSchemaToCode(s, { imports: result.imports, strictValidation }),
+      zodSchemaToCode(s, {
+        currentSchemaName,
+        imports: result.imports,
+        recursiveContext,
+        strictValidation,
+      }),
     );
     const schemasCodes = subResults.map((r) => r.code);
     subResults.forEach((r) => {
@@ -107,7 +135,12 @@ export function handleUnionSchema(
 
   // Regular union without discriminator
   const subResults = schemas.map((s) =>
-    zodSchemaToCode(s, { imports: result.imports, strictValidation }),
+    zodSchemaToCode(s, {
+      currentSchemaName,
+      imports: result.imports,
+      recursiveContext,
+      strictValidation,
+    }),
   );
   const schemasCodes = subResults.map((r) => r.code);
   subResults.forEach((r) => {

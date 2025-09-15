@@ -555,6 +555,8 @@ components:
       $ref: "./definitions.yaml#/Person"
     Book:
       $ref: "./definitions.yaml#/Book"
+    Category:
+      $ref: "./definitions.yaml#/Category"
 
     FiscalCode:
       type: string
