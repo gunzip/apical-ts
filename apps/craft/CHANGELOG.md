@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.35
+
+### Patch Changes
+
+- Fix mismatch between response / requests bodies
+
 ## 0.0.34
 
 ### Patch Changes
