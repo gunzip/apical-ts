@@ -1,5 +1,7 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
+import type { RecursiveContext } from "./recursive-handlers.js";
+
 import { mergeImports } from "./utils.js";
 
 /**
@@ -19,7 +21,7 @@ interface ZodSchemaCodeOptions {
   currentSchemaName?: string;
   imports?: Set<string>;
   isTopLevel?: boolean;
-  recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
+  recursiveContext?: RecursiveContext;
   strictValidation?: boolean;
 }
 
@@ -42,7 +44,7 @@ export function handleAllOfSchema(
   ) => ZodSchemaResult,
   options: {
     currentSchemaName?: string;
-    recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
+    recursiveContext?: RecursiveContext;
     strictValidation?: boolean;
   } = {},
 ): ZodSchemaResult {
@@ -94,7 +96,7 @@ export function handleUnionSchema(
   discriminator?: DiscriminatorConfig,
   options: {
     currentSchemaName?: string;
-    recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
+    recursiveContext?: RecursiveContext;
     strictValidation?: boolean;
   } = {},
 ): ZodSchemaResult {
