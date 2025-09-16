@@ -134,18 +134,24 @@ describe("client-generator response references", () => {
 
       // Should extract both responses
       expect(result).toHaveLength(2);
-      
+
       // Sort by status code for consistent testing
-      const sortedResult = result.sort((a, b) => a.statusCode.localeCompare(b.statusCode));
-      
+      const sortedResult = result.sort((a, b) =>
+        a.statusCode.localeCompare(b.statusCode),
+      );
+
       expect(sortedResult[0].statusCode).toBe("200");
-      expect(sortedResult[0].contentTypes[0].contentType).toBe("application/json");
+      expect(sortedResult[0].contentTypes[0].contentType).toBe(
+        "application/json",
+      );
       expect(sortedResult[0].contentTypes[0].schema).toEqual({
         $ref: "#/components/schemas/Document",
       });
-      
+
       expect(sortedResult[1].statusCode).toBe("400");
-      expect(sortedResult[1].contentTypes[0].contentType).toBe("application/json");
+      expect(sortedResult[1].contentTypes[0].contentType).toBe(
+        "application/json",
+      );
       expect(sortedResult[1].contentTypes[0].schema).toEqual({
         $ref: "#/components/schemas/Error",
       });

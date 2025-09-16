@@ -87,7 +87,7 @@ export function toValidVariableName(str: string): string {
 
 /**
  * Resolves a response reference within an OpenAPI document
- * @param ref The reference string (e.g., "#/components/responses/DocumentResponse") 
+ * @param ref The reference string (e.g., "#/components/responses/DocumentResponse")
  * @param doc The OpenAPI document containing the referenced response
  * @returns The resolved ResponseObject or undefined if not found
  */
@@ -101,7 +101,7 @@ export function resolveResponseReference(
 
   const responseName = ref.replace("#/components/responses/", "");
   const response = doc.components?.responses?.[responseName];
-  
+
   if (!response) {
     return undefined;
   }
@@ -110,7 +110,9 @@ export function resolveResponseReference(
   // If it's still a reference, we'd need recursive resolution, but OpenAPI bundling
   // should have resolved this already
   if (isReferenceObject(response)) {
-    console.warn(`⚠️ Nested response reference not resolved: ${ref} -> ${response.$ref}`);
+    console.warn(
+      `⚠️ Nested response reference not resolved: ${ref} -> ${response.$ref}`,
+    );
     return undefined;
   }
 
@@ -131,7 +133,9 @@ export function resolveResponse(
     if (doc) {
       const resolved = resolveResponseReference(responseOrRef.$ref, doc);
       if (!resolved) {
-        console.warn(`⚠️ Could not resolve response reference: ${responseOrRef.$ref}`);
+        console.warn(
+          `⚠️ Could not resolve response reference: ${responseOrRef.$ref}`,
+        );
         return undefined;
       }
       return resolved;

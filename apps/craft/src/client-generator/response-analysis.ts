@@ -1,6 +1,10 @@
 /* Pure analysis functions for response processing */
 
-import type { OpenAPIObject, OperationObject, ResponseObject } from "openapi3-ts/oas31";
+import type {
+  OpenAPIObject,
+  OperationObject,
+  ResponseObject,
+} from "openapi3-ts/oas31";
 
 import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";

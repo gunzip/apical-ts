@@ -142,7 +142,10 @@ export function generateResponseMap(
   }
 
   contentTypeCount = allContentTypes.size;
-  shouldGenerateResponseMap = statusCodes.length > 1 || contentTypeCount > 1 || Object.keys(statusToContentTypes).length > 0;
+  shouldGenerateResponseMap =
+    statusCodes.length > 1 ||
+    contentTypeCount > 1 ||
+    Object.keys(statusToContentTypes).length > 0;
 
   if (Object.keys(statusToContentTypes).length > 0) {
     const statusMappings: string[] = Object.entries(statusToContentTypes).map(
