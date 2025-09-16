@@ -1,6 +1,10 @@
 /* Shared response mapping logic with correct structure */
 
-import { isReferenceObject, type OperationObject } from "openapi3-ts/oas31";
+import {
+  isReferenceObject,
+  type OpenAPIObject,
+  type OperationObject,
+} from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
 import {
@@ -45,6 +49,7 @@ export function generateResponseMap(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
+  openApiDoc?: OpenAPIObject,
   options: ResponseMapOptions = {},
 ): ResponseMapResult {
   let defaultContentType: null | string = null;
@@ -54,7 +59,10 @@ export function generateResponseMap(
   const statusCodes: string[] = [];
   const allContentTypes = new Set<string>();
 
-  const responseContentTypes = extractResponseContentTypes(operation);
+  const responseContentTypes = extractResponseContentTypes(
+    operation,
+    openApiDoc,
+  );
   if (responseContentTypes.length === 0) {
     return {
       contentTypeCount,

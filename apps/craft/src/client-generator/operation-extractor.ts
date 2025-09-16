@@ -9,6 +9,7 @@ import type {
 } from "openapi3-ts/oas31";
 
 import assert from "assert";
+import { isReferenceObject } from "openapi3-ts/oas31";
 
 /**
  * Content type mapping with schema information
@@ -121,6 +122,7 @@ export function extractRequestContentTypes(
  */
 export function extractResponseContentTypes(
   operation: OperationObject,
+  openApiDoc?: OpenAPIObject,
 ): ResponseContentTypes[] {
   const responseContentTypes: ResponseContentTypes[] = [];
 
@@ -128,18 +130,49 @@ export function extractResponseContentTypes(
     for (const [statusCode, response] of Object.entries(operation.responses)) {
       if (statusCode === "default") continue;
 
-      const responseObj = response as ResponseObject;
       const contentTypes: ContentTypeMapping[] = [];
 
-      if (responseObj.content) {
-        for (const [contentType, mediaType] of Object.entries(
-          responseObj.content,
-        )) {
-          if (mediaType.schema) {
-            contentTypes.push({
-              contentType,
-              schema: mediaType.schema,
-            });
+      // Handle $ref responses (components/responses)
+      if (isReferenceObject(response)) {
+        // Extract component response reference
+        const ref = response.$ref;
+        if (
+          ref.startsWith("#/components/responses/") &&
+          openApiDoc?.components?.responses
+        ) {
+          const responseName = ref.split("/").pop();
+          if (responseName) {
+            const componentResponse =
+              openApiDoc.components.responses[responseName];
+            if (componentResponse && !isReferenceObject(componentResponse)) {
+              // Extract content types from the resolved component response
+              if (componentResponse.content) {
+                for (const [contentType, mediaType] of Object.entries(
+                  componentResponse.content,
+                )) {
+                  if (mediaType.schema) {
+                    contentTypes.push({
+                      contentType,
+                      schema: mediaType.schema,
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else {
+        const responseObj = response as ResponseObject;
+        if (responseObj.content) {
+          for (const [contentType, mediaType] of Object.entries(
+            responseObj.content,
+          )) {
+            if (mediaType.schema) {
+              contentTypes.push({
+                contentType,
+                schema: mediaType.schema,
+              });
+            }
           }
         }
       }

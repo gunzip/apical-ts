@@ -138,7 +138,7 @@ export function generateServerOperationWrapper(
     : "";
 
   /* Build response map */
-  const responseMapCode = buildServerResponseMap(metadata, typeImports);
+  const responseMapCode = buildServerResponseMap(metadata, typeImports, doc);
 
   /* Render the complete wrapper function */
   const wrapperCode = renderServerOperationWrapper({
