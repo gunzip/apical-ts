@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.34
+
+### Patch Changes
+
+- Add support for requestBodies section
+
 ## 0.0.33
 
 ### Patch Changes
