@@ -20,7 +20,7 @@
     "release:major": "turbo run release:major"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.6",
+    "@changesets/cli": "^2.29.7",
     "@devcontainers/cli": "^0.80.1",
     "turbo": "^2.5.6"
   },
