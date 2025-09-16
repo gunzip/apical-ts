@@ -1,8 +1,11 @@
+import type { SchemaObject } from "openapi3-ts/oas31";
+
 import { describe, expect, it } from "vitest";
 
 import {
   analyzeRecursiveReference,
   createRecursiveContext,
+  findReferencesInSchema,
   generateRecursiveReference,
 } from "../../src/schema-generator/recursive-handlers.js";
 
@@ -203,6 +206,125 @@ describe("recursive-handlers", () => {
 
       expect(result.isRecursive).toBe(true);
       expect(result.cyclePath).toBeDefined();
+    });
+  });
+
+  describe("findReferencesInSchema", () => {
+    it("should find references in simple schema", () => {
+      const schema: SchemaObject = {
+        type: "object",
+        properties: {
+          user: {
+            $ref: "#/components/schemas/User",
+          },
+          profile: {
+            $ref: "#/components/schemas/Profile",
+          },
+        },
+      };
+
+      const refs = findReferencesInSchema(schema);
+      expect(refs).toContain("#/components/schemas/User");
+      expect(refs).toContain("#/components/schemas/Profile");
+      expect(refs).toHaveLength(2);
+    });
+
+    it("should find nested references", () => {
+      const schema: SchemaObject = {
+        type: "object",
+        properties: {
+          items: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/Item",
+            },
+          },
+        },
+      };
+
+      const refs = findReferencesInSchema(schema);
+      expect(refs).toContain("#/components/schemas/Item");
+      expect(refs).toHaveLength(1);
+    });
+
+    it("should find references in allOf/anyOf/oneOf", () => {
+      const schema: SchemaObject = {
+        allOf: [
+          { $ref: "#/components/schemas/Base" },
+          {
+            anyOf: [
+              { $ref: "#/components/schemas/TypeA" },
+              { $ref: "#/components/schemas/TypeB" },
+            ],
+          },
+        ],
+      };
+
+      const refs = findReferencesInSchema(schema);
+      expect(refs).toContain("#/components/schemas/Base");
+      expect(refs).toContain("#/components/schemas/TypeA");
+      expect(refs).toContain("#/components/schemas/TypeB");
+      expect(refs).toHaveLength(3);
+    });
+
+    it("should return empty array for schema without references", () => {
+      const schema: SchemaObject = {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          age: { type: "number" },
+        },
+      };
+
+      const refs = findReferencesInSchema(schema);
+      expect(refs).toEqual([]);
+    });
+
+    it("should handle deeply nested structures", () => {
+      const schema: SchemaObject = {
+        type: "object",
+        properties: {
+          data: {
+            type: "object",
+            properties: {
+              nested: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    deepRef: {
+                      $ref: "#/components/schemas/DeepType",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const refs = findReferencesInSchema(schema);
+      expect(refs).toContain("#/components/schemas/DeepType");
+      expect(refs).toHaveLength(1);
+    });
+
+    it("should handle self-referencing schemas", () => {
+      const schema: SchemaObject = {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          children: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/TreeNode",
+            },
+          },
+        },
+      };
+
+      const refs = findReferencesInSchema(schema);
+      expect(refs).toContain("#/components/schemas/TreeNode");
+      expect(refs).toHaveLength(1);
     });
   });
 });

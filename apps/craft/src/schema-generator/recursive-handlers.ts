@@ -1,5 +1,7 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
 
+import { isReferenceObject } from "openapi3-ts/oas31";
+
 import { sanitizeIdentifier } from "./utils.js";
 
 /**
@@ -124,13 +126,8 @@ export function findReferencesInSchema(schema: SchemaObject): string[] {
       return;
     }
 
-    if (
-      typeof obj === "object" &&
-      obj !== null &&
-      "$ref" in obj &&
-      typeof (obj as { $ref: unknown }).$ref === "string"
-    ) {
-      references.push((obj as { $ref: string }).$ref);
+    if (isReferenceObject(obj)) {
+      references.push(obj.$ref);
       return;
     }
 
