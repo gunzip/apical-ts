@@ -1,8 +1,15 @@
 /* Shared response mapping logic with correct structure */
 
-import { isReferenceObject, type OperationObject } from "openapi3-ts/oas31";
+import {
+  isReferenceObject,
+  type OpenAPIObject,
+  type OperationObject,
+} from "openapi3-ts/oas31";
 
-import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
+import {
+  extractResponseContentTypes,
+  type ResponseContentTypes,
+} from "../client-generator/operation-extractor.js";
 import {
   resolveSchemaTypeName,
   resolveStrictSchemaTypeName,
@@ -48,7 +55,7 @@ export function generateResponseMap(
   options: ResponseMapOptions = {},
   doc?: OpenAPIObject,
 ): ResponseMapResult {
-  let defaultContentType: null | string = null;
+  const defaultContentType = { value: null as null | string };
   let contentTypeCount = 0;
   let responseMapType = "{}";
   let shouldGenerateResponseMap = false;
@@ -59,7 +66,7 @@ export function generateResponseMap(
   if (responseContentTypes.length === 0) {
     return {
       contentTypeCount,
-      defaultContentType,
+      defaultContentType: defaultContentType.value,
       responseMapType,
       shouldGenerateResponseMap,
       statusCodes,
@@ -73,6 +80,97 @@ export function generateResponseMap(
     { contentType: string; typeName: string }[]
   > = {};
 
+  // Build mappings from response content types
+  buildStatusToContentTypes(
+    responseContentTypes,
+    operationId,
+    typeImports,
+    options,
+    statusCodes,
+    statusToContentTypes,
+    allContentTypes,
+    defaultContentType,
+  );
+
+  // Handle default response
+  handleDefaultResponse(
+    operation,
+    operationId,
+    typeImports,
+    options,
+    statusCodes,
+    statusToContentTypes,
+    allContentTypes,
+    defaultContentType,
+  );
+
+  contentTypeCount = allContentTypes.size;
+  shouldGenerateResponseMap =
+    statusCodes.length > 1 ||
+    contentTypeCount > 1 ||
+    Object.keys(statusToContentTypes).length > 0;
+
+  // Build response map type string
+  responseMapType = buildResponseMapType(statusToContentTypes);
+
+  return {
+    contentTypeCount,
+    defaultContentType: defaultContentType.value,
+    responseMapType,
+    shouldGenerateResponseMap,
+    statusCodes,
+    typeImports,
+  };
+}
+
+/**
+ * Helper to build response map type string
+ */
+function buildResponseMapType(
+  statusToContentTypes: Record<
+    string,
+    { contentType: string; typeName: string }[]
+  >,
+): string {
+  if (Object.keys(statusToContentTypes).length === 0) {
+    return "{}";
+  }
+
+  const statusMappings: string[] = Object.entries(statusToContentTypes).map(
+    ([statusCode, contentTypeMappings]) => {
+      const contentMappings = contentTypeMappings
+        .map(
+          ({ contentType, typeName }) => `    "${contentType}": ${typeName},`,
+        )
+        .join("\n");
+
+      return `  "${statusCode}": {
+${contentMappings}
+  },`;
+    },
+  );
+
+  return `{
+${statusMappings.join("\n")}
+}`;
+}
+
+/**
+ * Helper to build status to content type mappings
+ */
+function buildStatusToContentTypes(
+  responseContentTypes: ResponseContentTypes[],
+  operationId: string,
+  typeImports: Set<string>,
+  options: ResponseMapOptions,
+  statusCodes: string[],
+  statusToContentTypes: Record<
+    string,
+    { contentType: string; typeName: string }[]
+  >,
+  allContentTypes: Set<string>,
+  defaultContentType: { value: null | string },
+): void {
   for (const group of responseContentTypes) {
     if (group.contentTypes.length === 0) continue;
 
@@ -83,7 +181,7 @@ export function generateResponseMap(
       const ct = mapping.contentType;
       allContentTypes.add(ct);
 
-      if (!defaultContentType) defaultContentType = ct;
+      if (!defaultContentType.value) defaultContentType.value = ct;
 
       const typeName = options.useStrictSchemas
         ? resolveStrictSchemaTypeName(
@@ -105,15 +203,33 @@ export function generateResponseMap(
       });
     }
   }
+}
 
-  // Handle default response (catch-all) if present with content
+/**
+ * Helper to handle default response
+ */
+function handleDefaultResponse(
+  operation: OperationObject,
+  operationId: string,
+  typeImports: Set<string>,
+  options: ResponseMapOptions,
+  statusCodes: string[],
+  statusToContentTypes: Record<
+    string,
+    { contentType: string; typeName: string }[]
+  >,
+  allContentTypes: Set<string>,
+  defaultContentType: { value: null | string },
+): void {
   if (operation.responses && "default" in operation.responses) {
     const defaultResponse = operation.responses.default;
     if (defaultResponse && !isReferenceObject(defaultResponse)) {
       const content = defaultResponse.content;
       if (content) {
-        const defaultContentTypes: { contentType: string; typeName: string }[] =
-          [];
+        const defaultContentTypes: {
+          contentType: string;
+          typeName: string;
+        }[] = [];
         for (const [contentType, mediaType] of Object.entries(content)) {
           if (!mediaType.schema) continue;
           const typeName = options.useStrictSchemas
@@ -130,7 +246,7 @@ export function generateResponseMap(
                 typeImports,
               );
           allContentTypes.add(contentType);
-          if (!defaultContentType) defaultContentType = contentType;
+          if (!defaultContentType.value) defaultContentType.value = contentType;
           defaultContentTypes.push({ contentType, typeName });
         }
         if (defaultContentTypes.length > 0) {
@@ -140,39 +256,4 @@ export function generateResponseMap(
       }
     }
   }
-
-  contentTypeCount = allContentTypes.size;
-  shouldGenerateResponseMap =
-    statusCodes.length > 1 ||
-    contentTypeCount > 1 ||
-    Object.keys(statusToContentTypes).length > 0;
-
-  if (Object.keys(statusToContentTypes).length > 0) {
-    const statusMappings: string[] = Object.entries(statusToContentTypes).map(
-      ([statusCode, contentTypeMappings]) => {
-        const contentMappings = contentTypeMappings
-          .map(
-            ({ contentType, typeName }) => `    "${contentType}": ${typeName},`,
-          )
-          .join("\n");
-
-        return `  "${statusCode}": {
-${contentMappings}
-  },`;
-      },
-    );
-
-    responseMapType = `{
-${statusMappings.join("\n")}
-}`;
-  }
-
-  return {
-    contentTypeCount,
-    defaultContentType,
-    responseMapType,
-    shouldGenerateResponseMap,
-    statusCodes,
-    typeImports,
-  };
 }
