@@ -1,5 +1,6 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
+import type { RecursiveContext } from "./recursive-handlers.js";
 /**
  * Union type for OpenAPI schema types
  */
@@ -12,7 +13,7 @@ export interface ZodSchemaCodeOptions {
   currentSchemaName?: string;
   imports?: Set<string>;
   isTopLevel?: boolean;
-  recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
+  recursiveContext?: RecursiveContext;
   strictValidation?: boolean;
 }
 
@@ -144,7 +145,7 @@ function handleMultiTypeArray(
   effectiveType: string[],
   result: ZodSchemaResult,
   strictValidation: boolean,
-  recursiveContext?: import("./recursive-handlers.js").RecursiveContext,
+  recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
 ): ZodSchemaResult {
   const { isNullable: hasNull, nonNullTypes } = analyzeTypeArray(effectiveType);
@@ -179,7 +180,7 @@ function handleNullableSchema(
   schema: SchemaObject,
   result: ZodSchemaResult,
   strictValidation: boolean,
-  recursiveContext?: import("./recursive-handlers.js").RecursiveContext,
+  recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
 ): ZodSchemaResult {
   const clone = cloneWithoutNullable(schema);
@@ -200,7 +201,7 @@ function handlePrimitive(
   effectiveType: string | undefined,
   result: ZodSchemaResult,
   strictValidation: boolean,
-  recursiveContext?: import("./recursive-handlers.js").RecursiveContext,
+  recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
 ): undefined | ZodSchemaResult {
   if (effectiveType === "string") return handleStringType(schema, result);
@@ -230,7 +231,7 @@ function tryHandleCompositions(
   schema: SchemaObject,
   result: ZodSchemaResult,
   strictValidation: boolean,
-  recursiveContext?: import("./recursive-handlers.js").RecursiveContext,
+  recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
 ): undefined | ZodSchemaResult {
   if (schema.allOf) {
