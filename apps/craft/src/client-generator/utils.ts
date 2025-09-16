@@ -2,7 +2,11 @@
  * Utility functions for string manipulation and validation
  */
 
-import type { OpenAPIObject, ResponseObject } from "openapi3-ts/oas31";
+import type {
+  OpenAPIObject,
+  ReferenceObject,
+  ResponseObject,
+} from "openapi3-ts/oas31";
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
@@ -52,7 +56,7 @@ export function getResponseContentType(
  * @returns The resolved ResponseObject or undefined if resolution fails
  */
 export function resolveResponse(
-  responseOrRef: ResponseObject | { $ref: string },
+  responseOrRef: ReferenceObject | ResponseObject,
   doc?: OpenAPIObject,
 ): ResponseObject | undefined {
   if (isReferenceObject(responseOrRef)) {
