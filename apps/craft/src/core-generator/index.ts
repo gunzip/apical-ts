@@ -115,6 +115,39 @@ export async function generate(options: GenerationOptions): Promise<void> {
 }
 
 /**
+ * Creates a schema generation promise for a single schema variant
+ */
+function createComponentSchemaPromise(
+  schemaName: string,
+  schema: SchemaObject,
+  description: string | undefined,
+  recursiveContext: ReturnType<typeof createRecursiveContext>,
+  context: SchemaGenerationContext,
+  options: { strictValidation: boolean },
+): Promise<void> {
+  const isRecursive = recursiveContext.recursiveSchemas.has(schemaName);
+
+  return context.limit(async () => {
+    const generationPromise = isRecursive
+      ? generateRecursiveSchemaFile(
+          schemaName,
+          schema,
+          recursiveContext,
+          description,
+          { strictValidation: options.strictValidation },
+        )
+      : generateSchemaFile(schemaName, schema, description, {
+          recursiveContext,
+          strictValidation: options.strictValidation,
+        });
+
+    const schemaFile = await generationPromise;
+    const filePath = path.join(context.schemasDir, schemaFile.fileName);
+    return await fs.writeFile(filePath, schemaFile.content);
+  });
+}
+
+/**
  * Creates the package.json file for the generated output
  */
 async function createPackageJson(output: string): Promise<void> {
@@ -500,70 +533,27 @@ function generateComponentSchemas(
       ? schema.description.trim()
       : undefined;
 
-    const isRegularRecursive =
-      recursiveContext.recursiveSchemas.has(sanitizedName);
-    const isStrictRecursive = recursiveContext.recursiveSchemas.has(
-      `${sanitizedName}Strict`,
+    // Generate regular schema
+    const promise = createComponentSchemaPromise(
+      sanitizedName,
+      schema,
+      description,
+      recursiveContext,
+      context,
+      { strictValidation: context.strictValidation },
     );
-
-    // Generate regular schema with appropriate function
-    const promise = context.limit(() => {
-      if (isRegularRecursive) {
-        return generateRecursiveSchemaFile(
-          sanitizedName,
-          schema,
-          recursiveContext,
-          description,
-          {
-            strictValidation: context.strictValidation,
-          },
-        ).then((schemaFile) => {
-          const filePath = path.join(context.schemasDir, schemaFile.fileName);
-          return fs.writeFile(filePath, schemaFile.content);
-        });
-      } else {
-        return generateSchemaFile(sanitizedName, schema, description, {
-          recursiveContext,
-          strictValidation: context.strictValidation,
-        }).then((schemaFile) => {
-          const filePath = path.join(context.schemasDir, schemaFile.fileName);
-          return fs.writeFile(filePath, schemaFile.content);
-        });
-      }
-    });
     promises.push(promise);
 
     // Generate strict schema for server when generateServer is enabled
     if (context.generateServer) {
-      const strictPromise = context.limit(() => {
-        if (isStrictRecursive) {
-          return generateRecursiveSchemaFile(
-            `${sanitizedName}Strict`,
-            schema,
-            recursiveContext,
-            description,
-            {
-              strictValidation: true,
-            },
-          ).then((schemaFile) => {
-            const filePath = path.join(context.schemasDir, schemaFile.fileName);
-            return fs.writeFile(filePath, schemaFile.content);
-          });
-        } else {
-          return generateSchemaFile(
-            `${sanitizedName}Strict`,
-            schema,
-            description,
-            {
-              recursiveContext,
-              strictValidation: true,
-            },
-          ).then((schemaFile) => {
-            const filePath = path.join(context.schemasDir, schemaFile.fileName);
-            return fs.writeFile(filePath, schemaFile.content);
-          });
-        }
-      });
+      const strictPromise = createComponentSchemaPromise(
+        `${sanitizedName}Strict`,
+        schema,
+        description,
+        recursiveContext,
+        context,
+        { strictValidation: true },
+      );
       promises.push(strictPromise);
     }
   }
