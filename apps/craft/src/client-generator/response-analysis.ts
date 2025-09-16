@@ -14,34 +14,7 @@ import type {
 } from "./models/response-models.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { getResponseContentType } from "./utils.js";
-
-/*
- * Resolves a response reference within an OpenAPI document
- */
-function resolveResponseReference(
-  ref: string,
-  doc: OpenAPIObject,
-): ResponseObject | undefined {
-  if (!ref.startsWith("#/components/responses/")) {
-    return undefined;
-  }
-
-  const responseName = ref.replace("#/components/responses/", "");
-  const response = doc.components?.responses?.[responseName];
-  
-  if (!response) {
-    return undefined;
-  }
-
-  /* The resolved response should be a ResponseObject, not a ReferenceObject */
-  if (isReferenceObject(response)) {
-    console.warn(`⚠️ Nested response reference not resolved: ${ref} -> ${response.$ref}`);
-    return undefined;
-  }
-
-  return response;
-}
+import { getResponseContentType, resolveResponse } from "./utils.js";
 
 // Interfaces (alphabetical keys inside)
 interface BuildUnionTypesParams {
@@ -286,25 +259,8 @@ function collectResponses(
 
   for (const code of responseCodes) {
     const responseOrRef = operation.responses[code];
-    let responseObj: ResponseObject;
-    
-    /* Handle both direct ResponseObject and ReferenceObject */
-    if (isReferenceObject(responseOrRef)) {
-      /* Resolve response reference if document is available */
-      if (doc) {
-        const resolved = resolveResponseReference(responseOrRef.$ref, doc);
-        if (!resolved) {
-          console.warn(`⚠️ Could not resolve response reference: ${responseOrRef.$ref}`);
-          continue;
-        }
-        responseObj = resolved;
-      } else {
-        /* Skip reference objects if no document to resolve against */
-        continue;
-      }
-    } else {
-      responseObj = responseOrRef;
-    }
+    const responseObj = resolveResponse(responseOrRef, doc);
+    if (!responseObj) continue;
 
     responses.push(
       buildResponseTypeInfo(
@@ -319,33 +275,16 @@ function collectResponses(
 
   if (operation.responses.default) {
     const responseOrRef = operation.responses.default;
-    let responseObj: ResponseObject;
-    
-    /* Handle both direct ResponseObject and ReferenceObject */
-    if (isReferenceObject(responseOrRef)) {
-      /* Resolve response reference if document is available */
-      if (doc) {
-        const resolved = resolveResponseReference(responseOrRef.$ref, doc);
-        if (!resolved) {
-          console.warn(`⚠️ Could not resolve default response reference: ${responseOrRef.$ref}`);
-          return { defaultResponseInfo, responses };
-        }
-        responseObj = resolved;
-      } else {
-        /* Skip reference objects if no document to resolve against */
-        return { defaultResponseInfo, responses };
-      }
-    } else {
-      responseObj = responseOrRef;
+    const responseObj = resolveResponse(responseOrRef, doc);
+    if (responseObj) {
+      defaultResponseInfo = buildResponseTypeInfo(
+        "default",
+        responseObj,
+        operation,
+        typeImports,
+        hasResponseContentTypeMap,
+      );
     }
-
-    defaultResponseInfo = buildResponseTypeInfo(
-      "default",
-      responseObj,
-      operation,
-      typeImports,
-      hasResponseContentTypeMap,
-    );
   }
 
   return { defaultResponseInfo, responses };
