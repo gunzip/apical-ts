@@ -69,8 +69,8 @@ importers:
         specifier: ^7.0.8
         version: 7.0.8
       zod:
-        specifier: ^4.0.0
-        version: 4.1.5
+        specifier: ^4.1.8
+        version: 4.1.8
     devDependencies:
       '@pagopa/eslint-config':
         specifier: ^5.0.0
@@ -6939,6 +6939,9 @@ packages:
 
   zod@4.1.5:
     resolution: {integrity: sha512-rcUUZqlLJgBC33IT3PNMgsCq6TzLQEG/Ei/KTCU0PedSWRMAXoOUN+4t/0H+Q8bdnLPdqUYnvboJT0bn/229qg==}
+
+  zod@4.1.8:
+    resolution: {integrity: sha512-5R1P+WwQqmmMIEACyzSvo4JXHY5WiAFHRMg+zBZKgKS+Q1viRa0C1hmUKtHltoIFKtIdki3pRxkmpP74jnNYHQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -15433,5 +15436,7 @@ snapshots:
       zod: 4.1.5
 
   zod@4.1.5: {}
+
+  zod@4.1.8: {}
 
   zwitch@2.0.4: {}

@@ -1,5 +1,7 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
+import { isReferenceObject } from "openapi3-ts/oas31";
+
 import type { RecursiveContext } from "./recursive-handlers.js";
 
 import {
@@ -203,18 +205,18 @@ function generateGetterCode(
   const baseGetter = (code: string) =>
     `get ${JSON.stringify(key)}() { return ${code}${isRequired ? "" : ".optional()"}; }`;
 
+  /* Array with reference items - wrap in z.array() */
   if (
-    !("$ref" in propSchema) &&
+    !isReferenceObject(propSchema) &&
     propSchema.type === "array" &&
     propSchema.items &&
-    "$ref" in propSchema.items
+    isReferenceObject(propSchema.items)
   ) {
     return baseGetter(`z.array(${name})`);
-  } else if ("$ref" in propSchema) {
-    return baseGetter(name);
-  } else {
-    return baseGetter(`z.array(${name})`);
   }
+
+  /* All other cases (direct references, objects with nested references) - use schema directly */
+  return baseGetter(name);
 }
 
 /* Helper function to generate imports section */
@@ -234,8 +236,15 @@ function isRecursiveProperty(
   propSchema: ReferenceObject | SchemaObject,
   originalSchemaName: string,
 ): boolean {
-  if ("$ref" in propSchema) return false;
+  /* Check for direct self-reference via $ref */
+  if ("$ref" in propSchema) {
+    const ref = propSchema.$ref;
+    const selfRef = `#/components/schemas/${originalSchemaName}`;
+    const shortSelfRef = `#/${originalSchemaName}`;
+    return ref === selfRef || ref === shortSelfRef;
+  }
 
+  /* Check for indirect self-references within schema properties */
   const refs = findReferencesInSchema(propSchema);
   const selfRef = `#/components/schemas/${originalSchemaName}`;
   const shortSelfRef = `#/${originalSchemaName}`;
