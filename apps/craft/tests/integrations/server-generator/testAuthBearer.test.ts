@@ -50,9 +50,11 @@ describe("testAuthBearer operation integration tests", () => {
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
       name: "John Doe",
-      age: 30,
-      email: "john.doe@example.com",
-      fiscal_code: "SPNDNL80R13C555X",
+      address: {
+        location: "Some location",
+        city: "Some city",
+        zipCode: "12345",
+      },
     });
   });
 

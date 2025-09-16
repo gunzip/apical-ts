@@ -558,6 +558,34 @@ paths:
         "200":
           "$ref": "#/components/responses/DocumentResponse"
 
+  /test-response-bodies:
+    get:
+      summary: Test response bodies references
+      description: Test endpoint that uses responseBodies references
+      operationId: testResponseBodies
+      responses:
+        "200":
+          $ref: "#/components/responseBodies/UserResponse"
+        "400":
+          $ref: "#/components/responseBodies/ErrorResponse"
+        "404":
+          description: User not found
+    post:
+      summary: Create user with response bodies
+      description: Create a new user using responseBodies references
+      operationId: createUserWithResponseBodies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Profile"
+      responses:
+        "201":
+          $ref: "#/components/responseBodies/UserResponse"
+        "400":
+          $ref: "#/components/responseBodies/ErrorResponse"
+
 # -------------
 # Components
 # -------------
@@ -1132,6 +1160,29 @@ components:
         application/json:
           schema:
             "$ref": "#/components/schemas/Document"
+
+  # -------------
+  # Response Bodies
+  # -------------
+  responseBodies:
+    UserResponse:
+      description: User response with profile data
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Profile"
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    MessageListResponse:
+      description: List of messages with pagination
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AllOfTest"
 
   # -------------
   # Sec Schemas
