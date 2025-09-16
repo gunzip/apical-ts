@@ -35,13 +35,6 @@ export interface RecursiveSchemaOptions {
   strictValidation?: boolean;
 }
 
-// Import from schema-converter to avoid circular dependencies
-interface ZodSchemaResult {
-  code: string;
-  extensibleEnumValues?: unknown[];
-  imports: Set<string>;
-}
-
 /**
  * Analyzes a reference to determine if it's recursive
  */
@@ -144,88 +137,9 @@ export function findReferencesInSchema(schema: SchemaObject): string[] {
 }
 
 /**
- * Generates Zod code for a recursive array reference
- */
-export function generateRecursiveArrayReference(
-  referenceName: string,
-  propertyName: string,
-  options: RecursiveSchemaOptions = {},
-): ZodSchemaResult {
-  const { strictValidation = false } = options;
-  const finalSchemaName = strictValidation
-    ? `${referenceName}Strict`
-    : referenceName;
-
-  const result: ZodSchemaResult = {
-    code: `get ${propertyName}() { return z.array(${finalSchemaName}); }`,
-    imports: new Set([finalSchemaName]),
-  };
-
-  return result;
 }
 
-/**
- * Generates Zod code for a recursive nullable reference
- */
-export function generateRecursiveNullableReference(
-  referenceName: string,
-  propertyName: string,
-  options: RecursiveSchemaOptions = {},
-): ZodSchemaResult {
-  const { strictValidation = false } = options;
-  const finalSchemaName = strictValidation
-    ? `${referenceName}Strict`
-    : referenceName;
 
-  const result: ZodSchemaResult = {
-    code: `get ${propertyName}() { return ${finalSchemaName}.nullable(); }`,
-    imports: new Set([finalSchemaName]),
-  };
-
-  return result;
-}
-
-/**
- * Generates Zod code for a recursive optional reference
- */
-export function generateRecursiveOptionalReference(
-  referenceName: string,
-  propertyName: string,
-  options: RecursiveSchemaOptions = {},
-): ZodSchemaResult {
-  const { strictValidation = false } = options;
-  const finalSchemaName = strictValidation
-    ? `${referenceName}Strict`
-    : referenceName;
-
-  const result: ZodSchemaResult = {
-    code: `get ${propertyName}() { return ${finalSchemaName}.optional(); }`,
-    imports: new Set([finalSchemaName]),
-  };
-
-  return result;
-}
-
-/**
- * Generates Zod code for a recursive reference using getter syntax
- */
-export function generateRecursiveReference(
-  referenceName: string,
-  propertyName: string,
-  options: RecursiveSchemaOptions = {},
-): ZodSchemaResult {
-  const { strictValidation = false } = options;
-  const finalSchemaName = strictValidation
-    ? `${referenceName}Strict`
-    : referenceName;
-
-  const result: ZodSchemaResult = {
-    code: `get ${propertyName}() { return ${finalSchemaName}; }`,
-    imports: new Set([finalSchemaName]),
-  };
-
-  return result;
-}
 
 /**
  * Gets the current depth of the reference stack

@@ -6,7 +6,6 @@ import {
   analyzeRecursiveReference,
   createRecursiveContext,
   findReferencesInSchema,
-  generateRecursiveReference,
 } from "../../src/schema-generator/recursive-handlers.js";
 
 describe("recursive-handlers", () => {
@@ -89,48 +88,6 @@ describe("recursive-handlers", () => {
       );
 
       expect(result.referenceName).toBe("TreeNode");
-    });
-  });
-
-  describe("generateRecursiveReference", () => {
-    it("should generate getter syntax for recursive self-reference", () => {
-      const result = generateRecursiveReference("TreeNode", "children", {
-        currentSchemaName: "TreeNode",
-      });
-
-      expect(result.code).toContain("get children()");
-      expect(result.code).toContain("return TreeNode");
-      expect(result.imports.has("TreeNode")).toBe(true);
-    });
-
-    it("should generate getter with strict validation", () => {
-      const result = generateRecursiveReference("RecursiveSchema", "self", {
-        currentSchemaName: "RecursiveSchema",
-        strictValidation: true,
-      });
-
-      expect(result.code).toContain("get self()");
-      expect(result.code).toContain("return RecursiveSchemaStrict");
-      expect(result.imports.has("RecursiveSchemaStrict")).toBe(true);
-    });
-
-    it("should handle regular reference generation", () => {
-      const result = generateRecursiveReference("RegularSchema", "reference", {
-        currentSchemaName: "CurrentSchema",
-      });
-
-      expect(result.code).toContain("get reference()");
-      expect(result.code).toContain("return RegularSchema");
-      expect(result.imports.has("RegularSchema")).toBe(true);
-    });
-
-    it("should handle property name sanitization", () => {
-      const result = generateRecursiveReference("Schema", "recursive-ref", {
-        currentSchemaName: "Schema",
-      });
-
-      expect(result.code).toContain("get recursive-ref()");
-      expect(result.code).toContain("return Schema");
     });
   });
 

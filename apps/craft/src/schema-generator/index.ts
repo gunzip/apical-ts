@@ -27,7 +27,6 @@ export {
   analyzeRecursiveReference,
   analyzeSchemaForRecursion,
   createRecursiveContext,
-  generateRecursiveReference,
 } from "./recursive-handlers.js";
 
 export { handleReference } from "./reference-handlers.js";
