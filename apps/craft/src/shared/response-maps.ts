@@ -58,6 +58,18 @@ export function generateResponseMap(
 
   const responseContentTypes = extractResponseContentTypes(operation, doc);
 
+  // Early return if no response content types
+  if (responseContentTypes.length === 0) {
+    return {
+      contentTypeCount,
+      defaultContentType: null,
+      responseMapType,
+      shouldGenerateResponseMap,
+      statusCodes: [],
+      typeImports: new Set(),
+    };
+  }
+
   // Build mappings from response content types
   const buildResult = buildStatusToContentTypes(
     responseContentTypes,
@@ -130,9 +142,10 @@ function applyDefaultResponse(
 
   if (operation.responses && "default" in operation.responses) {
     const defaultResponse = operation.responses.default;
-    const resolvedDefault = defaultResponse
-      ? resolveResponse(defaultResponse, doc)
-      : undefined;
+    const resolvedDefault =
+      defaultResponse && doc
+        ? resolveResponse(defaultResponse, doc)
+        : undefined;
     if (resolvedDefault && resolvedDefault.content) {
       const defaultContentTypes: {
         contentType: string;
