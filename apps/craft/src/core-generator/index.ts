@@ -646,11 +646,11 @@ async function parseAndPreprocessOpenAPI(
     );
   }
 
-  // Resolve responseBodies references to inline content
-  const resolvedResponseBodiesCount = resolveResponseBodies(openApiDoc);
-  if (resolvedResponseBodiesCount > 0) {
+  // Resolve requestBodies references to inline content
+  const resolvedRequestBodiesCount = resolveRequestBodies(openApiDoc);
+  if (resolvedRequestBodiesCount > 0) {
     console.log(
-      `✅ Resolved ${resolvedResponseBodiesCount} responseBody references`,
+      `✅ Resolved ${resolvedRequestBodiesCount} requestBody references`,
     );
   }
 
@@ -759,32 +759,32 @@ function renameConflictingSchemas(openApiDoc: OpenAPIObject) {
 }
 
 /*
- * Resolves responseBodies references by replacing $ref pointers with inline content.
+ * Resolves requestBodies references by replacing $ref pointers with inline content.
  * This preprocessing step allows the existing client and server generators to work
- * without modifications, as they only need to handle inline response definitions.
+ * without modifications, as they only need to handle inline request body definitions.
  *
- * For each responseBodies reference found in operation responses, this function:
- * 1. Looks up the responseBody definition in components/responseBodies
- * 2. Replaces the $ref with the actual responseBody content
+ * For each requestBodies reference found in operation requestBody, this function:
+ * 1. Looks up the requestBody definition in components/requestBodies
+ * 2. Replaces the $ref with the actual requestBody content
  * 3. Updates all references across the entire OpenAPI document
  */
-function resolveResponseBodies(openApiDoc: OpenAPIObject): number {
-  // Access responseBodies safely - extend components type for responseBodies support
+function resolveRequestBodies(openApiDoc: OpenAPIObject): number {
+  // Access requestBodies safely - extend components type for requestBodies support
   const components = openApiDoc.components as {
     [key: string]: unknown;
-    responseBodies?: Record<string, ResponseObject>;
+    requestBodies?: Record<string, RequestBodyObject>;
     schemas?: Record<string, SchemaObject>;
   };
-  if (!components?.responseBodies) {
-    return 0; // No responseBodies to resolve
+  if (!components?.requestBodies) {
+    return 0; // No requestBodies to resolve
   }
 
-  const responseBodies = components.responseBodies;
+  const requestBodies = components.requestBodies;
   let resolvedCount = 0;
 
-  const refPrefix = "#/components/responseBodies/";
+  const refPrefix = "#/components/requestBodies/";
 
-  /* Walk entire document and replace responseBodies $ref with inline content */
+  /* Walk entire document and replace requestBodies $ref with inline content */
   const visit = (node: unknown): void => {
     if (!node) return;
     if (Array.isArray(node)) {
@@ -796,21 +796,21 @@ function resolveResponseBodies(openApiDoc: OpenAPIObject): number {
       if (isReferenceObject(obj)) {
         const ref: string = obj.$ref;
         if (ref.startsWith(refPrefix)) {
-          const responseBodyName = ref.substring(refPrefix.length);
-          const responseBody = responseBodies[responseBodyName];
+          const requestBodyName = ref.substring(refPrefix.length);
+          const requestBody = requestBodies[requestBodyName];
 
-          if (responseBody) {
-            // Replace the $ref with the actual responseBody content
+          if (requestBody) {
+            // Replace the $ref with the actual requestBody content
             delete (obj as Record<string, unknown>).$ref;
 
-            // Copy all properties from the responseBody to the current object
-            for (const [key, value] of Object.entries(responseBody)) {
+            // Copy all properties from the requestBody to the current object
+            for (const [key, value] of Object.entries(requestBody)) {
               obj[key] = value;
             }
 
             resolvedCount++;
           } else {
-            console.warn(`⚠️ Could not resolve responseBody reference: ${ref}`);
+            console.warn(`⚠️ Could not resolve requestBody reference: ${ref}`);
           }
         }
       }
