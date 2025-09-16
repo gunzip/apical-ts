@@ -34,10 +34,12 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
 
     it("should have correct TypeScript signature", () => {
       const client = createUnauthenticatedClient(baseURL);
-      
+
       // This verifies that the operation accepts the correct parameters
       // The function should accept a body parameter of type Profile
-      const validBody: Parameters<typeof client.createUserWithRequestBodies>[0]["body"] = {
+      const validBody: Parameters<
+        typeof client.createUserWithRequestBodies
+      >[0]["body"] = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
         has_profile: true,
@@ -45,7 +47,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         name: "John",
         version: 1,
       };
-      
+
       expect(validBody).toBeDefined();
     });
   });
@@ -53,7 +55,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
   describe("Request body validation", () => {
     it("should accept valid Profile data", async () => {
       const client = createUnauthenticatedClient(baseURL);
-      
+
       const validProfile = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
@@ -67,7 +69,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         const response = await client.createUserWithRequestBodies({
           body: validProfile,
         });
-        
+
         // The operation should execute (may succeed or fail due to mock server)
         expect(response).toBeDefined();
       } catch (error) {
@@ -78,7 +80,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
 
     it("should accept Profile with all optional fields", async () => {
       const client = createUnauthenticatedClient(baseURL);
-      
+
       const fullProfile = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
@@ -98,7 +100,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         const response = await client.createUserWithRequestBodies({
           body: fullProfile,
         });
-        
+
         expect(response).toBeDefined();
       } catch (error) {
         // Expected - operation should handle full profile
@@ -108,11 +110,8 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
 
     it("should validate fiscal code format at runtime", () => {
       // Test that the Profile schema validates fiscal code format
-      const validFiscalCodes = [
-        "SPNDNL80R13C555X",
-        "RSSMRA85T10A562S",
-      ];
-      
+      const validFiscalCodes = ["SPNDNL80R13C555X", "RSSMRA85T10A562S"];
+
       const invalidFiscalCodes = [
         "INVALID",
         "SPNDNL80R13C555", // Too short
@@ -127,7 +126,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
           name: "John",
           version: 1,
         };
-        
+
         const result = Profile.safeParse(profile);
         expect(result.success).toBe(true);
       }
@@ -141,7 +140,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
           name: "John",
           version: 1,
         };
-        
+
         const result = Profile.safeParse(profile);
         expect(result.success).toBe(false);
       }
@@ -150,7 +149,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
     it("should validate email format when provided", () => {
       const validEmails = ["john.doe@example.com", "test@domain.co.uk"];
       const invalidEmails = ["invalid-email", "@example.com"];
-      
+
       for (const email of validEmails) {
         const profile = {
           fiscal_code: "SPNDNL80R13C555X",
@@ -161,7 +160,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
           version: 1,
           email,
         };
-        
+
         const result = Profile.safeParse(profile);
         expect(result.success).toBe(true);
       }
@@ -176,7 +175,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
           version: 1,
           email,
         };
-        
+
         const result = Profile.safeParse(profile);
         expect(result.success).toBe(false);
       }
@@ -186,7 +185,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
   describe("Content type handling", () => {
     it("should default to application/json content type", async () => {
       const client = createUnauthenticatedClient(baseURL);
-      
+
       const profile = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
@@ -201,7 +200,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
           body: profile,
           // No contentType specified - should default to application/json
         });
-        
+
         expect(response).toBeDefined();
       } catch (error) {
         // Expected - operation should work with default content type
@@ -211,7 +210,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
 
     it("should accept explicit content type specification", async () => {
       const client = createUnauthenticatedClient(baseURL);
-      
+
       const profile = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
@@ -226,7 +225,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
           body: profile,
           contentType: { request: "application/json" },
         });
-        
+
         expect(response).toBeDefined();
       } catch (error) {
         // Expected - operation should work with explicit content type
@@ -238,7 +237,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
   describe("Response handling", () => {
     it("should handle successful response (201)", async () => {
       const client = createUnauthenticatedClient(baseURL);
-      
+
       const profile = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
@@ -252,7 +251,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         const response = await client.createUserWithRequestBodies({
           body: profile,
         });
-        
+
         // Verify response structure
         expect(response).toHaveProperty("isValid");
         expect(response).toHaveProperty("status");
@@ -266,7 +265,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
 
     it("should handle error response (400)", async () => {
       const client = createUnauthenticatedClient(baseURL);
-      
+
       // This might trigger a 400 response depending on mock server behavior
       const profile = {
         fiscal_code: "SPNDNL80R13C555X",
@@ -281,7 +280,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         const response = await client.createUserWithRequestBodies({
           body: profile,
         });
-        
+
         // If we get a response, verify it's properly structured
         if (response.status === 400) {
           expect(response.isValid).toBe(true);
@@ -298,9 +297,9 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
     it("should correctly resolve CreateUserRequest reference", () => {
       // This test verifies that the requestBodies reference was correctly resolved
       // The operation should use the Profile schema from the CreateUserRequest
-      
+
       const client = createUnauthenticatedClient(baseURL);
-      
+
       // The operation should exist and be callable
       expect(client.createUserWithRequestBodies).toBeDefined();
       expect(typeof client.createUserWithRequestBodies).toBe("function");
@@ -309,12 +308,12 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
     it("should demonstrate requestBodies preprocessing success", () => {
       // This test demonstrates that the requestBodies preprocessing worked
       // If it didn't work, the operation wouldn't exist or would have wrong types
-      
+
       const client = createUnauthenticatedClient(baseURL);
-      
+
       // Verify the operation exists with correct signature
       expect(client).toHaveProperty("createUserWithRequestBodies");
-      
+
       // The operation should be a function
       expect(typeof client.createUserWithRequestBodies).toBe("function");
     });
@@ -323,7 +322,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
   describe("Edge cases", () => {
     it("should handle empty optional fields", async () => {
       const client = createUnauthenticatedClient(baseURL);
-      
+
       const profile = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
@@ -338,7 +337,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         const response = await client.createUserWithRequestBodies({
           body: profile,
         });
-        
+
         expect(response).toBeDefined();
       } catch (error) {
         // Expected - operation should handle missing optional fields
@@ -348,7 +347,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
 
     it("should handle network errors gracefully", async () => {
       const client = createUnauthenticatedClient(baseURL);
-      
+
       const profile = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
