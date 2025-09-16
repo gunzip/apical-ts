@@ -103,27 +103,40 @@ ${headersContent}
     const url = new URL(\`${finalPath}\`, config.baseURL);
     ${queryParamLines ? `    ${queryParamLines}` : ""}
 
-    const response = await config.fetch(url.toString(), {
-      method: "${method.toUpperCase()}",
-      headers: finalHeaders,${
-        hasBody
-          ? `
-      body: bodyContent,`
-          : ""
-      }
-    });
+    /* Inner try/catch for fetch-specific errors */
+    let response: Response;
+    let data: unknown;
+    let minimalResponse: { status: number; headers: Map<string, string> };
 
-    /*
-     * The response body is consumed immediately to prevent holding onto the raw
-     * response stream. A new, lightweight response object is created with only
-     * the necessary properties, and headers are copied to a Map to break the
-     * reference to the original response object.
-     */
-    const data = await parseResponseBody(response);
-    const minimalResponse = {
-      status: response.status,
-      headers: new Map(response.headers.entries()),
-    };
+    try {
+      response = await config.fetch(url.toString(), {
+        method: "${method.toUpperCase()}",
+        headers: finalHeaders,${
+          hasBody
+            ? `
+        body: bodyContent,`
+            : ""
+        }
+      });
+
+      /*
+       * The response body is consumed immediately to prevent holding onto the raw
+       * response stream. A new, lightweight response object is created with only
+       * the necessary properties, and headers are copied to a Map to break the
+       * reference to the original response object.
+       */
+      data = await parseResponseBody(response);
+      minimalResponse = {
+        status: response.status,
+        headers: new Map(response.headers.entries()),
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        kind: "fetch-error",
+        error,
+      } as const;
+    }
 
     switch (response.status) {
 ${responseHandlers.join("\n")}

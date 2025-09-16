@@ -149,6 +149,10 @@ export type ApiResponseError = {
       readonly error: unknown;
     }
   | {
+      readonly kind: "fetch-error";
+      readonly error: unknown;
+    }
+  | {
       readonly kind: "unexpected-response";
       readonly result: ApiResponseErrorResult;
       readonly error: string;
