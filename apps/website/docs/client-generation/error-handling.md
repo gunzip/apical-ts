@@ -17,6 +17,10 @@ type ApiResponseError =
       readonly error: unknown;
     }
   | {
+      readonly kind: "fetch-error";
+      readonly error: unknown;
+    }
+  | {
       readonly kind: "unexpected-response";
       readonly data: unknown;
       readonly status: number;
@@ -49,34 +53,45 @@ type ApiResponseError =
 ## Error Handling Patterns
 
 ```ts
-const result = await getPetById({ path: { petId: "123" } });
+const r = await getPetById({ path: { petId: "123" } });
 
-if (!result.isValid) {
+if (!r.isValid) {
   // You don't have to handle all errors like this, but you can.
-  switch (result.kind) {
+  switch (r.kind) {
     case "unexpected-response":
-      console.error("Unexpected status:", result.status, result.error);
+      console.error("Unexpected status:", r.status, r.error);
       break;
     case "deserialization-error":
-      console.error("Deserialization failed:", result.error);
+      console.error("Deserialization failed:", r.error);
       break;
     case "parse-error":
-      console.error("Validation failed:", result.error);
+      console.error("Validation failed:", r.error);
       break;
     case "missing-schema":
-      console.error("Schema missing:", result.error);
+      console.error("Schema missing:", r.error);
+      break;
+    case "fetch-error":
+      console.error("Network fetch failed:", r.error);
       break;
     case "unexpected-error":
-      console.error("Unexpected error:", result.error);
+      console.error("Unexpected error:", r.error);
       break;
   }
-} else if (result.status === 200) {
-  // result.data is the raw response payload
-  console.log("Pet:", result.data);
-} else if (result.status === 404) {
-  console.warn("Pet not found");
-} else {
-  console.error("Unexpected documented status", result.status);
+  return;
+}
+
+switch (r.status === 200) {
+  case 200:
+    // Raw response payload
+    console.log("Pet (raw):", r.data);
+    // The parsed response payload
+    console.log("Pet:", r.parsed.data);
+    break;
+  case 404:
+    console.warn("Pet not found");
+    break;
+  default:
+    console.error("Unexpected documented status", r.status);
 }
 ```
 
@@ -89,15 +104,29 @@ Different error types provide different context:
 
 ### unexpected-error
 
-- **When it occurs**: Network failures and connection issues.
+- **When it occurs**: Unexpected failures and connection issues.
 - **Available data**: No `status`, `data`, or `response` fields
 - **Use case**: Handle network connectivity issues, timeouts, or other
   infrastructure problems
 
 ```ts
 if (result.kind === "unexpected-error") {
-  console.error("Network or unexpected error:", result.error);
-  // Show "Service unavailable" message to user
+  console.error("Unexpected error:", result.error);
+}
+```
+
+### fetch-error
+
+- **When it occurs**: Errors during the HTTP fetch request (network timeouts,
+  DNS failures, connection refused, etc.)
+- **Available data**: No `status`, `data`, or `response` fields
+- **Use case**: Handle recoverable network errors that may succeed on retry
+
+```ts
+if (result.kind === "fetch-error") {
+  console.error("Fetch request failed:", result.error);
+  // Implement retry logic for recoverable network errors
+  // Show "Connection failed, retrying..." message to user
 }
 ```
 
@@ -172,7 +201,7 @@ async function getPetWithRetry(petId: string, maxRetries = 3) {
     }
 
     // Only retry on network errors
-    if (result.kind === "unexpected-error") {
+    if (result.kind === "fetch-error" || result.kind === "unexpected-error") {
       if (attempt < maxRetries) {
         await delay(1000 * attempt); // Exponential backoff
         continue;
@@ -190,6 +219,8 @@ async function getPetWithRetry(petId: string, maxRetries = 3) {
 1. **Never ignore errors** - Always check `isValid` before proceeding
 1. **Handle errors appropriately** - Different error types require different
    handling strategies
+1. **Retry fetch errors** - Network errors (`fetch-error`) are often recoverable
+   with retry logic
 1. **Provide user feedback** - Show meaningful error messages to users
 1. **Log for debugging** - Include relevant context in error logs
 1. **Implement retry logic** - For transient network errors
