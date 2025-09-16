@@ -558,33 +558,29 @@ paths:
         "200":
           "$ref": "#/components/responses/DocumentResponse"
 
-  /test-response-bodies:
+  /test-request-bodies:
     get:
       summary: Test response bodies references
-      description: Test endpoint that uses responseBodies references
-      operationId: testResponseBodies
+      description: Test endpoint that uses requestBodies references
+      operationId: testRequestBodies
       responses:
         "200":
-          $ref: "#/components/responseBodies/UserResponse"
+          $ref: "#/components/responses/UserResponse"
         "400":
-          $ref: "#/components/responseBodies/ErrorResponse"
+          $ref: "#/components/responses/ErrorResponse"
         "404":
           description: User not found
     post:
-      summary: Create user with response bodies
-      description: Create a new user using responseBodies references
-      operationId: createUserWithResponseBodies
+      summary: Create user with request body reference
+      description: Create a new user using requestBodies reference
+      operationId: createUserWithRequestBodies
       requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Profile"
+        $ref: "#/components/requestBodies/CreateUserRequest"
       responses:
         "201":
-          $ref: "#/components/responseBodies/UserResponse"
+          $ref: "#/components/responses/UserResponse"
         "400":
-          $ref: "#/components/responseBodies/ErrorResponse"
+          $ref: "#/components/responses/ErrorResponse"
 
 # -------------
 # Components
@@ -1161,28 +1157,54 @@ components:
           schema:
             "$ref": "#/components/schemas/Document"
 
-  # -------------
-  # Response Bodies
-  # -------------
-  responseBodies:
     UserResponse:
       description: User response with profile data
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Profile"
+
     ErrorResponse:
       description: Error response
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ProblemDetails"
+
     MessageListResponse:
       description: List of messages with pagination
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/AllOfTest"
+
+  # -------------
+  # Request Bodies
+  # -------------
+  requestBodies:
+    CreateUserRequest:
+      description: Request body for creating a user
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Profile"
+    UpdateUserRequest:
+      description: Request body for updating a user
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              email:
+                $ref: "#/components/schemas/EmailAddress"
+    MessageRequest:
+      description: Request body for sending a message
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessageContent"
 
   # -------------
   # Sec Schemas
