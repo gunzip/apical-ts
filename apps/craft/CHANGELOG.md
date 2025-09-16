@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.33
+
+### Patch Changes
+
+- Add support for response references
+
 ## 0.0.32
 
 ### Patch Changes
