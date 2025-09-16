@@ -73,8 +73,8 @@ export function buildServerResponseMap(
     metadata.operation,
     metadata.operationId,
     typeImports,
-    { useStrictSchemas: true }, // Use strict schemas for server responses
     doc, // Pass document for response reference resolution
+    { useStrictSchemas: true }, // Use strict schemas for server responses
   );
 
   /* Add type imports */

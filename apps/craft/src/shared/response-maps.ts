@@ -52,74 +52,59 @@ export function generateResponseMap(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
-  options: ResponseMapOptions = {},
   doc?: OpenAPIObject,
+  options: ResponseMapOptions = {},
 ): ResponseMapResult {
-  const defaultContentType = { value: null as null | string };
   let contentTypeCount = 0;
   let responseMapType = "{}";
   let shouldGenerateResponseMap = false;
-  const statusCodes: string[] = [];
-  const allContentTypes = new Set<string>();
 
   const responseContentTypes = extractResponseContentTypes(operation, doc);
   if (responseContentTypes.length === 0) {
     return {
       contentTypeCount,
-      defaultContentType: defaultContentType.value,
+      defaultContentType: null,
       responseMapType,
       shouldGenerateResponseMap,
-      statusCodes,
+      statusCodes: [],
       typeImports: new Set(),
     };
   }
 
-  /* Build status code to content type mapping */
-  const statusToContentTypes: Record<
-    string,
-    { contentType: string; typeName: string }[]
-  > = {};
-
   // Build mappings from response content types
-  buildStatusToContentTypes(
+  const buildResult = buildStatusToContentTypes(
     responseContentTypes,
     operationId,
     typeImports,
     options,
-    statusCodes,
-    statusToContentTypes,
-    allContentTypes,
-    defaultContentType,
   );
 
   // Handle default response
-  handleDefaultResponse(
+  const defaultResult = handleDefaultResponse(
     operation,
     operationId,
-    typeImports,
+    buildResult.updatedTypeImports,
     options,
-    statusCodes,
-    statusToContentTypes,
-    allContentTypes,
-    defaultContentType,
+    buildResult.statusCodes,
+    buildResult.statusToContentTypes,
+    buildResult.allContentTypes,
+    buildResult.defaultContentType,
   );
 
-  contentTypeCount = allContentTypes.size;
+  contentTypeCount = defaultResult.allContentTypes.size;
   shouldGenerateResponseMap =
-    statusCodes.length > 1 ||
-    contentTypeCount > 1 ||
-    Object.keys(statusToContentTypes).length > 0;
+    defaultResult.statusCodes.length > 0 || contentTypeCount > 1;
 
   // Build response map type string
-  responseMapType = buildResponseMapType(statusToContentTypes);
+  responseMapType = buildResponseMapType(defaultResult.statusToContentTypes);
 
   return {
     contentTypeCount,
-    defaultContentType: defaultContentType.value,
+    defaultContentType: defaultResult.defaultContentType,
     responseMapType,
     shouldGenerateResponseMap,
-    statusCodes,
-    typeImports,
+    statusCodes: defaultResult.statusCodes,
+    typeImports: defaultResult.updatedTypeImports,
   };
 }
 
@@ -163,14 +148,25 @@ function buildStatusToContentTypes(
   operationId: string,
   typeImports: Set<string>,
   options: ResponseMapOptions,
-  statusCodes: string[],
+): {
+  allContentTypes: Set<string>;
+  defaultContentType: null | string;
+  statusCodes: string[];
   statusToContentTypes: Record<
     string,
     { contentType: string; typeName: string }[]
-  >,
-  allContentTypes: Set<string>,
-  defaultContentType: { value: null | string },
-): void {
+  >;
+  updatedTypeImports: Set<string>;
+} {
+  const statusCodes: string[] = [];
+  const statusToContentTypes: Record<
+    string,
+    { contentType: string; typeName: string }[]
+  > = {};
+  const allContentTypes = new Set<string>();
+  let defaultContentType: null | string = null;
+  const updatedTypeImports = new Set(typeImports);
+
   for (const group of responseContentTypes) {
     if (group.contentTypes.length === 0) continue;
 
@@ -181,20 +177,20 @@ function buildStatusToContentTypes(
       const ct = mapping.contentType;
       allContentTypes.add(ct);
 
-      if (!defaultContentType.value) defaultContentType.value = ct;
+      if (!defaultContentType) defaultContentType = ct;
 
       const typeName = options.useStrictSchemas
         ? resolveStrictSchemaTypeName(
             mapping.schema,
             operationId,
             `${group.statusCode}Response`,
-            typeImports,
+            updatedTypeImports,
           )
         : resolveSchemaTypeName(
             mapping.schema,
             operationId,
             `${group.statusCode}Response`,
-            typeImports,
+            updatedTypeImports,
           );
 
       statusToContentTypes[group.statusCode].push({
@@ -203,6 +199,14 @@ function buildStatusToContentTypes(
       });
     }
   }
+
+  return {
+    allContentTypes,
+    defaultContentType,
+    statusCodes,
+    statusToContentTypes,
+    updatedTypeImports,
+  };
 }
 
 /**
@@ -219,8 +223,23 @@ function handleDefaultResponse(
     { contentType: string; typeName: string }[]
   >,
   allContentTypes: Set<string>,
-  defaultContentType: { value: null | string },
-): void {
+  defaultContentType: null | string,
+): {
+  allContentTypes: Set<string>;
+  defaultContentType: null | string;
+  statusCodes: string[];
+  statusToContentTypes: Record<
+    string,
+    { contentType: string; typeName: string }[]
+  >;
+  updatedTypeImports: Set<string>;
+} {
+  const updatedStatusCodes = [...statusCodes];
+  const updatedStatusToContentTypes = { ...statusToContentTypes };
+  const updatedAllContentTypes = new Set(allContentTypes);
+  let updatedDefaultContentType = defaultContentType;
+  const updatedTypeImports = new Set(typeImports);
+
   if (operation.responses && "default" in operation.responses) {
     const defaultResponse = operation.responses.default;
     if (defaultResponse && !isReferenceObject(defaultResponse)) {
@@ -237,23 +256,33 @@ function handleDefaultResponse(
                 mediaType.schema,
                 operationId,
                 `DefaultResponse`,
-                typeImports,
+                updatedTypeImports,
               )
             : resolveSchemaTypeName(
                 mediaType.schema,
                 operationId,
                 `DefaultResponse`,
-                typeImports,
+                updatedTypeImports,
               );
-          allContentTypes.add(contentType);
-          if (!defaultContentType.value) defaultContentType.value = contentType;
+          updatedAllContentTypes.add(contentType);
+          if (!updatedDefaultContentType) {
+            updatedDefaultContentType = contentType;
+          }
           defaultContentTypes.push({ contentType, typeName });
         }
         if (defaultContentTypes.length > 0) {
-          statusCodes.push("default");
-          statusToContentTypes["default"] = defaultContentTypes;
+          updatedStatusCodes.push("default");
+          updatedStatusToContentTypes["default"] = defaultContentTypes;
         }
       }
     }
   }
+
+  return {
+    allContentTypes: updatedAllContentTypes,
+    defaultContentType: updatedDefaultContentType,
+    statusCodes: updatedStatusCodes,
+    statusToContentTypes: updatedStatusToContentTypes,
+    updatedTypeImports,
+  };
 }

@@ -154,13 +154,7 @@ function buildResponseContentTypeMap(
   doc?: OpenAPIObject,
 ) {
   /* Use shared response mapping logic with correct structure */
-  const result = generateResponseMap(
-    operation,
-    operationId,
-    typeImports,
-    {},
-    doc,
-  );
+  const result = generateResponseMap(operation, operationId, typeImports, doc);
 
   /* Merge type imports */
   result.typeImports.forEach((imp) => typeImports.add(imp));
