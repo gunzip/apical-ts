@@ -11,6 +11,18 @@ import {
 import { zodSchemaToCode } from "./schema-converter.js";
 
 /**
+ * Options for recursive schema file generation
+ */
+export interface RecursiveSchemaFileOptions {
+  description?: string;
+  name: string;
+  originalSchemaName: string;
+  recursiveContext: RecursiveContext;
+  schema: SchemaObject;
+  strictValidation?: boolean;
+}
+
+/**
  * Schema file generation result
  */
 export interface SchemaFileResult {
@@ -22,6 +34,7 @@ export interface SchemaFileResult {
  * Options for schema file generation
  */
 export interface SchemaGenerationOptions {
+  originalSchemaName?: string;
   recursiveContext?: RecursiveContext;
   strictValidation?: boolean;
 }
@@ -30,21 +43,22 @@ export interface SchemaGenerationOptions {
  * Generates file content for a recursive schema using getter syntax
  */
 export async function generateRecursiveSchemaFile(
-  name: string,
-  schema: SchemaObject,
-  recursiveContext: RecursiveContext,
-  description?: string,
-  options: SchemaGenerationOptions = {},
+  options: RecursiveSchemaFileOptions,
 ): Promise<SchemaFileResult> {
-  const { strictValidation = false } = options;
+  const {
+    description,
+    name,
+    originalSchemaName,
+    recursiveContext,
+    schema,
+    strictValidation = false,
+  } = options;
 
   if (schema.type !== "object" || !schema.properties) {
     throw new Error(
       `Recursive schema ${name} must be an object with properties`,
     );
   }
-
-  const originalSchemaName = name.endsWith("Strict") ? name.slice(0, -6) : name;
 
   const commentSection = generateCommentSection(description);
   const shape: string[] = [];

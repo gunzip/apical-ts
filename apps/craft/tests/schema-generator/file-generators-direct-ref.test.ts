@@ -29,12 +29,14 @@ describe("file-generators - direct $ref recursive properties", () => {
       required: ["name"],
     };
 
-    const result = await generateRecursiveSchemaFile(
-      "TreeNode",
-      treeNodeSchema,
+    const result = await generateRecursiveSchemaFile({
+      description: "A tree node with parent and children references",
+      name: "TreeNode",
+      originalSchemaName: "TreeNode",
       recursiveContext,
-      "A tree node with parent and children references",
-    );
+      schema: treeNodeSchema,
+      strictValidation: false,
+    });
 
     /* Verify the generated content contains getter syntax for recursive properties */
     expect(result.content).toContain('get "parent"()');
@@ -74,12 +76,14 @@ describe("file-generators - direct $ref recursive properties", () => {
       required: ["id"],
     };
 
-    const result = await generateRecursiveSchemaFile(
-      "Category",
-      categorySchema,
+    const result = await generateRecursiveSchemaFile({
+      description: "A category with parent and subcategory references",
+      name: "Category",
+      originalSchemaName: "Category",
       recursiveContext,
-      "A category with parent and subcategory references",
-    );
+      schema: categorySchema,
+      strictValidation: false,
+    });
 
     /* Verify the generated content contains getter syntax for recursive properties */
     expect(result.content).toContain('get "parentCategory"()');
@@ -114,12 +118,14 @@ describe("file-generators - direct $ref recursive properties", () => {
       required: ["name"],
     };
 
-    const result = await generateRecursiveSchemaFile(
-      "User",
-      userSchema,
+    const result = await generateRecursiveSchemaFile({
+      description: "A user with profile and friends",
+      name: "User",
+      originalSchemaName: "User",
       recursiveContext,
-      "A user with profile and friends",
-    );
+      schema: userSchema,
+      strictValidation: false,
+    });
 
     /* Verify only self-references use getter syntax */
     expect(result.content).toContain('get "friends"()'); // Self-reference
@@ -149,12 +155,14 @@ describe("file-generators - direct $ref recursive properties", () => {
       required: ["value"], // 'next' is not required
     };
 
-    const result = await generateRecursiveSchemaFile(
-      "Node",
-      nodeSchema,
+    const result = await generateRecursiveSchemaFile({
+      description: "A linked list node",
+      name: "Node",
+      originalSchemaName: "Node",
       recursiveContext,
-      "A linked list node",
-    );
+      schema: nodeSchema,
+      strictValidation: false,
+    });
 
     /* Verify optional recursive property has .optional() */
     expect(result.content).toContain('get "next"()');
