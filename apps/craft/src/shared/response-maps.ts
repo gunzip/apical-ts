@@ -46,6 +46,7 @@ export function generateResponseMap(
   operationId: string,
   typeImports: Set<string>,
   options: ResponseMapOptions = {},
+  doc?: OpenAPIObject,
 ): ResponseMapResult {
   let defaultContentType: null | string = null;
   let contentTypeCount = 0;
@@ -54,7 +55,7 @@ export function generateResponseMap(
   const statusCodes: string[] = [];
   const allContentTypes = new Set<string>();
 
-  const responseContentTypes = extractResponseContentTypes(operation);
+  const responseContentTypes = extractResponseContentTypes(operation, doc);
   if (responseContentTypes.length === 0) {
     return {
       contentTypeCount,

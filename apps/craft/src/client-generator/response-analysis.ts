@@ -1,6 +1,6 @@
 /* Pure analysis functions for response processing */
 
-import type { OperationObject, ResponseObject } from "openapi3-ts/oas31";
+import type { OpenAPIObject, OperationObject, ResponseObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";
@@ -15,6 +15,33 @@ import type {
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { getResponseContentType } from "./utils.js";
+
+/*
+ * Resolves a response reference within an OpenAPI document
+ */
+function resolveResponseReference(
+  ref: string,
+  doc: OpenAPIObject,
+): ResponseObject | undefined {
+  if (!ref.startsWith("#/components/responses/")) {
+    return undefined;
+  }
+
+  const responseName = ref.replace("#/components/responses/", "");
+  const response = doc.components?.responses?.[responseName];
+  
+  if (!response) {
+    return undefined;
+  }
+
+  /* The resolved response should be a ResponseObject, not a ReferenceObject */
+  if (isReferenceObject(response)) {
+    console.warn(`⚠️ Nested response reference not resolved: ${ref} -> ${response.$ref}`);
+    return undefined;
+  }
+
+  return response;
+}
 
 // Interfaces (alphabetical keys inside)
 interface BuildUnionTypesParams {
@@ -52,6 +79,7 @@ export function analyzeResponseStructure(
   config: ResponseAnalysisConfig,
 ): ResponseAnalysis {
   const {
+    doc,
     hasResponseContentTypeMap = false,
     operation,
     responseMapName,
@@ -62,6 +90,7 @@ export function analyzeResponseStructure(
     operation,
     typeImports,
     hasResponseContentTypeMap,
+    doc,
   );
 
   // Derive response map name for union types
@@ -241,6 +270,7 @@ function collectResponses(
   operation: OperationObject,
   typeImports: Set<string>,
   hasResponseContentTypeMap: boolean,
+  doc?: OpenAPIObject,
 ) {
   const responses: ResponseInfo[] = [];
   let defaultResponseInfo: ResponseInfo | undefined;
@@ -255,11 +285,31 @@ function collectResponses(
   responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 
   for (const code of responseCodes) {
-    const response = operation.responses[code] as ResponseObject;
+    const responseOrRef = operation.responses[code];
+    let responseObj: ResponseObject;
+    
+    /* Handle both direct ResponseObject and ReferenceObject */
+    if (isReferenceObject(responseOrRef)) {
+      /* Resolve response reference if document is available */
+      if (doc) {
+        const resolved = resolveResponseReference(responseOrRef.$ref, doc);
+        if (!resolved) {
+          console.warn(`⚠️ Could not resolve response reference: ${responseOrRef.$ref}`);
+          continue;
+        }
+        responseObj = resolved;
+      } else {
+        /* Skip reference objects if no document to resolve against */
+        continue;
+      }
+    } else {
+      responseObj = responseOrRef;
+    }
+
     responses.push(
       buildResponseTypeInfo(
         code,
-        response,
+        responseObj,
         operation,
         typeImports,
         hasResponseContentTypeMap,
@@ -268,10 +318,30 @@ function collectResponses(
   }
 
   if (operation.responses.default) {
-    const response = operation.responses.default as ResponseObject;
+    const responseOrRef = operation.responses.default;
+    let responseObj: ResponseObject;
+    
+    /* Handle both direct ResponseObject and ReferenceObject */
+    if (isReferenceObject(responseOrRef)) {
+      /* Resolve response reference if document is available */
+      if (doc) {
+        const resolved = resolveResponseReference(responseOrRef.$ref, doc);
+        if (!resolved) {
+          console.warn(`⚠️ Could not resolve default response reference: ${responseOrRef.$ref}`);
+          return { defaultResponseInfo, responses };
+        }
+        responseObj = resolved;
+      } else {
+        /* Skip reference objects if no document to resolve against */
+        return { defaultResponseInfo, responses };
+      }
+    } else {
+      responseObj = responseOrRef;
+    }
+
     defaultResponseInfo = buildResponseTypeInfo(
       "default",
-      response,
+      responseObj,
       operation,
       typeImports,
       hasResponseContentTypeMap,

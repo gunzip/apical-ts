@@ -1,6 +1,6 @@
 /* Shared response union generation logic */
 
-import type { OperationObject } from "openapi3-ts/oas31";
+import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
@@ -45,6 +45,7 @@ export function generateResponseUnion(
   operationId: string,
   typeImports: Set<string>,
   options: ResponseUnionOptions = {},
+  doc?: OpenAPIObject,
 ): ResponseUnionResult {
   const unionMembers: ResponseUnionMember[] = [];
   const responseTypeName = `${sanitizeIdentifier(operationId)}Response`;
@@ -63,7 +64,7 @@ export function generateResponseUnion(
     allStatusCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 
     /* Extract responses that have content/schema */
-    const responseContentTypes = extractResponseContentTypes(operation);
+    const responseContentTypes = extractResponseContentTypes(operation, doc);
     const statusCodesWithContent = new Set(
       responseContentTypes.map((r) => r.statusCode),
     );

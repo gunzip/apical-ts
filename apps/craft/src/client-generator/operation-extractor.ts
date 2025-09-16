@@ -7,6 +7,7 @@ import type {
   ResponseObject,
   SchemaObject,
 } from "openapi3-ts/oas31";
+import { isReferenceObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 
@@ -117,10 +118,43 @@ export function extractRequestContentTypes(
 }
 
 /**
+ * Resolves a response reference within an OpenAPI document
+ * @param ref The reference string (e.g., "#/components/responses/DocumentResponse") 
+ * @param doc The OpenAPI document containing the referenced response
+ * @returns The resolved ResponseObject or undefined if not found
+ */
+function resolveResponseReference(
+  ref: string,
+  doc: OpenAPIObject,
+): ResponseObject | undefined {
+  if (!ref.startsWith("#/components/responses/")) {
+    return undefined;
+  }
+
+  const responseName = ref.replace("#/components/responses/", "");
+  const response = doc.components?.responses?.[responseName];
+  
+  if (!response) {
+    return undefined;
+  }
+
+  // The resolved response should be a ResponseObject, not a ReferenceObject
+  // If it's still a reference, we'd need recursive resolution, but OpenAPI bundling
+  // should have resolved this already
+  if (isReferenceObject(response)) {
+    console.warn(`⚠️ Nested response reference not resolved: ${ref} -> ${response.$ref}`);
+    return undefined;
+  }
+
+  return response;
+}
+
+/**
  * Extracts all response content types and their schemas from operation responses
  */
 export function extractResponseContentTypes(
   operation: OperationObject,
+  doc?: OpenAPIObject,
 ): ResponseContentTypes[] {
   const responseContentTypes: ResponseContentTypes[] = [];
 
@@ -128,7 +162,26 @@ export function extractResponseContentTypes(
     for (const [statusCode, response] of Object.entries(operation.responses)) {
       if (statusCode === "default") continue;
 
-      const responseObj = response as ResponseObject;
+      let responseObj: ResponseObject;
+      
+      /* Handle both direct ResponseObject and ReferenceObject */
+      if (isReferenceObject(response)) {
+        /* Resolve response reference if document is available */
+        if (doc) {
+          const resolved = resolveResponseReference(response.$ref, doc);
+          if (!resolved) {
+            console.warn(`⚠️ Could not resolve response reference: ${response.$ref}`);
+            continue;
+          }
+          responseObj = resolved;
+        } else {
+          /* Skip reference objects if no document to resolve against */
+          continue;
+        }
+      } else {
+        responseObj = response;
+      }
+
       const contentTypes: ContentTypeMapping[] = [];
 
       if (responseObj.content) {
