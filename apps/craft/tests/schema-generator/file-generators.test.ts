@@ -6,7 +6,7 @@ import {
   generateRequestSchemaFile,
   generateResponseSchemaFile,
   generateSchemaFile,
-  type SchemaFileResult,
+  generateGetterCode,
 } from "../../src/schema-generator/file-generators.js";
 import { zodSchemaToCode } from "../../src/schema-generator/schema-converter.js";
 
@@ -292,6 +292,62 @@ describe("schema-generator file-generators", () => {
       );
 
       expect(result.content).toContain("Response schema for GetUser404");
+    });
+  });
+
+  describe("circular reference type annotations", () => {
+    it("should generate getters with proper TypeScript return type annotations for arrays", () => {
+      const arraySchema: SchemaObject = {
+        type: "array",
+        items: {
+          $ref: "#/Category",
+        },
+      };
+
+      const result = generateGetterCode(
+        "subcategories",
+        arraySchema,
+        "Category",
+        false,
+      );
+
+      expect(result).toContain(
+        'get "subcategories"(): z.ZodOptional<z.ZodArray<typeof Category>>',
+      );
+      expect(result).toContain("return z.array(Category).optional()");
+    });
+
+    it("should generate getters with proper TypeScript return type annotations for direct references", () => {
+      const refSchema = {
+        $ref: "#/Category",
+      };
+
+      const result = generateGetterCode("parent", refSchema, "Category", true);
+
+      expect(result).toContain('get "parent"(): typeof Category');
+      expect(result).toContain("return Category");
+    });
+
+    it("should generate proper type annotations for required vs optional fields", () => {
+      const refSchema = {
+        $ref: "#/Category",
+      };
+
+      const requiredResult = generateGetterCode(
+        "parent",
+        refSchema,
+        "Category",
+        true,
+      );
+      const optionalResult = generateGetterCode(
+        "parent",
+        refSchema,
+        "Category",
+        false,
+      );
+
+      expect(requiredResult).toContain("(): typeof Category");
+      expect(optionalResult).toContain("(): z.ZodOptional<typeof Category>");
     });
   });
 });

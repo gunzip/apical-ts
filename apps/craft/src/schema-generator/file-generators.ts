@@ -216,8 +216,12 @@ function generateGetterCode(
   name: string,
   isRequired: boolean,
 ): string {
-  const baseGetter = (code: string) =>
-    `get ${JSON.stringify(key)}() { return ${code}${isRequired ? "" : ".optional()"}; }`;
+  /**
+   * Generate getter with proper TypeScript return type annotation to resolve circular reference issues.
+   * This follows the pattern from Zod documentation: https://zod.dev/api?id=circularity-errors
+   */
+  const baseGetter = (code: string, returnType: string) =>
+    `get ${JSON.stringify(key)}(): ${returnType} { return ${code}${isRequired ? "" : ".optional()"}; }`;
 
   /* Array with reference items - wrap in z.array() */
   if (
@@ -226,11 +230,17 @@ function generateGetterCode(
     propSchema.items &&
     isReferenceObject(propSchema.items)
   ) {
-    return baseGetter(`z.array(${name})`);
+    const returnType = isRequired
+      ? `z.ZodArray<typeof ${name}>`
+      : `z.ZodOptional<z.ZodArray<typeof ${name}>>`;
+    return baseGetter(`z.array(${name})`, returnType);
   }
 
   /* All other cases (direct references, objects with nested references) - use schema directly */
-  return baseGetter(name);
+  const returnType = isRequired
+    ? `typeof ${name}`
+    : `z.ZodOptional<typeof ${name}>`;
+  return baseGetter(name, returnType);
 }
 
 /* Helper function to generate imports section */
@@ -264,3 +274,6 @@ function isRecursiveProperty(
   const shortSelfRef = `#/${originalSchemaName}`;
   return refs.includes(selfRef) || refs.includes(shortSelfRef);
 }
+
+// Export for testing
+export { generateGetterCode };
