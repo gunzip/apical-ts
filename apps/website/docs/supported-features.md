@@ -53,6 +53,8 @@ experience.
   for validation (e.g., in forms) and server-side logic
 - 🔄 **Automatic OpenAPI normalization**: All input specs are normalized to
   OpenAPI 3.1.0 before code generation
+- 🔁 **Circular reference support**: Handles recursive schemas and circular
+  references in OpenAPI specifications
 - ✅ **Comprehensive test suite**: Project includes Vitest-based tests for all
   major features
 
