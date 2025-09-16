@@ -4,11 +4,12 @@ import type {
   ParameterObject,
   ReferenceObject,
   RequestBodyObject,
-  ResponseObject,
   SchemaObject,
 } from "openapi3-ts/oas31";
 
 import assert from "assert";
+
+import { resolveResponse } from "./utils.js";
 
 /**
  * Content type mapping with schema information
@@ -121,6 +122,7 @@ export function extractRequestContentTypes(
  */
 export function extractResponseContentTypes(
   operation: OperationObject,
+  doc?: OpenAPIObject,
 ): ResponseContentTypes[] {
   const responseContentTypes: ResponseContentTypes[] = [];
 
@@ -128,7 +130,9 @@ export function extractResponseContentTypes(
     for (const [statusCode, response] of Object.entries(operation.responses)) {
       if (statusCode === "default") continue;
 
-      const responseObj = response as ResponseObject;
+      const responseObj = resolveResponse(response, doc);
+      if (!responseObj) continue;
+
       const contentTypes: ContentTypeMapping[] = [];
 
       if (responseObj.content) {

@@ -1,6 +1,10 @@
 /* Pure analysis functions for response processing */
 
-import type { OperationObject, ResponseObject } from "openapi3-ts/oas31";
+import type {
+  OpenAPIObject,
+  OperationObject,
+  ResponseObject,
+} from "openapi3-ts/oas31";
 
 import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";
@@ -14,7 +18,7 @@ import type {
 } from "./models/response-models.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { getResponseContentType } from "./utils.js";
+import { getResponseContentType, resolveResponse } from "./utils.js";
 
 // Interfaces (alphabetical keys inside)
 interface BuildUnionTypesParams {
@@ -52,6 +56,7 @@ export function analyzeResponseStructure(
   config: ResponseAnalysisConfig,
 ): ResponseAnalysis {
   const {
+    doc,
     hasResponseContentTypeMap = false,
     operation,
     responseMapName,
@@ -62,6 +67,7 @@ export function analyzeResponseStructure(
     operation,
     typeImports,
     hasResponseContentTypeMap,
+    doc,
   );
 
   // Derive response map name for union types
@@ -241,6 +247,7 @@ function collectResponses(
   operation: OperationObject,
   typeImports: Set<string>,
   hasResponseContentTypeMap: boolean,
+  doc?: OpenAPIObject,
 ) {
   const responses: ResponseInfo[] = [];
   let defaultResponseInfo: ResponseInfo | undefined;
@@ -255,11 +262,14 @@ function collectResponses(
   responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 
   for (const code of responseCodes) {
-    const response = operation.responses[code] as ResponseObject;
+    const responseOrRef = operation.responses[code];
+    const responseObj = resolveResponse(responseOrRef, doc);
+    if (!responseObj) continue;
+
     responses.push(
       buildResponseTypeInfo(
         code,
-        response,
+        responseObj,
         operation,
         typeImports,
         hasResponseContentTypeMap,
@@ -268,14 +278,17 @@ function collectResponses(
   }
 
   if (operation.responses.default) {
-    const response = operation.responses.default as ResponseObject;
-    defaultResponseInfo = buildResponseTypeInfo(
-      "default",
-      response,
-      operation,
-      typeImports,
-      hasResponseContentTypeMap,
-    );
+    const responseOrRef = operation.responses.default;
+    const responseObj = resolveResponse(responseOrRef, doc);
+    if (responseObj) {
+      defaultResponseInfo = buildResponseTypeInfo(
+        "default",
+        responseObj,
+        operation,
+        typeImports,
+        hasResponseContentTypeMap,
+      );
+    }
   }
 
   return { defaultResponseInfo, responses };

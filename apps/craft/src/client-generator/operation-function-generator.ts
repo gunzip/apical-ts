@@ -79,6 +79,7 @@ export function extractOperationMetadata(
     functionName,
     typeImports,
     operationName,
+    doc,
   );
 
   /* Build parameter shapes */
@@ -101,6 +102,7 @@ export function extractOperationMetadata(
     typeImports,
     bodyInfo.shouldExportResponseMap,
     bodyInfo.shouldExportResponseMap ? bodyInfo.responseMapTypeName : undefined,
+    doc,
   );
 
   /* Security overrides/auth headers */
@@ -281,6 +283,7 @@ function collectBodyAndContentTypes(
   functionName: string,
   typeImports: Set<string>,
   operationName: string,
+  doc: OpenAPIObject,
 ) {
   let bodyTypeInfo: ReturnType<typeof resolveRequestBodyType> | undefined;
   let requestContentType: string | undefined;
@@ -295,7 +298,7 @@ function collectBodyAndContentTypes(
   const requestMapTypeName = `${operationName}RequestMap`;
   const responseMapTypeName = `${operationName}ResponseMap`;
 
-  const contentTypeMaps = generateContentTypeMaps(operation);
+  const contentTypeMaps = generateContentTypeMaps(operation, doc);
   contentTypeMaps.typeImports.forEach((imp) => typeImports.add(imp));
 
   let requestContentTypes: string[] = [];
