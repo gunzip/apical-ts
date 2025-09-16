@@ -90,11 +90,21 @@ describe("Response Bodies Integration Tests - Server Side", () => {
   describe("createUserWithResponseBodies operation", () => {
     it("should handle POST request with resolved responseBodies", async () => {
       // Arrange
+      // Define the expected request body type for type safety
+      interface CreateUserRequestBody {
+        fiscal_code: string;
+        family_name: string;
+        has_profile: boolean;
+        is_email_set: boolean;
+        name: string;
+        version: number;
+      }
+
       const handler: createUserWithResponseBodiesHandler = async (params) => {
         if ("isValid" in params && params.isValid) {
           // Validate the request body
           expect(params.value.body).toBeDefined();
-          const body = params.value.body as any; // Type assertion due to current generator limitations
+          const body = params.value.body as CreateUserRequestBody;
           expect(body.fiscal_code).toBe("SPNDNL80R13C555X");
 
           // Return success response with resolved responseBody data
@@ -151,11 +161,9 @@ describe("Response Bodies Integration Tests - Server Side", () => {
     it("should handle validation errors with resolved responseBodies", async () => {
       // Arrange - This test verifies that when validation fails, we get a 400 response
       // Since the body schema is z.any(), we'll simulate a validation error by returning invalid params
-      let validationErrorReceived = false;
 
       const handler: createUserWithResponseBodiesHandler = async (params) => {
         if ("isValid" in params && !params.isValid) {
-          validationErrorReceived = true;
           // Return error response with resolved responseBody data
           return {
             status: 400,
@@ -190,17 +198,7 @@ describe("Response Bodies Integration Tests - Server Side", () => {
         createUserWithResponseBodiesWrapper,
         handler,
         (result, res) => {
-          if (validationErrorReceived) {
-            res
-              .status(result.status)
-              .type(result.contentType)
-              .send(result.data);
-          } else {
-            res
-              .status(result.status)
-              .type(result.contentType)
-              .send(result.data);
-          }
+          res.status(result.status).type(result.contentType).send(result.data);
         },
       );
 
@@ -218,7 +216,6 @@ describe("Response Bodies Integration Tests - Server Side", () => {
         .set("Content-Type", "application/json");
 
       // Assert - Since validation passes, we should get 201
-      expect(validationErrorReceived).toBe(false);
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("fiscal_code");
       expect(response.body).toHaveProperty("family_name");

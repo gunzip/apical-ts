@@ -76,13 +76,11 @@ export function setupTestRoute<THandler extends (...args: any[]) => any>(
 export const mockData = {
   person: (): Person => ({
     name: "John Doe",
-    age: 30,
-    email: "john.doe@example.com",
-    fiscal_code: "SPNDNL80R13C555X",
-    family_name: "Doe",
-    has_profile: true,
-    is_email_set: true,
-    version: 1,
+    address: {
+      location: "Some location",
+      city: "Some city",
+      zipCode: "12345",
+    },
   }),
 
   message: (): Message => ({
