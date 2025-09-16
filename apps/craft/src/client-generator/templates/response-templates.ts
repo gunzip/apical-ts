@@ -12,9 +12,9 @@ export function renderDefaultResponseHandler(
   defaultResponseInfo: ResponseInfo,
   responseMapName?: string,
 ): string {
-  const { contentType, typeName } = defaultResponseInfo;
+  const { typeName } = defaultResponseInfo;
 
-  if (typeName || contentType) {
+  if (defaultResponseInfo.hasSchema || typeName) {
     /* Use string-literal indexing for the default response */
     if (defaultResponseInfo.hasSchema && responseMapName) {
       /* Generate dynamic validation logic for default response */
@@ -79,7 +79,7 @@ export function renderResponseHandler(
   responseInfo: ResponseInfo,
   responseMapName?: string,
 ): string {
-  const { contentType, statusCode, typeName } = responseInfo;
+  const { statusCode, typeName } = responseInfo;
 
   // OpenAPI default responses are handled with a special case that excludes expected status codes
   // We'll generate them in a special way later in the function body template
@@ -87,7 +87,7 @@ export function renderResponseHandler(
     return ""; // Default responses are handled separately
   }
 
-  if (typeName || contentType) {
+  if (responseInfo.hasSchema || typeName) {
     /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
     if (responseInfo.hasSchema && responseMapName) {
       /* Always generate dynamic validation logic (forceValidation flag removed) */

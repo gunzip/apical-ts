@@ -1,10 +1,6 @@
 /* Pure analysis functions for response processing */
 
-import type {
-  OpenAPIObject,
-  OperationObject,
-  ResponseObject,
-} from "openapi3-ts/oas31";
+import type { OperationObject, ResponseObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";
@@ -18,7 +14,6 @@ import type {
 } from "./models/response-models.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { extractResponseContentTypes } from "./operation-extractor.js";
 import { getResponseContentType } from "./utils.js";
 
 // Interfaces (alphabetical keys inside)
@@ -58,7 +53,6 @@ export function analyzeResponseStructure(
 ): ResponseAnalysis {
   const {
     hasResponseContentTypeMap = false,
-    openApiDoc,
     operation,
     responseMapName,
     typeImports,
@@ -68,7 +62,6 @@ export function analyzeResponseStructure(
     operation,
     typeImports,
     hasResponseContentTypeMap,
-    openApiDoc,
   );
 
   // Derive response map name for union types
@@ -105,31 +98,40 @@ export function buildResponseTypeInfo(
   typeImports: Set<string>,
   hasResponseContentTypeMap: boolean,
 ): ResponseInfo {
-  const contentType = getResponseContentType(response);
   const contentTypeAnalysis = analyzeContentTypes(response);
 
   let typeName: null | string = null;
   let hasSchema = false;
 
-  if (contentType && response.content?.[contentType]?.schema) {
-    hasSchema = true;
-    typeName = resolveResponseTypeName(
-      response.content[contentType].schema,
-      operation,
-      statusCode,
-      typeImports,
-    );
+  /* Check if ANY content type has a schema */
+  if (response.content) {
+    for (const [, mediaType] of Object.entries(response.content)) {
+      if (mediaType.schema) {
+        hasSchema = true;
+        if (!typeName) {
+          /* Use the first schema we find for type name resolution */
+          typeName = resolveResponseTypeName(
+            mediaType.schema,
+            operation,
+            statusCode,
+            typeImports,
+          );
+        }
+      }
+    }
   }
 
+  /* Use getResponseContentType for display purposes only - doesn't affect hasSchema logic */
+  const displayContentType = getResponseContentType(response);
+
   const parsingStrategy = determineParsingStrategy(
-    contentType || "",
+    displayContentType || "",
     hasSchema,
     contentTypeAnalysis,
     hasResponseContentTypeMap,
   );
 
   return {
-    contentType,
     hasSchema,
     parsingStrategy,
     statusCode,
@@ -200,7 +202,7 @@ function buildUnionTypes({
   const unionTypes: string[] = [];
   const mapName = responseMapName;
   const pushStandard = (info: ResponseInfo) => {
-    const dataType = info.contentType ? "unknown" : "void";
+    const dataType = info.hasSchema ? "unknown" : "void";
     const statusLiteral =
       info.statusCode === "default" ? '"default"' : info.statusCode;
     unionTypes.push(`ApiResponse<${statusLiteral}, ${dataType}>`);
@@ -248,7 +250,6 @@ function collectResponses(
   operation: OperationObject,
   typeImports: Set<string>,
   hasResponseContentTypeMap: boolean,
-  openApiDoc?: OpenAPIObject,
 ) {
   const responses: ResponseInfo[] = [];
   let defaultResponseInfo: ResponseInfo | undefined;
@@ -257,65 +258,28 @@ function collectResponses(
     return { defaultResponseInfo, responses };
   }
 
-  // Use extractResponseContentTypes to get resolved response content types
-  const responseContentTypes = extractResponseContentTypes(
-    operation,
-    openApiDoc,
+  /* Process all response status codes, not just those with content types */
+  const responseCodes = Object.keys(operation.responses).filter(
+    (code) => code !== "default",
   );
+  responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 
-  // Convert the extracted content types to ResponseInfo objects
-  for (const responseGroup of responseContentTypes) {
-    const statusCode = responseGroup.statusCode;
-    const contentTypes = responseGroup.contentTypes;
+  for (const code of responseCodes) {
+    const response = operation.responses[code] as ResponseObject;
 
-    if (contentTypes.length > 0) {
-      // For now, take the first content type (usually application/json)
-      const firstContentType = contentTypes[0];
-      const contentType = firstContentType.contentType;
-      const schema = firstContentType.schema;
+    /* Use buildResponseTypeInfo for consistent handling of all responses */
+    const responseInfo = buildResponseTypeInfo(
+      code,
+      response,
+      operation,
+      typeImports,
+      hasResponseContentTypeMap,
+    );
 
-      let typeName: null | string = null;
-      let hasSchema = false;
-
-      if (schema) {
-        hasSchema = true;
-        typeName = resolveResponseTypeName(
-          schema,
-          operation,
-          statusCode,
-          typeImports,
-        );
-      }
-
-      const contentTypeAnalysis: ContentTypeAnalysis = {
-        allContentTypes: contentTypes.map((ct) => ct.contentType),
-        hasJsonLike: contentTypes.some((ct) => ct.contentType.includes("json")),
-        hasMixedContentTypes: false, // Will be set below
-        hasNonJson: contentTypes.some((ct) => !ct.contentType.includes("json")),
-      };
-      contentTypeAnalysis.hasMixedContentTypes =
-        contentTypeAnalysis.hasJsonLike && contentTypeAnalysis.hasNonJson;
-
-      const parsingStrategy = determineParsingStrategy(
-        contentType,
-        hasSchema,
-        contentTypeAnalysis,
-        hasResponseContentTypeMap,
-      );
-
-      const responseInfo: ResponseInfo = {
-        contentType,
-        hasSchema,
-        parsingStrategy,
-        statusCode,
-        typeName,
-      };
-
-      responses.push(responseInfo);
-    }
+    responses.push(responseInfo);
   }
 
-  // Handle default response if present (not handled by extractResponseContentTypes)
+  // Handle default response if present
   if (operation.responses.default) {
     const response = operation.responses.default as ResponseObject;
     defaultResponseInfo = buildResponseTypeInfo(

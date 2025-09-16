@@ -63,8 +63,6 @@ export interface ResponseAnalysisConfig {
  * Information about a single response type for analysis
  */
 export interface ResponseInfo {
-  /* Content type for this response */
-  contentType: null | string;
   /* Whether this response has schema content */
   hasSchema: boolean;
   /* Parsing strategy for this response */

@@ -183,7 +183,6 @@ describe("response-analysis", () => {
 
       expect(result.statusCode).toBe("200");
       expect(result.typeName).toBe("User");
-      expect(result.contentType).toBe("application/json");
       expect(result.hasSchema).toBe(true);
       expect(result.parsingStrategy.useValidation).toBe(true);
       expect(result.parsingStrategy.isJsonLike).toBe(true);
@@ -219,7 +218,6 @@ describe("response-analysis", () => {
 
       expect(result.statusCode).toBe("201");
       expect(result.typeName).toBe("CreateUser201Response");
-      expect(result.contentType).toBe("application/json");
       expect(result.hasSchema).toBe(true);
       expect(typeImports.has("CreateUser201Response")).toBe(true);
     });
@@ -245,9 +243,99 @@ describe("response-analysis", () => {
 
       expect(result.statusCode).toBe("204");
       expect(result.typeName).toBeNull();
-      expect(result.contentType).toBeNull();
       expect(result.hasSchema).toBe(false);
       expect(result.parsingStrategy.useValidation).toBe(false);
+    });
+
+    it("should detect schema in any content type, not just the first", () => {
+      const response: ResponseObject = {
+        description: "Success",
+        content: {
+          "text/plain": {}, // No schema
+          "application/json": {
+            schema: { $ref: "#/components/schemas/User" },
+          },
+        },
+      };
+
+      const operation: OperationObject = {
+        operationId: "getUser",
+        responses: { "200": response },
+      };
+
+      const typeImports = new Set<string>();
+      const result = buildResponseTypeInfo(
+        "200",
+        response,
+        operation,
+        typeImports,
+        false,
+      );
+
+      expect(result.statusCode).toBe("200");
+      expect(result.hasSchema).toBe(true);
+      expect(result.typeName).toBe("User");
+      expect(typeImports.has("User")).toBe(true);
+    });
+
+    it("should use schema from non-JSON content type if JSON has no schema", () => {
+      const response: ResponseObject = {
+        description: "Success",
+        content: {
+          "application/json": {}, // No schema
+          "text/xml": {
+            schema: { type: "string" },
+          },
+        },
+      };
+
+      const operation: OperationObject = {
+        operationId: "getData",
+        responses: { "200": response },
+      };
+
+      const typeImports = new Set<string>();
+      const result = buildResponseTypeInfo(
+        "200",
+        response,
+        operation,
+        typeImports,
+        false,
+      );
+
+      expect(result.statusCode).toBe("200");
+      expect(result.hasSchema).toBe(true);
+      expect(result.typeName).toBe("GetData200Response");
+      expect(typeImports.has("GetData200Response")).toBe(true);
+    });
+
+    it("should handle multiple content types all without schemas", () => {
+      const response: ResponseObject = {
+        description: "Success",
+        content: {
+          "application/json": {}, // No schema
+          "text/plain": {}, // No schema
+          "text/xml": {}, // No schema
+        },
+      };
+
+      const operation: OperationObject = {
+        operationId: "getData",
+        responses: { "200": response },
+      };
+
+      const typeImports = new Set<string>();
+      const result = buildResponseTypeInfo(
+        "200",
+        response,
+        operation,
+        typeImports,
+        false,
+      );
+
+      expect(result.statusCode).toBe("200");
+      expect(result.hasSchema).toBe(false);
+      expect(result.typeName).toBeNull();
     });
   });
 
