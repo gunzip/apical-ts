@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.36
+
+### Patch Changes
+
+- Fix default response handling
+
 ## 0.0.35
 
 ### Patch Changes
