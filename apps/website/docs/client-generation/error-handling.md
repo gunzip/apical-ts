@@ -105,8 +105,9 @@ Different error types provide different context:
 ### unexpected-error
 
 - **When it occurs**: Unexpected failures and connection issues.
-- **Available data**: No `status`, `data`, or `response` fields
-- **Use case**: Handle URL pa
+- **Available data**: No `status`, `data`, or `response` fields a
+- **Use case**: Handle network connectivity issues, timeouts, or other
+  infrastructure problems
 
 ```ts
 if (result.kind === "unexpected-error") {
