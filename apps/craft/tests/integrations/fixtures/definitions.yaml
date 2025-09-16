@@ -35,3 +35,13 @@ Book:
         title of the book
     author:
       $ref: "#/Author"
+
+Category:
+  type: object
+  properties:
+    name:
+      type: string
+    subcategories:
+      type: array
+      items:
+        $ref: "#/Category"

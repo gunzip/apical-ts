@@ -17,6 +17,9 @@ import path from "path";
 import { generateOperations } from "../client-generator/index.js";
 import { applyGeneratedOperationIds } from "../operation-id-generator/index.js";
 import {
+  analyzeSchemaForRecursion,
+  createRecursiveContext,
+  generateRecursiveSchemaFile,
   generateRequestSchemaFile,
   generateResponseSchemaFile,
   generateSchemaFile,
@@ -59,6 +62,19 @@ export interface GenerationOptions {
    * @default false
    */
   strictValidation?: boolean;
+}
+
+/**
+ * Options for component schema promise creation
+ */
+interface ComponentSchemaOptions {
+  context: SchemaGenerationContext;
+  description?: string;
+  originalSchemaName?: string;
+  recursiveContext: ReturnType<typeof createRecursiveContext>;
+  schema: SchemaObject;
+  schemaName: string;
+  strictValidation: boolean;
 }
 
 interface SchemaGenerationContext {
@@ -109,6 +125,45 @@ export async function generate(options: GenerationOptions): Promise<void> {
   );
 
   await createPackageJson(output);
+}
+
+/**
+ * Creates a schema generation promise for a single schema variant
+ */
+function createComponentSchemaPromise(
+  options: ComponentSchemaOptions,
+): Promise<void> {
+  const {
+    context,
+    description,
+    originalSchemaName,
+    recursiveContext,
+    schema,
+    schemaName,
+    strictValidation,
+  } = options;
+  const isRecursive = recursiveContext.recursiveSchemas.has(schemaName);
+
+  return context.limit(async () => {
+    const generationPromise = isRecursive
+      ? generateRecursiveSchemaFile({
+          description,
+          name: schemaName,
+          originalSchemaName: originalSchemaName || schemaName,
+          recursiveContext,
+          schema,
+          strictValidation,
+        })
+      : generateSchemaFile(schemaName, schema, description, {
+          originalSchemaName,
+          recursiveContext,
+          strictValidation,
+        });
+
+    const schemaFile = await generationPromise;
+    const filePath = path.join(context.schemasDir, schemaFile.fileName);
+    return await fs.writeFile(filePath, schemaFile.content);
+  });
 }
 
 /**
@@ -456,6 +511,31 @@ function generateComponentSchemas(
     return promises;
   }
 
+  // Create a shared recursive context for all schemas
+  const recursiveContext = createRecursiveContext();
+
+  // First pass: analyze all schemas for recursive patterns
+  for (const [name, schema] of Object.entries(
+    context.openApiDoc.components.schemas,
+  )) {
+    if (!isPlainSchemaObject(schema)) {
+      continue;
+    }
+
+    const sanitizedName = sanitizeIdentifier(name);
+
+    // Analyze for recursion and update context
+    const isRecursive = analyzeSchemaForRecursion(name, schema);
+    if (isRecursive) {
+      recursiveContext.recursiveSchemas.add(sanitizedName);
+      // Also add the strict variant if server generation is enabled
+      if (context.generateServer) {
+        recursiveContext.recursiveSchemas.add(`${sanitizedName}Strict`);
+      }
+    }
+  }
+
+  // Second pass: generate schema files with recursive context
   for (const [name, schema] of Object.entries(
     context.openApiDoc.components.schemas,
   )) {
@@ -473,26 +553,27 @@ function generateComponentSchemas(
       : undefined;
 
     // Generate regular schema
-    const promise = context.limit(() =>
-      generateSchemaFile(sanitizedName, schema, description, {
-        strictValidation: context.strictValidation,
-      }).then((schemaFile) => {
-        const filePath = path.join(context.schemasDir, schemaFile.fileName);
-        return fs.writeFile(filePath, schemaFile.content);
-      }),
-    );
+    const promise = createComponentSchemaPromise({
+      context,
+      description,
+      recursiveContext,
+      schema,
+      schemaName: sanitizedName,
+      strictValidation: context.strictValidation,
+    });
     promises.push(promise);
 
     // Generate strict schema for server when generateServer is enabled
     if (context.generateServer) {
-      const strictPromise = context.limit(() =>
-        generateSchemaFile(`${sanitizedName}Strict`, schema, description, {
-          strictValidation: true,
-        }).then((schemaFile) => {
-          const filePath = path.join(context.schemasDir, schemaFile.fileName);
-          return fs.writeFile(filePath, schemaFile.content);
-        }),
-      );
+      const strictPromise = createComponentSchemaPromise({
+        context,
+        description,
+        originalSchemaName: sanitizedName,
+        recursiveContext,
+        schema,
+        schemaName: `${sanitizedName}Strict`,
+        strictValidation: true,
+      });
       promises.push(strictPromise);
     }
   }
@@ -501,10 +582,14 @@ function generateComponentSchemas(
 }
 
 /**
- * Determines if an object is a plain OpenAPI schema object
+ * Determines if an object is a plain OpenAPI schema object or reference object
  */
 function isPlainSchemaObject(obj: unknown): obj is SchemaObject {
   if (!obj || typeof obj !== "object") return false;
+  // Check if it's a reference object (contains $ref)
+  if (isReferenceObject(obj)) {
+    return true;
+  }
   // Must have at least one OpenAPI schema property
   return (
     "type" in obj ||

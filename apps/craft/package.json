@@ -69,7 +69,7 @@
     "openapi3-ts": "^4.3.0",
     "p-limit": "^7.1.0",
     "swagger2openapi": "^7.0.8",
-    "zod": "^4.0.0"
+    "zod": "^4.1.8"
   },
   "engines": {
     "node": ">=20.0.0"
