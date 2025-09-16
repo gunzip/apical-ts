@@ -1,6 +1,6 @@
 /* Response analysis data structures and models */
 
-import type { OperationObject } from "openapi3-ts/oas31";
+import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 
 /*
  * Information about content type detection for a response
@@ -47,6 +47,8 @@ export interface ResponseAnalysis {
  * Configuration for analyzing responses
  */
 export interface ResponseAnalysisConfig {
+  /* OpenAPI document for resolving response references */
+  doc?: OpenAPIObject;
   /* Whether the operation has a response content type map */
   hasResponseContentTypeMap?: boolean;
   /* The operation being analyzed */

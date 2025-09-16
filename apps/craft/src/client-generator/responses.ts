@@ -1,4 +1,4 @@
-import type { OperationObject } from "openapi3-ts/oas31";
+import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 
@@ -49,6 +49,7 @@ export interface ResponseTypeInfo {
  */
 export function generateContentTypeMaps(
   operation: OperationObject,
+  doc?: OpenAPIObject,
 ): ContentTypeMaps {
   assert(operation.operationId, "Operation ID is required");
   const typeImports = new Set<string>();
@@ -63,6 +64,7 @@ export function generateContentTypeMaps(
     operation,
     operationId,
     typeImports,
+    doc,
   );
 
   return {
@@ -85,9 +87,11 @@ export function generateResponseHandlers(
   typeImports: Set<string>,
   hasResponseContentTypeMap = false,
   responseMapName?: string,
+  doc?: OpenAPIObject,
 ): ResponseHandlerResult {
   /* Analyze the response structure */
   const analysis = analyzeResponseStructure({
+    doc,
     hasResponseContentTypeMap,
     operation,
     responseMapName,
@@ -147,9 +151,10 @@ function buildResponseContentTypeMap(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
+  doc?: OpenAPIObject,
 ) {
   /* Use shared response mapping logic with correct structure */
-  const result = generateResponseMap(operation, operationId, typeImports);
+  const result = generateResponseMap(operation, operationId, typeImports, doc);
 
   /* Merge type imports */
   result.typeImports.forEach((imp) => typeImports.add(imp));

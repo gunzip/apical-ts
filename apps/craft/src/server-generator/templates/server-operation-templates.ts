@@ -1,3 +1,5 @@
+import type { OpenAPIObject } from "openapi3-ts/oas31";
+
 import type { ParameterGroups } from "../../client-generator/models/parameter-models.js";
 import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
 
@@ -55,6 +57,7 @@ export type ${mapName} = typeof ${mapName};`;
 export function buildServerResponseMap(
   metadata: ServerOperationMetadata,
   typeImports: Set<string>,
+  doc: OpenAPIObject,
 ): string {
   /* Generate response union type using existing logic */
   const unionResult = generateResponseUnion(
@@ -62,6 +65,7 @@ export function buildServerResponseMap(
     metadata.operationId,
     typeImports,
     { useStrictSchemas: true }, // Use strict schemas for server responses
+    doc, // Pass document for response reference resolution
   );
 
   /* Generate response map using shared logic */
@@ -69,6 +73,7 @@ export function buildServerResponseMap(
     metadata.operation,
     metadata.operationId,
     typeImports,
+    doc, // Pass document for response reference resolution
     { useStrictSchemas: true }, // Use strict schemas for server responses
   );
 
