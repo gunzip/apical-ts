@@ -543,6 +543,21 @@ paths:
         default:
           description: Foo bar
 
+  "/test-doc-ref":
+    post:
+      summary: Create document
+      description: Create a new document
+      operationId: createDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Document"
+      responses:
+        "200":
+          "$ref": "#/components/responses/DocumentResponse"
+
 # -------------
 # Components
 # -------------
@@ -557,6 +572,26 @@ components:
       $ref: "./definitions.yaml#/Book"
     Category:
       $ref: "./definitions.yaml#/Category"
+
+    _documentalias:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Document identifier
+        title:
+          type: string
+          description: Document title
+        createdAt:
+          type: string
+          format: date-time
+          description: Document creation timestamp
+      required:
+        - id
+        - title
+        - createdAt
+    Document:
+      "$ref": "#/components/schemas/_documentalias"
 
     FiscalCode:
       type: string
@@ -1090,6 +1125,13 @@ components:
   responses:
     NotFound:
       description: Not found
+
+    DocumentResponse:
+      description: Successful response
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/Document"
 
   # -------------
   # Sec Schemas

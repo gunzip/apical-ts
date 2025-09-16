@@ -572,10 +572,14 @@ function generateComponentSchemas(
 }
 
 /**
- * Determines if an object is a plain OpenAPI schema object
+ * Determines if an object is a plain OpenAPI schema object or reference object
  */
 function isPlainSchemaObject(obj: unknown): obj is SchemaObject {
   if (!obj || typeof obj !== "object") return false;
+  // Check if it's a reference object (contains $ref)
+  if (isReferenceObject(obj)) {
+    return true;
+  }
   // Must have at least one OpenAPI schema property
   return (
     "type" in obj ||
