@@ -119,7 +119,3 @@ export async function writeTypeScriptFile(
     throw new Error(`Failed to write file ${filePath}: ${error}`);
   }
 }
-  } catch (error) {
-    throw new Error(`Failed to write file ${filePath}: ${error}`);
-  }
-}
