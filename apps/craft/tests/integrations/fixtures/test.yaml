@@ -404,6 +404,9 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/Unexpected"
+
   /test-param-with-schema-ref/{param}:
     get:
       operationId: "testParamWithSchemaRef"
@@ -1156,6 +1159,13 @@ components:
         application/json:
           schema:
             "$ref": "#/components/schemas/Document"
+
+    Unexpected:
+      description: Unexpected error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
 
     UserResponse:
       description: User response with profile data

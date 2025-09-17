@@ -1,15 +1,12 @@
 /* Shared response mapping logic with correct structure */
 
-import {
-  isReferenceObject,
-  type OpenAPIObject,
-  type OperationObject,
-} from "openapi3-ts/oas31";
+import { type OpenAPIObject, type OperationObject } from "openapi3-ts/oas31";
 
 import {
   extractResponseContentTypes,
   type ResponseContentTypes,
 } from "../client-generator/operation-extractor.js";
+import { resolveResponse } from "../client-generator/utils.js";
 import {
   resolveSchemaTypeName,
   resolveStrictSchemaTypeName,
@@ -60,16 +57,6 @@ export function generateResponseMap(
   let shouldGenerateResponseMap = false;
 
   const responseContentTypes = extractResponseContentTypes(operation, doc);
-  if (responseContentTypes.length === 0) {
-    return {
-      contentTypeCount,
-      defaultContentType: null,
-      responseMapType,
-      shouldGenerateResponseMap,
-      statusCodes: [],
-      typeImports: new Set(),
-    };
-  }
 
   // Build mappings from response content types
   const buildResult = buildStatusToContentTypes(
@@ -84,6 +71,7 @@ export function generateResponseMap(
     operation,
     operationId,
     buildResult.updatedTypeImports,
+    doc,
     options,
     buildResult.statusCodes,
     buildResult.statusToContentTypes,
@@ -115,6 +103,7 @@ function applyDefaultResponse(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
+  doc: OpenAPIObject | undefined,
   options: ResponseMapOptions,
   statusCodes: string[],
   statusToContentTypes: Record<
@@ -141,38 +130,41 @@ function applyDefaultResponse(
 
   if (operation.responses && "default" in operation.responses) {
     const defaultResponse = operation.responses.default;
-    if (defaultResponse && !isReferenceObject(defaultResponse)) {
-      const content = defaultResponse.content;
-      if (content) {
-        const defaultContentTypes: {
-          contentType: string;
-          typeName: string;
-        }[] = [];
-        for (const [contentType, mediaType] of Object.entries(content)) {
-          if (!mediaType.schema) continue;
-          const typeName = options.useStrictSchemas
-            ? resolveStrictSchemaTypeName(
-                mediaType.schema,
-                operationId,
-                `DefaultResponse`,
-                updatedTypeImports,
-              )
-            : resolveSchemaTypeName(
-                mediaType.schema,
-                operationId,
-                `DefaultResponse`,
-                updatedTypeImports,
-              );
-          updatedAllContentTypes.add(contentType);
-          if (!updatedDefaultContentType) {
-            updatedDefaultContentType = contentType;
-          }
-          defaultContentTypes.push({ contentType, typeName });
+    const resolvedDefault =
+      defaultResponse && doc
+        ? resolveResponse(defaultResponse, doc)
+        : undefined;
+    if (resolvedDefault && resolvedDefault.content) {
+      const defaultContentTypes: {
+        contentType: string;
+        typeName: string;
+      }[] = [];
+      for (const [contentType, mediaType] of Object.entries(
+        resolvedDefault.content,
+      )) {
+        if (!mediaType.schema) continue;
+        const typeName = options.useStrictSchemas
+          ? resolveStrictSchemaTypeName(
+              mediaType.schema,
+              operationId,
+              `DefaultResponse`,
+              updatedTypeImports,
+            )
+          : resolveSchemaTypeName(
+              mediaType.schema,
+              operationId,
+              `DefaultResponse`,
+              updatedTypeImports,
+            );
+        updatedAllContentTypes.add(contentType);
+        if (!updatedDefaultContentType) {
+          updatedDefaultContentType = contentType;
         }
-        if (defaultContentTypes.length > 0) {
-          updatedStatusCodes.push("default");
-          updatedStatusToContentTypes["default"] = defaultContentTypes;
-        }
+        defaultContentTypes.push({ contentType, typeName });
+      }
+      if (defaultContentTypes.length > 0) {
+        updatedStatusCodes.push("default");
+        updatedStatusToContentTypes["default"] = defaultContentTypes;
       }
     }
   }
