@@ -1,5 +1,12 @@
 # @apical-ts/craft
 
+## 0.0.37
+
+### Patch Changes
+
+- Split imports in generated client operations in order to work with
+  verbatimModuleSyntax
+
 ## 0.0.36
 
 ### Patch Changes
