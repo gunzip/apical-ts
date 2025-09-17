@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.38
+
+### Patch Changes
+
+- Fix unsafe access in getResponseContentType
+
 ## 0.0.37
 
 ### Patch Changes
