@@ -71,18 +71,14 @@ export function buildOperationImports(
   const imports: string[] = [];
 
   /* Add type imports from config */
-  if (configTypeImports.length > 0) {
-    imports.push(
-      `import type { ${configTypeImports.join(", ")} } from "./config.js";`,
-    );
-  }
+  imports.push(
+    `import type { ${configTypeImports.join(", ")} } from "./config.js";`,
+  );
 
   /* Add value imports from config */
-  if (configValueImports.length > 0) {
-    imports.push(
-      `import { ${configValueImports.join(", ")} } from "./config.js";`,
-    );
-  }
+  imports.push(
+    `import { ${configValueImports.join(", ")} } from "./config.js";`,
+  );
 
   /* Add Zod import if needed for parameter schemas */
   if (typeImports.has("z")) {
@@ -119,6 +115,10 @@ export async function writeTypeScriptFile(
 ): Promise<void> {
   try {
     await fs.writeFile(filePath, content);
+  } catch (error) {
+    throw new Error(`Failed to write file ${filePath}: ${error}`);
+  }
+}
   } catch (error) {
     throw new Error(`Failed to write file ${filePath}: ${error}`);
   }
