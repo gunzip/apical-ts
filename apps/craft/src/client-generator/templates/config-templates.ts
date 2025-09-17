@@ -534,7 +534,9 @@ export function renderResponseParsingUtilities(): string {
 /* Normalize Content-Type header */
 export function getResponseContentType(response: MinimalResponse): string {
   const raw = response.headers.get("content-type");
-  return raw ? raw.split(";")[0].trim().toLowerCase() : "";
+  if (!raw) return "";
+  const firstPart = raw.split(";")[0];
+  return firstPart ? firstPart.trim().toLowerCase() : "";
 }`;
 }
 
