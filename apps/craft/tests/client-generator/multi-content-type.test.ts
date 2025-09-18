@@ -134,12 +134,12 @@ describe("Multi-content-type operation function generation", () => {
 
     // Check dynamic content type handling looks for contentType in first parameter
     expect(result.functionCode).toContain(
-      'const finalRequestContentType = contentType?.request || "application/json";',
+      'const finalRequestContentType = params.contentType?.request || "application/json";',
     );
     expect(result.functionCode).toContain("switch (finalRequestContentType)");
     // Accept header now emitted for response negotiation
     expect(result.functionCode).toContain(
-      '"Accept": contentType?.response || "application/json",',
+      '"Accept": params.contentType?.response || "application/json",',
     );
 
     // Check type imports

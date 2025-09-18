@@ -19,7 +19,9 @@ describe("client-generator security templates", () => {
       ];
 
       const result = renderSecurityHeaderHandling(headers);
-      expect(result).toBe("finalHeaders['X-API-Key'] = XAPIKey;");
+      expect(result).toBe(
+        "finalHeaders['X-API-Key'] = params.headers[\"X-API-Key\"];",
+      );
     });
 
     it("should render optional header assignment", () => {
@@ -33,7 +35,7 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "if (XAPIKey !== undefined) finalHeaders['X-API-Key'] = XAPIKey;",
+        'if (params.headers?.["X-API-Key"] !== undefined) finalHeaders[\'X-API-Key\'] = params.headers["X-API-Key"];',
       );
     });
 
@@ -53,8 +55,8 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "finalHeaders['X-API-Key'] = XAPIKey;\n" +
-          "    if (Authorization !== undefined) finalHeaders['Authorization'] = Authorization;",
+        "finalHeaders['X-API-Key'] = params.headers[\"X-API-Key\"];\n" +
+          '    if (params.headers?.["Authorization"] !== undefined) finalHeaders[\'Authorization\'] = params.headers["Authorization"];',
       );
     });
 
@@ -69,7 +71,7 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "finalHeaders['X-Custom-Auth-Token'] = XCustomAuthToken;",
+        "finalHeaders['X-Custom-Auth-Token'] = params.headers[\"X-Custom-Auth-Token\"];",
       );
     });
 
@@ -88,7 +90,9 @@ describe("client-generator security templates", () => {
       ];
 
       const result = renderSecurityHeaderHandling(headers);
-      expect(result).toBe("finalHeaders['X-Special@Header'] = XSpecialHeader;");
+      expect(result).toBe(
+        "finalHeaders['X-Special@Header'] = params.headers[\"X-Special@Header\"];",
+      );
     });
   });
 

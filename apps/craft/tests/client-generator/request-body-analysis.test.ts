@@ -66,7 +66,7 @@ describe("Request Body Analysis Functions", () => {
       const strategy = determineContentTypeStrategy("application/json");
 
       expect(strategy.bodyProcessing).toBe(
-        "body ? JSON.stringify(body) : undefined",
+        "params.body ? JSON.stringify(params.body) : undefined",
       );
       expect(strategy.contentTypeHeader).toBe(
         '"Content-Type": "application/json"',
@@ -157,7 +157,7 @@ describe("Request Body Analysis Functions", () => {
       expect(result.isRequired).toBe(true);
       expect(result.contentType).toBe("application/json");
       expect(result.strategy.bodyProcessing).toBe(
-        "body ? JSON.stringify(body) : undefined",
+        "params.body ? JSON.stringify(params.body) : undefined",
       );
       expect(result.typeInfo).toBeDefined();
       expect(result.typeInfo?.typeName).toBe("TestSchema");

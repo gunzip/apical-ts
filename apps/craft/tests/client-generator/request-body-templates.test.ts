@@ -28,7 +28,9 @@ describe("Request Body Template Functions", () => {
 
       const result = renderBodyHandling(strategy);
 
-      expect(result).toBe("    body: body ? JSON.stringify(body) : undefined,");
+      expect(result).toBe(
+        "    body: params.body ? JSON.stringify(params.body) : undefined,",
+      );
     });
 
     it("should render body handling with custom indentation", () => {
@@ -36,7 +38,9 @@ describe("Request Body Template Functions", () => {
 
       const result = renderBodyHandling(strategy, "  ");
 
-      expect(result).toBe("  body: body ? JSON.stringify(body) : undefined,");
+      expect(result).toBe(
+        "  body: params.body ? JSON.stringify(params.body) : undefined,",
+      );
     });
 
     it("should handle multipart/form-data correctly", () => {
@@ -243,7 +247,7 @@ describe("Request Body Template Functions", () => {
       expect(result).toContain('case "text/plain":');
       expect(result).toContain("default:");
       expect(result).toContain(
-        "bodyContent = typeof body === 'string' ? body : JSON.stringify(body);",
+        "bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);",
       );
       expect(result).toContain(
         'contentTypeHeader = { "Content-Type": finalRequestContentType };',
@@ -256,7 +260,7 @@ describe("Request Body Template Functions", () => {
 
       expect(result).toContain('case "application/custom":');
       expect(result).toContain(
-        "bodyContent = typeof body === 'string' ? body : JSON.stringify(body);",
+        "bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);",
       );
       expect(result).toContain(
         'contentTypeHeader = { "Content-Type": "application/custom" };',
@@ -279,7 +283,7 @@ describe("Request Body Template Functions", () => {
 
       expect(result).toContain('    case "application/json":');
       expect(result).toContain(
-        "bodyContent = body ? JSON.stringify(body) : undefined;",
+        "bodyContent = params.body ? JSON.stringify(params.body) : undefined;",
       );
       expect(result).toContain(
         'contentTypeHeader = { "Content-Type": "application/json" };',

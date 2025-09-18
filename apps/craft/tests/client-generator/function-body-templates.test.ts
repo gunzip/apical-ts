@@ -31,7 +31,7 @@ describe("function-body-templates", () => {
       );
 
       expect(result.contentTypeLogic).toContain(
-        'const finalRequestContentType = contentType?.request || "application/json";',
+        'const finalRequestContentType = params.contentType?.request || "application/json";',
       );
       expect(result.acceptHeaderLogic).toBe("");
     });
@@ -56,7 +56,7 @@ describe("function-body-templates", () => {
       );
 
       expect(result.acceptHeaderLogic).toBe(
-        '    "Accept": contentType?.response || "application/xml",',
+        '    "Accept": params.contentType?.response || "application/xml",',
       );
     });
 
@@ -80,10 +80,10 @@ describe("function-body-templates", () => {
       );
 
       expect(result.contentTypeLogic).toContain(
-        'const finalRequestContentType = contentType?.request || "application/json";',
+        'const finalRequestContentType = params.contentType?.request || "application/json";',
       );
       expect(result.acceptHeaderLogic).toBe(
-        '    "Accept": contentType?.response || "application/xml",',
+        '    "Accept": params.contentType?.response || "application/xml",',
       );
     });
 
@@ -107,10 +107,10 @@ describe("function-body-templates", () => {
       );
 
       expect(result.contentTypeLogic).toContain(
-        'const finalRequestContentType = contentType?.request || "application/json";',
+        'const finalRequestContentType = params.contentType?.request || "application/json";',
       );
       expect(result.acceptHeaderLogic).toBe(
-        '    "Accept": contentType?.response || "application/json",',
+        '    "Accept": params.contentType?.response || "application/json",',
       );
     });
   });

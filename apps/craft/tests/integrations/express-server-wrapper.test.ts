@@ -183,19 +183,19 @@ describe("Express server wrappers integration", () => {
     const res = await request(base)
       .get("/test-coercion/456/false")
       .set("count-header", "99")
-      .query({ "num-query": "123.5", "flag-query": "true" });
+      .query({ "num-query": "123.5", class: "true" });
     expect(res.status).toBe(200);
     /* Path coercion */
-    expect(res.body.path["int-param"]).toBe(456);
-    expect(typeof res.body.path["int-param"]).toBe("number");
+    expect(res.body.path["class"]).toBe(456);
+    expect(typeof res.body.path["class"]).toBe("number");
     /* stringbool(): should parse 'false' to boolean false */
     expect(res.body.path["bool-param"]).toBe(false);
     expect(typeof res.body.path["bool-param"]).toBe("boolean");
     /* Query coercion */
     expect(res.body.query["num-query"]).toBeCloseTo(123.5);
     expect(typeof res.body.query["num-query"]).toBe("number");
-    expect(res.body.query["flag-query"]).toBe(true);
-    expect(typeof res.body.query["flag-query"]).toBe("boolean");
+    expect(res.body.query["class"]).toBe(true);
+    expect(typeof res.body.query["class"]).toBe("boolean");
     /* Header coercion */
     expect(res.body.headers["count-header"]).toBe(99);
     expect(typeof res.body.headers["count-header"]).toBe("number");
