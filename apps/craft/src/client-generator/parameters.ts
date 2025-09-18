@@ -23,7 +23,7 @@ import {
   renderParameterHandling,
   renderParameterInterface,
 } from "./templates/parameter-templates.js";
-import { toCamelCase, toValidVariableName } from "./utils.js";
+import { toValidVariableName } from "./utils.js";
 
 /* Re-export types for backward compatibility */
 export type {
@@ -56,32 +56,22 @@ export function analyzeParameters(
   );
 
   const optionalityRules = determineParameterOptionalityRules(structure);
+  const { headerParams, pathParams, queryParams } = structure.processed;
 
-  /* Analyze path parameters */
-  const pathProperties = structure.processed.pathParams.map((param) =>
-    toCamelCase(param.name),
-  );
+  const analyzeParameterGroup = (params: ParameterObject[]) =>
+    params.map((param) => {
+      const varName = toValidVariableName(param.name);
+      return {
+        isRequired: param.required === true,
+        name: param.name,
+        needsQuoting: param.name !== varName,
+        varName,
+      };
+    });
 
-  /* Analyze query parameters */
-  const queryProperties = structure.processed.queryParams.map((param) => ({
-    isRequired: param.required === true,
-    name: toCamelCase(param.name),
-  }));
-
-  /* Analyze header parameters */
-  const headerProperties = structure.processed.headerParams.map((param) => {
-    const varName = toValidVariableName(param.name);
-    /*
-     * Use the variable name directly for the property name when quoting is not required.
-     */
-    const needsQuoting = param.name !== varName;
-    return {
-      isRequired: param.required === true,
-      name: needsQuoting ? param.name : varName,
-      needsQuoting,
-      varName,
-    };
-  });
+  const pathProperties = analyzeParameterGroup(pathParams);
+  const queryProperties = analyzeParameterGroup(queryParams);
+  const headerProperties = analyzeParameterGroup(headerParams);
 
   /* Analyze security headers */
   const securityHeaderProperties = structure.processed.securityHeaders.map(

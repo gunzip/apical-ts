@@ -47,7 +47,20 @@ describe("parameter template functions", () => {
 
     it("should render path parameters correctly", () => {
       const analysis = createBasicAnalysis({
-        pathProperties: ["userId", "projectId"],
+        pathProperties: [
+          {
+            name: "userId",
+            isRequired: true,
+            varName: "userId",
+            needsQuoting: false,
+          },
+          {
+            name: "projectId",
+            isRequired: true,
+            varName: "projectId",
+            needsQuoting: false,
+          },
+        ],
         structure: {
           ...createBasicAnalysis().structure,
           processed: {
@@ -79,8 +92,18 @@ describe("parameter template functions", () => {
     it("should render query parameters with optionality", () => {
       const analysis = createBasicAnalysis({
         queryProperties: [
-          { name: "filter", isRequired: true },
-          { name: "sort", isRequired: false },
+          {
+            name: "filter",
+            isRequired: true,
+            varName: "filter",
+            needsQuoting: false,
+          },
+          {
+            name: "sort",
+            isRequired: false,
+            varName: "sort",
+            needsQuoting: false,
+          },
         ],
         optionalityRules: {
           ...createBasicAnalysis().optionalityRules,
@@ -197,7 +220,12 @@ describe("parameter template functions", () => {
         structure: {
           ...createBasicAnalysis().structure,
           hasBody: true,
-          bodyTypeInfo: { typeName: "UserCreateRequest", isRequired: true },
+          bodyTypeInfo: {
+            typeName: "UserCreateRequest",
+            isRequired: true,
+            contentType: "application/json",
+            typeImports: new Set(),
+          },
         },
         optionalityRules: {
           ...createBasicAnalysis().optionalityRules,
@@ -236,7 +264,20 @@ describe("parameter template functions", () => {
 
     it("should render destructured path parameters", () => {
       const analysis = createBasicAnalysis({
-        pathProperties: ["userId", "projectId"],
+        pathProperties: [
+          {
+            name: "userId",
+            isRequired: true,
+            varName: "userId",
+            needsQuoting: false,
+          },
+          {
+            name: "projectId",
+            isRequired: true,
+            varName: "projectId",
+            needsQuoting: false,
+          },
+        ],
         structure: {
           ...createBasicAnalysis().structure,
           processed: {
@@ -259,7 +300,14 @@ describe("parameter template functions", () => {
 
     it("should render destructured query parameters with defaults", () => {
       const analysis = createBasicAnalysis({
-        queryProperties: [{ name: "filter", isRequired: false }],
+        queryProperties: [
+          {
+            name: "filter",
+            isRequired: false,
+            varName: "filter",
+            needsQuoting: false,
+          },
+        ],
         structure: {
           ...createBasicAnalysis().structure,
           processed: {
@@ -315,7 +363,12 @@ describe("parameter template functions", () => {
         structure: {
           ...createBasicAnalysis().structure,
           hasBody: true,
-          bodyTypeInfo: { typeName: "UserCreateRequest", isRequired: false },
+          bodyTypeInfo: {
+            typeName: "UserCreateRequest",
+            isRequired: false,
+            contentType: "application/json",
+            typeImports: new Set(),
+          },
         },
       });
 

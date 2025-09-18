@@ -2,7 +2,7 @@ import type { ParameterObject } from "openapi3-ts/oas31";
 
 import type { ParameterAnalysis } from "../models/parameter-models.js";
 
-import { toCamelCase, toValidVariableName } from "../utils.js";
+import { toValidVariableName } from "../utils.js";
 
 /**
  * Renders destructured parameters for function signature
@@ -15,12 +15,27 @@ export function renderDestructuredParameters(
 
   // Path parameters
   if (structure.processed.pathParams.length > 0) {
-    destructureParams.push(`path: { ${analysis.pathProperties.join(", ")} }`);
+    const pathProperties: string[] = [];
+    analysis.pathProperties.forEach((prop) => {
+      if (prop.needsQuoting) {
+        pathProperties.push(`"${prop.name}": ${prop.varName}`);
+      } else {
+        pathProperties.push(`${prop.varName}`);
+      }
+    });
+    destructureParams.push(`path: { ${pathProperties.join(", ")} }`);
   }
 
   // Query parameters
   if (structure.processed.queryParams.length > 0) {
-    const queryProperties = analysis.queryProperties.map((prop) => prop.name);
+    const queryProperties: string[] = [];
+    analysis.queryProperties.forEach((prop) => {
+      if (prop.needsQuoting) {
+        queryProperties.push(`"${prop.name}": ${prop.varName}`);
+      } else {
+        queryProperties.push(`${prop.varName}`);
+      }
+    });
     const defaultValue = analysis.optionalityRules.isQueryOptional
       ? " = {}"
       : "";
@@ -98,7 +113,7 @@ export function renderParameterHandling(
   } else {
     return params
       .map((p) => {
-        const varName = toCamelCase(p.name);
+        const varName = toValidVariableName(p.name);
         return `if (${varName} !== undefined) url.searchParams.append('${p.name}', String(${varName}));`;
       })
       .join("\n    ");
@@ -114,17 +129,29 @@ export function renderParameterInterface(analysis: ParameterAnalysis): string {
 
   // Path parameters section (never optional if present)
   if (structure.processed.pathParams.length > 0) {
-    const pathProperties = analysis.pathProperties.map(
-      (name) => `${name}: string`,
-    );
+    const pathProperties: string[] = [];
+    analysis.pathProperties.forEach((prop) => {
+      const requiredMarker = prop.isRequired ? "" : "?";
+      if (prop.needsQuoting) {
+        pathProperties.push(`"${prop.name}"${requiredMarker}: string`);
+      } else {
+        pathProperties.push(`${prop.varName}${requiredMarker}: string`);
+      }
+    });
     sections.push(`path: {\n    ${pathProperties.join(";\n    ")};\n  }`);
   }
 
   // Query parameters section
   if (structure.processed.queryParams.length > 0) {
-    const queryProperties = analysis.queryProperties.map(
-      (prop) => `${prop.name}${prop.isRequired ? "" : "?"}: string`,
-    );
+    const queryProperties: string[] = [];
+    analysis.queryProperties.forEach((prop) => {
+      const requiredMarker = prop.isRequired ? "" : "?";
+      if (prop.needsQuoting) {
+        queryProperties.push(`"${prop.name}"${requiredMarker}: string`);
+      } else {
+        queryProperties.push(`${prop.varName}${requiredMarker}: string`);
+      }
+    });
     const optionalMarker = analysis.optionalityRules.isQueryOptional ? "?" : "";
     sections.push(
       `query${optionalMarker}: {\n    ${queryProperties.join(";\n    ")};\n  }`,

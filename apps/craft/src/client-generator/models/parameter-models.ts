@@ -14,8 +14,18 @@ export interface ParameterAnalysis {
     varName: string;
   }[];
   optionalityRules: ParameterOptionalityRules;
-  pathProperties: string[];
-  queryProperties: { isRequired: boolean; name: string }[];
+  pathProperties: {
+    isRequired: boolean;
+    name: string;
+    needsQuoting: boolean;
+    varName: string;
+  }[];
+  queryProperties: {
+    isRequired: boolean;
+    name: string;
+    needsQuoting: boolean;
+    varName: string;
+  }[];
   securityHeaderProperties: {
     headerName: string;
     isRequired: boolean;
