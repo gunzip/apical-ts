@@ -115,35 +115,6 @@ export function resolveResponseReference(
 }
 
 /**
- * Converts kebab-case or similar to camelCase.
- * Preserves already camelCased parts.
- */
-export function toCamelCase(str: string): string {
-  // Split on non-alphanumeric characters (-, _, spaces, etc.) and remove empty parts
-  const parts = str.split(/[^a-zA-Z0-9]+/).filter(Boolean);
-  if (parts.length === 0) return "";
-
-  // If only one part (no separators), preserve original casing but ensure first char is lowercase
-  if (parts.length === 1) {
-    const first = parts[0];
-    return first.charAt(0).toLowerCase() + first.slice(1);
-  }
-
-  // Take the first part and lowercase it entirely
-  const first = parts[0];
-  const firstLower = first.toLowerCase();
-
-  // For subsequent parts, capitalize first letter and lowercase the rest
-  return (
-    firstLower +
-    parts
-      .slice(1)
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join("")
-  );
-}
-
-/**
  * Creates a valid JavaScript variable name from any string
  */
 export function toValidVariableName(str: string): string {
