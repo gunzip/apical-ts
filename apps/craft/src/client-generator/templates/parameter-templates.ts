@@ -2,99 +2,33 @@ import type { ParameterObject } from "openapi3-ts/oas31";
 
 import type { ParameterAnalysis } from "../models/parameter-models.js";
 
-import { toValidVariableName } from "../utils.js";
-
 /**
- * Renders destructured parameters for function signature
+ * Renders simple parameters for function signature (no destructuring to avoid duplicate identifiers)
  */
 export function renderDestructuredParameters(
   analysis: ParameterAnalysis,
 ): string {
-  const destructureParams: string[] = [];
+  const params: string[] = [];
   const { structure } = analysis;
 
-  // Path parameters
-  if (structure.processed.pathParams.length > 0) {
-    const pathProperties: string[] = [];
-    analysis.pathProperties.forEach((prop) => {
-      if (prop.needsQuoting) {
-        pathProperties.push(`"${prop.name}": ${prop.varName}`);
-      } else {
-        pathProperties.push(`${prop.varName}`);
-      }
-    });
-    destructureParams.push(`path: { ${pathProperties.join(", ")} }`);
-  }
-
-  // Query parameters
-  if (structure.processed.queryParams.length > 0) {
-    const queryProperties: string[] = [];
-    analysis.queryProperties.forEach((prop) => {
-      if (prop.needsQuoting) {
-        queryProperties.push(`"${prop.name}": ${prop.varName}`);
-      } else {
-        queryProperties.push(`${prop.varName}`);
-      }
-    });
-    const defaultValue = analysis.optionalityRules.isQueryOptional
-      ? " = {}"
-      : "";
-    destructureParams.push(
-      `query: { ${queryProperties.join(", ")} }${defaultValue}`,
-    );
-  }
-
-  // Header parameters
+  // Add single params parameter for all parameter types
   if (
+    structure.processed.pathParams.length > 0 ||
+    structure.processed.queryParams.length > 0 ||
     structure.processed.headerParams.length > 0 ||
-    structure.processed.securityHeaders.length > 0
+    structure.processed.securityHeaders.length > 0 ||
+    structure.hasBody ||
+    structure.hasRequestMap ||
+    structure.hasResponseMap
   ) {
-    const headerProperties: string[] = [];
-
-    // Regular header parameters
-    analysis.headerProperties.forEach((prop) => {
-      if (prop.needsQuoting) {
-        headerProperties.push(`"${prop.name}": ${prop.varName}`);
-      } else {
-        /* Use the derived variable name so that later header handling code
-         * refers to the correct (possibly camelCased) identifier. */
-        headerProperties.push(`${prop.varName}`);
-      }
-    });
-
-    // Security headers
-    analysis.securityHeaderProperties.forEach((prop) => {
-      headerProperties.push(`"${prop.headerName}": ${prop.varName}`);
-    });
-
-    const defaultValue = analysis.optionalityRules.isHeadersOptional
-      ? " = {}"
-      : "";
-    destructureParams.push(
-      `headers: { ${headerProperties.join(", ")} }${defaultValue}`,
-    );
+    params.push("params");
   }
 
-  // Body parameter
-  if (structure.hasBody && structure.bodyTypeInfo) {
-    const defaultValue = structure.bodyTypeInfo.isRequired
-      ? ""
-      : " = undefined";
-    destructureParams.push(`body${defaultValue}`);
-  }
-
-  // ContentType parameter
-  if (structure.hasRequestMap || structure.hasResponseMap) {
-    destructureParams.push("contentType = {}");
-  }
-
-  return destructureParams.length > 0
-    ? `{ ${destructureParams.join(", ")} }`
-    : "{}";
+  return params.length > 0 ? params[0] : "{}";
 }
 
 /**
- * Renders parameter handling code for headers
+ * Renders parameter handling code for headers and queries using bracket notation
  */
 export function renderParameterHandling(
   paramType: "header" | "query",
@@ -104,90 +38,44 @@ export function renderParameterHandling(
 
   if (paramType === "header") {
     return params
-      .map((p) => {
-        const varName = toValidVariableName(p.name);
-        // Use the sanitized variable name on the LHS, original header string as key
-        return `if (${varName} !== undefined) finalHeaders['${p.name}'] = String(${varName});`;
-      })
+      .map(
+        (p) =>
+          `if (params.headers?.["${p.name}"] !== undefined) finalHeaders['${p.name}'] = String(params.headers["${p.name}"]);`,
+      )
       .join("\n    ");
   } else {
     return params
-      .map((p) => {
-        const varName = toValidVariableName(p.name);
-        return `if (${varName} !== undefined) url.searchParams.append('${p.name}', String(${varName}));`;
-      })
+      .map(
+        (p) =>
+          `if (params.query?.["${p.name}"] !== undefined) url.searchParams.append('${p.name}', String(params.query["${p.name}"]));`,
+      )
       .join("\n    ");
   }
 }
 
 /**
- * Renders TypeScript interface for parameters
+ * Renders TypeScript interface for parameters (using a params object instead of destructuring)
  */
 export function renderParameterInterface(analysis: ParameterAnalysis): string {
   const sections: string[] = [];
   const { structure } = analysis;
 
-  // Path parameters section (never optional if present)
-  if (structure.processed.pathParams.length > 0) {
-    const pathProperties: string[] = [];
-    analysis.pathProperties.forEach((prop) => {
-      const requiredMarker = prop.isRequired ? "" : "?";
-      if (prop.needsQuoting) {
-        pathProperties.push(`"${prop.name}"${requiredMarker}: string`);
-      } else {
-        pathProperties.push(`${prop.varName}${requiredMarker}: string`);
-      }
-    });
-    sections.push(`path: {\n    ${pathProperties.join(";\n    ")};\n  }`);
-  }
-
-  // Query parameters section
-  if (structure.processed.queryParams.length > 0) {
-    const queryProperties: string[] = [];
-    analysis.queryProperties.forEach((prop) => {
-      const requiredMarker = prop.isRequired ? "" : "?";
-      if (prop.needsQuoting) {
-        queryProperties.push(`"${prop.name}"${requiredMarker}: string`);
-      } else {
-        queryProperties.push(`${prop.varName}${requiredMarker}: string`);
-      }
-    });
-    const optionalMarker = analysis.optionalityRules.isQueryOptional ? "?" : "";
-    sections.push(
-      `query${optionalMarker}: {\n    ${queryProperties.join(";\n    ")};\n  }`,
-    );
-  }
-
-  // Header parameters section
-  if (
+  // Check if we need a params object at all
+  const needsParams =
+    structure.processed.pathParams.length > 0 ||
+    structure.processed.queryParams.length > 0 ||
     structure.processed.headerParams.length > 0 ||
-    structure.processed.securityHeaders.length > 0
-  ) {
-    const headerProperties: string[] = [];
+    structure.processed.securityHeaders.length > 0;
 
-    // Regular header parameters
-    analysis.headerProperties.forEach((prop) => {
-      const requiredMarker = prop.isRequired ? "" : "?";
-      if (prop.needsQuoting) {
-        headerProperties.push(`"${prop.name}"${requiredMarker}: string`);
-      } else {
-        /* Use the sanitized variable name consistently */
-        headerProperties.push(`${prop.varName}${requiredMarker}: string`);
-      }
-    });
+  if (needsParams) {
+    const pathSection = renderPathParametersSection(analysis);
+    if (pathSection) sections.push(pathSection);
 
-    // Security headers
-    analysis.securityHeaderProperties.forEach((prop) => {
-      const requiredMarker = prop.isRequired ? "" : "?";
-      headerProperties.push(`"${prop.headerName}"${requiredMarker}: string`);
-    });
+    const querySection = renderQueryParametersSection(analysis);
+    if (querySection) sections.push(querySection);
 
-    const optionalMarker = analysis.optionalityRules.isHeadersOptional
-      ? "?"
-      : "";
-    sections.push(
-      `headers${optionalMarker}: {\n    ${headerProperties.join(";\n    ")};\n  }`,
-    );
+    const headerSection = renderHeaderParametersSection(analysis);
+    if (headerSection) sections.push(headerSection);
   }
 
   // Body parameter
@@ -219,4 +107,71 @@ export function renderParameterInterface(analysis: ParameterAnalysis): string {
   }
 
   return sections.length > 0 ? `{\n  ${sections.join(";\n  ")};\n}` : "{}";
+}
+
+/* Helper functions for rendering parameter sections */
+
+/**
+ * Renders header parameters section for the params interface
+ */
+function renderHeaderParametersSection(
+  analysis: ParameterAnalysis,
+): null | string {
+  const { structure } = analysis;
+  if (
+    structure.processed.headerParams.length === 0 &&
+    structure.processed.securityHeaders.length === 0
+  ) {
+    return null;
+  }
+
+  const headerProperties: string[] = [];
+
+  // Regular header parameters
+  analysis.headerProperties.forEach((prop) => {
+    const requiredMarker = prop.isRequired ? "" : "?";
+    headerProperties.push(`"${prop.name}"${requiredMarker}: string`);
+  });
+
+  // Security headers
+  analysis.securityHeaderProperties.forEach((prop) => {
+    const requiredMarker = prop.isRequired ? "" : "?";
+    headerProperties.push(`"${prop.headerName}"${requiredMarker}: string`);
+  });
+
+  const optionalMarker = analysis.optionalityRules.isHeadersOptional ? "?" : "";
+  return `headers${optionalMarker}: {\n      ${headerProperties.join(";\n      ")};\n    }`;
+}
+
+/**
+ * Renders path parameters section for the params interface
+ */
+function renderPathParametersSection(
+  analysis: ParameterAnalysis,
+): null | string {
+  if (analysis.structure.processed.pathParams.length === 0) return null;
+
+  const pathProperties: string[] = [];
+  analysis.pathProperties.forEach((prop) => {
+    const requiredMarker = prop.isRequired ? "" : "?";
+    pathProperties.push(`"${prop.name}"${requiredMarker}: string`);
+  });
+  return `path: {\n      ${pathProperties.join(";\n      ")};\n    }`;
+}
+
+/**
+ * Renders query parameters section for the params interface
+ */
+function renderQueryParametersSection(
+  analysis: ParameterAnalysis,
+): null | string {
+  if (analysis.structure.processed.queryParams.length === 0) return null;
+
+  const queryProperties: string[] = [];
+  analysis.queryProperties.forEach((prop) => {
+    const requiredMarker = prop.isRequired ? "" : "?";
+    queryProperties.push(`"${prop.name}"${requiredMarker}: string`);
+  });
+  const optionalMarker = analysis.optionalityRules.isQueryOptional ? "?" : "";
+  return `query${optionalMarker}: {\n      ${queryProperties.join(";\n      ")};\n    }`;
 }

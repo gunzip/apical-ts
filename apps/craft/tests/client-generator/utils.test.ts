@@ -61,7 +61,7 @@ describe("client-generator utils", () => {
       ];
 
       const result = generatePathInterpolation("/users/{userId}", pathParams);
-      expect(result).toBe("/users/${userId}");
+      expect(result).toBe('/users/${params.path["userId"]}');
     });
 
     it("should interpolate multiple path parameters", () => {
@@ -74,7 +74,9 @@ describe("client-generator utils", () => {
         "/users/{userId}/posts/{postId}",
         pathParams,
       );
-      expect(result).toBe("/users/${userId}/posts/${postId}");
+      expect(result).toBe(
+        '/users/${params.path["userId"]}/posts/${params.path["postId"]}',
+      );
     });
 
     it("should convert kebab-case parameter names to camelCase", () => {
@@ -87,7 +89,9 @@ describe("client-generator utils", () => {
         "/users/{user-id}/posts/{post-id}",
         pathParams,
       );
-      expect(result).toBe("/users/${userId}/posts/${postId}");
+      expect(result).toBe(
+        '/users/${params.path["user-id"]}/posts/${params.path["post-id"]}',
+      );
     });
 
     it("should handle paths with no parameters", () => {
@@ -119,7 +123,9 @@ describe("client-generator utils", () => {
         "/users/{user_id}/data/{complex-param-name}",
         pathParams,
       );
-      expect(result).toBe("/users/${userId}/data/${complexParamName}"); // Only complex-param-name gets converted
+      expect(result).toBe(
+        '/users/${params.path["user_id"]}/data/${params.path["complex-param-name"]}',
+      ); // Now uses exact param names
     });
   });
 

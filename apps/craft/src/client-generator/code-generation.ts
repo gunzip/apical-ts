@@ -83,7 +83,7 @@ export function generateFunctionBody({
       bodyContentCode = renderContentTypeSwitch(requestContentTypes || []);
     } else {
       // Single content type operation - generate simple body content
-      bodyContentCode = `  const bodyContent = body ? JSON.stringify(body) : undefined;`;
+      bodyContentCode = `  const bodyContent = params.body ? JSON.stringify(params.body) : undefined;`;
     }
   }
 

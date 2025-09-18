@@ -19,7 +19,7 @@ export function renderAuthHeaderValidation(authHeaders: string[]): string {
 }
 
 /**
- * Renders security header handling code from security headers
+ * Renders security header handling code from security headers using bracket notation
  */
 export function renderSecurityHeaderHandling(
   operationSecurityHeaders: SecurityHeader[],
@@ -28,11 +28,10 @@ export function renderSecurityHeaderHandling(
 
   return operationSecurityHeaders
     .map((securityHeader) => {
-      const varName = toValidVariableName(securityHeader.headerName);
       if (securityHeader.isRequired) {
-        return `finalHeaders['${securityHeader.headerName}'] = ${varName};`;
+        return `finalHeaders['${securityHeader.headerName}'] = params.headers["${securityHeader.headerName}"];`;
       } else {
-        return `if (${varName} !== undefined) finalHeaders['${securityHeader.headerName}'] = ${varName};`;
+        return `if (params.headers?.["${securityHeader.headerName}"] !== undefined) finalHeaders['${securityHeader.headerName}'] = params.headers["${securityHeader.headerName}"];`;
       }
     })
     .join("\n    ");

@@ -332,11 +332,11 @@ paths:
           description: "Ok"
         "500":
           description: "Fatal error"
-  /test-coercion/{int-param}/{bool-param}:
+  /test-coercion/{class}/{bool-param}:
     get:
       operationId: testCoercion
       parameters:
-        - name: int-param
+        - name: class
           in: path
           required: true
           schema:
@@ -351,7 +351,7 @@ paths:
           required: true
           schema:
             type: number
-        - name: flag-query
+        - name: class
           in: query
           required: true
           schema:

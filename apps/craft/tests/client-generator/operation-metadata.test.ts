@@ -158,11 +158,10 @@ describe("extractOperationMetadata", () => {
     expect(metadata.bodyInfo.requestContentTypes).toEqual([]);
     expect(metadata.bodyInfo.bodyTypeInfo).toBeUndefined();
 
-    /* Parameter structures should include path and query parameters */
-    expect(metadata.parameterStructures.destructuredParams).toContain("path");
-    expect(metadata.parameterStructures.destructuredParams).toContain("query");
+    /* Parameter structures should use simple params approach */
+    expect(metadata.parameterStructures.destructuredParams).toBe("params");
     expect(metadata.parameterStructures.paramsInterface).toContain(
-      "id: string",
+      '"id": string',
     );
   });
 
@@ -217,12 +216,8 @@ describe("extractOperationMetadata", () => {
     expect(metadata.parameterGroups.headerParams).toHaveLength(1);
     expect(metadata.parameterGroups.headerParams[0].name).toBe("version");
 
-    /* Parameter structures should include both path-level and operation parameters */
-    expect(metadata.parameterStructures.destructuredParams).toContain("path");
-    expect(metadata.parameterStructures.destructuredParams).toContain(
-      "headers",
-    );
-    expect(metadata.parameterStructures.destructuredParams).toContain("body");
+    /* Parameter structures should use simple params approach */
+    expect(metadata.parameterStructures.destructuredParams).toBe("params");
   });
 
   it("should handle operation with security schemes", () => {

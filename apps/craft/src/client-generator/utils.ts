@@ -13,7 +13,7 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 import { handleReservedKeyword } from "../shared/reserved-keywords.js";
 
 /**
- * Generates URL path with parameter interpolation
+ * Generates URL path with parameter interpolation using bracket notation
  */
 export function generatePathInterpolation(
   pathKey: string,
@@ -21,8 +21,10 @@ export function generatePathInterpolation(
 ): string {
   let finalPath = pathKey;
   for (const param of pathParams) {
-    const varName = toValidVariableName(param.name);
-    finalPath = finalPath.replace(`{${param.name}}`, `\${${varName}}`);
+    finalPath = finalPath.replace(
+      `{${param.name}}`,
+      `\${params.path["${param.name}"]}`,
+    );
   }
   return finalPath;
 }

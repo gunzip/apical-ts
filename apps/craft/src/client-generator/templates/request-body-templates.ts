@@ -11,33 +11,35 @@ import type {
 /* Default content type handling strategies */
 export const DEFAULT_CONTENT_TYPE_HANDLERS: ContentTypeHandlerConfig = {
   "application/json": {
-    bodyProcessing: "body ? JSON.stringify(body) : undefined",
+    bodyProcessing: "params.body ? JSON.stringify(params.body) : undefined",
     contentTypeHeader: '"Content-Type": "application/json"',
     requiresFormData: false,
   },
   "application/octet-stream": {
-    bodyProcessing: "body",
+    bodyProcessing: "params.body",
     contentTypeHeader: '"Content-Type": "application/octet-stream"',
     requiresFormData: false,
   },
   "application/x-www-form-urlencoded": {
     bodyProcessing:
-      "body ? formUrlEncode(body, { arrayFormat: 'repeat' }) : undefined",
+      "params.body ? formUrlEncode(params.body, { arrayFormat: 'repeat' }) : undefined",
     contentTypeHeader: '"Content-Type": "application/x-www-form-urlencoded"',
     requiresFormData: false,
   },
   "application/xml": {
-    bodyProcessing: "typeof body === 'string' ? body : String(body)",
+    bodyProcessing:
+      "typeof params.body === 'string' ? params.body : String(params.body)",
     contentTypeHeader: '"Content-Type": "application/xml"',
     requiresFormData: false,
   },
   "multipart/form-data": {
-    bodyProcessing: "buildFormData(body)",
+    bodyProcessing: "buildFormData(params.body)",
     contentTypeHeader: "",
     requiresFormData: true,
   },
   "text/plain": {
-    bodyProcessing: "typeof body === 'string' ? body : String(body)",
+    bodyProcessing:
+      "typeof params.body === 'string' ? params.body : String(params.body)",
     contentTypeHeader: '"Content-Type": "text/plain"',
     requiresFormData: false,
   },
@@ -87,7 +89,7 @@ export function renderContentTypeSwitch(requestContentTypes: string[]): string {
       } else {
         /* Generic approach for unknown content types */
         return `    case "${contentType}":
-      bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
+      bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);
       contentTypeHeader = { "Content-Type": "${contentType}" };
       break;`;
       }
@@ -95,7 +97,7 @@ export function renderContentTypeSwitch(requestContentTypes: string[]): string {
     .join("\n");
 
   const defaultCase = `    default:
-      bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
+      bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);
       contentTypeHeader = { "Content-Type": finalRequestContentType };`;
 
   return `  let bodyContent: RequestBody = "";
@@ -130,7 +132,7 @@ export function renderDynamicBodyHandling(
       } else {
         /* Generic approach for unknown content types */
         return `    case "${contentType}":
-      bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
+      bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);
       contentTypeHeader = { "Content-Type": "${contentType}" };
       break;`;
       }
@@ -138,7 +140,7 @@ export function renderDynamicBodyHandling(
     .join("\n");
 
   const defaultCase = `    default:
-      bodyContent = typeof body === 'string' ? body : JSON.stringify(body);
+      bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);
       contentTypeHeader = { "Content-Type": finalRequestContentType };`;
 
   return `  let bodyContent: RequestBody = "";
@@ -170,7 +172,7 @@ export function renderLegacyRequestBodyHandling(
       /* Fallback for unknown content types */
       const fallbackStrategy: ContentTypeStrategy = {
         bodyProcessing:
-          "typeof body === 'string' ? body : JSON.stringify(body)",
+          "typeof params.body === 'string' ? params.body : JSON.stringify(params.body)",
         contentTypeHeader: `"Content-Type": "${context.requestContentType}"`,
         requiresFormData: false,
       };

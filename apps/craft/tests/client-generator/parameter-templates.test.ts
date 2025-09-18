@@ -85,8 +85,8 @@ describe("parameter template functions", () => {
 
       const result = renderParameterInterface(analysis);
       expect(result).toContain("path: {");
-      expect(result).toContain("userId: string");
-      expect(result).toContain("projectId: string");
+      expect(result).toContain('"userId": string');
+      expect(result).toContain('"projectId": string');
     });
 
     it("should render query parameters with optionality", () => {
@@ -134,8 +134,8 @@ describe("parameter template functions", () => {
 
       const result = renderParameterInterface(analysis);
       expect(result).toContain("query: {");
-      expect(result).toContain("filter: string");
-      expect(result).toContain("sort?: string");
+      expect(result).toContain('"filter": string');
+      expect(result).toContain('"sort"?: string');
     });
 
     it("should render header parameters with quoting", () => {
@@ -184,7 +184,7 @@ describe("parameter template functions", () => {
       const result = renderParameterInterface(analysis);
       expect(result).toContain("headers: {");
       expect(result).toContain('"Content-Type": string');
-      expect(result).toContain("simpleheader?: string");
+      expect(result).toContain('"simpleheader"?: string');
     });
 
     it("should render security headers", () => {
@@ -295,7 +295,7 @@ describe("parameter template functions", () => {
       });
 
       const result = renderDestructuredParameters(analysis);
-      expect(result).toContain("path: { userId, projectId }");
+      expect(result).toBe("params");
     });
 
     it("should render destructured query parameters with defaults", () => {
@@ -325,7 +325,7 @@ describe("parameter template functions", () => {
       });
 
       const result = renderDestructuredParameters(analysis);
-      expect(result).toContain("query: { filter } = {}");
+      expect(result).toBe("params");
     });
 
     it("should render destructured header parameters with quoting", () => {
@@ -355,7 +355,7 @@ describe("parameter template functions", () => {
       });
 
       const result = renderDestructuredParameters(analysis);
-      expect(result).toContain('"Content-Type": ContentType');
+      expect(result).toBe("params");
     });
 
     it("should render body parameter with default", () => {
@@ -373,7 +373,7 @@ describe("parameter template functions", () => {
       });
 
       const result = renderDestructuredParameters(analysis);
-      expect(result).toContain("body = undefined");
+      expect(result).toBe("params");
     });
   });
 
@@ -396,10 +396,10 @@ describe("parameter template functions", () => {
 
       const result = renderParameterHandling("header", params);
       expect(result).toContain(
-        "if (XAPIKey !== undefined) finalHeaders['X-API-Key'] = String(XAPIKey);",
+        'if (params.headers?.["X-API-Key"] !== undefined) finalHeaders[\'X-API-Key\'] = String(params.headers["X-API-Key"]);',
       );
       expect(result).toContain(
-        "if (ContentType !== undefined) finalHeaders['Content-Type'] = String(ContentType);",
+        'if (params.headers?.["Content-Type"] !== undefined) finalHeaders[\'Content-Type\'] = String(params.headers["Content-Type"]);',
       );
     });
 
@@ -421,10 +421,10 @@ describe("parameter template functions", () => {
 
       const result = renderParameterHandling("query", params);
       expect(result).toContain(
-        "if (filter !== undefined) url.searchParams.append('filter', String(filter));",
+        'if (params.query?.["filter"] !== undefined) url.searchParams.append(\'filter\', String(params.query["filter"]));',
       );
       expect(result).toContain(
-        "if (sortBy !== undefined) url.searchParams.append('sort-by', String(sortBy));",
+        'if (params.query?.["sort-by"] !== undefined) url.searchParams.append(\'sort-by\', String(params.query["sort-by"]));',
       );
     });
 

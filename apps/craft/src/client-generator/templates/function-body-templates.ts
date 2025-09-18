@@ -39,13 +39,13 @@ export function determineFunctionBodyStructure(
   if (shouldGenerateRequestMap) {
     const defaultReq =
       contentTypeMaps.defaultRequestContentType || "application/json";
-    contentTypeLogic += `  const finalRequestContentType = contentType?.request || "${defaultReq}";\n`;
+    contentTypeLogic += `  const finalRequestContentType = params.contentType?.request || "${defaultReq}";\n`;
   }
 
   if (shouldGenerateResponseMap) {
     const defaultRespValue =
       contentTypeMaps.defaultResponseContentType || "application/json";
-    acceptHeaderLogic = `    "Accept": contentType?.response || "${defaultRespValue}",`;
+    acceptHeaderLogic = `    "Accept": params.contentType?.response || "${defaultRespValue}",`;
   }
 
   return {
