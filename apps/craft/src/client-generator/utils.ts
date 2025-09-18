@@ -21,7 +21,7 @@ export function generatePathInterpolation(
 ): string {
   let finalPath = pathKey;
   for (const param of pathParams) {
-    const varName = toCamelCase(param.name);
+    const varName = toValidVariableName(param.name);
     finalPath = finalPath.replace(`{${param.name}}`, `\${${varName}}`);
   }
   return finalPath;
@@ -114,34 +114,6 @@ export function resolveResponseReference(
   }
 
   return response;
-}
-
-/**
- * Converts kebab-case or similar to camelCase.
- * Preserves already camelCased parts.
- */
-export function toCamelCase(str: string): string {
-  // Split on non-alphanumeric characters (-, _, spaces, etc.) and remove empty parts
-  const parts = str.split(/[^a-zA-Z0-9]+/).filter(Boolean);
-
-  // Should not happen, makes type checking easier
-  if (parts.length === 0) return "";
-
-  // If only one part (no separators), preserve original casing but ensure first char is lowercase
-  if (parts.length === 1) {
-    const result = parts[0].charAt(0).toLowerCase() + parts[0].slice(1);
-    return handleReservedKeyword(result);
-  }
-
-  // Take the first part and lowercase it entirely, then capitalize subsequent parts
-  const firstLower = parts[0].toLowerCase();
-  const capitalizedParts = parts
-    .slice(1)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join("");
-
-  const result = firstLower + capitalizedParts;
-  return handleReservedKeyword(result);
 }
 
 /**

@@ -86,7 +86,12 @@ describe("parameter logic functions", () => {
       const result = determineParameterStructure(
         sampleParameterGroups,
         true,
-        { typeName: "UserCreateRequest", isRequired: true },
+        {
+          typeName: "UserCreateRequest",
+          isRequired: true,
+          contentType: "application/json",
+          typeImports: new Set(),
+        },
         undefined,
         true,
         false,
@@ -107,7 +112,12 @@ describe("parameter logic functions", () => {
       const structure = determineParameterStructure(
         sampleParameterGroups,
         true,
-        { typeName: "UserCreateRequest", isRequired: false },
+        {
+          typeName: "UserCreateRequest",
+          isRequired: false,
+          contentType: "application/json",
+          typeImports: new Set(),
+        },
       );
 
       const rules = determineParameterOptionalityRules(structure);
@@ -123,11 +133,25 @@ describe("parameter logic functions", () => {
       const analysis = analyzeParameters(sampleParameterGroups, true, {
         typeName: "UserCreateRequest",
         isRequired: true,
+        contentType: "application/json",
+        typeImports: new Set(),
       });
 
-      expect(analysis.pathProperties).toEqual(["userId"]);
+      expect(analysis.pathProperties).toEqual([
+        {
+          name: "userId",
+          isRequired: true,
+          varName: "userId",
+          needsQuoting: false,
+        },
+      ]);
       expect(analysis.queryProperties).toEqual([
-        { name: "filter", isRequired: false },
+        {
+          name: "filter",
+          isRequired: false,
+          varName: "filter",
+          needsQuoting: false,
+        },
       ]);
       expect(analysis.headerProperties).toEqual([
         {

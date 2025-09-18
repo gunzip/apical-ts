@@ -107,4 +107,4 @@ export {
   renderOperationFunction,
 } from "./templates/operation-templates.js";
 
-export { toCamelCase, toValidVariableName } from "./utils.js";
+export { toValidVariableName } from "./utils.js";

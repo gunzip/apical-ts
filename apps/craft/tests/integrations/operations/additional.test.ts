@@ -158,7 +158,7 @@ describe("Additional Operations", () => {
       const response = await client.testParametersAtPathLevel({
         query: {
           cursor: "test-cursor-value",
-          requestId: "test-request-123",
+          "request-id": "test-request-123",
         },
       });
 

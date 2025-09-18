@@ -5,55 +5,10 @@ import { describe, expect, it } from "vitest";
 import {
   generatePathInterpolation,
   getResponseContentType,
-  toCamelCase,
   toValidVariableName,
 } from "../../src/client-generator/utils.js";
 
 describe("client-generator utils", () => {
-  describe("toCamelCase", () => {
-    it("should convert kebab-case to camelCase", () => {
-      expect(toCamelCase("hello-world")).toBe("helloWorld");
-      expect(toCamelCase("user-profile-data")).toBe("userProfileData");
-      expect(toCamelCase("api-key")).toBe("apiKey");
-    });
-
-    it("should handle single word", () => {
-      expect(toCamelCase("hello")).toBe("hello");
-    });
-
-    it("should handle empty string", () => {
-      expect(toCamelCase("")).toBe("");
-    });
-
-    it("should handle string without hyphens", () => {
-      expect(toCamelCase("alreadyCamelCase")).toBe("alreadyCamelCase");
-    });
-
-    it("should handle multiple consecutive hyphens", () => {
-      expect(toCamelCase("test--case")).toBe("testCase");
-    });
-
-    it("should handle hyphens at start and end", () => {
-      expect(toCamelCase("-test-case-")).toBe("testCase");
-    });
-
-    it("should handle uppercase letters after hyphens", () => {
-      expect(toCamelCase("test-Case")).toBe("testCase");
-    });
-
-    it("should handle all uppercase input", () => {
-      expect(toCamelCase("TEST-CASE")).toBe("testCase");
-    });
-
-    it("should handle numbers in input", () => {
-      expect(toCamelCase("test-123-case")).toBe("test123Case");
-    });
-
-    it("should handle only separators", () => {
-      expect(toCamelCase("---")).toBe("");
-    });
-  });
-
   describe("toValidVariableName", () => {
     it("should convert special characters to valid variable name", () => {
       expect(toValidVariableName("hello@world.com")).toBe("helloWorldCom");
