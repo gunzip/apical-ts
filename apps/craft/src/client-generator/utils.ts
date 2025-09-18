@@ -19,7 +19,7 @@ export function generatePathInterpolation(
 ): string {
   let finalPath = pathKey;
   for (const param of pathParams) {
-    const varName = toCamelCase(param.name);
+    const varName = toValidVariableName(param.name);
     finalPath = finalPath.replace(`{${param.name}}`, `\${${varName}}`);
   }
   return finalPath;

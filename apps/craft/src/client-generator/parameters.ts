@@ -23,7 +23,7 @@ import {
   renderParameterHandling,
   renderParameterInterface,
 } from "./templates/parameter-templates.js";
-import { toCamelCase, toValidVariableName } from "./utils.js";
+import { toValidVariableName } from "./utils.js";
 
 /* Re-export types for backward compatibility */
 export type {
@@ -58,15 +58,28 @@ export function analyzeParameters(
   const optionalityRules = determineParameterOptionalityRules(structure);
 
   /* Analyze path parameters */
-  const pathProperties = structure.processed.pathParams.map((param) =>
-    toCamelCase(param.name),
-  );
+  const pathProperties = structure.processed.pathParams.map((param) => {
+    const varName = toValidVariableName(param.name);
+    const needsQuoting = param.name !== varName;
+    return {
+      isRequired: param.required === true,
+      name: needsQuoting ? param.name : varName,
+      needsQuoting,
+      varName,
+    };
+  });
 
   /* Analyze query parameters */
-  const queryProperties = structure.processed.queryParams.map((param) => ({
-    isRequired: param.required === true,
-    name: toCamelCase(param.name),
-  }));
+  const queryProperties = structure.processed.queryParams.map((param) => {
+    const varName = toValidVariableName(param.name);
+    const needsQuoting = param.name !== varName;
+    return {
+      isRequired: param.required === true,
+      name: needsQuoting ? param.name : varName,
+      needsQuoting,
+      varName,
+    };
+  });
 
   /* Analyze header parameters */
   const headerProperties = structure.processed.headerParams.map((param) => {

@@ -301,7 +301,7 @@ paths:
           in: query
           schema:
             type: string
-        - name: headerInlineParam
+        - name: header-InlineParam
           in: header
           schema:
             type: string

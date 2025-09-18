@@ -132,15 +132,15 @@ describe("Parameters Operations", () => {
       const client = createAuthenticatedClient(baseURL, "customToken");
       const params = {
         headers: {
-          headerInlineParam: sampleData.headerParams.headerInlineParam,
+          "header-InlineParam": sampleData.headerParams.headerInlineParam,
           "x-header-param": sampleData.headerParams["x-header-param"],
         },
         path: {
-          pathParam: sampleData.pathParams["path-param"],
+          "path-param": sampleData.pathParams["path-param"],
         },
         query: {
-          fooBar: "test-underscore-param",
-          requestId: sampleData.headerParams["request-id"],
+          foo_bar: "test-underscore-param",
+          "request-id": sampleData.headerParams["request-id"],
         },
       };
 
@@ -157,11 +157,11 @@ describe("Parameters Operations", () => {
       const params = {
         // fooBar is optional, not providing it
         headers: {
-          headerInlineParam: sampleData.headerParams.headerInlineParam,
+          "header-InlineParam": sampleData.headerParams.headerInlineParam,
           "x-header-param": sampleData.headerParams["x-header-param"],
         },
         path: {
-          pathParam: sampleData.pathParams["path-param"],
+          "path-param": sampleData.pathParams["path-param"],
         },
       };
 
@@ -261,7 +261,7 @@ describe("Parameters Operations", () => {
       const params = {
         query: {
           cursor: sampleData.queryParams.cursor,
-          requestId: sampleData.headerParams["request-id"],
+          "request-id": sampleData.headerParams["request-id"],
         },
       };
 
