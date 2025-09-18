@@ -10,6 +10,8 @@ import type {
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
+import { handleReservedKeyword } from "../shared/reserved-keywords.js";
+
 /**
  * Generates URL path with parameter interpolation
  */
@@ -119,9 +121,11 @@ export function resolveResponseReference(
  */
 export function toValidVariableName(str: string): string {
   // Replace any non-alphanumeric characters with underscore, then camelCase
-  return str
+  const result = str
     .replace(/[^a-zA-Z0-9]/g, "_")
     .replace(/_+/g, "_") // Replace multiple underscores with single
     .replace(/^_+|_+$/g, "") // Remove leading/trailing underscores
     .replace(/_([a-zA-Z])/g, (_, letter) => letter.toUpperCase()); // camelCase after underscore
+
+  return handleReservedKeyword(result);
 }
