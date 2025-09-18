@@ -56,45 +56,22 @@ export function analyzeParameters(
   );
 
   const optionalityRules = determineParameterOptionalityRules(structure);
+  const { headerParams, pathParams, queryParams } = structure.processed;
 
-  /* Analyze path parameters */
-  const pathProperties = structure.processed.pathParams.map((param) => {
-    const varName = toValidVariableName(param.name);
-    const needsQuoting = param.name !== varName;
-    return {
-      isRequired: param.required === true,
-      name: needsQuoting ? param.name : varName,
-      needsQuoting,
-      varName,
-    };
-  });
+  const analyzeParameterGroup = (params: ParameterObject[]) =>
+    params.map((param) => {
+      const varName = toValidVariableName(param.name);
+      return {
+        isRequired: param.required === true,
+        name: param.name,
+        needsQuoting: param.name !== varName,
+        varName,
+      };
+    });
 
-  /* Analyze query parameters */
-  const queryProperties = structure.processed.queryParams.map((param) => {
-    const varName = toValidVariableName(param.name);
-    const needsQuoting = param.name !== varName;
-    return {
-      isRequired: param.required === true,
-      name: needsQuoting ? param.name : varName,
-      needsQuoting,
-      varName,
-    };
-  });
-
-  /* Analyze header parameters */
-  const headerProperties = structure.processed.headerParams.map((param) => {
-    const varName = toValidVariableName(param.name);
-    /*
-     * Use the variable name directly for the property name when quoting is not required.
-     */
-    const needsQuoting = param.name !== varName;
-    return {
-      isRequired: param.required === true,
-      name: needsQuoting ? param.name : varName,
-      needsQuoting,
-      varName,
-    };
-  });
+  const pathProperties = analyzeParameterGroup(pathParams);
+  const queryProperties = analyzeParameterGroup(queryParams);
+  const headerProperties = analyzeParameterGroup(headerParams);
 
   /* Analyze security headers */
   const securityHeaderProperties = structure.processed.securityHeaders.map(
