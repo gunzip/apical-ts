@@ -148,7 +148,7 @@ export function sanitizeIdentifier(id: string): string {
   }
 
   // Handle JavaScript/TypeScript reserved keywords
-  if (isReservedKeyword(sanitized.toLowerCase())) {
+  if (isReservedKeyword(sanitized)) {
     sanitized = sanitized + "Schema";
   }
 
