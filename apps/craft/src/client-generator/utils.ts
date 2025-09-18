@@ -10,6 +10,8 @@ import type {
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
+import { handleReservedKeyword } from "../shared/reserved-keywords.js";
+
 /**
  * Generates URL path with parameter interpolation
  */
@@ -121,26 +123,25 @@ export function resolveResponseReference(
 export function toCamelCase(str: string): string {
   // Split on non-alphanumeric characters (-, _, spaces, etc.) and remove empty parts
   const parts = str.split(/[^a-zA-Z0-9]+/).filter(Boolean);
+
+  // Should not happen, makes type checking easier
   if (parts.length === 0) return "";
 
   // If only one part (no separators), preserve original casing but ensure first char is lowercase
   if (parts.length === 1) {
-    const first = parts[0];
-    return first.charAt(0).toLowerCase() + first.slice(1);
+    const result = parts[0].charAt(0).toLowerCase() + parts[0].slice(1);
+    return handleReservedKeyword(result);
   }
 
-  // Take the first part and lowercase it entirely
-  const first = parts[0];
-  const firstLower = first.toLowerCase();
+  // Take the first part and lowercase it entirely, then capitalize subsequent parts
+  const firstLower = parts[0].toLowerCase();
+  const capitalizedParts = parts
+    .slice(1)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join("");
 
-  // For subsequent parts, capitalize first letter and lowercase the rest
-  return (
-    firstLower +
-    parts
-      .slice(1)
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join("")
-  );
+  const result = firstLower + capitalizedParts;
+  return handleReservedKeyword(result);
 }
 
 /**
@@ -148,9 +149,11 @@ export function toCamelCase(str: string): string {
  */
 export function toValidVariableName(str: string): string {
   // Replace any non-alphanumeric characters with underscore, then camelCase
-  return str
+  const result = str
     .replace(/[^a-zA-Z0-9]/g, "_")
     .replace(/_+/g, "_") // Replace multiple underscores with single
     .replace(/^_+|_+$/g, "") // Remove leading/trailing underscores
     .replace(/_([a-zA-Z])/g, (_, letter) => letter.toUpperCase()); // camelCase after underscore
+
+  return handleReservedKeyword(result);
 }

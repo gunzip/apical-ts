@@ -1,5 +1,7 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
 
+import { isReservedKeyword } from "../shared/reserved-keywords.js";
+
 /**
  * Effective type after resolving union types and inference
  */
@@ -146,80 +148,7 @@ export function sanitizeIdentifier(id: string): string {
   }
 
   // Handle JavaScript/TypeScript reserved keywords
-  const reservedKeywords = new Set([
-    "abstract",
-    "any",
-    "as",
-    "async",
-    "await",
-    "boolean",
-    "break",
-    "case",
-    "catch",
-    "class",
-    "const",
-    "constructor",
-    "continue",
-    "debugger",
-    "declare",
-    "default",
-    "delete",
-    "do",
-    "else",
-    "enum",
-    "export",
-    "extends",
-    "false",
-    "finally",
-    "for",
-    "from",
-    "function",
-    "get",
-    "if",
-    "implements",
-    "import",
-    "in",
-    "instanceof",
-    "interface",
-    "is",
-    "let",
-    "module",
-    "namespace",
-    "never",
-    "new",
-    "null",
-    "number",
-    "object",
-    "package",
-    "private",
-    "protected",
-    "public",
-    "readonly",
-    "require",
-    "return",
-    "set",
-    "static",
-    "string",
-    "super",
-    "switch",
-    "symbol",
-    "this",
-    "throw",
-    "true",
-    "try",
-    "type",
-    "typeof",
-    "undefined",
-    "unique",
-    "unknown",
-    "var",
-    "void",
-    "while",
-    "with",
-    "yield",
-  ]);
-
-  if (reservedKeywords.has(sanitized.toLowerCase())) {
+  if (isReservedKeyword(sanitized.toLowerCase())) {
     sanitized = sanitized + "Schema";
   }
 

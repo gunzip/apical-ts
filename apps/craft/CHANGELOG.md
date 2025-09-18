@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.39
+
+### Patch Changes
+
+- Fix for reserved keywords
+
 ## 0.0.38
 
 ### Patch Changes
