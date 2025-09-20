@@ -332,6 +332,34 @@ function extractRequestSchemas(
  * // Result: Map with entry 'GetUser200Response' -> schema object
  * ```
  */
+/*
+ * Resolves a response reference to a ResponseObject
+ */
+function resolveResponseReference(
+  ref: string,
+  doc: OpenAPIObject,
+): ResponseObject | undefined {
+  if (!ref.startsWith("#/components/responses/")) {
+    return undefined;
+  }
+
+  const responseName = ref.replace("#/components/responses/", "");
+  const response = doc.components?.responses?.[responseName];
+
+  if (!response) {
+    return undefined;
+  }
+
+  if (isReferenceObject(response)) {
+    console.warn(
+      `⚠️ Nested response reference not resolved: ${ref} -> ${response.$ref}`,
+    );
+    return undefined;
+  }
+
+  return response;
+}
+
 function extractResponseSchemas(
   openApiDoc: OpenAPIObject,
 ): Map<string, SchemaObject> {
@@ -350,8 +378,15 @@ function extractResponseSchemas(
       // Handle both direct ResponseObject and ReferenceObject
       let responseObj: ResponseObject;
       if (isReferenceObject(response)) {
-        // Skip reference objects for now - we only want inline schemas
-        continue;
+        // Resolve the response reference
+        const resolved = resolveResponseReference(response.$ref, openApiDoc);
+        if (!resolved) {
+          console.warn(
+            `⚠️ Could not resolve response reference: ${response.$ref}`,
+          );
+          continue;
+        }
+        responseObj = resolved;
       } else {
         responseObj = response;
       }
