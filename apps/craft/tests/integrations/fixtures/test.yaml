@@ -585,6 +585,16 @@ paths:
         "400":
           $ref: "#/components/responses/ErrorResponse"
 
+  /test-response-ref-with-inline-schema:
+    get:
+      operationId: testResponseRefWithInlineSchema
+      summary:
+        Test $ref response with inline schema to verify response schema
+        generation
+      responses:
+        "200":
+          $ref: "#/components/responses/InlineSchemaResponse"
+
 # -------------
 # Components
 # -------------
@@ -1187,6 +1197,26 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/AllOfTest"
+
+    InlineSchemaResponse:
+      description:
+        Response with inline schema to test response schema generation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              items:
+                type: array
+                items:
+                  type: string
+            required:
+              - id
+              - name
 
   # -------------
   # Request Bodies

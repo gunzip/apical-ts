@@ -10,6 +10,7 @@ import type {
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
+import { resolveResponseReference } from "../core-generator/index.js";
 import { handleReservedKeyword } from "../shared/reserved-keywords.js";
 
 /**
@@ -81,41 +82,6 @@ export function resolveResponse(
   } else {
     return responseOrRef;
   }
-}
-
-/**
- * Resolves a response reference within an OpenAPI document
- * @param ref The reference string (e.g., "#/components/responses/DocumentResponse")
- * @param doc The OpenAPI document containing the referenced response
- * @returns The resolved ResponseObject or undefined if not found
- */
-export function resolveResponseReference(
-  ref: string,
-  doc: OpenAPIObject,
-): ResponseObject | undefined {
-  if (!ref.startsWith("#/components/responses/")) {
-    return undefined;
-  }
-
-  const responseName = ref.replace("#/components/responses/", "");
-  const response = doc.components?.responses?.[responseName];
-
-  if (!response) {
-    return undefined;
-  }
-
-  // The resolved response should be a ResponseObject, not a ReferenceObject
-  // If it's still a reference, we'd need recursive resolution, but OpenAPI bundling
-  // should have resolved this already
-  if (isReferenceObject(response)) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `⚠️ Nested response reference not resolved: ${ref} -> ${response.$ref}`,
-    );
-    return undefined;
-  }
-
-  return response;
 }
 
 /**
