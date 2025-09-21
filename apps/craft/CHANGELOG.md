@@ -1,5 +1,17 @@
 # @apical-ts/craft
 
+## 0.0.41
+
+### Patch Changes
+
+- Fix reference to response components
+
+## 0.0.40
+
+### Patch Changes
+
+- Fix reference to components responses
+
 ## 0.0.39
 
 ### Patch Changes
