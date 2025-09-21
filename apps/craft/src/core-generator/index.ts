@@ -128,6 +128,37 @@ export async function generate(options: GenerationOptions): Promise<void> {
 }
 
 /**
+ * Resolves a response reference within an OpenAPI document
+ */
+export function resolveResponseReference(
+  ref: string,
+  doc: OpenAPIObject,
+): ResponseObject | undefined {
+  if (!ref.startsWith("#/components/responses/")) {
+    return undefined;
+  }
+
+  const responseName = ref.replace("#/components/responses/", "");
+  const response = doc.components?.responses?.[responseName];
+
+  if (!response) {
+    return undefined;
+  }
+
+  // The resolved response should be a ResponseObject, not a ReferenceObject
+  // If it's still a reference, we'd need recursive resolution, but OpenAPI bundling
+  // should have resolved this already
+  if (isReferenceObject(response)) {
+    console.warn(
+      `⚠️ Nested response reference not resolved: ${ref} -> ${response.$ref}`,
+    );
+    return undefined;
+  }
+
+  return response;
+}
+
+/**
  * Creates a schema generation promise for a single schema variant
  */
 function createComponentSchemaPromise(
@@ -777,11 +808,7 @@ function renameConflictingSchemas(openApiDoc: OpenAPIObject) {
  */
 function resolveRequestBodies(openApiDoc: OpenAPIObject): number {
   // Access requestBodies safely - extend components type for requestBodies support
-  const components = openApiDoc.components as {
-    [key: string]: unknown;
-    requestBodies?: Record<string, RequestBodyObject>;
-    schemas?: Record<string, SchemaObject>;
-  };
+  const components = openApiDoc.components;
   if (!components?.requestBodies) {
     return 0; // No requestBodies to resolve
   }
@@ -827,32 +854,4 @@ function resolveRequestBodies(openApiDoc: OpenAPIObject): number {
 
   visit(openApiDoc);
   return resolvedCount;
-}
-
-/*
- * Resolves a response reference to a ResponseObject
- */
-function resolveResponseReference(
-  ref: string,
-  doc: OpenAPIObject,
-): ResponseObject | undefined {
-  if (!ref.startsWith("#/components/responses/")) {
-    return undefined;
-  }
-
-  const responseName = ref.replace("#/components/responses/", "");
-  const response = doc.components?.responses?.[responseName];
-
-  if (!response) {
-    return undefined;
-  }
-
-  if (isReferenceObject(response)) {
-    console.warn(
-      `⚠️ Nested response reference not resolved: ${ref} -> ${response.$ref}`,
-    );
-    return undefined;
-  }
-
-  return response;
 }
