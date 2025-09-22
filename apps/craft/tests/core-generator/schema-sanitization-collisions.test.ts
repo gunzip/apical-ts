@@ -99,7 +99,7 @@ describe("schema sanitization collision detection", () => {
     expect(CatalogMeta).toBeDefined();
 
     // The collision detection should ensure these schemas work together
-    // catalog2 should be the same as catalogmeta2 (as per the OpenAPI spec structure)
+    // catalog2 and catalogmeta2 are distinct schemas; this test checks that their validation results are consistent for the given test data.
     const testData = { url: "https://test.com" };
     const catalog2Result = catalog2.safeParse(testData);
     const catalogmeta2Result = catalogmeta2.safeParse(testData);
