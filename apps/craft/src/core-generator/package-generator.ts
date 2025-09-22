@@ -1,0 +1,29 @@
+import { promises as fs } from "fs";
+import path from "path";
+
+/**
+ * Creates the package.json file for the generated output
+ */
+export async function createPackageJson(output: string): Promise<void> {
+  const packageJsonContent = {
+    dependencies: {
+      zod: "^4.0.0",
+    },
+    devDependencies: {
+      "@types/node": "^24.3.1",
+      typescript: "^5.4.5",
+    },
+    name: "generated-client",
+    scripts: {
+      build:
+        "tsc --outDir ./dist --rootDir . --moduleResolution NodeNext --module NodeNext --target ES2022 --lib es2022 --strict --esModuleInterop --skipLibCheck --allowSyntheticDefaultImports --resolveJsonModule --forceConsistentCasingInFileNames --noEmitOnError false schemas/*.ts client/*.ts server/*.ts",
+    },
+    type: "module",
+    version: "0.1.0",
+  };
+  const packageJsonPath = path.join(output, "package.json");
+  await fs.writeFile(
+    packageJsonPath,
+    JSON.stringify(packageJsonContent, null, 2),
+  );
+}

@@ -10,7 +10,7 @@ import type {
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
-import { resolveResponseReference } from "../core-generator/index.js";
+import { resolveResponseReference } from "../core-generator/openapi-utils.js";
 import { handleReservedKeyword } from "../shared/reserved-keywords.js";
 
 /**
