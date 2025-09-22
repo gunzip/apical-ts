@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.42
+
+### Patch Changes
+
+- Fix collisions in schema names
+
 ## 0.0.41
 
 ### Patch Changes
