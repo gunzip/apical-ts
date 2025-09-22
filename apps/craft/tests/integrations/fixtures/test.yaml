@@ -595,6 +595,33 @@ paths:
         "200":
           $ref: "#/components/responses/InlineSchemaResponse"
 
+  /catalog:
+    get:
+      parameters:
+        - in: "query"
+          name: "url"
+          schema:
+            type: "string"
+            format: "uri"
+        - in: "query"
+          name: "status"
+          schema:
+            type: "string"
+            enum:
+              - "live"
+              - "archived"
+        - in: "query"
+          name: "collection"
+          schema:
+            type: "string"
+        - in: "query"
+          name: "q"
+          schema:
+            type: "string"
+      responses:
+        200:
+          $ref: "#/components/responses/ListCatalogs"
+
 # -------------
 # Components
 # -------------
@@ -609,6 +636,48 @@ components:
       $ref: "./definitions.yaml#/Book"
     Category:
       $ref: "./definitions.yaml#/Category"
+
+    Catalog:
+      $ref: "#/components/schemas/_catalog"
+    CatalogMeta:
+      $ref: "#/components/schemas/_catalogmeta"
+    _catalog:
+      type: "object"
+      required:
+        - "name"
+      additionalProperties: false
+      properties:
+        name:
+          type: "string"
+        status:
+          type: "string"
+          enum:
+            - "live"
+            - "archived"
+        start:
+          type: "string"
+          format: "date-time"
+        end:
+          type: "string"
+          format: "date-time"
+      allOf:
+        - $ref: "#/components/schemas/CatalogMeta"
+    _catalogmeta:
+      type: "object"
+      required:
+        - "url"
+      additionalProperties: false
+      properties:
+        url:
+          type: "string"
+          format: "uri"
+        name:
+          type: "string"
+          pattern: "^[a-zA-Z0-9]+$"
+          default: ""
+        description:
+          type: "string"
+          default: ""
 
     _documentalias:
       type: object
@@ -1160,6 +1229,14 @@ components:
   # Responses
   # -------------
   responses:
+    ListCatalogs:
+      content:
+        application/json:
+          schema:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/Catalog"
+
     NotFound:
       description: Not found
 

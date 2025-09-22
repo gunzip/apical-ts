@@ -684,6 +684,20 @@ async function parseAndPreprocessOpenAPI(
     );
   }
 
+  /*
+   * Pre-process: rename schemas whose sanitized identifiers would collide.
+   * This prevents name clashes when schemas like 'Catalog' and '_catalog'
+   * both sanitize to similar identifiers causing case-sensitivity conflicts
+   * in TypeScript imports and file systems.
+   */
+  const sanitizationRenamedCount =
+    renameSanitizationConflictingSchemas(openApiDoc);
+  if (sanitizationRenamedCount > 0) {
+    console.log(
+      "✅ Renamed schema names with sanitization conflicts to avoid case-sensitivity issues",
+    );
+  }
+
   // Resolve requestBodies references to inline content
   const resolvedRequestBodiesCount = resolveRequestBodies(openApiDoc);
   if (resolvedRequestBodiesCount > 0) {
@@ -772,6 +786,127 @@ function renameConflictingSchemas(openApiDoc: OpenAPIObject) {
   const refPrefix = "#/components/schemas/";
 
   /* Walk entire document and rewrite $ref strings */
+  const visit = (node: unknown): void => {
+    if (!node) return;
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+    if (typeof node === "object") {
+      const obj = node as Record<string, unknown>;
+      if (typeof obj.$ref === "string") {
+        const ref: string = obj.$ref;
+        if (ref.startsWith(refPrefix)) {
+          const name = ref.substring(refPrefix.length);
+          const renamed = renameMap.get(name);
+          if (renamed) obj.$ref = refPrefix + renamed;
+        }
+      }
+      for (const value of Object.values(obj)) visit(value);
+    }
+  };
+
+  visit(openApiDoc);
+  return renameMap.size;
+}
+
+/*
+ * Renames schemas whose sanitized identifiers would collide with each other.
+ * This prevents case-sensitivity conflicts when schemas like 'Catalog' and '_catalog'
+ * both sanitize to similar identifiers, causing TypeScript import and filesystem issues.
+ * The renaming strategy appends numeric suffixes and updates $ref pointers accordingly.
+ */
+function renameSanitizationConflictingSchemas(
+  openApiDoc: OpenAPIObject,
+): number {
+  if (!openApiDoc.components || !openApiDoc.components.schemas) return 0;
+  const schemas = openApiDoc.components.schemas;
+
+  // Map from sanitized names (lowercase) to original schema names that would collide
+  const sanitizedToOriginals = new Map<string, string[]>();
+
+  // First pass: group original names by their sanitized equivalents (case-insensitive)
+  for (const originalName of Object.keys(schemas)) {
+    const sanitized = sanitizeIdentifier(originalName);
+    const sanitizedLower = sanitized.toLowerCase();
+
+    if (!sanitizedToOriginals.has(sanitizedLower)) {
+      sanitizedToOriginals.set(sanitizedLower, []);
+    }
+    const existingList = sanitizedToOriginals.get(sanitizedLower);
+    if (existingList) {
+      existingList.push(originalName);
+    }
+  }
+
+  // Find groups with more than one original name (collisions)
+  const collisionGroups = Array.from(sanitizedToOriginals.entries()).filter(
+    ([, originals]) => originals.length > 1,
+  );
+
+  if (collisionGroups.length === 0) return 0;
+
+  const renameMap = new Map<string, string>();
+
+  // For each collision group, rename all but the first schema
+  for (const [, originals] of collisionGroups) {
+    // Sort originals for deterministic behavior - keep the lexicographically first one unchanged
+    const sortedOriginals = [...originals].sort();
+
+    // Leave the first one unchanged, rename the rest
+    for (let i = 1; i < sortedOriginals.length; i++) {
+      const originalName = sortedOriginals[i];
+      const baseSanitized = sanitizeIdentifier(originalName);
+
+      // Find a unique name by appending numeric suffix
+      let candidate = `${baseSanitized}${i + 1}`;
+      let counter = i + 1;
+
+      // Ensure the candidate doesn't conflict with existing schemas or other renames
+      while (
+        schemas[candidate as keyof typeof schemas] ||
+        renameMap.has(candidate) ||
+        // Check if the new candidate would create another case-insensitive collision
+        Array.from(renameMap.values()).some(
+          (existing) => existing.toLowerCase() === candidate.toLowerCase(),
+        ) ||
+        Object.keys(schemas).some(
+          (existing) =>
+            sanitizeIdentifier(existing).toLowerCase() ===
+              candidate.toLowerCase() && !renameMap.has(existing),
+        )
+      ) {
+        counter++;
+        candidate = `${baseSanitized}${counter}`;
+      }
+
+      renameMap.set(originalName, candidate);
+    }
+  }
+
+  if (renameMap.size === 0) return 0;
+
+  // Perform the actual renames (reconstruct object to avoid dynamic delete issues)
+  const rebuilt: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(schemas)) {
+    const newKey = renameMap.get(key) ?? key;
+    rebuilt[newKey] = value as unknown;
+  }
+
+  // Remove existing keys
+  for (const key of Object.keys(schemas)) {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete (schemas as Record<string, unknown>)[key];
+  }
+
+  // Assign rebuilt
+  for (const [key, value] of Object.entries(rebuilt)) {
+    (schemas as Record<string, unknown>)[key] = value;
+  }
+
+  const refPrefix = "#/components/schemas/";
+
+  // Walk entire document and rewrite $ref strings
   const visit = (node: unknown): void => {
     if (!node) return;
     if (Array.isArray(node)) {
