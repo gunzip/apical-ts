@@ -622,6 +622,56 @@ paths:
         200:
           $ref: "#/components/responses/ListCatalogs"
 
+  "/breadcrumb/{collection}":
+    post:
+      tags:
+        - Breadcrumb
+      parameters:
+        - in: path
+          name: collection
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          text/csv:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "201":
+          description: The breadcrumbs were created successfully.
+          content:
+            application/json:
+              schema:
+                type: string
+
+  "/unsupported/{contentType}":
+    post:
+      tags:
+        - Breadcrumb
+      parameters:
+        - in: path
+          name: contentType
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          text/foobar:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "201":
+          description: The breadcrumbs were created successfully.
+          content:
+            application/json:
+              schema:
+                type: string
+
 # -------------
 # Components
 # -------------
