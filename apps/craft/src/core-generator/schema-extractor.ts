@@ -58,23 +58,17 @@ export function extractRequestSchemas(
       requestBody = operation.requestBody;
     }
 
-    const supportedContentTypes = [
-      "application/json",
-      "multipart/form-data",
-      "application/x-www-form-urlencoded",
-      "application/octet-stream",
-      "text/csv",
-    ];
-
     assert(operation.operationId, "Operation ID is missing");
 
-    for (const contentType of supportedContentTypes) {
-      const content = requestBody.content?.[contentType];
-      if (content?.schema && !isReferenceObject(content.schema)) {
-        // Only extract inline schemas, not $ref schemas
-        const requestTypeName = `${sanitizeIdentifier(operation.operationId)}Request`;
-        requestSchemas.set(requestTypeName, content.schema);
-        break; // Only process the first matching content type
+    // Process all content types in the request body, not just a predefined "supported" list
+    if (requestBody.content) {
+      for (const [, content] of Object.entries(requestBody.content)) {
+        if (content?.schema && !isReferenceObject(content.schema)) {
+          // Only extract inline schemas, not $ref schemas
+          const requestTypeName = `${sanitizeIdentifier(operation.operationId)}Request`;
+          requestSchemas.set(requestTypeName, content.schema);
+          break; // Only process the first content type with an inline schema
+        }
       }
     }
   });
@@ -147,32 +141,19 @@ export function extractResponseSchemas(
 
       if (!responseObj.content) continue;
 
-      // Check for various content types
-      const supportedContentTypes = [
-        "application/json",
-        "application/problem+json",
-        "application/octet-stream",
-        "multipart/form-data",
-        "application/pdf",
-      ];
-
+      // Process all content types in the response, not just a predefined "supported" list
       for (const contentType of Object.keys(responseObj.content)) {
-        if (
-          supportedContentTypes.includes(contentType) ||
-          contentType.includes("+json")
-        ) {
-          const content = responseObj.content[contentType];
-          if (content?.schema && !isReferenceObject(content.schema)) {
-            // Only extract inline schemas, not $ref schemas
-            const sanitizedOperationId = sanitizeIdentifier(operationId);
-            const suffix =
-              statusCode === "default"
-                ? "DefaultResponse"
-                : `${statusCode}Response`;
-            const responseTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${suffix}`;
-            responseSchemas.set(responseTypeName, content.schema);
-          }
-          break; // Only process the first matching content type
+        const content = responseObj.content[contentType];
+        if (content?.schema && !isReferenceObject(content.schema)) {
+          // Only extract inline schemas, not $ref schemas
+          const sanitizedOperationId = sanitizeIdentifier(operationId);
+          const suffix =
+            statusCode === "default"
+              ? "DefaultResponse"
+              : `${statusCode}Response`;
+          const responseTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${suffix}`;
+          responseSchemas.set(responseTypeName, content.schema);
+          break; // Only process the first content type with an inline schema
         }
       }
     }
