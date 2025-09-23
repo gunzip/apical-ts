@@ -639,9 +639,6 @@ paths:
             schema:
               type: string
               format: binary
-            example: |-
-              datetime,class,ip_address
-              2023-10-27T10:00:00Z,building:commercial:store,192.168.1.1
       responses:
         "201":
           description: The breadcrumbs were created successfully.
@@ -667,9 +664,6 @@ paths:
             schema:
               type: string
               format: binary
-            example: |-
-              datetime,class,ip_address
-              2023-10-27T10:00:00Z,building:commercial:store,192.168.1.1
       responses:
         "201":
           description: The breadcrumbs were created successfully.
@@ -692,11 +686,6 @@ components:
       $ref: "./definitions.yaml#/Book"
     Category:
       $ref: "./definitions.yaml#/Category"
-
-    CsvPayload:
-      type: string
-      format: binary
-      description: A valid CSV file containing the header row and the data rows
 
     Catalog:
       $ref: "#/components/schemas/_catalog"
