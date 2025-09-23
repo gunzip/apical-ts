@@ -622,6 +622,62 @@ paths:
         200:
           $ref: "#/components/responses/ListCatalogs"
 
+  "/breadcrumb/{collection}":
+    post:
+      tags:
+        - Breadcrumb
+      parameters:
+        - in: path
+          name: collection
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          text/csv:
+            schema:
+              type: string
+              format: binary
+            example: |-
+              datetime,class,ip_address
+              2023-10-27T10:00:00Z,building:commercial:store,192.168.1.1
+      responses:
+        "201":
+          description: The breadcrumbs were created successfully.
+          content:
+            application/json:
+              schema:
+                type: string
+
+  "/unsupported/{contentType}":
+    post:
+      tags:
+        - Breadcrumb
+      parameters:
+        - in: path
+          name: contentType
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          text/foobar:
+            schema:
+              type: string
+              format: binary
+            example: |-
+              datetime,class,ip_address
+              2023-10-27T10:00:00Z,building:commercial:store,192.168.1.1
+      responses:
+        "201":
+          description: The breadcrumbs were created successfully.
+          content:
+            application/json:
+              schema:
+                type: string
+
 # -------------
 # Components
 # -------------
@@ -636,6 +692,11 @@ components:
       $ref: "./definitions.yaml#/Book"
     Category:
       $ref: "./definitions.yaml#/Category"
+
+    CsvPayload:
+      type: string
+      format: binary
+      description: A valid CSV file containing the header row and the data rows
 
     Catalog:
       $ref: "#/components/schemas/_catalog"

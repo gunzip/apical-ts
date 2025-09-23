@@ -63,6 +63,7 @@ export function extractRequestSchemas(
       "multipart/form-data",
       "application/x-www-form-urlencoded",
       "application/octet-stream",
+      "text/csv",
     ];
 
     assert(operation.operationId, "Operation ID is missing");
