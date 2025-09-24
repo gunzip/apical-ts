@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.0.44
+
+### Patch Changes
+
+- d9117a4: Refactor command line flags
+
 ## 0.0.43
 
 ### Patch Changes
