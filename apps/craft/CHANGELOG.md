@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.1.0
+
+### Minor Changes
+
+- First stable minor release
+
 ## 0.0.44
 
 ### Patch Changes
