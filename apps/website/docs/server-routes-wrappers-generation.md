@@ -7,11 +7,11 @@ Zod schemas and can return only responses of the expected types.
 
 ## How to Generate a Server Route Wrapper
 
-To generate server-side code, use the CLI with the `--generate-server` flag:
+To generate server-side code, use the CLI with the `--server` flag:
 
 ```bash
 npx @apical-ts/craft generate \
-  --generate-server \
+  --server \
   -i https://petstore.swagger.io/v2/swagger.json \
   -o generated
 ```

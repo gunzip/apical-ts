@@ -77,7 +77,7 @@ tests/integrations/
 
 3. Generate the test client (if not already generated):
    ```bash
-   pnpm start generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client
+   pnpm start generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --client
    ```
 
 ### Run Working Demo

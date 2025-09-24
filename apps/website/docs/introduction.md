@@ -43,8 +43,8 @@ Get started with @apical-ts/craft in just a few commands:
 ```bash
 # Generate schemas and client from an OpenAPI specification
 npx @apical-ts/craft generate \
-  --generate-server \
-  --generate-client \
+  --server \
+  --client \
   -i https://petstore.swagger.io/v2/swagger.json \
   -o generated
 
