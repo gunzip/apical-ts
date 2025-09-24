@@ -27,8 +27,8 @@ Generate schemas and client code from an OpenAPI specification:
 
 ```bash
 npx @apical-ts/craft generate \
-  --generate-server \
-  --generate-client \
+  --server \
+  --client \
   -i https://petstore.swagger.io/v2/swagger.json \
   -o generated
 ```
@@ -37,8 +37,8 @@ This command will:
 
 1. Download the OpenAPI specification from the provided URL
 2. Generate Zod schemas for all data models
-3. Generate client operation functions (if `--generate-client` is specified)
-4. Generate server handler wrappers (if `--generate-server` is specified)
+3. Generate client operation functions (if `--client` is specified)
+4. Generate server handler wrappers (if `--server` is specified)
 5. Output all generated files to the `generated` directory
 
 ## Runtime Dependencies
@@ -60,8 +60,8 @@ OpenAPI specification file changes:
 npm install chokidar-cli @apical-ts/craft
 npm exec -- chokidar-cli openapi.yaml -c \
   "craft generate \
-  --generate-server \
-  --generate-client \
+  --server \
+  --client \
   -i openapi.yaml \
   -o generated"
 ```
@@ -79,10 +79,13 @@ specification.
 
 ### Generation Options
 
-- `--generate-client`: Generate the operation functions for client-side usage
+- `--client`: Generate the operation functions for client-side usage (default:
+  false)
+- `--server`: Generate the operation wrapper functions for server-side usage
   (default: false)
-- `--generate-server`: Generate the operation wrapper functions for server-side
-  usage (default: false)
+
+> **Note**: The long-form flags `--generate-client` and `--generate-server` are
+> deprecated in favor of the shorter `--client` and `--server` aliases.
 
 ## Output Structure
 
@@ -90,8 +93,8 @@ The generated output follows a consistent structure:
 
 ```
 generated/
-├── client/           # Client operation functions (if --generate-client)
-├── server/           # Server handler wrappers (if --generate-server)
+├── client/           # Client operation functions (if --client)
+├── server/           # Server handler wrappers (if --server)
 └── schemas/          # Zod schemas and TypeScript types
 ```
 

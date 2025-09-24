@@ -96,10 +96,10 @@ pnpm test
 pnpm start generate -i <openapi-spec> -o <output-dir>
 
 # Generate schemas and client
-pnpm start generate -i <openapi-spec> -o <output-dir> --generate-client
+pnpm start generate -i <openapi-spec> -o <output-dir> --client
 
 # Example with provided test files
-pnpm start generate -i test.yaml -o ./generated --generate-client
+pnpm start generate -i test.yaml -o ./generated --client
 ```
 
 **Note**: Use single command format (`pnpm start generate`) not double-dash
@@ -204,7 +204,7 @@ pnpm format
 ```bash
 pnpm --filter craft generate
 # or use the CLI directly:
-pnpx @apical-ts/craft generate -i <spec> -o <output> --generate-client
+pnpx @apical-ts/craft generate -i <spec> -o <output> --client
 ```
 
 #### Other Useful Tasks
@@ -313,7 +313,7 @@ pnpx @apical-ts/craft generate -i <spec> -o <output> --generate-client
 ```
 <output-dir>/
 ├── package.json                  # Generated package metadata
-├── operations/                   # Client operations (if --generate-client)
+├── operations/                   # Client operations (if --client)
 │   ├── index.ts                  # Operation exports and configuration
 │   ├── config.ts                 # Global configuration types
 │   └── <operationId>.ts          # Individual operation functions

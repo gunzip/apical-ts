@@ -30,8 +30,8 @@ describe("generated client + server typecheck", () => {
         specPath,
         "-o",
         generatedDir,
-        "--generate-client",
-        "--generate-server",
+        "--client",
+        "--server",
       ],
       { encoding: "utf-8" },
     );

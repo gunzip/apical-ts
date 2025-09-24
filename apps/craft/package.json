@@ -30,7 +30,7 @@
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
     "start": "node dist/index.js",
-    "generate:tests": "node dist/index.js generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --generate-client --generate-server",
+    "generate:tests": "node dist/index.js generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --client --server",
     "prepublishOnly": "pnpm build:docs && pnpm run build",
     "clean": "rm -rf tests/integrations/generated"
   },

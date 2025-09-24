@@ -26,7 +26,7 @@ and purpose of the generated files and directories.
 ```
 <output-dir>/
 ├── package.json                  # Generated package metadata (if enabled)
-├── client/                       # Type-safe API client operations (if --generate-client)
+├── client/                       # Type-safe API client operations (if --client)
 │   ├── index.ts                  # Exports all operation functions and config
 │   ├── config.ts                 # Global configuration types and helpers
 │   └── <operationId>.ts          # Individual operation function for each endpoint

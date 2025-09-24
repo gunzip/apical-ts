@@ -20,8 +20,16 @@ program
     "Path to the OpenAPI specification file.",
   )
   .requiredOption("-o, --output <path>", "Path to the output directory.")
-  .option("--generate-client", "Generate the full HTTP client.", false)
-  .option("--generate-server", "Generate server endpoint wrappers.", false)
+  .option(
+    "--generate-client, --client",
+    "Generate the full HTTP client.",
+    false,
+  )
+  .option(
+    "--generate-server, --server",
+    "Generate server endpoint wrappers.",
+    false,
+  )
   // Disable strict validation setting, this should remain strict for the server
   // and loose for the client
   // .option(
