@@ -39,8 +39,6 @@ program
   // )
   .action(async (options: Record<string, unknown>) => {
     try {
-      console.log(options);
-
       // Map CLI option names to GenerationOptions interface
       const generationOptions = {
         generateClient: Boolean(options.client),
