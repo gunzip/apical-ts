@@ -42,8 +42,7 @@ pnpm generate:examples
 This task will:
 
 - Clean any existing generated code
-- Run the TypeScript OpenAPI generator with both `--generate-server` and
-  `--generate-client` flags
+- Run the TypeScript OpenAPI generator with both `--server` and `--client` flags
 - Create the `generated/` directory with schemas, server wrappers, and client
   functions
 

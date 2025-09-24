@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "typecheck:code": "tsc -p tsconfig.examples.json",
-    "generate": "craft generate -i examples.yaml -o generated --generate-server --generate-client",
+    "generate": "craft generate -i examples.yaml -o generated --server --client",
     "clean": "rm -rf generated"
   },
   "author": "gunzip",

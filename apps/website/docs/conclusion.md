@@ -49,7 +49,7 @@ Ready to experience the difference? Get started with @apical-ts/craft:
 
 ```bash
 npx @apical-ts/craft generate \
-  --generate-client \
+  --client \
   -i https://petstore.swagger.io/v2/swagger.json \
   -o ./generated
 ```
