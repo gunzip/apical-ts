@@ -39,9 +39,18 @@ program
   // )
   .action(async (options: Record<string, unknown>) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await generate(options as any);
-      console.log("✅ Client generated successfully!");
+      console.log(options);
+
+      // Map CLI option names to GenerationOptions interface
+      const generationOptions = {
+        generateClient: Boolean(options.client),
+        generateServer: Boolean(options.server),
+        input: String(options.input),
+        output: String(options.output),
+      };
+
+      await generate(generationOptions);
+      console.log("✅ Generation completed successfully!");
     } catch (error) {
       console.error("❌ An error occurred during generation:", error);
       process.exit(1);
