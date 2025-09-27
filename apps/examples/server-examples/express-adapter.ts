@@ -7,7 +7,7 @@ import type { Request, Response } from "express";
  */
 export interface ServerResponse {
   // Allow literal "default" produced by generators for OpenAPI default responses
-  status: number | "default";
+  status: string | "default";
   contentType?: string;
   data?: any;
 }

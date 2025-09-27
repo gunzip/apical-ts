@@ -47,7 +47,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParameterWithDash(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -76,7 +76,7 @@ describe("Parameters Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -114,7 +114,7 @@ describe("Parameters Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -148,7 +148,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParameterWithDashAnUnderscore(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
 
     it("should handle optional query parameters", async () => {
@@ -169,7 +169,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParameterWithDashAnUnderscore(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
   });
 
@@ -188,7 +188,7 @@ describe("Parameters Operations", () => {
       const response = await client.testWithTwoParams(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
 
     it("should reject missing first path parameter", async () => {
@@ -211,7 +211,7 @@ describe("Parameters Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -242,7 +242,7 @@ describe("Parameters Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -269,7 +269,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParametersAtPathLevel(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
 
     it("should reject missing required path-level parameter", async () => {
@@ -292,7 +292,7 @@ describe("Parameters Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -318,7 +318,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParamWithSchemaRef(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
 
     it("should validate parameter against schema reference", async () => {
@@ -334,12 +334,12 @@ describe("Parameters Operations", () => {
       try {
         const response = await client.testParamWithSchemaRef(params);
         // Test passes if the operation succeeds
-        expect(response.status).toBe(200);
+        expect(response.status).toBe("200");
       } catch (error) {
         // If validation fails, verify error shape
         expect(error).toBeDefined();
         if (error.status !== undefined) {
-          expect([400, 422]).toContain(error.status);
+          expect(["400", "422"]).toContain(error.status);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -364,7 +364,7 @@ describe("Parameters Operations", () => {
       const response = await client.testHeaderWithSchemaRef(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
   });
 
@@ -382,7 +382,7 @@ describe("Parameters Operations", () => {
       const response = await client.testHeaderOptional(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
 
     it("should work without optional header parameter", async () => {
@@ -396,7 +396,7 @@ describe("Parameters Operations", () => {
       const response = await client.testHeaderOptional(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
   });
 
@@ -414,7 +414,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParameterWithReference(params);
 
       // Assert
-      expect(response.status).toBe(201);
+      expect(response.status).toBe("201");
     });
 
     it("should work without optional referenced parameter", async () => {
@@ -428,7 +428,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParameterWithReference(params);
 
       // Assert
-      expect(response.status).toBe(201);
+      expect(response.status).toBe("201");
     });
   });
 });

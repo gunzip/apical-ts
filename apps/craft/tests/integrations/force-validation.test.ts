@@ -53,7 +53,7 @@ describe("Dynamic Force Validation Integration Test", () => {
     // Use an operation that has only void responses without schemas
     const operationPath = join(generatedDir, "client/testSimplePatch.ts");
     const content = readFileSync(operationPath, "utf-8");
-    expect(content).toContain("ApiResponse<200, void>");
+    expect(content).toContain('ApiResponse<"200", void>');
     expect(content).not.toContain("parse: () =>");
     expect(content).not.toContain("parsed: parseResult");
   });

@@ -217,7 +217,9 @@ describe("function-body-templates", () => {
         "/api/users/${userId}",
         "POST",
         true,
-        ['    case "200": return { status: 200, data };'],
+        [
+          '    if (response.status === 200) { return { status: "200", data }; }',
+        ],
         undefined, // no defaultResponseHandler
         "    finalHeaders['X-Custom'] = customHeader;",
         "    finalHeaders['Authorization'] = token;",
@@ -240,9 +242,15 @@ describe("function-body-templates", () => {
       expect(result).toContain("url.searchParams.append('filter', filter);");
       expect(result).toContain('method: "POST",');
       expect(result).toContain("body: bodyContent,");
-      expect(result).toContain("switch (response.status) {");
-      expect(result).toContain('case "200": return { status: 200, data };');
-      expect(result).toContain("default: {");
+      expect(result).toContain(
+        "/* Handle response status codes using if-else logic to support wildcard patterns */",
+      );
+      expect(result).toContain(
+        'if (response.status === 200) { return { status: "200", data }; }',
+      );
+      expect(result).toContain(
+        "/* Handle default response or unexpected status codes */",
+      );
       expect(result).toContain('kind: "unexpected-response"');
     });
 
@@ -254,7 +262,9 @@ describe("function-body-templates", () => {
         "/api/users",
         "GET",
         false,
-        ['    case "200": return { status: 200, data };'],
+        [
+          '    if (response.status === 200) { return { status: "200", data }; }',
+        ],
       );
 
       expect(result).toContain('method: "GET",');
@@ -270,7 +280,9 @@ describe("function-body-templates", () => {
         "/api/users",
         "GET",
         false,
-        ['    case "200": return { status: 200, data };'],
+        [
+          '    if (response.status === 200) { return { status: "200", data }; }',
+        ],
       );
 
       expect(result).not.toContain("finalHeaders['");

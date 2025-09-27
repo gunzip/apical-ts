@@ -23,7 +23,7 @@ describe("createDocument response reference integration", () => {
     // This test verifies the TypeScript types are correct at compile time
     // If the response reference resolution worked correctly, the function should:
     // 1. Accept the Document type in request body
-    // 2. Return ApiResponseWithForcedParse<200, typeof CreateDocumentResponseMap>
+    // 2. Return ApiResponseWithForcedParse<"200", typeof CreateDocumentResponseMap>
 
     // Mock a successful response for type checking
     const mockDocument = {

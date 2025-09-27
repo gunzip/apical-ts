@@ -43,7 +43,7 @@ async function demonstrateClient() {
 
   if (!ret.isValid) {
     console.error("Error:", ret.error);
-  } else if (ret.status === 200) {
+  } else if (ret.status === "200") {
     if (ret.parsed.contentType === "application/json") {
       const parsed = ret.parsed;
       console.log("Parsed JSON:", parsed.data.name);

@@ -23,28 +23,28 @@ type ApiResponseError =
   | {
       readonly kind: "unexpected-response";
       readonly data: unknown;
-      readonly status: number;
+      readonly status: string; // status code as string, e.g. '404', '4XX', '5XX'
       readonly response: Response;
       readonly error: string;
     }
   | {
       readonly kind: "parse-error";
       readonly data: unknown;
-      readonly status: number;
+      readonly status: string;
       readonly response: Response;
       readonly error: z.ZodError;
     }
   | {
       readonly kind: "deserialization-error";
       readonly data: unknown;
-      readonly status: number;
+      readonly status: string;
       readonly response: Response;
       readonly error: unknown;
     }
   | {
       readonly kind: "missing-schema";
       readonly data: unknown;
-      readonly status: number;
+      readonly status: string;
       readonly response: Response;
       readonly error: string;
     };
@@ -80,15 +80,21 @@ if (!r.isValid) {
   return;
 }
 
-switch (r.status === 200) {
-  case 200:
+switch (r.status) {
+  case "200":
     // Raw response payload
     console.log("Pet (raw):", r.data);
     // The parsed response payload
     console.log("Pet:", r.parsed.data);
     break;
-  case 404:
+  case "404":
     console.warn("Pet not found");
+    break;
+  case "4XX":
+    console.warn("Client error (4XX):", r.data);
+    break;
+  case "5XX":
+    console.error("Server error (5XX):", r.data);
     break;
   default:
     console.error("Unexpected documented status", r.status);

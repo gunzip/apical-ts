@@ -70,15 +70,15 @@ describe("precise ApiResponse types", () => {
 
       /* Should generate precise ApiResponseWithParse types */
       expect(result.returnType).toContain(
-        "ApiResponseWithParse<200, typeof TestMultiContentTypesResponseMap>",
+        'ApiResponseWithParse<"200", typeof TestMultiContentTypesResponseMap>',
       );
       expect(result.returnType).toContain(
-        "ApiResponseWithParse<201, typeof TestMultiContentTypesResponseMap>",
+        'ApiResponseWithParse<"201", typeof TestMultiContentTypesResponseMap>',
       );
 
       /* Should not contain generic ApiResponse types */
-      expect(result.returnType).not.toContain("ApiResponse<200, unknown>");
-      expect(result.returnType).not.toContain("ApiResponse<201, unknown>");
+      expect(result.returnType).not.toContain('ApiResponse<"200", unknown>');
+      expect(result.returnType).not.toContain('ApiResponse<"201", unknown>');
 
       /* Should have response map information */
       expect(result.responseMapName).toBe("TestMultiContentTypesResponseMap");
@@ -101,8 +101,8 @@ describe("precise ApiResponse types", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       /* Should use standard ApiResponse for responses without content */
-      expect(result.returnType).toContain("ApiResponse<204, void>");
-      expect(result.returnType).toContain("ApiResponse<404, void>");
+      expect(result.returnType).toContain('ApiResponse<"204", void>');
+      expect(result.returnType).toContain('ApiResponse<"404", void>');
 
       /* Should not use ApiResponseWithParse for responses without schemas */
       expect(result.returnType).not.toContain("ApiResponseWithParse");
@@ -131,11 +131,11 @@ describe("precise ApiResponse types", () => {
 
       /* Should use precise type for 200 (has schema) */
       expect(result.returnType).toContain(
-        "ApiResponseWithParse<200, typeof MixedOperationResponseMap>",
+        'ApiResponseWithParse<"200", typeof MixedOperationResponseMap>',
       );
 
       /* Should use standard type for 204 (no content) */
-      expect(result.returnType).toContain("ApiResponse<204, void>");
+      expect(result.returnType).toContain('ApiResponse<"204", void>');
     });
 
     it("should fall back to standard types when no operation ID", () => {
@@ -157,7 +157,7 @@ describe("precise ApiResponse types", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       /* Should fall back to standard ApiResponse when no operationId */
-      expect(result.returnType).toContain("ApiResponse<200, unknown>");
+      expect(result.returnType).toContain('ApiResponse<"200", unknown>');
       expect(result.returnType).not.toContain("ApiResponseWithParse");
 
       /* Should not have response map when no operationId */

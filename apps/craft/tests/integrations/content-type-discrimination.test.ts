@@ -50,7 +50,7 @@ describe("Content Type Discrimination Integration Test", () => {
 
     // Verify the forced parse type is used in the function signature
     expect(operationContent).toContain(
-      "ApiResponseWithForcedParse<200, typeof TestMultiContentTypesResponseMap>",
+      'ApiResponseWithForcedParse<"200", typeof TestMultiContentTypesResponseMap>',
     );
   });
 });

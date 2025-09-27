@@ -44,7 +44,7 @@ async function demonstrateClient() {
 
   if (!ret.isValid) {
     console.error("Error:", ret.error);
-  } else if (ret.status === 200) {
+  } else if (ret.status === "200") {
     console.log("Raw data:", ret.data);
     const parsed = ret.parse();
     if (!isParsed(parsed)) {

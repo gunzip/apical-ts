@@ -40,8 +40,10 @@ you to ensure type safety and runtime validation for your request parameters
 
 You are responsible for extracting parameters from the framework request and
 passing them to the wrapper, then handling the result (status, contentType,
-data) in your route handler. This allows you to integrate with any web framework
-and customize error handling as needed.
+data) in your route handler. The `status` field is now always a string (e.g.
+`'200'`, `'404'`, `'4XX'`, `'5XX'`), allowing you to handle both specific and
+range status codes type-safely. This allows you to integrate with any web
+framework and customize error handling as needed.
 
 Example usage with Express and a helper for parameter extraction:
 
@@ -54,7 +56,7 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
     /* Handle validation errors */
     console.error("Validation error in getPetById:", params);
     return {
-      status: 400,
+      status: "400",
     };
   }
 
@@ -66,13 +68,13 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
 
   if (!pet) {
     return {
-      status: 404,
+      status: "404",
     };
   }
 
   // Response is typed here
   return {
-    status: 200,
+    status: "200",
     contentType: "application/json",
     data: pet,
   };

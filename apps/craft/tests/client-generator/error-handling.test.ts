@@ -26,7 +26,7 @@ describe("error handling in client generator", () => {
       /* Should include ApiResponseError in the union */
       expect(result.returnType).toContain("ApiResponseError");
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof GetUserResponseMap> : ApiResponseWithParse<200, typeof GetUserResponseMap>) | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof GetUserResponseMap> : ApiResponseWithParse<"200", typeof GetUserResponseMap>) | ApiResponseError',
       );
     });
 
@@ -64,11 +64,11 @@ describe("error handling in client generator", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       /* Should include both response types and ApiResponseError */
-      expect(result.returnType).toContain("ApiResponseWithParse<200");
-      expect(result.returnType).toContain("ApiResponse<204, void>");
+      expect(result.returnType).toContain('ApiResponseWithParse<"200"');
+      expect(result.returnType).toContain('ApiResponse<"204", void>');
       expect(result.returnType).toContain("ApiResponseError");
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof MixedOperationResponseMap> : ApiResponseWithParse<200, typeof MixedOperationResponseMap>) | ApiResponse<204, void> | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof MixedOperationResponseMap> : ApiResponseWithParse<"200", typeof MixedOperationResponseMap>) | ApiResponse<"204", void> | ApiResponseError',
       );
     });
   });

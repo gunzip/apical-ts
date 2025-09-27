@@ -33,7 +33,7 @@ describe("Additional Operations", () => {
       const response = await client.testSimplePatch({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -45,7 +45,7 @@ describe("Additional Operations", () => {
       const response = await client.testSimplePatch({});
 
       // Assert - Could be 200 or 500 based on Prism mock behavior
-      expect([200, 500]).toContain(response.status);
+      expect(["200", "500"]).toContain(response.status);
     });
 
     it("should support PATCH as an HTTP method", async () => {
@@ -57,7 +57,7 @@ describe("Additional Operations", () => {
 
       // Assert - Verify the operation exists and is callable
       expect(response).toBeDefined();
-      expect(typeof response.status).toBe("number");
+      expect(typeof response.status).toBe("string");
       expect(response.response.headers).toBeInstanceOf(Headers);
     });
   });
@@ -71,8 +71,8 @@ describe("Additional Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      expect(response.status).toBeGreaterThanOrEqual(200);
-      expect(response.status).toBeLessThan(600);
+      expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
+      expect(parseInt(response.status)).toBeLessThan(600);
     });
 
     it("should support POST methods", async () => {
@@ -89,8 +89,8 @@ describe("Additional Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBeGreaterThanOrEqual(200);
-      expect(response.status).toBeLessThan(600);
+      expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
+      expect(parseInt(response.status)).toBeLessThan(600);
     });
 
     it("should support PUT methods", async () => {
@@ -107,8 +107,8 @@ describe("Additional Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBeGreaterThanOrEqual(200);
-      expect(response.status).toBeLessThan(600);
+      expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
+      expect(parseInt(response.status)).toBeLessThan(600);
     });
 
     it("should support PATCH methods", async () => {
@@ -119,8 +119,8 @@ describe("Additional Operations", () => {
       const response = await client.testSimplePatch({});
 
       // Assert
-      expect(response.status).toBeGreaterThanOrEqual(200);
-      expect(response.status).toBeLessThan(600);
+      expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
+      expect(parseInt(response.status)).toBeLessThan(600);
     });
   });
 
@@ -146,7 +146,7 @@ describe("Additional Operations", () => {
       const response = await client.testWithEmptyResponse({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -163,7 +163,7 @@ describe("Additional Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
   });
 
@@ -176,7 +176,7 @@ describe("Additional Operations", () => {
       const response = await customClient.testSimplePatch({});
 
       // Assert
-      expect(response.status).toBeGreaterThanOrEqual(200);
+      expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
     });
 
     it("should preserve custom headers", async () => {
@@ -187,7 +187,7 @@ describe("Additional Operations", () => {
       const response = await client.testSimplePatch({});
 
       // Assert
-      expect(response.status).toBeGreaterThanOrEqual(200);
+      expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
       expect(response.response.headers).toBeDefined();
     });
 
@@ -218,7 +218,7 @@ describe("Additional Operations", () => {
       expect(response).toHaveProperty("response");
       expect(response).toHaveProperty("data");
 
-      expect(typeof response.status).toBe("number");
+      expect(typeof response.status).toBe("string");
       expect(response.response.headers).toBeInstanceOf(Headers);
     });
 
@@ -230,7 +230,7 @@ describe("Additional Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      expect(response.status).toBeGreaterThanOrEqual(200);
+      expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
 
       const contentType = response.response.headers.get("content-type");
       if (contentType) {
@@ -246,7 +246,7 @@ describe("Additional Operations", () => {
       const response = await client.testResponseHeader({});
 
       // Assert
-      expect(response.status).toBeGreaterThanOrEqual(200);
+      expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
       expect(response.response.headers).toBeDefined();
 
       // Check that headers are accessible

@@ -94,7 +94,7 @@ export function isParsed<
 
 /* Type-safe helper function that lets TypeScript infer the correct forced parse result type */
 export function createForcedParseResponse<
-  S extends number | "default",
+  S extends string,
   TParseResult extends { contentType: string; parsed: unknown }
 >(
   status: S,
@@ -118,9 +118,9 @@ export function createForcedParseResponse<
 export function renderApiResponseTypes(): string {
   return `/**
  * Represents a generic API response for the new discriminated union pattern.
- * @template S The HTTP status code.
+ * @template S The HTTP status code as a string (e.g., "200", "4XX", "default").
  */
-export type ApiResponse<S extends number | "default", T> =
+export type ApiResponse<S extends string, T> =
   | {
       readonly isValid: true;
       readonly status: S;
@@ -133,7 +133,7 @@ export type ApiResponse<S extends number | "default", T> =
  */
 type ApiResponseErrorResult = {
   readonly data: unknown;
-  readonly status: number;
+  readonly status: string;
   readonly response: Response;
 };
 
@@ -193,7 +193,7 @@ export type ExtractResponseUnion<
  * Used when response map information is available for type-safe parsing
  */
 export type ApiResponseWithParse<
-  S extends number | "default",
+  S extends string,
   Map extends Record<string, Record<string, any>>,
 > = {
   readonly isValid: true;
@@ -220,7 +220,7 @@ export type ApiResponseWithParse<
  * Used when forceValidation flag is enabled for automatic response validation
  */
 export type ApiResponseWithForcedParse<
-  S extends number | "default",
+  S extends string,
   Map extends Record<string, Record<string, any>>,
 > = {
   readonly isValid: true;

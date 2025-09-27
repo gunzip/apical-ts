@@ -33,9 +33,9 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      expect([200, 202, 403, 404]).toContain(response.status);
+      expect(["200", "202", "403", "404"]).toContain(response.status);
 
-      if (response.status === 200) {
+      if (response.status === "200") {
         // Use parse() method to get structured data
         if (response.parse) {
           const parsed = response.parse();
@@ -69,7 +69,7 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      if (response.status === 202) {
+      if (response.status === "202") {
         // 202 responses typically have no body or minimal body
         expect(response.response.headers).toBeDefined();
       }
@@ -91,8 +91,8 @@ describe("Response Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -111,7 +111,7 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      if (response.status === 404) {
+      if (response.status === "404") {
         // 404 response has no content according to spec
         expect(response.response.headers).toBeDefined();
       }
@@ -127,9 +127,9 @@ describe("Response Operations", () => {
       const response = await client.testResponseHeader({});
 
       // Assert
-      expect([201, 500]).toContain(response.status);
+      expect(["201", "500"]).toContain(response.status);
 
-      if (response.status === 201) {
+      if (response.status === "201") {
         // Use parse() method to get structured data
         if (response.parse) {
           const parsed = response.parse();
@@ -170,7 +170,7 @@ describe("Response Operations", () => {
       const response = await client.testResponseHeader({});
 
       // Assert
-      if (response.status === 500) {
+      if (response.status === "500") {
         // 500 response has no content according to spec
         expect(response.response.headers).toBeDefined();
       }
@@ -184,7 +184,7 @@ describe("Response Operations", () => {
       const response = await client.testResponseHeader({});
 
       // Assert
-      if (response.status === 201) {
+      if (response.status === "201") {
         // Use parse() method to get structured data
         if (response.parse) {
           const parsed = response.parse();
@@ -224,7 +224,7 @@ describe("Response Operations", () => {
       const response = await client.testWithEmptyResponse({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
 
       // NotFound response reference should result in minimal/no content
@@ -239,7 +239,7 @@ describe("Response Operations", () => {
       const response = await client.testWithEmptyResponse({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
 
       // Check common headers are present
@@ -259,7 +259,7 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      if (response.status === 200 || response.status === 403) {
+      if (response.status === "200" || response.status === "403") {
         const contentType = response.response.headers.get("content-type");
         if (contentType) {
           expect(contentType).toContain("application/json");
@@ -289,12 +289,12 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      if (response.status === 202 || response.status === 404) {
+      if (response.status === 202 || response.status === "404") {
         // These responses might not have content
         // The data might be null, undefined, or an empty object
         expect(response.response.headers).toBeDefined();
         expect(response.status).toBeGreaterThan(199);
-        expect(response.status).toBeLessThan(300);
+        expect(parseInt(response.status)).toBeLessThan(300);
       }
     });
 
@@ -310,7 +310,7 @@ describe("Response Operations", () => {
       expect(response).toHaveProperty("response");
       expect(response).toHaveProperty("data");
 
-      expect(typeof response.status).toBe("number");
+      expect(typeof response.status).toBe("string");
       expect(response.response.headers).toBeInstanceOf(Headers);
     });
   });

@@ -47,7 +47,7 @@ describe("Authentication Operations", () => {
       const response = await client.testAuthBearer(params);
 
       // Assert - Validate response structure (allow top-level validation error branch)
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
       if ("error" in response) {
         // Validation failed; ensure ZodError shape
@@ -80,8 +80,8 @@ describe("Authentication Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -116,7 +116,7 @@ describe("Authentication Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -147,7 +147,7 @@ describe("Authentication Operations", () => {
       const response = await client.testAuthBearerHttp(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -169,8 +169,8 @@ describe("Authentication Operations", () => {
       const response = await client.testAuthBearerHttp(params);
 
       // Assert - Prism might return different status codes for different scenarios
-      expect([200, 503, 504]).toContain(response.status);
-      if (response.status === 503 && "data" in response) {
+      expect(["200", "503", "504"]).toContain(response.status);
+      if (response.status === "503" && "data" in response) {
         expect(response.data).toHaveProperty("prop1");
       }
     });
@@ -199,8 +199,8 @@ describe("Authentication Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -231,7 +231,7 @@ describe("Authentication Operations", () => {
       const response = await client.testSimpleToken(params);
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -259,8 +259,8 @@ describe("Authentication Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -285,7 +285,7 @@ describe("Authentication Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -307,8 +307,8 @@ describe("Authentication Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {

@@ -42,7 +42,7 @@ describe("octet-stream binary upload integration", () => {
 
     // Assert: operation should either succeed with 200, or return an error-like object
     if ("isValid" in response && response.isValid) {
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     } else if ("kind" in response) {
       // Unexpected-response error object - ensure it is shaped as expected
       expect(response.kind).toBe("unexpected-response");
@@ -63,7 +63,7 @@ describe("octet-stream binary upload integration", () => {
     });
 
     if ("isValid" in octetResponse && octetResponse.isValid) {
-      expect(octetResponse.status).toBe(200);
+      expect(octetResponse.status).toBe("200");
     } else if ("kind" in octetResponse) {
       expect(octetResponse.kind).toBe("unexpected-response");
     } else {

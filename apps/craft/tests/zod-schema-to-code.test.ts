@@ -236,7 +236,9 @@ describe("zodSchemaToCode", () => {
       'z.object({}).catchall(z.array(z.number())).default({"test":[1000]})',
     );
     const zodSchema = evalZod(result.code);
-    expect(zodSchema.parse({ other: [1, 2, 3] })).toEqual({ other: [1, 2, 3] });
+    expect(zodSchema.parse({ other: [1, 2, 3] })).toEqual({
+      other: [1, 2, 3],
+    });
     expect(zodSchema.parse(undefined)).toEqual({ test: [1000] }); // default value
   });
 

@@ -1,7 +1,8 @@
 # Response Handling
 
 Each operation returns a discriminated union: either a compliant API response
-(`isValid: true` with a `status` code) or an error object (`isValid: false`)
+(`isValid: true` with a `status` code as **string**, e.g. `'200'`, `'404'`,
+`'422'`, or a range like `'4XX'`, `'5XX'`) or an error object (`isValid: false`)
 with a `kind` discriminator.
 
 Validation is opt-out by default (compliant responses expose a `parsed` field).
@@ -16,10 +17,14 @@ const result = await getPetById({ path: { petId: "123" } });
 
 if (result.isValid === false) {
   console.error("Operation failed:", result.kind, result.error);
-} else if (result.status === 200) {
+} else if (result.status === "200") {
   console.log("Pet (raw):", result.data);
-} else if (result.status === 404) {
+} else if (result.status === "404") {
   console.warn("Pet not found");
+} else if (result.status === "4XX") {
+  console.warn("Client error (4XX):", result.data);
+} else if (result.status === "5XX") {
+  console.error("Server error (5XX):", result.data);
 } else {
   console.error("Unexpected documented status", result.status);
 }
@@ -104,14 +109,20 @@ if (!result.isValid) {
 // result.data is untyped raw data here
 
 switch (result.status) {
-  case 200:
+  case "200":
     console.log("Pet found (raw):", result.data);
     break;
-  case 404:
+  case "404":
     console.log("Pet not found");
     break;
-  case 400:
+  case "400":
     console.log("Invalid request (raw):", result.data);
+    break;
+  case "4XX":
+    console.log("Client error (4XX):", result.data);
+    break;
+  case "5XX":
+    console.log("Server error (5XX):", result.data);
     break;
   default:
     console.log("Unexpected status:", result.status);

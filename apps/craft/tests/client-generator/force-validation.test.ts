@@ -55,7 +55,7 @@ describe("force validation flag", () => {
 
       /* Verify return type uses conditional types */
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof GetUserResponseMap> : ApiResponseWithParse<200, typeof GetUserResponseMap>) | ApiResponse<404, void> | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof GetUserResponseMap> : ApiResponseWithParse<"200", typeof GetUserResponseMap>) | ApiResponse<"404", void> | ApiResponseError',
       );
     });
 
@@ -110,7 +110,7 @@ describe("force validation flag", () => {
 
       /* Verify return type uses conditional types */
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof GetUserResponseMap> : ApiResponseWithParse<200, typeof GetUserResponseMap>) | ApiResponse<404, void> | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof GetUserResponseMap> : ApiResponseWithParse<"200", typeof GetUserResponseMap>) | ApiResponse<"404", void> | ApiResponseError',
       );
     });
 

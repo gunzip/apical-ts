@@ -32,10 +32,12 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof GetUserResponseMap> : ApiResponseWithParse<200, typeof GetUserResponseMap>) | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof GetUserResponseMap> : ApiResponseWithParse<"200", typeof GetUserResponseMap>) | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case 200:");
+      expect(result.responseHandlers[0]).toContain(
+        "if (response.status === 200)",
+      );
       expect(result.responseHandlers[0]).not.toContain(
         "const data = undefined",
       );
@@ -66,10 +68,12 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<201, typeof CreateUserResponseMap> : ApiResponseWithParse<201, typeof CreateUserResponseMap>) | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"201", typeof CreateUserResponseMap> : ApiResponseWithParse<"201", typeof CreateUserResponseMap>) | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case 201:");
+      expect(result.responseHandlers[0]).toContain(
+        "if (response.status === 201)",
+      );
       expect(result.responseHandlers[0]).not.toContain(
         "const data = undefined",
       );
@@ -103,11 +107,15 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof GetUserResponseMap> : ApiResponseWithParse<200, typeof GetUserResponseMap>) | (TForceValidation extends true ? ApiResponseWithForcedParse<404, typeof GetUserResponseMap> : ApiResponseWithParse<404, typeof GetUserResponseMap>) | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof GetUserResponseMap> : ApiResponseWithParse<"200", typeof GetUserResponseMap>) | (TForceValidation extends true ? ApiResponseWithForcedParse<"404", typeof GetUserResponseMap> : ApiResponseWithParse<"404", typeof GetUserResponseMap>) | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(2);
-      expect(result.responseHandlers[0]).toContain("case 200:");
-      expect(result.responseHandlers[1]).toContain("case 404:");
+      expect(result.responseHandlers[0]).toContain(
+        "if (response.status === 200)",
+      );
+      expect(result.responseHandlers[1]).toContain(
+        "if (response.status === 404)",
+      );
       expect(typeImports.has("User")).toBe(true);
       expect(typeImports.has("Error")).toBe(true);
     });
@@ -126,10 +134,12 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "ApiResponse<204, void> | ApiResponseError",
+        'ApiResponse<"204", void> | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case 204:");
+      expect(result.responseHandlers[0]).toContain(
+        "if (response.status === 204)",
+      );
       expect(result.responseHandlers[0]).toContain("data: undefined");
     });
 
@@ -152,7 +162,7 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof DownloadFileResponseMap> : ApiResponseWithParse<200, typeof DownloadFileResponseMap>) | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof DownloadFileResponseMap> : ApiResponseWithParse<"200", typeof DownloadFileResponseMap>) | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(1);
       expect(result.responseHandlers[0]).not.toContain(
@@ -178,11 +188,13 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "ApiResponse<200, unknown> | ApiResponseError",
+        'ApiResponse<"200", unknown> | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case 200:");
-      expect(result.responseHandlers[0]).toContain("data = undefined");
+      expect(result.responseHandlers[0]).toContain(
+        "if (response.status === 200)",
+      );
+      expect(result.responseHandlers[0]).toContain("const data = undefined");
     });
 
     it("should sort response codes numerically", () => {
@@ -199,12 +211,18 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "ApiResponse<200, void> | ApiResponse<404, void> | ApiResponse<500, void> | ApiResponseError",
+        'ApiResponse<"200", void> | ApiResponse<"404", void> | ApiResponse<"500", void> | ApiResponseError',
       );
       // Check that handlers are sorted by status code
-      expect(result.responseHandlers[0]).toContain("case 200:");
-      expect(result.responseHandlers[1]).toContain("case 404:");
-      expect(result.responseHandlers[2]).toContain("case 500:");
+      expect(result.responseHandlers[0]).toContain(
+        "if (response.status === 200)",
+      );
+      expect(result.responseHandlers[1]).toContain(
+        "if (response.status === 404)",
+      );
+      expect(result.responseHandlers[2]).toContain(
+        "if (response.status === 500)",
+      );
     });
 
     it("should ignore default response", () => {
@@ -219,12 +237,14 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
 
-      // Now default is included as a union member with status literal "default"
+      // Now default is included as a union member with status literal 'default'
       expect(result.returnType).toBe(
-        'ApiResponse<200, void> | ApiResponse<"default", void> | ApiResponseError',
+        'ApiResponse<"200", void> | ApiResponse<"default", void> | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case 200:");
+      expect(result.responseHandlers[0]).toContain(
+        "if (response.status === 200)",
+      );
     });
 
     it("should include default response with schema in union", () => {
@@ -255,7 +275,7 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        '(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof TestAuthBearerResponseMap> : ApiResponseWithParse<200, typeof TestAuthBearerResponseMap>) | ApiResponse<403, void> | (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof TestAuthBearerResponseMap> : ApiResponseWithParse<"default", typeof TestAuthBearerResponseMap>) | ApiResponseError',
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof TestAuthBearerResponseMap> : ApiResponseWithParse<"200", typeof TestAuthBearerResponseMap>) | ApiResponse<"403", void> | (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof TestAuthBearerResponseMap> : ApiResponseWithParse<"default", typeof TestAuthBearerResponseMap>) | ApiResponseError',
       );
       // Should have handlers only for explicit numeric codes (200 and 403)
       expect(result.responseHandlers).toHaveLength(2);
@@ -275,7 +295,7 @@ describe("client-generator responses", () => {
       const typeImports = new Set<string>();
       const result = generateResponseHandlers(operation, typeImports);
       expect(result.returnType).toBe(
-        'ApiResponse<204, void> | ApiResponse<"default", void> | ApiResponseError',
+        'ApiResponse<"204", void> | ApiResponse<"default", void> | ApiResponseError',
       );
     });
 
@@ -326,7 +346,7 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof UserProfileDataResponseMap> : ApiResponseWithParse<200, typeof UserProfileDataResponseMap>) | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof UserProfileDataResponseMap> : ApiResponseWithParse<"200", typeof UserProfileDataResponseMap>) | ApiResponseError',
       );
       expect(typeImports.has("UserProfileData200Response")).toBe(true);
     });
@@ -350,7 +370,7 @@ describe("client-generator responses", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof TestOperationResponseMap> : ApiResponseWithParse<200, typeof TestOperationResponseMap>) | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof TestOperationResponseMap> : ApiResponseWithParse<"200", typeof TestOperationResponseMap>) | ApiResponseError',
       );
       expect(result.responseHandlers[0]).not.toContain(
         "const data = undefined",
@@ -381,7 +401,7 @@ describe("client-generator responses", () => {
 
       // Should prefer JSON content type (getResponseContentType logic)
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof TestOperationResponseMap> : ApiResponseWithParse<200, typeof TestOperationResponseMap>) | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof TestOperationResponseMap> : ApiResponseWithParse<"200", typeof TestOperationResponseMap>) | ApiResponseError',
       );
       expect(result.responseHandlers[0]).not.toContain(
         "const data = undefined",

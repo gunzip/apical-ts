@@ -40,7 +40,7 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -62,8 +62,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -92,8 +92,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -114,7 +114,7 @@ describe("Security Operations", () => {
       const response = await client.testOverriddenSecurityNoAuth({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -126,7 +126,7 @@ describe("Security Operations", () => {
       const response = await client.testOverriddenSecurityNoAuth({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
 
     it("should work with any auth scheme since none is required", async () => {
@@ -137,7 +137,7 @@ describe("Security Operations", () => {
       const response = await client.testOverriddenSecurityNoAuth({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
   });
 
@@ -154,7 +154,7 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
 
     it("should reject global security with wrong scheme", async () => {
@@ -175,8 +175,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -213,8 +213,8 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(bearerResponse.status).toBe(200);
-      expect(customResponse.status).toBe(200);
+      expect(bearerResponse.status).toBe("200");
+      expect(customResponse.status).toBe("200");
     });
   });
 
@@ -237,8 +237,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -273,7 +273,7 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(simpleResponse.status).toBe(200);
+      expect(simpleResponse.status).toBe("200");
 
       // Act & Assert - bearerToken should fail for simpleToken operation
       try {
@@ -294,8 +294,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -324,8 +324,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate comprehensive error shape
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -352,8 +352,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate comprehensive error shape
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {

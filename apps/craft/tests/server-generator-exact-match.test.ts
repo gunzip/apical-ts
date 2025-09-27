@@ -100,10 +100,10 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify response type discriminated by status and contentType */
     expect(result.wrapperCode).toMatch(
-      /status: 200.*contentType: "application\/json"/,
+      /status: "200".*contentType: "application\/json"/,
     );
     expect(result.wrapperCode).toMatch(
-      /status: 404.*contentType: "text\/plain"/,
+      /status: "404".*contentType: "text\/plain"/,
     );
 
     /* Verify handler type includes both success and error cases */

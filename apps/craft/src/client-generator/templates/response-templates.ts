@@ -32,7 +32,7 @@ export function renderDefaultResponseHandler(
             const errorResult = {
               ...parseResult,
               isValid: false as const,
-              result: { data, status: response.status, response },
+              result: { data, status: response.status.toString(), response },
             } satisfies ApiResponseError;
             return errorResult;
           }
@@ -55,7 +55,7 @@ export function renderDefaultResponseHandler(
           isValid: false,
           result: {
             data,
-            status: response.status,
+            status: response.status.toString(),
             response,
           },
           error: \`Unexpected response status: \${response.status}\`,
@@ -73,7 +73,7 @@ export function renderDefaultResponseHandler(
 }
 
 /*
- * Renders a single response handler case for a switch statement
+ * Renders a single response handler condition for if-else logic
  */
 export function renderResponseHandler(
   responseInfo: ResponseInfo,
@@ -87,25 +87,27 @@ export function renderResponseHandler(
     return ""; // Default responses are handled separately
   }
 
+  const condition = generateStatusMatchCondition(statusCode);
+
   if (typeName || contentType) {
-    /* Use string-literal indexing for numeric HTTP status codes to preserve literal key types */
+    /* Use string-literal indexing for HTTP status codes to preserve literal key types */
     if (responseInfo.hasSchema && responseMapName) {
       /* Always generate dynamic validation logic (forceValidation flag removed) */
-      return `    case ${statusCode}: {
+      return `    if (${condition}) {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       if (config.forceValidation) {
         /* Force validation: automatically parse and return result */
         const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {});
         if ("parsed" in parseResult) {
-          const forcedResult = createForcedParseResponse(${statusCode}, data, response, parseResult);
+          const forcedResult = createForcedParseResponse("${statusCode}", data, response, parseResult);
           // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
-          return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>);
+          return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"${statusCode}", typeof ${responseMapName}> : ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}>);
         }
         if (parseResult.kind) {
           const errorResult = {
             ...parseResult,
             isValid: false as const,
-            result: { data, status: ${statusCode}, response },
+            result: { data, status: "${statusCode}", response },
           } satisfies ApiResponseError;
           return errorResult;
         }
@@ -114,25 +116,26 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
         /* Manual validation: provide parse method */
         const manualResult = {
           isValid: true as const,
-          status: ${statusCode} as const,
+          status: "${statusCode}" as const,
           data,
           response,
           parse: () => parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {})
-        } satisfies ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>;
-        return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<${statusCode}, typeof ${responseMapName}> : ApiResponseWithParse<${statusCode}, typeof ${responseMapName}>);
+        } satisfies ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}>;
+        return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"${statusCode}", typeof ${responseMapName}> : ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}>);
       }
     }`;
     } else {
       /* No schema or response map: return simple response */
-      return `    case ${statusCode}: {
+      return `    if (${condition}) {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-  return { isValid: true as const, status: ${statusCode} as const, data, response };
+      return { isValid: true as const, status: "${statusCode}" as const, data, response };
     }`;
     }
   }
 
-  return `    case ${statusCode}:
-  return { isValid: true as const, status: ${statusCode} as const, data: undefined, response };`;
+  return `    if (${condition}) {
+      return { isValid: true as const, status: "${statusCode}" as const, data: undefined, response };
+    }`;
 }
 
 /*
@@ -150,4 +153,22 @@ export function renderResponseHandlers(
   }
 
   return handlers;
+}
+
+/*
+ * Helper function to generate status code matching logic
+ */
+function generateStatusMatchCondition(statusCode: string): string {
+  if (statusCode === "default") {
+    return "true"; // Default case is handled separately
+  }
+
+  // Check if it's a wildcard pattern (e.g., "4XX", "5XX")
+  if (statusCode.endsWith("XX")) {
+    const prefix = parseInt(statusCode[0], 10);
+    return `response.status >= ${prefix}00 && response.status < ${prefix + 1}00`;
+  }
+
+  // Exact status code match
+  return `response.status === ${statusCode}`;
 }

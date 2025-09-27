@@ -16,7 +16,7 @@ import {
 
 /* Minimal local adapter + helpers to decouple test from example implementation. */
 interface LocalServerResponse {
-  status: number;
+  status: string;
   contentType?: string;
   data?: any;
 }
@@ -70,7 +70,7 @@ function localCreateExpressAdapter<
             path: remappedPath,
           });
           res
-            .status(result.status)
+            .status(parseInt(result.status, 10))
             .type(result.contentType || "application/json")
             .send(result.data);
         } catch (err) {
@@ -104,9 +104,9 @@ describe("Express server wrappers integration", () => {
         async (params) => {
           if (!params.isValid) {
             /* Map validation errors to an allowed fallback status (500) */
-            return { status: 500 } as const;
+            return { status: "500" } as const;
           }
-          return { status: 200, data: params.value } as const;
+          return { status: "200", data: params.value } as const;
         },
       );
       adapter(app);
@@ -118,8 +118,8 @@ describe("Express server wrappers integration", () => {
       const adapter = localCreateExpressAdapter(
         { path: r.path, method: r.method, wrapper: testWithTwoParamsWrapper },
         async (params) => {
-          if (!params.isValid) return { status: 500 } as const;
-          return { status: 200, data: params.value } as const;
+          if (!params.isValid) return { status: "500" } as const;
+          return { status: "200", data: params.value } as const;
         },
       );
       adapter(app);
@@ -131,8 +131,8 @@ describe("Express server wrappers integration", () => {
       const adapter = localCreateExpressAdapter(
         { path: r.path, method: r.method, wrapper: testCoercionWrapper },
         async (params) => {
-          if (!params.isValid) return { status: 500 } as const;
-          return { status: 200, data: params.value } as const;
+          if (!params.isValid) return { status: "500" } as const;
+          return { status: "200", data: params.value } as const;
         },
       );
       adapter(app);
