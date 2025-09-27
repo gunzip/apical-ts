@@ -40,6 +40,7 @@ program
   // )
   .action(async (options: Record<string, unknown>) => {
     try {
+      const started = process.hrtime.bigint();
       // Map CLI option names to GenerationOptions interface
       const generationOptions = {
         generateClient: Boolean(options.client),
@@ -50,7 +51,11 @@ program
       };
 
       await generate(generationOptions);
-      console.log("✅ Generation completed successfully!");
+      const elapsedMs = Number(process.hrtime.bigint() - started) / 1_000_000;
+      console.log(
+        "✅ Generation completed successfully%s!",
+        generationOptions.profile ? "" : `in ${elapsedMs.toFixed(2)} ms`,
+      );
     } catch (error) {
       console.error("❌ An error occurred during generation:", error);
       process.exit(1);
