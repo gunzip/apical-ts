@@ -27,7 +27,7 @@ describe("octet-stream binary upload integration", () => {
     const client = createAuthenticatedClient(baseURL, "customToken");
 
     // Create binary buffer (Uint8Array) and send as Blob/File inside multipart form
-    const binaryData = new Uint8Array(["1", "2", "3", "4", "5"]);
+    const binaryData = new Uint8Array([1, 2, 3, 4, 5]);
     const blob = new Blob([binaryData], {
       type: "application/octet-stream",
     });
@@ -53,7 +53,7 @@ describe("octet-stream binary upload integration", () => {
     }
 
     // Also test application/octet-stream endpoint (raw body)
-    const octetData = new Uint8Array(["10", "20", "30", "40"]);
+    const octetData = new Uint8Array([10, 20, 30, 40]);
     const octetBlob = new Blob([octetData.buffer], {
       type: "application/octet-stream",
     });

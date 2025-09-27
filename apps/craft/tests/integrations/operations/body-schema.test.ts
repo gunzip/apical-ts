@@ -260,7 +260,7 @@ describe("Body and Schema Operations", () => {
       const client = createAuthenticatedClient(baseURL, "customToken");
       const complexBody = {
         age: 30,
-        items: ["1", "2", "3", "4", "5"],
+        items: [1, 2, 3, 4, 5],
         metadata: {
           settings: {
             enabled: true,

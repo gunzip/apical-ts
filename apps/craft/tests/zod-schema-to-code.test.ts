@@ -228,18 +228,18 @@ describe("zodSchemaToCode", () => {
         items: { type: "number" },
         type: "array",
       },
-      default: { test: ["1000"] },
+      default: { test: [1000] },
       type: "object",
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe(
-      'z.object({}).catchall(z.array(z.number())).default({"test":["1000"]})',
+      'z.object({}).catchall(z.array(z.number())).default({"test":[1000]})',
     );
     const zodSchema = evalZod(result.code);
     expect(zodSchema.parse({ other: [1, 2, 3] })).toEqual({
       other: [1, 2, 3],
     });
-    expect(zodSchema.parse(undefined)).toEqual({ test: ["1000"] }); // default value
+    expect(zodSchema.parse(undefined)).toEqual({ test: [1000] }); // default value
   });
 
   it("should handle discriminated unions with oneOf", () => {

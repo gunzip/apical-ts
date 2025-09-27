@@ -259,7 +259,7 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      if (response.status === 200 || response.status === "403") {
+      if (response.status === "200" || response.status === "403") {
         const contentType = response.response.headers.get("content-type");
         if (contentType) {
           expect(contentType).toContain("application/json");
