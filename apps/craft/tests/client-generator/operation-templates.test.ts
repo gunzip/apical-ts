@@ -358,19 +358,19 @@ describe("operation-templates", () => {
           'export function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  params: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config: GlobalConfig & { forceValidation: true }\n" +
-          "): Promise<ApiResponse<\"200\", User>>;\n" +
+          '): Promise<ApiResponse<"200", User>>;\n' +
           'export function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  params: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config: GlobalConfig & { forceValidation: false }\n" +
-          "): Promise<ApiResponse<\"200\", User>>;\n" +
+          '): Promise<ApiResponse<"200", User>>;\n' +
           'export function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  params: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config?: GlobalConfig\n" +
-          "): Promise<ApiResponse<\"200\", User>>;\n" +
+          '): Promise<ApiResponse<"200", User>>;\n' +
           'export async function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  { body }: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config: GlobalConfig = globalConfig\n" +
-          "): Promise<ApiResponse<\"200\", User>> {\n" +
+          '): Promise<ApiResponse<"200", User>> {\n' +
           "  return fetchApi('/test', { method: 'POST', body });\n" +
           "}",
       );
@@ -394,19 +394,19 @@ describe("operation-templates", () => {
         "export function testOperation<TForceValidation extends boolean = true>(\n" +
           "  params: {},\n" +
           "  config: GlobalConfig & { forceValidation: true }\n" +
-          "): Promise<ApiResponse<\"200\", User>>;\n" +
+          '): Promise<ApiResponse<"200", User>>;\n' +
           "export function testOperation<TForceValidation extends boolean = true>(\n" +
           "  params: {},\n" +
           "  config: GlobalConfig & { forceValidation: false }\n" +
-          "): Promise<ApiResponse<\"200\", User>>;\n" +
+          '): Promise<ApiResponse<"200", User>>;\n' +
           "export function testOperation<TForceValidation extends boolean = true>(\n" +
           "  params: {},\n" +
           "  config?: GlobalConfig\n" +
-          "): Promise<ApiResponse<\"200\", User>>;\n" +
+          '): Promise<ApiResponse<"200", User>>;\n' +
           "export async function testOperation<TForceValidation extends boolean = true>(\n" +
           "  {}: {} = {},\n" +
           "  config: GlobalConfig = globalConfig\n" +
-          "): Promise<ApiResponse<\"200\", User>> {\n" +
+          '): Promise<ApiResponse<"200", User>> {\n' +
           "  return fetchApi('/test');\n" +
           "}",
       );
