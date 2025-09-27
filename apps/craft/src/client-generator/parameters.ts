@@ -43,6 +43,7 @@ export function analyzeParameters(
   hasResponseMap = false,
   requestMapTypeName?: string,
   responseMapTypeName?: string,
+  operationId?: string,
 ): ParameterAnalysis {
   const structure = determineParameterStructure(
     parameterGroups,
@@ -84,6 +85,7 @@ export function analyzeParameters(
 
   return {
     headerProperties,
+    operationId,
     optionalityRules,
     pathProperties,
     queryProperties,
@@ -125,6 +127,7 @@ export function buildParameterInterface(
   operationSecurityHeaders?: SecurityHeader[],
   requestMapTypeName?: string,
   responseMapTypeName?: string,
+  operationId?: string,
 ): string {
   const analysis = analyzeParameters(
     parameterGroups,
@@ -135,6 +138,7 @@ export function buildParameterInterface(
     !!responseMapTypeName,
     requestMapTypeName,
     responseMapTypeName,
+    operationId,
   );
 
   return renderParameterInterface(analysis);

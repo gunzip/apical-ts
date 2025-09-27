@@ -421,10 +421,13 @@ describe("parameter template functions", () => {
 
       const result = renderParameterHandling("query", params);
       expect(result).toContain(
-        'if (params.query?.["filter"] !== undefined) url.searchParams.append(\'filter\', String(params.query["filter"]));',
+        'const serialized = serializeQueryParam("filter", params.query["filter"], { style: "form", explode: true });',
       );
       expect(result).toContain(
-        'if (params.query?.["sort-by"] !== undefined) url.searchParams.append(\'sort-by\', String(params.query["sort-by"]));',
+        'const serialized = serializeQueryParam("sort-by", params.query["sort-by"], { style: "form", explode: true });',
+      );
+      expect(result).toContain(
+        "for (const [key, value] of serialized) {\n        url.searchParams.append(key, value);",
       );
     });
 

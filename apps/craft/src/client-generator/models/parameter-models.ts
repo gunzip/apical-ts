@@ -13,6 +13,7 @@ export interface ParameterAnalysis {
     needsQuoting: boolean;
     varName: string;
   }[];
+  operationId?: string;
   optionalityRules: ParameterOptionalityRules;
   pathProperties: {
     isRequired: boolean;

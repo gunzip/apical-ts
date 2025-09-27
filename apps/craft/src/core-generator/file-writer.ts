@@ -63,6 +63,11 @@ export function buildOperationImports(
     configValueImports.push("buildFormData");
   }
 
+  /* Add serializeQueryParam helper import when complex query parameter serialization is used */
+  if (functionCode && functionCode.includes("serializeQueryParam(")) {
+    configValueImports.push("serializeQueryParam");
+  }
+
   /* RequestBody alias used by generated operation body typing */
   if (functionCode && functionCode.includes("RequestBody")) {
     configTypeImports.push("RequestBody");

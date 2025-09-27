@@ -2,6 +2,8 @@ import type { ParameterObject } from "openapi3-ts/oas31";
 
 import type { ParameterAnalysis } from "../models/parameter-models.js";
 
+import { sanitizeIdentifier } from "../../schema-generator/utils.js";
+
 /**
  * Renders simple parameters for function signature (no destructuring to avoid duplicate identifiers)
  */
@@ -45,10 +47,18 @@ export function renderParameterHandling(
       .join("\n    ");
   } else {
     return params
-      .map(
-        (p) =>
-          `if (params.query?.["${p.name}"] !== undefined) url.searchParams.append('${p.name}', String(params.query["${p.name}"]));`,
-      )
+      .map((p) => {
+        /* Extract OpenAPI serialization options */
+        const style = p.style || "form";
+        const explode = p.explode !== false; // Default to true for query params per OpenAPI spec
+
+        return `if (params.query?.["${p.name}"] !== undefined) {
+      const serialized = serializeQueryParam("${p.name}", params.query["${p.name}"], { style: "${style}", explode: ${explode} });
+      for (const [key, value] of serialized) {
+        url.searchParams.append(key, value);
+      }
+    }`;
+      })
       .join("\n    ");
   }
 }
@@ -167,11 +177,25 @@ function renderQueryParametersSection(
 ): null | string {
   if (analysis.structure.processed.queryParams.length === 0) return null;
 
+  /*
+   * Instead of hardcoding individual parameter types as 'string', use the inferred Zod type
+   * which properly handles arrays, enums, and other complex types
+   */
+  const optionalMarker = analysis.optionalityRules.isQueryOptional ? "?" : "";
+
+  if (analysis.operationId) {
+    /* Use the inferred Zod type which handles arrays, enums, and complex types correctly */
+    const sanitizedOperationId = sanitizeIdentifier(analysis.operationId);
+    const queryTypeName = `${sanitizedOperationId}Query`;
+    /* Remove key-value pairs since the type is already defined by the Zod schema */
+    return `query${optionalMarker}: ${queryTypeName}`;
+  }
+
+  /* Fallback to manual expansion if operationId is not available */
   const queryProperties: string[] = [];
   analysis.queryProperties.forEach((prop) => {
     const requiredMarker = prop.isRequired ? "" : "?";
     queryProperties.push(`"${prop.name}"${requiredMarker}: string`);
   });
-  const optionalMarker = analysis.optionalityRules.isQueryOptional ? "?" : "";
   return `query${optionalMarker}: {\n      ${queryProperties.join(";\n      ")};\n    }`;
 }
