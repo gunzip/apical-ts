@@ -161,7 +161,7 @@ describe("extractOperationMetadata", () => {
     /* Parameter structures should use simple params approach */
     expect(metadata.parameterStructures.destructuredParams).toBe("params");
     expect(metadata.parameterStructures.paramsInterface).toContain(
-      '"id": string',
+      "path: getUserPath", // Now uses Zod schema types instead of hardcoded strings
     );
   });
 

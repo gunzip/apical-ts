@@ -35,11 +35,11 @@ describe("Parameters Operations", () => {
           "x-header-param": sampleData.headerParams["x-header-param"],
         },
         path: {
-          pathParam: sampleData.pathParams["path-param"],
+          "path-param": sampleData.pathParams["path-param"], // Use exact parameter name from OpenAPI spec
         },
         query: {
-          fooBar: "test-query-with-dash",
-          requestId: sampleData.headerParams["request-id"],
+          "foo-bar": "test-query-with-dash", // Use exact parameter name from OpenAPI spec
+          "request-id": sampleData.headerParams["request-id"], // Use exact parameter name from OpenAPI spec
         },
       };
 
@@ -179,8 +179,8 @@ describe("Parameters Operations", () => {
       const client = createAuthenticatedClient(baseURL, "customToken");
       const params = {
         path: {
-          firstParam: sampleData.pathParams["first-param"],
-          secondParam: sampleData.pathParams["second-param"],
+          "first-param": sampleData.pathParams["first-param"], // Use exact parameter name from OpenAPI spec
+          "second-param": sampleData.pathParams["second-param"], // Use exact parameter name from OpenAPI spec
         },
       };
 

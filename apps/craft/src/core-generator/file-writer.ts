@@ -63,9 +63,17 @@ export function buildOperationImports(
     configValueImports.push("buildFormData");
   }
 
-  /* Add serializeQueryParam helper import when complex query parameter serialization is used */
+  /* Add parameter serialization helper imports when used */
   if (functionCode && functionCode.includes("serializeQueryParam(")) {
     configValueImports.push("serializeQueryParam");
+  }
+
+  if (functionCode && functionCode.includes("serializePathParam(")) {
+    configValueImports.push("serializePathParam");
+  }
+
+  if (functionCode && functionCode.includes("serializeHeaderParam(")) {
+    configValueImports.push("serializeHeaderParam");
   }
 
   /* RequestBody alias used by generated operation body typing */
