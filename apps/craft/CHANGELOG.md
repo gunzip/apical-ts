@@ -1,5 +1,12 @@
 # @apical-ts/craft
 
+## 0.2.0
+
+### Minor Changes
+
+- 44649a0: BREAKING: Add support for range status code in OpenAPI specs (ie.
+  4XX, 5XX)
+
 ## 0.1.1
 
 ### Patch Changes
