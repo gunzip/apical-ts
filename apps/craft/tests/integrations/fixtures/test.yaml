@@ -672,6 +672,29 @@ paths:
               schema:
                 type: string
 
+  "/queryParam/{contentType}":
+    post:
+      operationId: "testQueryParamInlineEnum"
+      parameters:
+        - in: query
+          name: fields[catalog-item-bulk-create-job]
+          required: false
+          schema:
+            type: "array"
+            items:
+              type: "string"
+              enum:
+                [
+                  "status",
+                  "created_at",
+                  "total_count",
+                  "completed_count",
+                  "failed_count",
+                  "completed_at",
+                  "errors",
+                  "expires_at",
+                ]
+
 # -------------
 # Components
 # -------------

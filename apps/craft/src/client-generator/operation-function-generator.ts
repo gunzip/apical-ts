@@ -93,6 +93,7 @@ export function extractOperationMetadata(
     bodyInfo.shouldGenerateResponseMap, // This controls generic params, keep as false for unknown mode
     bodyInfo.requestMapTypeName,
     bodyInfo.responseMapTypeName,
+    operation.operationId,
   );
 
   /* Responses & union return type */
@@ -248,6 +249,7 @@ function buildParameterStructures(
   shouldGenerateResponseMap: boolean,
   requestMapTypeName: string,
   responseMapTypeName: string,
+  operationId: string,
 ) {
   const destructuredParams = buildDestructuredParameters(
     parameterGroups,
@@ -265,6 +267,7 @@ function buildParameterStructures(
     operationSecurityHeaders,
     shouldGenerateRequestMap ? requestMapTypeName : undefined,
     shouldGenerateResponseMap ? responseMapTypeName : undefined,
+    operationId,
   );
 
   return { destructuredParams, paramsInterface };
