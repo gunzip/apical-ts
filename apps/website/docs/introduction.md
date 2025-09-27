@@ -30,8 +30,10 @@ commitment to **strict type safety**. With @apical-ts/craft, you get:
 - no exceptions at runtime for client operations
 - no accidental access to properties that can be `undefined`
 - discriminated unions for polymorphic schemas
-- full support for multiple success responses (2xx) with payload
+- full support for multiple success responses (`201`, `202`) with payload
 - full support for multiple content types (json, xml, form data, etc.)
+- full support for wildcards responses (e.g., `2XX`, `4XX`)
+- full support for circular references in schemas
 - easy to debug operations with rich errors
 - precise Zod schemas for request and response validation with comprehensive
   OpenAPI support
