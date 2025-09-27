@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.3.1
+
+### Patch Changes
+
+- 6609bf0: Fix generated server barrel file
+
 ## 0.3.0
 
 ### Minor Changes
