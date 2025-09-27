@@ -55,12 +55,12 @@ describe("Body and Schema Operations", () => {
           body: requestBody,
         } as any);
         // Prism might still accept invalid data, so check response
-        expect(response.status).toBeGreaterThanOrEqual(200);
+        expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
       } catch (error) {
         // If validation fails, it should be a 400 error with proper structure
         expect(error).toBeDefined();
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -153,12 +153,12 @@ describe("Body and Schema Operations", () => {
           body: requestBody,
         } as any);
         // Prism might still accept invalid data
-        expect(response.status).toBeGreaterThanOrEqual(200);
+        expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
       } catch (error) {
         // Error shape validation
         expect(error).toBeDefined();
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -370,7 +370,7 @@ describe("Body and Schema Operations", () => {
         // Error shape validation
         expect(error).toBeDefined();
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {

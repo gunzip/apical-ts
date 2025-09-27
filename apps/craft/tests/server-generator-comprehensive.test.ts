@@ -74,8 +74,8 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain("body-error");
 
     /* Verify response types */
-    expect(result.wrapperCode).toContain("status: 200");
-    expect(result.wrapperCode).toContain("status: 404");
+    expect(result.wrapperCode).toContain("status: \"200\"");
+    expect(result.wrapperCode).toContain("status: \"404\"");
     expect(result.wrapperCode).toContain("application/json");
     expect(result.wrapperCode).toContain("text/plain");
 

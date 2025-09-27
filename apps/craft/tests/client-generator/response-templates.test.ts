@@ -24,9 +24,9 @@ describe("response-templates", () => {
 
       const result = renderResponseHandler(responseInfo, "undefined");
 
-      expect(result).toContain("case 204:");
+      expect(result).toContain("if (response.status === 204)");
       expect(result).toContain(
-        "return { isValid: true as const, status: 204 as const, data: undefined, response };",
+        'return { isValid: true as const, status: "204" as const, data: undefined, response };',
       );
     });
 
@@ -45,10 +45,10 @@ describe("response-templates", () => {
 
       const result = renderResponseHandler(responseInfo, "undefined");
 
-      expect(result).toContain("case 200: {");
+      expect(result).toContain("if (response.status === 200)");
       expect(result).toContain("const data = undefined");
       expect(result).toContain(
-        "return { isValid: true as const, status: 200 as const, data, response };",
+        'return { isValid: true as const, status: "200" as const, data, response };',
       );
     });
   });
@@ -83,9 +83,9 @@ describe("response-templates", () => {
       const result = renderResponseHandlers(responses);
 
       expect(result).toHaveLength(2);
-      expect(result["0"]).toContain("case 200:");
-      expect(result["1"]).toContain("case 404:");
-      expect(result["1"]).toContain("data: undefined");
+      expect(result[0]).toContain("if (response.status === 200)");
+      expect(result[1]).toContain("if (response.status === 404)");
+      expect(result[1]).toContain("data: undefined");
     });
 
     it("should handle empty responses array", () => {
@@ -96,16 +96,21 @@ describe("response-templates", () => {
 
   describe("renderUnionType", () => {
     it("should render union type from components", () => {
-      const unionTypes = ["ApiResponse<200, User>", "ApiResponse<404, Error>"];
+      const unionTypes = [
+        'ApiResponse<"200", User>',
+        'ApiResponse<"404", Error>',
+      ];
 
       const result = renderUnionType(unionTypes);
 
-      expect(result).toBe("ApiResponse<200, User> | ApiResponse<404, Error>");
+      expect(result).toBe(
+        'ApiResponse<"200", User> | ApiResponse<"404", Error>',
+      );
     });
 
     it("should render default type for empty union", () => {
       const result = renderUnionType([]);
-      expect(result).toBe("ApiResponse<number, unknown>");
+      expect(result).toBe("ApiResponse<string, unknown>");
     });
 
     it("should render custom default type", () => {
@@ -114,8 +119,8 @@ describe("response-templates", () => {
     });
 
     it("should render single union type", () => {
-      const result = renderUnionType(["ApiResponse<200, User>"]);
-      expect(result).toBe("ApiResponse<200, User>");
+      const result = renderUnionType(['ApiResponse<"200", User>']);
+      expect(result).toBe('ApiResponse<"200", User>');
     });
   });
 });

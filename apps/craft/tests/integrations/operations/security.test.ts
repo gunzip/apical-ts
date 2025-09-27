@@ -62,8 +62,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -92,8 +92,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -175,8 +175,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -237,8 +237,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -294,8 +294,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -324,8 +324,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate comprehensive error shape
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -352,8 +352,8 @@ describe("Security Operations", () => {
         expect(error).toBeDefined();
         // Validate comprehensive error shape
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {

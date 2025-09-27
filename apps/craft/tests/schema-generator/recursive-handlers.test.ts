@@ -14,9 +14,9 @@ describe("recursive-handlers", () => {
       const context = createRecursiveContext();
 
       expect(context.recursiveSchemas).toBeInstanceOf(Set);
-      expect(context.recursiveSchemas.size).toBe("0");
+      expect(context.recursiveSchemas.size).toBe(0);
       expect(context.recursiveProperties).toBeInstanceOf(Map);
-      expect(context.recursiveProperties.size).toBe("0");
+      expect(context.recursiveProperties.size).toBe(0);
       expect(context.referenceStack).toEqual([]);
     });
   });

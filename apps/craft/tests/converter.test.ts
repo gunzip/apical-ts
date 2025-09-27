@@ -91,9 +91,9 @@ describe("OpenAPI Converter", () => {
       const result = convertOpenAPI30to31(openapi30 as any);
       const schema = result.components?.schemas?.NumberTest as any;
 
-      expect(schema.exclusiveMinimum).toBe("0");
+      expect(schema.exclusiveMinimum).toBe(0);
       expect(schema.minimum).toBeUndefined();
-      expect(schema.exclusiveMaximum).toBe("100");
+      expect(schema.exclusiveMaximum).toBe(100);
       expect(schema.maximum).toBeUndefined();
     });
 

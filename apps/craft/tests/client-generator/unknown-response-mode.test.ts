@@ -48,11 +48,11 @@ describe("unknown response mode", () => {
       );
 
       /* Verify no Zod validation */
-      expect(result.responseHandlers["0"]).not.toContain("safeParse");
+      expect(result.responseHandlers["0"]).not.toContain("safeParse(");
 
       /* Verify return type uses precise types for responses with content and void for others */
       expect(result.returnType).toBe(
-        "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof GetUserResponseMap> : ApiResponseWithParse<200, typeof GetUserResponseMap>) | ApiResponse<404, void> | ApiResponseError",
+        '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof GetUserResponseMap> : ApiResponseWithParse<"200", typeof GetUserResponseMap>) | ApiResponse<"404", void> | ApiResponseError',
       );
     });
 

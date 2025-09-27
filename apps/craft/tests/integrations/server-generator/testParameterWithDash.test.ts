@@ -55,7 +55,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
       .set("x-header-param", "x-header-value");
 
     // Assert
-    expect(response.status).toBe("200");
+    expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body.message).toBe("All parameters validated successfully");
   });
@@ -114,7 +114,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
 
     // Assert
     expect(pathValidationFailed).toBe(true);
-    expect(response.status).toBe("400");
+    expect(response.status).toBe(400);
   });
 
   it("should return validation error when request-id is too short", async () => {
@@ -171,7 +171,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
 
     // Assert
     expect(queryValidationFailed).toBe(true);
-    expect(response.status).toBe("400");
+    expect(response.status).toBe(400);
   });
 
   it("should return validation error when required headers are missing", async () => {
@@ -223,7 +223,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
 
     // Assert
     expect(headerValidationFailed).toBe(true);
-    expect(response.status).toBe("400");
+    expect(response.status).toBe(400);
   });
 
   it.skip("should handle parameter name transformation correctly", async () => {
@@ -273,7 +273,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
       .set("x-header-param", "x-header-value");
 
     // Assert
-    expect(response.status).toBe("200");
+    expect(response.status).toBe(200);
     expect(response.body.transformedParams.query.fooBar).toBe("query-value");
     expect(response.body.transformedParams.query.requestId).toBe(
       "request-id-value",

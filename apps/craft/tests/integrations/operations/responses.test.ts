@@ -91,8 +91,8 @@ describe("Response Operations", () => {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
-          expect(error.status).toBeGreaterThanOrEqual(400);
-          expect(error.status).toBeLessThan(500);
+          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(error.status)).toBeLessThan(500);
           expect(error.data).toBeDefined();
           expect(error.response).toBeInstanceOf(Response);
         } else {
@@ -294,7 +294,7 @@ describe("Response Operations", () => {
         // The data might be null, undefined, or an empty object
         expect(response.response.headers).toBeDefined();
         expect(response.status).toBeGreaterThan(199);
-        expect(response.status).toBeLessThan(300);
+        expect(parseInt(response.status)).toBeLessThan(300);
       }
     });
 

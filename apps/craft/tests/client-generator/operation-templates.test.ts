@@ -28,7 +28,7 @@ describe("operation-templates", () => {
         },
         requestMapTypeName: "TestRequestMap",
         responseMapTypeName: "TestResponseMap",
-        initialReturnType: "ApiResponse<200, User>",
+        initialReturnType: 'ApiResponse<"200", User>',
       };
 
       const result = buildGenericParams(config);
@@ -36,7 +36,7 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         "<TForceValidation extends boolean = true>",
       );
-      expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
+      expect(result.updatedReturnType).toBe('ApiResponse<"200", User>');
     });
 
     it("should generate request map generic params only", () => {
@@ -55,7 +55,7 @@ describe("operation-templates", () => {
         },
         requestMapTypeName: "TestRequestMap",
         responseMapTypeName: "TestResponseMap",
-        initialReturnType: "ApiResponse<200, User>",
+        initialReturnType: 'ApiResponse<"200", User>',
       };
 
       const result = buildGenericParams(config);
@@ -63,7 +63,7 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         '<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">',
       );
-      expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
+      expect(result.updatedReturnType).toBe('ApiResponse<"200", User>');
     });
 
     it("should generate response map generic params only (return type stays ApiResponse)", () => {
@@ -82,7 +82,7 @@ describe("operation-templates", () => {
         },
         requestMapTypeName: "TestRequestMap",
         responseMapTypeName: "TestResponseMap",
-        initialReturnType: "ApiResponse<200, User>",
+        initialReturnType: 'ApiResponse<"200", User>',
       };
 
       const result = buildGenericParams(config);
@@ -90,7 +90,7 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         '<TForceValidation extends boolean = true, TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/json">',
       );
-      expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
+      expect(result.updatedReturnType).toBe('ApiResponse<"200", User>');
     });
 
     it("should generate both request and response map generic params (return type stays ApiResponse)", () => {
@@ -110,7 +110,7 @@ describe("operation-templates", () => {
         },
         requestMapTypeName: "TestRequestMap",
         responseMapTypeName: "TestResponseMap",
-        initialReturnType: "ApiResponse<200, User>",
+        initialReturnType: 'ApiResponse<"200", User>',
       };
 
       const result = buildGenericParams(config);
@@ -118,7 +118,7 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         '<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/xml">',
       );
-      expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
+      expect(result.updatedReturnType).toBe('ApiResponse<"200", User>');
     });
 
     it("should fallback to application/json when no default content type (return type stays ApiResponse)", () => {
@@ -136,7 +136,7 @@ describe("operation-templates", () => {
         },
         requestMapTypeName: "TestRequestMap",
         responseMapTypeName: "TestResponseMap",
-        initialReturnType: "ApiResponse<200, User>",
+        initialReturnType: 'ApiResponse<"200", User>',
       };
 
       const result = buildGenericParams(config);
@@ -144,7 +144,7 @@ describe("operation-templates", () => {
       expect(result.genericParams).toBe(
         '<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json", TResponseContentType extends { [K in keyof TestResponseMap]: keyof TestResponseMap[K]; }[keyof TestResponseMap] = "application/json">',
       );
-      expect(result.updatedReturnType).toBe("ApiResponse<200, User>");
+      expect(result.updatedReturnType).toBe('ApiResponse<"200", User>');
     });
   });
 
@@ -344,7 +344,7 @@ describe("operation-templates", () => {
         parameterDeclaration:
           "{ body }: { body: TestRequestMap[TRequestContentType] }",
         parameterInterface: "{ body: TestRequestMap[TRequestContentType] }",
-        updatedReturnType: "ApiResponse<200, User>",
+        updatedReturnType: 'ApiResponse<"200", User>',
         functionBodyCode: "return fetchApi('/test', { method: 'POST', body });",
         typeAliases:
           "export type TestRequestMap = { 'application/json': User; };\n\n",
@@ -358,19 +358,19 @@ describe("operation-templates", () => {
           'export function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  params: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config: GlobalConfig & { forceValidation: true }\n" +
-          "): Promise<ApiResponse<200, User>>;\n" +
+          "): Promise<ApiResponse<\"200\", User>>;\n" +
           'export function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  params: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config: GlobalConfig & { forceValidation: false }\n" +
-          "): Promise<ApiResponse<200, User>>;\n" +
+          "): Promise<ApiResponse<\"200\", User>>;\n" +
           'export function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  params: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config?: GlobalConfig\n" +
-          "): Promise<ApiResponse<200, User>>;\n" +
+          "): Promise<ApiResponse<\"200\", User>>;\n" +
           'export async function testOperation<TForceValidation extends boolean = true, TRequestContentType extends keyof TestRequestMap = "application/json">(\n' +
           "  { body }: { body: TestRequestMap[TRequestContentType] },\n" +
           "  config: GlobalConfig = globalConfig\n" +
-          "): Promise<ApiResponse<200, User>> {\n" +
+          "): Promise<ApiResponse<\"200\", User>> {\n" +
           "  return fetchApi('/test', { method: 'POST', body });\n" +
           "}",
       );
@@ -383,7 +383,7 @@ describe("operation-templates", () => {
         genericParams: "<TForceValidation extends boolean = true>",
         parameterDeclaration: "{}: {} = {}",
         parameterInterface: "{}",
-        updatedReturnType: "ApiResponse<200, User>",
+        updatedReturnType: 'ApiResponse<"200", User>',
         functionBodyCode: "return fetchApi('/test');",
         typeAliases: "",
       };
@@ -394,19 +394,19 @@ describe("operation-templates", () => {
         "export function testOperation<TForceValidation extends boolean = true>(\n" +
           "  params: {},\n" +
           "  config: GlobalConfig & { forceValidation: true }\n" +
-          "): Promise<ApiResponse<200, User>>;\n" +
+          "): Promise<ApiResponse<\"200\", User>>;\n" +
           "export function testOperation<TForceValidation extends boolean = true>(\n" +
           "  params: {},\n" +
           "  config: GlobalConfig & { forceValidation: false }\n" +
-          "): Promise<ApiResponse<200, User>>;\n" +
+          "): Promise<ApiResponse<\"200\", User>>;\n" +
           "export function testOperation<TForceValidation extends boolean = true>(\n" +
           "  params: {},\n" +
           "  config?: GlobalConfig\n" +
-          "): Promise<ApiResponse<200, User>>;\n" +
+          "): Promise<ApiResponse<\"200\", User>>;\n" +
           "export async function testOperation<TForceValidation extends boolean = true>(\n" +
           "  {}: {} = {},\n" +
           "  config: GlobalConfig = globalConfig\n" +
-          "): Promise<ApiResponse<200, User>> {\n" +
+          "): Promise<ApiResponse<\"200\", User>> {\n" +
           "  return fetchApi('/test');\n" +
           "}",
       );

@@ -205,7 +205,7 @@ describe("discriminated union response types", () => {
 
       /* Return type should use precise ApiResponseWithParse for type safety */
       expect(result.returnType).toContain(
-        "ApiResponseWithParse<200, typeof TestMultiContentTypesResponseMap>",
+        'ApiResponseWithParse<"200", typeof TestMultiContentTypesResponseMap>',
       );
     });
   });

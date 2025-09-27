@@ -72,7 +72,7 @@ describe("zodSchemaToCode", () => {
     expect(result.code).toContain("array");
     const zodSchema = evalZod(result.code);
     expect(zodSchema.safeParse(["a", "b", "c"]).success).toBe(true);
-    expect(zodSchema.safeParse(["1", "2", "3"]).success).toBe(false);
+    expect(zodSchema.safeParse([1, 2, 3]).success).toBe(false);
   });
 
   it("should generate code for a simple object", () => {
@@ -160,8 +160,8 @@ describe("zodSchemaToCode", () => {
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe("z.number().default(42)");
     const zodSchema = evalZod(result.code);
-    expect(zodSchema.parse(100)).toBe("100");
-    expect(zodSchema.parse(undefined)).toBe("42"); // default value
+    expect(zodSchema.parse(100)).toBe(100);
+    expect(zodSchema.parse(undefined)).toBe(42); // default value
   });
 
   it("should handle default values for integer schemas", () => {
@@ -172,8 +172,8 @@ describe("zodSchemaToCode", () => {
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe("z.number().int().default(10)");
     const zodSchema = evalZod(result.code);
-    expect(zodSchema.parse(5)).toBe("5");
-    expect(zodSchema.parse(undefined)).toBe("10"); // default value
+    expect(zodSchema.parse(5)).toBe(5);
+    expect(zodSchema.parse(undefined)).toBe(10); // default value
   });
 
   it("should handle default values for array schemas", () => {
@@ -236,8 +236,8 @@ describe("zodSchemaToCode", () => {
       'z.object({}).catchall(z.array(z.number())).default({"test":["1000"]})',
     );
     const zodSchema = evalZod(result.code);
-    expect(zodSchema.parse({ other: ["1", "2", "3"] })).toEqual({
-      other: ["1", "2", "3"],
+    expect(zodSchema.parse({ other: [1, 2, 3] })).toEqual({
+      other: [1, 2, 3],
     });
     expect(zodSchema.parse(undefined)).toEqual({ test: ["1000"] }); // default value
   });
