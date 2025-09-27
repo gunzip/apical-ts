@@ -30,6 +30,7 @@ program
     "Generate server endpoint wrappers.",
     false,
   )
+  .option("--profile", "Print timing breakdown for generation phases.", false)
   // Disable strict validation setting, this should remain strict for the server
   // and loose for the client
   // .option(
@@ -45,6 +46,7 @@ program
         generateServer: Boolean(options.server),
         input: String(options.input),
         output: String(options.output),
+        profile: Boolean(options.profile),
       };
 
       await generate(generationOptions);

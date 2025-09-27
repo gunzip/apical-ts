@@ -4,6 +4,8 @@ import { promises as fs } from "fs";
 import pLimit from "p-limit";
 import path from "path";
 
+import type { Profiler } from "./profiler.js";
+
 import {
   analyzeSchemaForRecursion,
   createRecursiveContext,
@@ -55,6 +57,7 @@ export async function generateAllSchemas(
   concurrency: number,
   strictValidation: boolean,
   generateServer: boolean,
+  profiler?: Profiler,
 ): Promise<void> {
   if (!openApiDoc.components?.schemas) {
     return;
@@ -72,24 +75,51 @@ export async function generateAllSchemas(
     strictValidation,
   };
 
-  const schemaGenerationPromises: Promise<void>[] = [
-    // Generate schemas from components/schemas
-    ...generateComponentSchemas(context),
-    // Generate request schemas from operations
-    ...createSchemaGenerationPromises(
-      extractRequestSchemas(openApiDoc),
-      context,
-      generateRequestSchemaFile,
-    ),
-    // Generate response schemas from operations
-    ...createSchemaGenerationPromises(
-      extractResponseSchemas(openApiDoc),
-      context,
-      generateResponseSchemaFile,
-    ),
-  ];
+  if (!profiler) {
+    const schemaGenerationPromises: Promise<void>[] = [
+      // Generate schemas from components/schemas
+      ...generateComponentSchemas(context),
+      // Generate request schemas from operations
+      ...createSchemaGenerationPromises(
+        extractRequestSchemas(openApiDoc),
+        context,
+        generateRequestSchemaFile,
+      ),
+      // Generate response schemas from operations
+      ...createSchemaGenerationPromises(
+        extractResponseSchemas(openApiDoc),
+        context,
+        generateResponseSchemaFile,
+      ),
+    ];
 
-  await Promise.all(schemaGenerationPromises);
+    await Promise.all(schemaGenerationPromises);
+  } else {
+    // Profiled path: run phases sequentially to get isolated timings
+    profiler.start("schemas:components");
+    await Promise.all(generateComponentSchemas(context));
+    profiler.end("schemas:components");
+
+    profiler.start("schemas:requests");
+    await Promise.all(
+      createSchemaGenerationPromises(
+        extractRequestSchemas(openApiDoc),
+        context,
+        generateRequestSchemaFile,
+      ),
+    );
+    profiler.end("schemas:requests");
+
+    profiler.start("schemas:responses");
+    await Promise.all(
+      createSchemaGenerationPromises(
+        extractResponseSchemas(openApiDoc),
+        context,
+        generateResponseSchemaFile,
+      ),
+    );
+    profiler.end("schemas:responses");
+  }
   /* eslint-disable-next-line no-console */
   console.log("✅ Schemas generated successfully");
 }
