@@ -10,6 +10,7 @@ import { generateServerOperations } from "../server-generator/index.js";
 import { convertToOpenAPI31 } from "./converter.js";
 import { createPackageJson } from "./package-generator.js";
 import { parseOpenAPI } from "./parser.js";
+import { Profiler } from "./profiler.js";
 import { resolveRequestBodies } from "./request-body-resolver.js";
 import {
   renameConflictingSchemas,
@@ -43,6 +44,8 @@ export interface GenerationOptions {
   generateServer?: boolean;
   input: string;
   output: string;
+  /** Enable timing breakdown of major phases */
+  profile?: boolean;
   /**
    * Use strict object validation (z.strictObject) instead of loose validation (z.object).
    * When false (default), allows additional properties in objects for client-side flexibility.
@@ -62,20 +65,28 @@ export async function generate(options: GenerationOptions): Promise<void> {
     generateServer: genServer = false,
     input,
     output,
+    profile = false,
     strictValidation = false,
   } = options;
 
   await fs.mkdir(output, { recursive: true });
 
-  const openApiDoc = await parseAndPreprocessOpenAPI(input);
+  const profiler = profile ? new Profiler() : undefined;
 
+  profiler?.start("parse+preprocess");
+  const openApiDoc = await parseAndPreprocessOpenAPI(input);
+  profiler?.end("parse+preprocess");
+
+  profiler?.start("schemas:all");
   await generateAllSchemas(
     openApiDoc,
     output,
     concurrency,
     strictValidation,
     genServer,
+    profiler,
   );
+  profiler?.end("schemas:all");
 
   await generateAllOperations(
     openApiDoc,
@@ -83,9 +94,14 @@ export async function generate(options: GenerationOptions): Promise<void> {
     concurrency,
     genClient,
     genServer,
+    profiler,
   );
 
+  profiler?.start("package-json");
   await createPackageJson(output);
+  profiler?.end("package-json");
+
+  profiler?.printSummary?.("Generation timing (ms)");
 }
 
 /**
@@ -97,15 +113,33 @@ async function generateAllOperations(
   concurrency: number,
   generateClient: boolean,
   generateServer: boolean,
+  profiler?: Profiler,
 ): Promise<void> {
+  const operationPromises: Promise<void>[] = [];
+
   if (generateClient) {
-    await generateOperations(openApiDoc, output, concurrency);
+    profiler?.start("client-operations");
+    operationPromises.push(
+      generateOperations(openApiDoc, output, concurrency).finally(() => {
+        profiler?.end("client-operations");
+      }),
+    );
   }
 
   if (generateServer) {
-    await generateServerOperations(openApiDoc, output, concurrency);
-    console.log("✅ Server operations generated successfully");
+    profiler?.start("server-operations");
+    operationPromises.push(
+      generateServerOperations(openApiDoc, output, concurrency)
+        .then(() => {
+          console.log("✅ Server operations generated successfully");
+        })
+        .finally(() => {
+          profiler?.end("server-operations");
+        }),
+    );
   }
+
+  await Promise.all(operationPromises);
 }
 
 /**
