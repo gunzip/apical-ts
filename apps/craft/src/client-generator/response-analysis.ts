@@ -201,14 +201,16 @@ function buildUnionTypes({
   const pushStandard = (info: ResponseInfo) => {
     const dataType = info.contentType ? "unknown" : "void";
     const statusLiteral =
-      info.statusCode === "default" ? '"default"' : info.statusCode;
+      info.statusCode === "default" ? '"default"' : `"${info.statusCode}"`;
     unionTypes.push(`ApiResponse<${statusLiteral}, ${dataType}>`);
   };
   if (mapName) {
     for (const info of responses) {
       if (info.hasSchema) {
+        const statusLiteral =
+          info.statusCode === "default" ? '"default"' : `"${info.statusCode}"`;
         unionTypes.push(
-          `(TForceValidation extends true ? ApiResponseWithForcedParse<${info.statusCode}, typeof ${mapName}> : ApiResponseWithParse<${info.statusCode}, typeof ${mapName}>)`,
+          `(TForceValidation extends true ? ApiResponseWithForcedParse<${statusLiteral}, typeof ${mapName}> : ApiResponseWithParse<${statusLiteral}, typeof ${mapName}>)`,
         );
       } else {
         pushStandard(info);
@@ -226,7 +228,9 @@ function buildUnionTypes({
   } else {
     for (const info of responses) {
       if (info.hasSchema) {
-        unionTypes.push(`ApiResponse<${info.statusCode}, unknown>`);
+        const statusLiteral =
+          info.statusCode === "default" ? '"default"' : `"${info.statusCode}"`;
+        unionTypes.push(`ApiResponse<${statusLiteral}, unknown>`);
       } else {
         pushStandard(info);
       }
@@ -259,7 +263,20 @@ function collectResponses(
   const responseCodes = Object.keys(operation.responses).filter(
     (code) => code !== "default",
   );
-  responseCodes.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+
+  // Sort response codes: specific codes first (numerically), then wildcards
+  responseCodes.sort((a, b) => {
+    const isAWildcard = a.includes("XX");
+    const isBWildcard = b.includes("XX");
+
+    // If both are wildcards or both are specific, sort them normally
+    if (isAWildcard === isBWildcard) {
+      return parseInt(a, 10) - parseInt(b, 10);
+    }
+
+    // Wildcards should come after specific codes
+    return isAWildcard ? 1 : -1;
+  });
 
   for (const code of responseCodes) {
     const responseOrRef = operation.responses[code];

@@ -138,28 +138,26 @@ ${headersContent}
       } as const;
     }
 
-    switch (response.status) {
+    /* Handle response status codes using if-else logic to support wildcard patterns */
 ${responseHandlers.join("\n")}
-      default: {${
-        defaultResponseHandler
-          ? `
-        /* Handle OpenAPI default response */
+
+    /* Handle default response or unexpected status codes */
+${
+  defaultResponseHandler
+    ? `    /* Handle OpenAPI default response */
 ${defaultResponseHandler}`
-          : `
-        /* Return error for unexpected status codes instead of throwing */
-        return {
-          kind: "unexpected-response",
-          isValid: false,
-          result: {
-            data,
-            status: response.status,
-            response,
-          },
-          error: \`Unexpected response status: \${response.status}\`,
-        } as const;`
-      }
-      }
-    }
+    : `    /* Return error for unexpected status codes instead of throwing */
+    return {
+      kind: "unexpected-response",
+      isValid: false,
+      result: {
+        data,
+        status: response.status,
+        response,
+      },
+      error: \`Unexpected response status: \${response.status}\`,
+    } as const;`
+}
   } catch (error) {
     return {
       isValid: false,

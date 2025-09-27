@@ -126,7 +126,7 @@ export function generateResponseUnion(
  */
 export function renderUnionType(
   unionTypes: string[],
-  defaultType = "ApiResponse<number, unknown>",
+  defaultType = "ApiResponse<string, unknown>",
 ): string {
   return unionTypes.length > 0 ? unionTypes.join(" | ") : defaultType;
 }
@@ -144,7 +144,7 @@ function generateUnionTypeDefinition(
 
   const memberStrings = members.map(
     (member) =>
-      `  | { status: ${member.statusCode}; ${member.contentType ? `contentType: "${member.contentType}";` : ""} ${member.dataType ? `data: ${member.dataType};` : ""} }`,
+      `  | { status: "${member.statusCode}"; ${member.contentType ? `contentType: "${member.contentType}";` : ""} ${member.dataType ? `data: ${member.dataType};` : ""} }`,
   );
 
   return `export type ${typeName} =
