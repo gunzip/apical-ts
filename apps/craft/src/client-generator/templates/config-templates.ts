@@ -490,7 +490,7 @@ export function configureOperations<TOperations extends Record<string, Operation
 }
 
 /*
- * Renders path and header parameter serialization utilities
+ * Renders query, path and header parameter serialization utilities
  */
 export function renderParameterSerializationUtilities(): string {
   return `/*
@@ -538,6 +538,12 @@ export function serializeQueryParam(
     return [];
   }
 
+  if (style === "deepObject" && typeof value === "object" && value !== null) {
+    const entries = filterAndStringifyEntries(value as Record<string, unknown>);
+    if (entries.length === 0) return [];
+    return entries.map(([key, val]) => [\`\${paramName}[\${key}]\`, val]);
+  }
+
   if (Array.isArray(value)) {
     if (explode) {
       return filterAndStringifyArray(value).map(item => [paramName, item]);
@@ -565,7 +571,16 @@ export function serializeQueryParam(
       return entries;
     } else {
       const flatValues = entries.flatMap(([k, v]) => [k, v]);
-      return [[paramName, flatValues.join(",")]];
+      let delimiter: string;
+      switch (style) {
+        case "spaceDelimited":
+          return [[paramName, flatValues.join(" ")]];
+        case "pipeDelimited":
+          return [[paramName, flatValues.join("|")]];
+        case "form":
+        default:
+          return [[paramName, flatValues.join(",")]];
+      }
     }
   }
 
