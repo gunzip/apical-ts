@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.3.0
+
+### Minor Changes
+
+- bfd5240: Advanced handling of query parameters
+
 ## 0.2.0
 
 ### Minor Changes
