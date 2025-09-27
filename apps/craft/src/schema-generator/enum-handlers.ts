@@ -51,7 +51,21 @@ export function handleRegularEnum(
     return addDefaultValue(code, defaultValue);
   }
 
-  // Multiple enum values
-  const code = `z.enum([${enumValues.map((e) => JSON.stringify(e)).join(", ")}])`;
+  // Check if all values are strings
+  const allStrings = enumValues.every((value) => typeof value === "string");
+
+  let code: string;
+  if (allStrings) {
+    // Use z.enum for string-only enums
+    code = `z.enum([${enumValues.map((e) => JSON.stringify(e)).join(", ")}])`;
+  } else {
+    // Use z.union of z.literal for mixed or non-string enums
+    const literals = enumValues.map(
+      (value) =>
+        `z.literal(${typeof value === "string" ? JSON.stringify(value) : value})`,
+    );
+    code = `z.union([${literals.join(", ")}])`;
+  }
+
   return addDefaultValue(code, defaultValue);
 }

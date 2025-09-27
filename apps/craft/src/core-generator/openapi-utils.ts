@@ -23,7 +23,9 @@ export function isPlainSchemaObject(obj: unknown): obj is SchemaObject {
     "oneOf" in obj ||
     "properties" in obj ||
     "additionalProperties" in obj ||
-    "array" in obj
+    "array" in obj ||
+    "enum" in obj ||
+    "const" in obj
   );
 }
 

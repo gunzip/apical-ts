@@ -455,4 +455,107 @@ describe("zodSchemaToCode", () => {
     );
     expect(result.code).not.toContain("regularEnum1");
   });
+
+  // Tests for const field support
+  it("should handle const field as literal", () => {
+    const schema: SchemaObject = { const: "fixed-value" };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe('z.literal("fixed-value")');
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse("fixed-value").success).toBe(true);
+    expect(zodSchema.safeParse("other-value").success).toBe(false);
+  });
+
+  it("should handle const field with number", () => {
+    const schema: SchemaObject = { const: 42 };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.literal(42)");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(42).success).toBe(true);
+    expect(zodSchema.safeParse(43).success).toBe(false);
+  });
+
+  it("should handle const field with boolean", () => {
+    const schema: SchemaObject = { const: true };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.literal(true)");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(true).success).toBe(true);
+    expect(zodSchema.safeParse(false).success).toBe(false);
+  });
+
+  // Tests for improved enum handling
+  it("should use z.enum for string-only enums", () => {
+    const schema: SchemaObject = {
+      type: "string",
+      enum: ["option1", "option2", "option3"],
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe('z.enum(["option1", "option2", "option3"])');
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse("option1").success).toBe(true);
+    expect(zodSchema.safeParse("option4").success).toBe(false);
+  });
+
+  it("should use z.union for mixed enum types", () => {
+    const schema: SchemaObject = {
+      enum: ["string", 42, true],
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe(
+      'z.union([z.literal("string"), z.literal(42), z.literal(true)])',
+    );
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse("string").success).toBe(true);
+    expect(zodSchema.safeParse(42).success).toBe(true);
+    expect(zodSchema.safeParse(true).success).toBe(true);
+    expect(zodSchema.safeParse("other").success).toBe(false);
+  });
+
+  it("should use z.union for numeric-only enums", () => {
+    const schema: SchemaObject = {
+      type: "number",
+      enum: [1, 2, 3],
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe(
+      "z.union([z.literal(1), z.literal(2), z.literal(3)])",
+    );
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(1).success).toBe(true);
+    expect(zodSchema.safeParse(4).success).toBe(false);
+  });
+
+  it("should treat single enum value as literal", () => {
+    const schema: SchemaObject = {
+      type: "string",
+      enum: ["single-value"],
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe('z.literal("single-value")');
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse("single-value").success).toBe(true);
+    expect(zodSchema.safeParse("other-value").success).toBe(false);
+  });
+
+  it("should prioritize const over enum", () => {
+    const schema: SchemaObject = {
+      const: "const-value",
+      enum: ["enum-value1", "enum-value2"],
+      type: "string",
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe('z.literal("const-value")');
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse("const-value").success).toBe(true);
+    expect(zodSchema.safeParse("enum-value1").success).toBe(false);
+  });
 });
