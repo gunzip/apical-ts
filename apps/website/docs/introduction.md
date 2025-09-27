@@ -24,23 +24,6 @@ keywords:
 **fully-typed Zod v4 schemas** ready for runtime (client or server) validation
 and TypeScript development.
 
-## Project Status & Versioning
-
-@apical-ts/craft is under active development. In accordance with the
-[Semantic Versioning](https://semver.org/) specification, the project will begin
-strict semantic versioning starting from version `1.0.0`. Until then, breaking
-changes may occur in minor releases. To avoid unexpected breaking changes, it is
-recommended to **pin a specific version** when using the CLI or as a dependency.
-
-For example, when using `npx`:
-
-```bash
-npx @apical-ts/craft@0.3.1 generate ...
-```
-
-Replace `0.3.1` with the desired version. This ensures consistent behavior even
-as the project evolves.
-
 You may ask: why another Typescript OpenAPI generator? The answer lies in full
 commitment to **strict type safety**. With @apical-ts/craft, you get:
 
@@ -84,6 +67,23 @@ The generated client and server code requires `zod` as a runtime dependency for
 schema validation. Make sure to install it in your project.
 
 :::
+
+## Project Status & Versioning
+
+@apical-ts/craft is under active development. In accordance with the
+[Semantic Versioning](https://semver.org/) specification, the project will begin
+strict semantic versioning starting from version `1.0.0`. Until then, breaking
+changes may occur in minor releases. To avoid unexpected breaking changes, it is
+recommended to **pin a specific version** when using the CLI or as a dependency.
+
+For example, when using `npx`:
+
+```bash
+npx @apical-ts/craft@0.3.1 generate ...
+```
+
+Replace `0.3.1` with the desired version. This ensures consistent behavior even
+as the project evolves.
 
 ## Live Demo
 
