@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.1.1
+
+### Patch Changes
+
+- Add support for OpenAPI consts and mixed enums
+
 ## 0.1.0
 
 ### Minor Changes
