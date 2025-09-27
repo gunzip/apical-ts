@@ -91,6 +91,12 @@ export function zodSchemaToCode(
     );
   }
 
+  /* const values should be treated as literals */
+  if (schema.const !== undefined) {
+    result.code = `z.literal(${typeof schema.const === "string" ? JSON.stringify(schema.const) : schema.const})`;
+    return result;
+  }
+
   /* Non-string enums (string enums handled inside string primitive for extensibility) */
   if (schema.enum && Array.isArray(schema.enum) && effectiveType !== "string") {
     result.code = handleRegularEnum(schema.enum, schema.default);
