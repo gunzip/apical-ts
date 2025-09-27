@@ -1275,6 +1275,51 @@ components:
       schema:
         type: string
 
+    # Test const field
+    StatusConst:
+      type: string
+      const: "active"
+
+    # Test const with number
+    VersionConst:
+      type: number
+      const: 42
+
+    # Test string-only enum
+    StringEnum:
+      type: string
+      enum: ["option1", "option2", "option3"]
+
+    # Test mixed enum (no type needed since it's mixed)
+    MixedEnum:
+      enum: ["string", 42, true, false]
+
+    # Test numeric enum
+    NumericEnum:
+      type: number
+      enum: [1, 2, 3]
+
+    # Test single enum value (should become literal)
+    SingleEnum:
+      type: string
+      enum: ["single"]
+
+    # Test object with const and enum fields
+    TestObject:
+      type: object
+      properties:
+        status:
+          const: "ready"
+        category:
+          type: string
+          enum: ["cat1", "cat2", "cat3"]
+        priority:
+          enum: [1, 2, 3]
+        flag:
+          const: true
+        mixed:
+          enum: ["high", 42, true]
+
   # -------------
   # Responses
   # -------------
