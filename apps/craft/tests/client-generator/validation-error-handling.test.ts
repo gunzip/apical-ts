@@ -27,11 +27,11 @@ describe("client-generator validation error handling", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       /* Verify that the generated code uses unknown mode (no validation) */
-      expect(result.responseHandlers["0"]).not.toContain("safeParse(");
-      expect(result.responseHandlers["0"]).not.toContain(
+      expect(result.responseHandlers[0]).not.toContain("safeParse(");
+      expect(result.responseHandlers[0]).not.toContain(
         "if (!parseResult.success)",
       );
-      expect(result.responseHandlers["0"]).not.toContain(
+      expect(result.responseHandlers[0]).not.toContain(
         "const data = undefined",
       );
 
@@ -63,11 +63,11 @@ describe("client-generator validation error handling", () => {
       const result = generateResponseHandlers(operation, typeImports, true);
 
       /* Verify that the generated code uses unknown mode (no conditional validation) */
-      expect(result.responseHandlers["0"]).not.toContain(
+      expect(result.responseHandlers[0]).not.toContain(
         "const data = undefined",
       );
-      expect(result.responseHandlers["0"]).not.toContain("safeParse(");
-      expect(result.responseHandlers["0"]).not.toContain(
+      expect(result.responseHandlers[0]).not.toContain("safeParse(");
+      expect(result.responseHandlers[0]).not.toContain(
         "error: parseResult.error",
       );
       expect(result.returnType).toBe(
@@ -94,8 +94,8 @@ describe("client-generator validation error handling", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       /* Verify that non-JSON responses don't use safeParse */
-      expect(result.responseHandlers["0"]).not.toContain("safeParse(");
-      expect(result.responseHandlers["0"]).not.toContain("error:");
+      expect(result.responseHandlers[0]).not.toContain("safeParse(");
+      expect(result.responseHandlers[0]).not.toContain("error:");
 
       /* Verify that the return type does NOT include parse-error */
       expect(result.returnType).not.toContain("error:");
@@ -118,9 +118,9 @@ describe("client-generator validation error handling", () => {
       const result = generateResponseHandlers(operation, typeImports);
 
       /* Verify that responses without content don't include validation logic */
-      expect(result.responseHandlers["0"]).not.toContain("safeParse(");
-      expect(result.responseHandlers["0"]).not.toContain("parse-error");
-      expect(result.responseHandlers["0"]).toContain("data: undefined");
+      expect(result.responseHandlers[0]).not.toContain("safeParse(");
+      expect(result.responseHandlers[0]).not.toContain("parse-error");
+      expect(result.responseHandlers[0]).toContain("data: undefined");
 
       /* Verify that the return type is simple void without parse-error */
       expect(result.returnType).toBe(

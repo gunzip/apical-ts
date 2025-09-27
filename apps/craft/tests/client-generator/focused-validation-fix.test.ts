@@ -34,21 +34,19 @@ describe("Focused test for forced validation response structure", () => {
     );
 
     /* Verify that forced validation uses createForcedParseResponse helper */
-    expect(result.responseHandlers["0"]).toContain(
+    expect(result.responseHandlers[0]).toContain(
       "const forcedResult = createForcedParseResponse(",
     );
-    expect(result.responseHandlers["0"]).not.toContain("parsed: parseResult,");
+    expect(result.responseHandlers[0]).not.toContain("parsed: parseResult,");
 
     /* Verify the structure includes conditional logic for force validation */
-    expect(result.responseHandlers["0"]).toContain(
-      "if (config.forceValidation)",
-    );
-    expect(result.responseHandlers["0"]).toContain(
+    expect(result.responseHandlers[0]).toContain("if (config.forceValidation)");
+    expect(result.responseHandlers[0]).toContain(
       'if ("parsed" in parseResult)',
     );
 
     /* Verify manual validation branch still exists */
-    expect(result.responseHandlers["0"]).toContain("} else {");
-    expect(result.responseHandlers["0"]).toContain("parse: () =>");
+    expect(result.responseHandlers[0]).toContain("} else {");
+    expect(result.responseHandlers[0]).toContain("parse: () =>");
   });
 });

@@ -59,14 +59,12 @@ describe("DeserializerMap Refactoring", () => {
     );
 
     /* Verify parse method uses only config.deserializers */
-    expect(result.responseHandlers["0"]).toContain("config.deserializers");
-    expect(result.responseHandlers["0"]).toContain("parse: ()");
-    expect(result.responseHandlers["0"]).not.toContain(
+    expect(result.responseHandlers[0]).toContain("config.deserializers");
+    expect(result.responseHandlers[0]).toContain("parse: ()");
+    expect(result.responseHandlers[0]).not.toContain(
       "deserializers || config.deserializers",
     );
-    expect(result.responseHandlers["0"]).not.toContain(
-      "parse: (deserializers?:",
-    );
+    expect(result.responseHandlers[0]).not.toContain("parse: (deserializers?:");
   });
 
   it("should generate content-type indexed deserializer map types", () => {
@@ -137,14 +135,12 @@ describe("DeserializerMap Refactoring", () => {
     );
 
     /* Parse method should take no parameters */
-    expect(result.responseHandlers["0"]).toContain("parse: ()");
-    expect(result.responseHandlers["0"]).not.toContain(
-      "parse: (deserializers?:",
-    );
+    expect(result.responseHandlers[0]).toContain("parse: ()");
+    expect(result.responseHandlers[0]).not.toContain("parse: (deserializers?:");
 
     /* Should use only config.deserializers */
-    expect(result.responseHandlers["0"]).toContain("config.deserializers");
-    expect(result.responseHandlers["0"]).not.toContain(
+    expect(result.responseHandlers[0]).toContain("config.deserializers");
+    expect(result.responseHandlers[0]).not.toContain(
       "deserializers || config.deserializers",
     );
   });

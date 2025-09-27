@@ -128,8 +128,8 @@ describe("discriminated union response types", () => {
 
       /* Should analyze responses correctly */
       expect(result.responses).toHaveLength(1);
-      expect(result.responses["0"].statusCode).toBe("200");
-      expect(result.responses["0"].hasSchema).toBe(true);
+      expect(result.responses[0].statusCode).toBe("200");
+      expect(result.responses[0].hasSchema).toBe(true);
     });
 
     it("should handle operations without operationId", () => {
@@ -198,8 +198,8 @@ describe("discriminated union response types", () => {
       expect(result.responseHandlers).toHaveLength(1);
 
       /* Should include parse method in handler */
-      expect(result.responseHandlers["0"]).toContain("parse:");
-      expect(result.responseHandlers["0"]).toContain(
+      expect(result.responseHandlers[0]).toContain("parse:");
+      expect(result.responseHandlers[0]).toContain(
         "parseApiResponseUnknownData",
       );
 

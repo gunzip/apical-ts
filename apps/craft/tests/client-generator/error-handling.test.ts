@@ -98,7 +98,7 @@ describe("error handling in client generator", () => {
       );
 
       /* Should include parse method that calls parseApiResponseUnknownData */
-      const responseHandler = result.responseHandlers["0"];
+      const responseHandler = result.responseHandlers[0];
       expect(responseHandler).toContain("parse: () =>");
       expect(responseHandler).toContain(
         "parseApiResponseUnknownData(minimalResponse, data, TestOperationResponseMap",
@@ -132,7 +132,7 @@ describe("error handling in client generator", () => {
       );
 
       /* Should include error handling in force validation mode */
-      const responseHandler = result.responseHandlers["0"];
+      const responseHandler = result.responseHandlers[0];
       expect(responseHandler).toContain(
         "const parseResult = parseApiResponseUnknownData",
       );

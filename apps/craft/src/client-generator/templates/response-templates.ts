@@ -164,9 +164,9 @@ function generateStatusMatchCondition(statusCode: string): string {
   }
 
   // Check if it's a wildcard pattern (e.g., "4XX", "5XX")
-  if (statusCode.includes("XX")) {
-    const prefix = statusCode.substring(0, statusCode.indexOf("XX"));
-    return `response.status >= ${prefix}00 && response.status < ${parseInt(prefix, 10) + 1}00`;
+  if (statusCode.endsWith("XX")) {
+    const prefix = parseInt(statusCode[0], 10);
+    return `response.status >= ${prefix}00 && response.status < ${prefix + 1}00`;
   }
 
   // Exact status code match
