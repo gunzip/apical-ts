@@ -3,6 +3,8 @@ import path from "path";
 
 import type { OperationMetadata } from "../client-generator/operation-extractor.js";
 
+import { sanitizeIdentifier } from "../schema-generator/utils.js";
+
 /**
  * Creates server operations directory structure
  */
@@ -22,23 +24,26 @@ export async function writeServerIndexFile(
   serverOperationsDir: string,
 ): Promise<void> {
   const exports = operations
-    .map(
-      ({ operationId }) =>
-        `export { ${operationId}Wrapper } from "./${operationId}.js";`,
-    )
+    .map(({ operationId }) => {
+      const sanitizedId = sanitizeIdentifier(operationId);
+      return `export { ${sanitizedId}Wrapper } from "./${operationId}.js";`;
+    })
     .join("\n");
 
   /* Generate routes object with all route functions properly aliased */
   const routeImports = operations
-    .map(
-      ({ operationId }) =>
-        `import { route as ${operationId}Route } from "./${operationId}.js";`,
-    )
+    .map(({ operationId }) => {
+      const sanitizedId = sanitizeIdentifier(operationId);
+      return `import { route as ${sanitizedId}Route } from "./${operationId}.js";`;
+    })
     .join("\n");
 
   const routesObject = `export const routes = {
 ${operations
-  .map(({ operationId }) => `${operationId}: ${operationId}Route,`)
+  .map(({ operationId }) => {
+    const sanitizedId = sanitizeIdentifier(operationId);
+    return `${sanitizedId}: ${sanitizedId}Route,`;
+  })
   .join("\n")}
 } as const;`;
 
@@ -50,10 +55,10 @@ ${exports}
 
 /* Re-export all handlers */
 ${operations
-  .map(
-    ({ operationId }) =>
-      `export type { ${operationId}Handler } from "./${operationId}.js";`,
-  )
+  .map(({ operationId }) => {
+    const sanitizedId = sanitizeIdentifier(operationId);
+    return `export type { ${sanitizedId}Handler } from "./${operationId}.js";`;
+  })
   .join("\n")}
 
 /* Routes object with all route functions */
