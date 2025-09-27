@@ -27,7 +27,7 @@ describe("octet-stream binary upload integration", () => {
     const client = createAuthenticatedClient(baseURL, "customToken");
 
     // Create binary buffer (Uint8Array) and send as Blob/File inside multipart form
-    const binaryData = new Uint8Array([1, 2, 3, 4, 5]);
+    const binaryData = new Uint8Array(["1", "2", "3", "4", "5"]);
     const blob = new Blob([binaryData], {
       type: "application/octet-stream",
     });
@@ -42,7 +42,7 @@ describe("octet-stream binary upload integration", () => {
 
     // Assert: operation should either succeed with 200, or return an error-like object
     if ("isValid" in response && response.isValid) {
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     } else if ("kind" in response) {
       // Unexpected-response error object - ensure it is shaped as expected
       expect(response.kind).toBe("unexpected-response");
@@ -53,7 +53,7 @@ describe("octet-stream binary upload integration", () => {
     }
 
     // Also test application/octet-stream endpoint (raw body)
-    const octetData = new Uint8Array([10, 20, 30, 40]);
+    const octetData = new Uint8Array(["10", "20", "30", "40"]);
     const octetBlob = new Blob([octetData.buffer], {
       type: "application/octet-stream",
     });
@@ -63,7 +63,7 @@ describe("octet-stream binary upload integration", () => {
     });
 
     if ("isValid" in octetResponse && octetResponse.isValid) {
-      expect(octetResponse.status).toBe(200);
+      expect(octetResponse.status).toBe("200");
     } else if ("kind" in octetResponse) {
       expect(octetResponse.kind).toBe("unexpected-response");
     } else {

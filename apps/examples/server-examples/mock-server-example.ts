@@ -80,7 +80,7 @@ const createMockHandler = <
           };
 
           return {
-            status: 400,
+            status: "400",
             contentType,
             data: errorData,
           };
@@ -89,7 +89,7 @@ const createMockHandler = <
 
       /* Fallback 400 response if no schema defined */
       return {
-        status: 400,
+        status: "400",
         contentType: "application/json",
         data: {
           error: "Bad Request",
@@ -136,7 +136,7 @@ const createMockHandler = <
     }
 
     /* Fallback to no data response if no schema found */
-    return { status: 204, contentType: "text/plain", data: null };
+    return { status: "204", contentType: "text/plain", data: null };
   };
   return handler;
 };

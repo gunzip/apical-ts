@@ -82,7 +82,7 @@ describe("Working Integration Test Demo", () => {
     } else if ("kind" in response) {
       // Expected to fail with auth (401) or validation (400) error
       if ("result" in response) {
-        expect([400, 401]).toContain(response.result.status);
+        expect(["400", "401"]).toContain(response.result.status);
       } else {
         // For errors without result (like unexpected-error), just verify it's an error
         expect(response.isValid).toBe(false);
@@ -110,7 +110,7 @@ describe("Working Integration Test Demo", () => {
     } else if ("kind" in response) {
       // Expected to fail with auth (401) or validation (400) error
       if ("result" in response) {
-        expect([400, 401]).toContain(response.result.status);
+        expect(["400", "401"]).toContain(response.result.status);
       } else {
         // For errors without result (like unexpected-error), just verify it's an error
         expect(response.isValid).toBe(false);
@@ -137,7 +137,7 @@ describe("Working Integration Test Demo", () => {
     } else if ("kind" in response) {
       // Expected to fail with auth (401) or validation (400) error
       if ("result" in response) {
-        expect([400, 401]).toContain(response.result.status);
+        expect(["400", "401"]).toContain(response.result.status);
       } else {
         // For errors without result (like unexpected-error), just verify it's an error
         expect(response.isValid).toBe(false);
@@ -188,7 +188,7 @@ describe("Working Integration Test Demo", () => {
       expect(result.kind).toBe("unexpected-response");
       expect(result.isValid).toBe(false);
       if ("result" in result) {
-        expect(result.result.status).toBe(401);
+        expect(result.result.status).toBe("401");
         expect(result.error).toContain("Unexpected response status: 401");
         expect(result.result.data).toBeDefined();
         expect(result.result.response).toBeInstanceOf(Response);

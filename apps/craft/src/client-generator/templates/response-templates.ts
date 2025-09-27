@@ -32,7 +32,7 @@ export function renderDefaultResponseHandler(
             const errorResult = {
               ...parseResult,
               isValid: false as const,
-              result: { data, status: response.status, response },
+              result: { data, status: response.status.toString(), response },
             } satisfies ApiResponseError;
             return errorResult;
           }
@@ -55,7 +55,7 @@ export function renderDefaultResponseHandler(
           isValid: false,
           result: {
             data,
-            status: response.status,
+            status: response.status.toString(),
             response,
           },
           error: \`Unexpected response status: \${response.status}\`,

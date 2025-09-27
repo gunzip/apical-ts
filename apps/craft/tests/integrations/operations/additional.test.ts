@@ -33,7 +33,7 @@ describe("Additional Operations", () => {
       const response = await client.testSimplePatch({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -45,7 +45,7 @@ describe("Additional Operations", () => {
       const response = await client.testSimplePatch({});
 
       // Assert - Could be 200 or 500 based on Prism mock behavior
-      expect([200, 500]).toContain(response.status);
+      expect(["200", "500"]).toContain(response.status);
     });
 
     it("should support PATCH as an HTTP method", async () => {
@@ -57,7 +57,7 @@ describe("Additional Operations", () => {
 
       // Assert - Verify the operation exists and is callable
       expect(response).toBeDefined();
-      expect(typeof response.status).toBe("number");
+      expect(typeof response.status).toBe("string");
       expect(response.response.headers).toBeInstanceOf(Headers);
     });
   });
@@ -146,7 +146,7 @@ describe("Additional Operations", () => {
       const response = await client.testWithEmptyResponse({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -163,7 +163,7 @@ describe("Additional Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
   });
 
@@ -218,7 +218,7 @@ describe("Additional Operations", () => {
       expect(response).toHaveProperty("response");
       expect(response).toHaveProperty("data");
 
-      expect(typeof response.status).toBe("number");
+      expect(typeof response.status).toBe("string");
       expect(response.response.headers).toBeInstanceOf(Headers);
     });
 

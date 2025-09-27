@@ -32,7 +32,7 @@ describe("Deserialization Operation", () => {
     const client = createUnauthenticatedClient(baseURL);
 
     const res = await client.testDeserialization({});
-    expect((res as any).status).toBe(200);
+    expect((res as any).status).toBe("200");
     expect("data" in res).toBe(true);
 
     const parsed = (res as any).parse({
@@ -53,7 +53,7 @@ describe("Deserialization Operation", () => {
 
     // Force Accept header so Prism emits JSON; we then pretend a custom content type when parsing
     const res = await client.testDeserialization({});
-    expect((res as any).status).toBe(200);
+    expect((res as any).status).toBe("200");
 
     const parsed = (res as any).parse({
       "application/custom+json": (data: any) => data,
@@ -85,7 +85,7 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect((res as any).status).toBe(200);
+    expect((res as any).status).toBe("200");
 
     const parsed = (res as any).parse();
     if ("parsed" in parsed) {
@@ -112,7 +112,7 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect((res as any).status).toBe(200);
+    expect((res as any).status).toBe("200");
 
     // Return object missing required property 'age'
     const parsed = (res as any).parse();
@@ -139,14 +139,14 @@ describe("Deserialization Operation", () => {
         deserializers: {
           "application/xml": (xml: unknown) => {
             const xmlStr = String(xml);
-            const name = /<name>([^<]+)<\/name>/u.exec(xmlStr)?.[1] || "";
-            const ageStr = /<age>([^<]+)<\/age>/u.exec(xmlStr)?.[1] || "0";
+            const name = /<name>([^<]+)<\/name>/u.exec(xmlStr)?.["1"] || "";
+            const ageStr = /<age>([^<]+)<\/age>/u.exec(xmlStr)?.["1"] || "0";
             return { name, age: Number(ageStr) };
           },
         },
       },
     );
-    expect((res as any).status).toBe(200);
+    expect((res as any).status).toBe("200");
     // Parse XML string into object expected by schema
     const parsed = (res as any).parse();
     expect(parsed.contentType).toBe("application/xml");
@@ -181,7 +181,7 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect((res as any).status).toBe(200);
+    expect((res as any).status).toBe("200");
     const parsed = (res as any).parse();
     expect(parsed.contentType).toBe("application/vnd.custom+json");
     if (parsed.parsed) {
@@ -213,7 +213,7 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect(res.status).toBe(200);
+    expect(res.status).toBe("200");
     const parsed = (res as any).parse();
     if ("parsed" in parsed) {
       expect(parsed.contentType).toBe("application/octet-stream");
@@ -254,7 +254,7 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect(res.status).toBe(200);
+    expect(res.status).toBe("200");
     const parsed = (res as any).parse();
     expect(parsed.contentType).toBe("application/vnd.custom+json");
     if (parsed.parsed) {

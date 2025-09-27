@@ -156,7 +156,7 @@ describe("Express server wrappers integration", () => {
       .set("x-header-param", "xvalue")
       .query({ "foo-bar": "qb", "request-id": "1234567890" });
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe("200");
     /* Ensure original keys preserved */
     expect(res.body.query).toHaveProperty("foo-bar", "qb");
     expect(res.body.headers).toHaveProperty("headerinlineparam");
@@ -168,7 +168,7 @@ describe("Express server wrappers integration", () => {
     const res = await request(base)
       .get("/test-two-path-params/123/true")
       .query({});
-    expect(res.status).toBe(200);
+    expect(res.status).toBe("200");
     expect(res.body.path).toBeDefined();
     /* Validate types actually coerced: these remain strings because spec types are string; ensure raw values match */
     expect(typeof res.body.path["first-param"]).toBe("string");
@@ -184,9 +184,9 @@ describe("Express server wrappers integration", () => {
       .get("/test-coercion/456/false")
       .set("count-header", "99")
       .query({ "num-query": "123.5", class: "true" });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe("200");
     /* Path coercion */
-    expect(res.body.path["class"]).toBe(456);
+    expect(res.body.path["class"]).toBe("456");
     expect(typeof res.body.path["class"]).toBe("number");
     /* stringbool(): should parse 'false' to boolean false */
     expect(res.body.path["bool-param"]).toBe(false);
@@ -197,7 +197,7 @@ describe("Express server wrappers integration", () => {
     expect(res.body.query["class"]).toBe(true);
     expect(typeof res.body.query["class"]).toBe("boolean");
     /* Header coercion */
-    expect(res.body.headers["count-header"]).toBe(99);
+    expect(res.body.headers["count-header"]).toBe("99");
     expect(typeof res.body.headers["count-header"]).toBe("number");
   });
 });

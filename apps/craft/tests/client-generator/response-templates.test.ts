@@ -83,9 +83,9 @@ describe("response-templates", () => {
       const result = renderResponseHandlers(responses);
 
       expect(result).toHaveLength(2);
-      expect(result[0]).toContain("case 200:");
-      expect(result[1]).toContain("case 404:");
-      expect(result[1]).toContain("data: undefined");
+      expect(result["0"]).toContain("case 200:");
+      expect(result["1"]).toContain("case 404:");
+      expect(result["1"]).toContain("data: undefined");
     });
 
     it("should handle empty responses array", () => {

@@ -146,9 +146,9 @@ describe("extractOperationMetadata", () => {
 
     /* Parameter groups should contain path and query params */
     expect(metadata.parameterGroups.pathParams).toHaveLength(1);
-    expect(metadata.parameterGroups.pathParams[0].name).toBe("id");
+    expect(metadata.parameterGroups.pathParams["0"].name).toBe("id");
     expect(metadata.parameterGroups.queryParams).toHaveLength(1);
-    expect(metadata.parameterGroups.queryParams[0].name).toBe("include");
+    expect(metadata.parameterGroups.queryParams["0"].name).toBe("include");
     expect(metadata.parameterGroups.headerParams).toEqual([]);
 
     /* Body info should reflect no request body */
@@ -212,9 +212,9 @@ describe("extractOperationMetadata", () => {
 
     /* Should include path-level parameters */
     expect(metadata.parameterGroups.pathParams).toHaveLength(1);
-    expect(metadata.parameterGroups.pathParams[0].name).toBe("id");
+    expect(metadata.parameterGroups.pathParams["0"].name).toBe("id");
     expect(metadata.parameterGroups.headerParams).toHaveLength(1);
-    expect(metadata.parameterGroups.headerParams[0].name).toBe("version");
+    expect(metadata.parameterGroups.headerParams["0"].name).toBe("version");
 
     /* Parameter structures should use simple params approach */
     expect(metadata.parameterStructures.destructuredParams).toBe("params");
@@ -262,10 +262,12 @@ describe("extractOperationMetadata", () => {
 
     /* Should extract operation-specific security headers */
     expect(metadata.operationSecurityHeaders).toHaveLength(1);
-    expect(metadata.operationSecurityHeaders[0].headerName).toBe(
+    expect(metadata.operationSecurityHeaders["0"].headerName).toBe(
       "Authorization",
     );
-    expect(metadata.operationSecurityHeaders[0].schemeName).toBe("bearerAuth");
+    expect(metadata.operationSecurityHeaders["0"].schemeName).toBe(
+      "bearerAuth",
+    );
 
     /* Should extract global auth headers */
     expect(metadata.authHeaders).toContain("X-API-Key");

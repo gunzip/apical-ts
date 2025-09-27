@@ -141,7 +141,7 @@ describe("generateUniqueOperationIds", () => {
 
   it("should handle empty paths object", () => {
     const result = generateUniqueOperationIds({});
-    expect(result.size).toBe(0);
+    expect(result.size).toBe("0");
   });
 
   it("should process all object properties, not just HTTP methods", () => {
@@ -157,7 +157,7 @@ describe("generateUniqueOperationIds", () => {
 
     const result = generateUniqueOperationIds(paths);
 
-    expect(result.size).toBe(3); // get, parameters, and customObject
+    expect(result.size).toBe("3"); // get, parameters, and customObject
     expect(result.get("get:/users")).toBe("getUsers");
     expect(result.get("parameters:/users")).toBe("parametersUsers");
     expect(result.get("customObject:/users")).toBe("customobjectUsers");
@@ -172,11 +172,11 @@ describe("generateUniqueOperationIds", () => {
 
     const result = generateUniqueOperationIds(paths);
 
-    expect(result.size).toBe(3);
+    expect(result.size).toBe("3");
     const values = Array.from(result.values());
     expect(values).toHaveLength(3);
     // All values should be unique
-    expect(new Set(values).size).toBe(3);
+    expect(new Set(values).size).toBe("3");
   });
 });
 

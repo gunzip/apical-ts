@@ -35,8 +35,8 @@ describe("client-generator responses", () => {
         "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof GetUserResponseMap> : ApiResponseWithParse<200, typeof GetUserResponseMap>) | ApiResponseError",
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case 200:");
-      expect(result.responseHandlers[0]).not.toContain(
+      expect(result.responseHandlers["0"]).toContain("case 200:");
+      expect(result.responseHandlers["0"]).not.toContain(
         "const data = undefined",
       );
       expect(typeImports.has("User")).toBe(true);
@@ -69,8 +69,8 @@ describe("client-generator responses", () => {
         "(TForceValidation extends true ? ApiResponseWithForcedParse<201, typeof CreateUserResponseMap> : ApiResponseWithParse<201, typeof CreateUserResponseMap>) | ApiResponseError",
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case 201:");
-      expect(result.responseHandlers[0]).not.toContain(
+      expect(result.responseHandlers["0"]).toContain("case 201:");
+      expect(result.responseHandlers["0"]).not.toContain(
         "const data = undefined",
       );
       expect(typeImports.has("CreateUser201Response")).toBe(true);
@@ -106,8 +106,8 @@ describe("client-generator responses", () => {
         "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof GetUserResponseMap> : ApiResponseWithParse<200, typeof GetUserResponseMap>) | (TForceValidation extends true ? ApiResponseWithForcedParse<404, typeof GetUserResponseMap> : ApiResponseWithParse<404, typeof GetUserResponseMap>) | ApiResponseError",
       );
       expect(result.responseHandlers).toHaveLength(2);
-      expect(result.responseHandlers[0]).toContain("case 200:");
-      expect(result.responseHandlers[1]).toContain("case 404:");
+      expect(result.responseHandlers["0"]).toContain("case 200:");
+      expect(result.responseHandlers["1"]).toContain("case 404:");
       expect(typeImports.has("User")).toBe(true);
       expect(typeImports.has("Error")).toBe(true);
     });
@@ -129,8 +129,8 @@ describe("client-generator responses", () => {
         "ApiResponse<204, void> | ApiResponseError",
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case 204:");
-      expect(result.responseHandlers[0]).toContain("data: undefined");
+      expect(result.responseHandlers["0"]).toContain("case 204:");
+      expect(result.responseHandlers["0"]).toContain("data: undefined");
     });
 
     it("should handle non-JSON content types", () => {
@@ -155,7 +155,7 @@ describe("client-generator responses", () => {
         "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof DownloadFileResponseMap> : ApiResponseWithParse<200, typeof DownloadFileResponseMap>) | ApiResponseError",
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).not.toContain(
+      expect(result.responseHandlers["0"]).not.toContain(
         "const data = undefined",
       );
       expect(typeImports.has("FileContent")).toBe(true);
@@ -181,8 +181,8 @@ describe("client-generator responses", () => {
         "ApiResponse<200, unknown> | ApiResponseError",
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case 200:");
-      expect(result.responseHandlers[0]).toContain("data = undefined");
+      expect(result.responseHandlers["0"]).toContain("case 200:");
+      expect(result.responseHandlers["0"]).toContain("data = undefined");
     });
 
     it("should sort response codes numerically", () => {
@@ -202,9 +202,9 @@ describe("client-generator responses", () => {
         "ApiResponse<200, void> | ApiResponse<404, void> | ApiResponse<500, void> | ApiResponseError",
       );
       // Check that handlers are sorted by status code
-      expect(result.responseHandlers[0]).toContain("case 200:");
-      expect(result.responseHandlers[1]).toContain("case 404:");
-      expect(result.responseHandlers[2]).toContain("case 500:");
+      expect(result.responseHandlers["0"]).toContain("case 200:");
+      expect(result.responseHandlers["1"]).toContain("case 404:");
+      expect(result.responseHandlers["2"]).toContain("case 500:");
     });
 
     it("should ignore default response", () => {
@@ -224,7 +224,7 @@ describe("client-generator responses", () => {
         'ApiResponse<200, void> | ApiResponse<"default", void> | ApiResponseError',
       );
       expect(result.responseHandlers).toHaveLength(1);
-      expect(result.responseHandlers[0]).toContain("case 200:");
+      expect(result.responseHandlers["0"]).toContain("case 200:");
     });
 
     it("should include default response with schema in union", () => {
@@ -352,7 +352,7 @@ describe("client-generator responses", () => {
       expect(result.returnType).toBe(
         "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof TestOperationResponseMap> : ApiResponseWithParse<200, typeof TestOperationResponseMap>) | ApiResponseError",
       );
-      expect(result.responseHandlers[0]).not.toContain(
+      expect(result.responseHandlers["0"]).not.toContain(
         "const data = undefined",
       );
       expect(typeImports.has("ApiData")).toBe(true);
@@ -383,7 +383,7 @@ describe("client-generator responses", () => {
       expect(result.returnType).toBe(
         "(TForceValidation extends true ? ApiResponseWithForcedParse<200, typeof TestOperationResponseMap> : ApiResponseWithParse<200, typeof TestOperationResponseMap>) | ApiResponseError",
       );
-      expect(result.responseHandlers[0]).not.toContain(
+      expect(result.responseHandlers["0"]).not.toContain(
         "const data = undefined",
       );
       expect(typeImports.has("Data")).toBe(true);
@@ -460,8 +460,8 @@ describe("client-generator responses", () => {
       );
 
       // Check counts
-      expect(result.requestContentTypeCount).toBe(2);
-      expect(result.responseContentTypeCount).toBe(3);
+      expect(result.requestContentTypeCount).toBe("2");
+      expect(result.responseContentTypeCount).toBe("3");
 
       // Check type imports
       expect(result.typeImports.has("Pet")).toBe(true);
@@ -490,8 +490,8 @@ describe("client-generator responses", () => {
       expect(result.defaultRequestContentType).toBeNull();
       expect(result.defaultResponseContentType).toBe("application/json");
       expect(result.requestMapType).toBe("{}");
-      expect(result.requestContentTypeCount).toBe(0);
-      expect(result.responseContentTypeCount).toBe(1);
+      expect(result.requestContentTypeCount).toBe("0");
+      expect(result.responseContentTypeCount).toBe("1");
       expect(result.responseMapType).toContain('"application/json": User,');
     });
 
@@ -513,8 +513,8 @@ describe("client-generator responses", () => {
 
       expect(result.defaultRequestContentType).toBe("application/json");
       expect(result.defaultResponseContentType).toBeNull();
-      expect(result.requestContentTypeCount).toBe(1);
-      expect(result.responseContentTypeCount).toBe(0);
+      expect(result.requestContentTypeCount).toBe("1");
+      expect(result.responseContentTypeCount).toBe("0");
       expect(result.requestMapType).toContain('"application/json": User;');
       expect(result.responseMapType).toBe("{}");
     });
@@ -529,8 +529,8 @@ describe("client-generator responses", () => {
 
       expect(result.defaultRequestContentType).toBeNull();
       expect(result.defaultResponseContentType).toBeNull();
-      expect(result.requestContentTypeCount).toBe(0);
-      expect(result.responseContentTypeCount).toBe(0);
+      expect(result.requestContentTypeCount).toBe("0");
+      expect(result.responseContentTypeCount).toBe("0");
       expect(result.requestMapType).toBe("{}");
       expect(result.responseMapType).toBe("{}");
     });

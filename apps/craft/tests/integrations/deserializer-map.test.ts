@@ -50,7 +50,7 @@ describe("DeserializerMap Integration Test", () => {
     expect(deserializerMapMatch).toBeTruthy();
 
     if (deserializerMapMatch) {
-      const typeDefinition = deserializerMapMatch[1];
+      const typeDefinition = deserializerMapMatch["1"];
 
       /* Should extract content types from the nested response map */
       expect(typeDefinition).toContain(

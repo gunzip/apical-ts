@@ -34,21 +34,21 @@ describe("unknown response mode", () => {
       );
 
       /* Verify response handler includes parse method */
-      expect(result.responseHandlers[0]).toContain("parse: () =>");
-      expect(result.responseHandlers[0]).toContain(
+      expect(result.responseHandlers["0"]).toContain("parse: () =>");
+      expect(result.responseHandlers["0"]).toContain(
         "parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap",
       );
-      expect(result.responseHandlers[0]).toContain(
+      expect(result.responseHandlers["0"]).toContain(
         "config.deserializers ?? {}",
       );
 
       /* Verify unknown parsing is used */
-      expect(result.responseHandlers[0]).not.toContain(
+      expect(result.responseHandlers["0"]).not.toContain(
         "const data = undefined",
       );
 
       /* Verify no Zod validation */
-      expect(result.responseHandlers[0]).not.toContain("safeParse");
+      expect(result.responseHandlers["0"]).not.toContain("safeParse");
 
       /* Verify return type uses precise types for responses with content and void for others */
       expect(result.returnType).toBe(
@@ -70,8 +70,8 @@ describe("unknown response mode", () => {
       const result = generateResponseHandlers(operation, typeImports, false);
 
       /* Verify no parse method is added */
-      expect(result.responseHandlers[0]).not.toContain("parse: () =>");
-      expect(result.responseHandlers[0]).not.toContain(
+      expect(result.responseHandlers["0"]).not.toContain("parse: () =>");
+      expect(result.responseHandlers["0"]).not.toContain(
         "parseApiResponseUnknownData",
       );
     });
@@ -107,11 +107,11 @@ describe("unknown response mode", () => {
       );
 
       /* Verify parse method is included */
-      expect(result.responseHandlers[0]).toContain("parse: () =>");
-      expect(result.responseHandlers[0]).toContain(
+      expect(result.responseHandlers["0"]).toContain("parse: () =>");
+      expect(result.responseHandlers["0"]).toContain(
         "parseApiResponseUnknownData(minimalResponse, data, GetPetResponseMap",
       );
-      expect(result.responseHandlers[0]).toContain(
+      expect(result.responseHandlers["0"]).toContain(
         "config.deserializers ?? {}",
       );
     });

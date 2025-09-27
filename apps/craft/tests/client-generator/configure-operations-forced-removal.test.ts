@@ -15,7 +15,7 @@ describe("configureOperations forced variant removal", () => {
       { ...globalConfig, forceValidation: false },
     );
     const resp = await api.testMultipleSuccess({});
-    if (resp.success === true && resp.status === 200) {
+    if (resp.success === true && resp.status === "200") {
       // Type-level assertion: resp should not be assignable to forced parse variant
       type RespType = typeof resp;
       type HasForced = Extract<RespType, ApiResponseWithForcedParse<any, any>>;

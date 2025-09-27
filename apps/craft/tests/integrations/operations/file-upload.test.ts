@@ -44,7 +44,7 @@ describe("File Upload Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -69,7 +69,7 @@ describe("File Upload Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
     });
 
@@ -89,7 +89,7 @@ describe("File Upload Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
   });
 
@@ -145,7 +145,7 @@ describe("File Upload Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
 
     it("should handle large file upload", async () => {
@@ -166,7 +166,7 @@ describe("File Upload Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
     });
   });
 
@@ -179,7 +179,7 @@ describe("File Upload Operations", () => {
       const response = await client.testBinaryFileDownload({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
       expect(response.response.headers).toBeDefined();
       expect(response.response.headers.get("content-type")).toContain(
         "application/octet-stream",
@@ -203,7 +203,7 @@ describe("File Upload Operations", () => {
       const response = await client.testBinaryFileDownload({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
 
       // Verify we can read the data
       if (response.data instanceof Blob) {
@@ -220,7 +220,7 @@ describe("File Upload Operations", () => {
       const response = await client.testBinaryFileDownload({});
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.status).toBe("200");
 
       // Check that content is binary (not text)
       if (response.data instanceof Blob) {

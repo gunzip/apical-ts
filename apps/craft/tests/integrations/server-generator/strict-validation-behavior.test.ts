@@ -54,12 +54,12 @@ describe("Strict validation behavior", () => {
 
     // Assert that validation error was received and handled
     expect(validationErrorReceived).toBe(true);
-    expect(response.status).toBe(400);
+    expect(response.status).toBe("400");
     expect(actualError).toBeDefined();
     expect(actualError.issues).toBeDefined();
-    expect(actualError.issues[0].code).toBe("unrecognized_keys");
-    expect(actualError.issues[0].keys).toContain("extraProperty");
-    expect(actualError.issues[0].keys).toContain("anotherExtra");
+    expect(actualError.issues["0"].code).toBe("unrecognized_keys");
+    expect(actualError.issues["0"].keys).toContain("extraProperty");
+    expect(actualError.issues["0"].keys).toContain("anotherExtra");
   });
 
   it("should accept request body without extra properties", async () => {
@@ -98,7 +98,7 @@ describe("Strict validation behavior", () => {
       .set("Content-Type", "application/json");
 
     // Assert that request succeeded
-    expect(response.status).toBe(200);
+    expect(response.status).toBe("200");
     expect(response.body).toMatchObject({
       id: "model-123",
       name: "Test Model",

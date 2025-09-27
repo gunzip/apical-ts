@@ -41,7 +41,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
     });
 
     // Assert
-    expect(response.status).toBe(503);
+    expect(response.status).toBe("503");
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
       prop1: { id: "test-id" },
@@ -80,7 +80,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
     });
 
     // Assert
-    expect(response.status).toBe(504);
+    expect(response.status).toBe("504");
     expect(response.headers["content-type"]).toContain(
       "application/problem+json",
     );
@@ -149,7 +149,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
 
     // Assert
     expect(validationErrorReceived).toBe(true);
-    expect(response.status).toBe(400);
+    expect(response.status).toBe("400");
     expect(response.body.error).toBe("Query validation failed");
   });
 
@@ -201,7 +201,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
         cursor: "x",
       });
 
-    expect(jsonResponse.status).toBe(503);
+    expect(jsonResponse.status).toBe("503");
     expect(jsonResponse.headers["content-type"]).toContain("application/json");
     expect(jsonResponse.body.prop1.id).toBe("json-test");
 
@@ -214,7 +214,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
         cursor: "x",
       });
 
-    expect(problemResponse.status).toBe(504);
+    expect(problemResponse.status).toBe("504");
     expect(problemResponse.headers["content-type"]).toContain(
       "application/problem+json",
     );

@@ -133,7 +133,7 @@ export type ApiResponse<S extends string, T> =
  */
 type ApiResponseErrorResult = {
   readonly data: unknown;
-  readonly status: number;
+  readonly status: string;
   readonly response: Response;
 };
 

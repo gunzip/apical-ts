@@ -91,9 +91,9 @@ describe("OpenAPI Converter", () => {
       const result = convertOpenAPI30to31(openapi30 as any);
       const schema = result.components?.schemas?.NumberTest as any;
 
-      expect(schema.exclusiveMinimum).toBe(0);
+      expect(schema.exclusiveMinimum).toBe("0");
       expect(schema.minimum).toBeUndefined();
-      expect(schema.exclusiveMaximum).toBe(100);
+      expect(schema.exclusiveMaximum).toBe("100");
       expect(schema.maximum).toBeUndefined();
     });
 
@@ -147,7 +147,7 @@ describe("OpenAPI Converter", () => {
 
       expect(result.openapi).toBe("3.0.0");
       expect(result.servers).toBeDefined();
-      expect(result.servers?.[0]?.url).toBe("https://api.example.com/v1");
+      expect(result.servers?.["0"]?.url).toBe("https://api.example.com/v1");
       expect(
         (result.paths as any)["/users"].get.responses["200"].content,
       ).toBeDefined();

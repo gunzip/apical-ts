@@ -115,8 +115,8 @@ describe("client-generator security analysis", () => {
       );
       expect(result.authHeaders).toEqual(["X-API-Key", "Authorization"]);
       expect(result.analyzedSchemes).toHaveLength(2);
-      expect(result.analyzedSchemes[0].schemeName).toBe("apiKey");
-      expect(result.analyzedSchemes[1].schemeName).toBe("bearerAuth");
+      expect(result.analyzedSchemes["0"].schemeName).toBe("apiKey");
+      expect(result.analyzedSchemes["1"].schemeName).toBe("bearerAuth");
     });
 
     it("should handle document with no security", () => {
@@ -228,7 +228,7 @@ describe("client-generator security analysis", () => {
       expect(result.hasOverride).toBe(true);
       expect(result.operationHeaders).toEqual([]);
       expect(result.analyzedSchemes).toHaveLength(1);
-      expect(result.analyzedSchemes[0].isHeaderBased).toBe(false);
+      expect(result.analyzedSchemes["0"].isHeaderBased).toBe(false);
     });
   });
 

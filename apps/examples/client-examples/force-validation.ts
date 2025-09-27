@@ -15,7 +15,7 @@ async function demonstrateClient() {
   });
   if (
     greedyPetsResponse.isValid === true &&
-    greedyPetsResponse.status === 200
+    greedyPetsResponse.status === "200"
   ) {
     // automatic validation: .parsed available
     if (greedyPetsResponse.parsed.data.length > 0) {
@@ -32,7 +32,7 @@ async function demonstrateClient() {
   const petsResponse1 = await greedyClient.findPetsByStatus({
     query: { status: "available" },
   });
-  if (petsResponse1.isValid === true && petsResponse1.status === 200) {
+  if (petsResponse1.isValid === true && petsResponse1.status === "200") {
     // bound automatic validation: .parsed available
     petsResponse1.parsed;
   }
@@ -45,7 +45,7 @@ async function demonstrateClient() {
     },
     { ...globalConfig, forceValidation: false },
   );
-  if (lazyPetResponse.isValid === true && lazyPetResponse.status === 200) {
+  if (lazyPetResponse.isValid === true && lazyPetResponse.status === "200") {
     lazyPetResponse.parse();
   }
 
@@ -58,7 +58,7 @@ async function demonstrateClient() {
   const petsResponse2 = await lazyClient.findPetsByStatus({
     query: { status: "available" },
   });
-  if (petsResponse2.isValid === true && petsResponse2.status === 200) {
+  if (petsResponse2.isValid === true && petsResponse2.status === "200") {
     petsResponse2.parse();
   }
 }

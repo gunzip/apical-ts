@@ -37,10 +37,10 @@ describe("Request Bodies Unit Tests", () => {
       expect(CreateUserWithRequestBodiesResponseMap).toHaveProperty("400");
 
       // Verify response content types
-      expect(CreateUserWithRequestBodiesResponseMap[201]).toHaveProperty(
+      expect(CreateUserWithRequestBodiesResponseMap["201"]).toHaveProperty(
         "application/json",
       );
-      expect(CreateUserWithRequestBodiesResponseMap[400]).toHaveProperty(
+      expect(CreateUserWithRequestBodiesResponseMap["400"]).toHaveProperty(
         "application/json",
       );
     });

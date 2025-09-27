@@ -152,7 +152,7 @@ ${defaultResponseHandler}`
       isValid: false,
       result: {
         data,
-        status: response.status,
+        status: response.status.toString(),
         response,
       },
       error: \`Unexpected response status: \${response.status}\`,

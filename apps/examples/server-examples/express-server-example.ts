@@ -65,7 +65,7 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
     /* Handle validation errors */
     console.error("Validation error in getPetById:", params);
     return {
-      status: 400,
+      status: "400",
     };
   }
 
@@ -77,12 +77,12 @@ const getPetByIdHandler: getPetByIdHandler = async (params) => {
 
   if (!pet) {
     return {
-      status: 404,
+      status: "404",
     };
   }
 
   return {
-    status: 200,
+    status: "200",
     contentType: "application/json",
     data: pet,
   };
@@ -98,14 +98,14 @@ const getInventoryHandler: getInventoryHandler = async (params) => {
     /* Handle validation errors */
     console.error("Validation error in getInventory:", params);
     return {
-      status: 400,
+      status: "400",
     };
   }
 
   console.log("Getting inventory");
 
   return {
-    status: 200,
+    status: "200",
     contentType: "application/json",
     data: mockInventory,
   };
@@ -119,7 +119,7 @@ const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
     /* Handle validation errors */
     console.error("Validation error in findPetsByStatus:", params);
     return {
-      status: 400,
+      status: "400",
     };
   }
 
@@ -130,7 +130,7 @@ const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
   const filteredPets = mockPets.filter((pet) => pet.status === status);
 
   return {
-    status: 200,
+    status: "200",
     contentType: "application/json",
     data: filteredPets,
   };
@@ -143,11 +143,14 @@ app.get("/pet/findByStatus", async (req, res) => {
     extractRequestParams(req),
   );
   switch (result.status) {
-    case 200:
-      res.status(result.status).type(result.contentType).send(result.data);
+    case "200":
+      res
+        .status(parseInt(result.status, 10))
+        .type(result.contentType)
+        .send(result.data);
       break;
-    case 400:
-      res.status(result.status);
+    case "400":
+      res.status(parseInt(result.status, 10));
       break;
   }
 });

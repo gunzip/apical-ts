@@ -4,7 +4,8 @@ import { globalConfig } from "../generated/client/config.js";
 
 type ApiError<T> = Exclude<
   T,
-  { isValid: true; status: 200 | 201 | 202 | 204 } | { status: "default" }
+  | { isValid: true; status: "200" | "201" | "202" | "204" }
+  | { status: "default" }
 >;
 
 const getAvailablePets = async () =>
@@ -41,7 +42,7 @@ const getAvailablePets = async () =>
 async function safeCall<
   TParams,
   TResponse extends { isValid: boolean } & Partial<{
-    status: number | "default";
+    status: string | "default";
     parsed: any;
     error: any;
   }>,
@@ -55,7 +56,7 @@ async function safeCall<
   Result<
     TResponse extends {
       isValid: true;
-      status: 200 | 201 | 202 | 204;
+      status: "200" | "201" | "202" | "204";
       parsed: infer P;
     }
       ? P
@@ -72,9 +73,8 @@ async function safeCall<
     response.isValid === true &&
     "status" in response &&
     response.status !== "default" &&
-    typeof response.status === "number" &&
-    response.status >= 200 &&
-    response.status < 300 &&
+    typeof response.status === "string" &&
+    response.status.startsWith("2") &&
     "parsed" in response
   ) {
     return ok((response as any).parsed);
