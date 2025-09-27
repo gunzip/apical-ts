@@ -39,7 +39,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
       // The function should accept a body parameter of type Profile
       const validBody: Parameters<
         typeof client.createUserWithRequestBodies
-      >["0"]["body"] = {
+      >[0]["body"] = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
         has_profile: true,

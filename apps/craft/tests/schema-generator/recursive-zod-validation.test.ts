@@ -87,7 +87,7 @@ describe("Recursive Schema Validation", () => {
       };
       const result = CategoryStrict.safeParse(categoryWithExtra);
       expect(result.success).toBe(false);
-      expect(result.error?.issues["0"].code).toBe("unrecognized_keys");
+      expect(result.error?.issues[0].code).toBe("unrecognized_keys");
     });
 
     it("should validate deeply nested strict recursive categories", () => {
@@ -128,7 +128,7 @@ describe("Recursive Schema Validation", () => {
 
       // This should compile without TypeScript errors
       expect(category.name).toBe("Electronics");
-      expect(category.subcategories?.["0"]?.name).toBe("Laptops");
+      expect(category.subcategories?.[0]?.name).toBe("Laptops");
     });
 
     it("should infer correct TypeScript types for strict recursive category", () => {
@@ -144,7 +144,7 @@ describe("Recursive Schema Validation", () => {
 
       // This should compile without TypeScript errors
       expect(strictCategory.name).toBe("Electronics");
-      expect(strictCategory.subcategories?.["0"]?.name).toBe("Laptops");
+      expect(strictCategory.subcategories?.[0]?.name).toBe("Laptops");
     });
   });
 });

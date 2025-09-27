@@ -72,7 +72,7 @@ describe("testAuthBearer operation integration tests", () => {
         // Verify the validation error structure
         expect(params.error.issues).toBeDefined();
         expect(params.error.issues.length).toBeGreaterThan(0);
-        expect(params.error.issues["0"].path).toEqual(["qr"]);
+        expect(params.error.issues[0].path).toEqual(["qr"]);
 
         // Return a valid response (wrapper type constraint)
         return {

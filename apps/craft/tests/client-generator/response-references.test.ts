@@ -26,12 +26,10 @@ describe("client-generator response references", () => {
       const result = extractResponseContentTypes(operation);
 
       expect(result).toHaveLength(1);
-      expect(result["0"].statusCode).toBe("200");
-      expect(result["0"].contentTypes).toHaveLength(1);
-      expect(result["0"].contentTypes["0"].contentType).toBe(
-        "application/json",
-      );
-      expect(result["0"].contentTypes["0"].schema).toEqual({
+      expect(result[0].statusCode).toBe("200");
+      expect(result[0].contentTypes).toHaveLength(1);
+      expect(result[0].contentTypes[0].contentType).toBe("application/json");
+      expect(result[0].contentTypes[0].schema).toEqual({
         $ref: "#/components/schemas/Document",
       });
     });
@@ -85,12 +83,10 @@ describe("client-generator response references", () => {
 
       // With document, should resolve the reference and extract content
       expect(result).toHaveLength(1);
-      expect(result["0"].statusCode).toBe("200");
-      expect(result["0"].contentTypes).toHaveLength(1);
-      expect(result["0"].contentTypes["0"].contentType).toBe(
-        "application/json",
-      );
-      expect(result["0"].contentTypes["0"].schema).toEqual({
+      expect(result[0].statusCode).toBe("200");
+      expect(result[0].contentTypes).toHaveLength(1);
+      expect(result[0].contentTypes[0].contentType).toBe("application/json");
+      expect(result[0].contentTypes[0].schema).toEqual({
         $ref: "#/components/schemas/Document",
       });
     });
@@ -144,19 +140,19 @@ describe("client-generator response references", () => {
         a.statusCode.localeCompare(b.statusCode),
       );
 
-      expect(sortedResult["0"].statusCode).toBe("200");
-      expect(sortedResult["0"].contentTypes["0"].contentType).toBe(
+      expect(sortedResult[0].statusCode).toBe("200");
+      expect(sortedResult[0].contentTypes[0].contentType).toBe(
         "application/json",
       );
-      expect(sortedResult["0"].contentTypes["0"].schema).toEqual({
+      expect(sortedResult[0].contentTypes[0].schema).toEqual({
         $ref: "#/components/schemas/Document",
       });
 
-      expect(sortedResult["1"].statusCode).toBe("400");
-      expect(sortedResult["1"].contentTypes["0"].contentType).toBe(
+      expect(sortedResult[1].statusCode).toBe("400");
+      expect(sortedResult[1].contentTypes[0].contentType).toBe(
         "application/json",
       );
-      expect(sortedResult["1"].contentTypes["0"].schema).toEqual({
+      expect(sortedResult[1].contentTypes[0].schema).toEqual({
         $ref: "#/components/schemas/Error",
       });
     });

@@ -57,9 +57,9 @@ describe("Strict validation behavior", () => {
     expect(response.status).toBe(400);
     expect(actualError).toBeDefined();
     expect(actualError.issues).toBeDefined();
-    expect(actualError.issues["0"].code).toBe("unrecognized_keys");
-    expect(actualError.issues["0"].keys).toContain("extraProperty");
-    expect(actualError.issues["0"].keys).toContain("anotherExtra");
+    expect(actualError.issues[0].code).toBe("unrecognized_keys");
+    expect(actualError.issues[0].keys).toContain("extraProperty");
+    expect(actualError.issues[0].keys).toContain("anotherExtra");
   });
 
   it("should accept request body without extra properties", async () => {

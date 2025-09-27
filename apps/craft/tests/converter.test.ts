@@ -147,7 +147,7 @@ describe("OpenAPI Converter", () => {
 
       expect(result.openapi).toBe("3.0.0");
       expect(result.servers).toBeDefined();
-      expect(result.servers?.["0"]?.url).toBe("https://api.example.com/v1");
+      expect(result.servers?.[0]?.url).toBe("https://api.example.com/v1");
       expect(
         (result.paths as any)["/users"].get.responses["200"].content,
       ).toBeDefined();

@@ -283,10 +283,10 @@ describe("response-analysis", () => {
       });
 
       expect(result.responses).toHaveLength(2);
-      expect(result.responses["0"].statusCode).toBe("200");
-      expect(result.responses["0"].typeName).toBe("User");
-      expect(result.responses["1"].statusCode).toBe("404");
-      expect(result.responses["1"].typeName).toBe("Error");
+      expect(result.responses[0].statusCode).toBe("200");
+      expect(result.responses[0].typeName).toBe("User");
+      expect(result.responses[1].statusCode).toBe("404");
+      expect(result.responses[1].typeName).toBe("Error");
 
       expect(result.unionTypes).toEqual([
         '(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof GetUserResponseMap> : ApiResponseWithParse<"200", typeof GetUserResponseMap>)',
@@ -331,9 +331,9 @@ describe("response-analysis", () => {
         typeImports,
       });
 
-      expect(result.responses["0"].statusCode).toBe("200");
-      expect(result.responses["1"].statusCode).toBe("404");
-      expect(result.responses["2"].statusCode).toBe("500");
+      expect(result.responses[0].statusCode).toBe("200");
+      expect(result.responses[1].statusCode).toBe("404");
+      expect(result.responses[2].statusCode).toBe("500");
     });
   });
 });

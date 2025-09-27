@@ -139,8 +139,8 @@ describe("Deserialization Operation", () => {
         deserializers: {
           "application/xml": (xml: unknown) => {
             const xmlStr = String(xml);
-            const name = /<name>([^<]+)<\/name>/u.exec(xmlStr)?.["1"] || "";
-            const ageStr = /<age>([^<]+)<\/age>/u.exec(xmlStr)?.["1"] || "0";
+            const name = /<name>([^<]+)<\/name>/u.exec(xmlStr)?.[1] || "";
+            const ageStr = /<age>([^<]+)<\/age>/u.exec(xmlStr)?.[1] || "0";
             return { name, age: Number(ageStr) };
           },
         },

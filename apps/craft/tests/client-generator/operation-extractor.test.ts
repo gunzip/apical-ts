@@ -123,7 +123,7 @@ describe("client-generator operation-extractor", () => {
       const result = extractAllOperations(doc);
 
       expect(result).toHaveLength(1);
-      expect(result["0"]).toEqual({
+      expect(result[0]).toEqual({
         method: "get",
         operation: expect.objectContaining({
           operationId: "getUsers",
@@ -155,10 +155,10 @@ describe("client-generator operation-extractor", () => {
       const result = extractAllOperations(doc);
 
       expect(result).toHaveLength(2);
-      expect(result["0"].method).toBe("get");
-      expect(result["0"].operationId).toBe("getUsers");
-      expect(result["1"].method).toBe("post");
-      expect(result["1"].operationId).toBe("createUser");
+      expect(result[0].method).toBe("get");
+      expect(result[0].operationId).toBe("getUsers");
+      expect(result[1].method).toBe("post");
+      expect(result[1].operationId).toBe("createUser");
     });
 
     it("should extract operations from multiple paths", () => {
@@ -184,8 +184,8 @@ describe("client-generator operation-extractor", () => {
       const result = extractAllOperations(doc);
 
       expect(result).toHaveLength(2);
-      expect(result["0"].pathKey).toBe("/posts");
-      expect(result["1"].pathKey).toBe("/users");
+      expect(result[0].pathKey).toBe("/posts");
+      expect(result[1].pathKey).toBe("/users");
     });
 
     it("should handle all HTTP methods", () => {
@@ -235,7 +235,7 @@ describe("client-generator operation-extractor", () => {
       const result = extractAllOperations(doc);
 
       expect(result).toHaveLength(1);
-      expect(result["0"].pathLevelParameters).toEqual([pathLevelParam]);
+      expect(result[0].pathLevelParameters).toEqual([pathLevelParam]);
     });
 
     it("should handle paths without operations", () => {
@@ -292,7 +292,7 @@ describe("client-generator operation-extractor", () => {
       const result = extractAllOperations(doc);
 
       expect(result).toHaveLength(1);
-      expect(result["0"].pathLevelParameters).toEqual([]);
+      expect(result[0].pathLevelParameters).toEqual([]);
     });
 
     it("should handle mixed operations - some with missing operationId", () => {
@@ -322,9 +322,9 @@ describe("client-generator operation-extractor", () => {
       const result = extractAllOperations(doc);
 
       expect(result).toHaveLength(2); // Both operations are included
-      expect(result["0"].operationId).toBe("getUsers");
-      expect(result["1"].operationId).toBeDefined(); // Should have generated operationId
-      expect(result["1"].operationId).toBe("postUsers"); // Expected generated ID
+      expect(result[0].operationId).toBe("getUsers");
+      expect(result[1].operationId).toBeDefined(); // Should have generated operationId
+      expect(result[1].operationId).toBe("postUsers"); // Expected generated ID
     });
 
     it("should preserve operation order based on HTTP method order", () => {
@@ -378,14 +378,14 @@ describe("client-generator operation-extractor", () => {
 
       expect(result.isRequired).toBe(true);
       expect(result.contentTypes).toHaveLength(3);
-      expect(result.contentTypes["0"].contentType).toBe("application/json");
-      expect(result.contentTypes["0"].schema).toEqual({
+      expect(result.contentTypes[0].contentType).toBe("application/json");
+      expect(result.contentTypes[0].schema).toEqual({
         $ref: "#/components/schemas/User",
       });
-      expect(result.contentTypes["1"].contentType).toBe(
+      expect(result.contentTypes[1].contentType).toBe(
         "application/x-www-form-urlencoded",
       );
-      expect(result.contentTypes["2"].contentType).toBe("multipart/form-data");
+      expect(result.contentTypes[2].contentType).toBe("multipart/form-data");
     });
 
     it("should handle optional request body", () => {
@@ -452,20 +452,16 @@ describe("client-generator operation-extractor", () => {
       expect(result).toHaveLength(2);
 
       // Check 200 response
-      expect(result["0"].statusCode).toBe("200");
-      expect(result["0"].contentTypes).toHaveLength(2);
-      expect(result["0"].contentTypes["0"].contentType).toBe(
-        "application/json",
-      );
-      expect(result["0"].contentTypes["1"].contentType).toBe("application/xml");
+      expect(result[0].statusCode).toBe("200");
+      expect(result[0].contentTypes).toHaveLength(2);
+      expect(result[0].contentTypes[0].contentType).toBe("application/json");
+      expect(result[0].contentTypes[1].contentType).toBe("application/xml");
 
       // Check 404 response
-      expect(result["1"].statusCode).toBe("404");
-      expect(result["1"].contentTypes).toHaveLength(2);
-      expect(result["1"].contentTypes["0"].contentType).toBe(
-        "application/json",
-      );
-      expect(result["1"].contentTypes["1"].contentType).toBe("text/plain");
+      expect(result[1].statusCode).toBe("404");
+      expect(result[1].contentTypes).toHaveLength(2);
+      expect(result[1].contentTypes[0].contentType).toBe("application/json");
+      expect(result[1].contentTypes[1].contentType).toBe("text/plain");
     });
 
     it("should ignore default responses", () => {
@@ -494,7 +490,7 @@ describe("client-generator operation-extractor", () => {
       const result = extractResponseContentTypes(operation);
 
       expect(result).toHaveLength(1);
-      expect(result["0"].statusCode).toBe("200");
+      expect(result[0].statusCode).toBe("200");
     });
 
     it("should handle responses without content", () => {
@@ -518,7 +514,7 @@ describe("client-generator operation-extractor", () => {
       const result = extractResponseContentTypes(operation);
 
       expect(result).toHaveLength(1);
-      expect(result["0"].statusCode).toBe("200");
+      expect(result[0].statusCode).toBe("200");
     });
   });
 });
