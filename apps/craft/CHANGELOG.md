@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.4.0
+
+### Minor Changes
+
+- 777b004: Improve path parameters and headers serialization in client generator
+
 ## 0.3.1
 
 ### Patch Changes
