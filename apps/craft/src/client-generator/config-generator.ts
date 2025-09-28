@@ -65,14 +65,6 @@ export function determineConfigStructure(
   };
 }
 
-/* Generates the configuration file content */
-export function generateConfigFileContent(
-  authHeaders: string[],
-  serverUrls: string[] = [],
-): string {
-  return generateConfigTypes(authHeaders, serverUrls);
-}
-
 /* Generate configuration types */
 export function generateConfigTypes(
   authHeaders: string[],
