@@ -396,10 +396,10 @@ describe("parameter template functions", () => {
 
       const result = renderParameterHandling("header", params);
       expect(result).toContain(
-        'if (params.headers?.["X-API-Key"] !== undefined) finalHeaders[\'X-API-Key\'] = String(params.headers["X-API-Key"]);',
+        'serializeHeaderParam("X-API-Key", params.headers["X-API-Key"], { style: "simple", explode: true })',
       );
       expect(result).toContain(
-        'if (params.headers?.["Content-Type"] !== undefined) finalHeaders[\'Content-Type\'] = String(params.headers["Content-Type"]);',
+        'serializeHeaderParam("Content-Type", params.headers["Content-Type"], { style: "simple", explode: true })',
       );
     });
 

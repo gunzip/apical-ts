@@ -40,10 +40,16 @@ export function renderParameterHandling(
 
   if (paramType === "header") {
     return params
-      .map(
-        (p) =>
-          `if (params.headers?.["${p.name}"] !== undefined) finalHeaders['${p.name}'] = String(params.headers["${p.name}"]);`,
-      )
+      .map((p) => {
+        /* Extract OpenAPI serialization options */
+        const style = p.style || "simple";
+        const explode = p.explode !== false; // Default to true for headers per OpenAPI spec
+
+        return `if (params.headers?.["${p.name}"] !== undefined) {
+      const serialized = serializeHeaderParam("${p.name}", params.headers["${p.name}"], { style: "${style}", explode: ${explode} });
+      if (serialized) finalHeaders['${p.name}'] = serialized;
+    }`;
+      })
       .join("\n    ");
   } else {
     return params
@@ -135,6 +141,29 @@ function renderHeaderParametersSection(
     return null;
   }
 
+  const optionalMarker = analysis.optionalityRules.isHeadersOptional ? "?" : "";
+
+  if (analysis.operationId && structure.processed.headerParams.length > 0) {
+    /* Use the inferred Zod type which handles proper parameter validation */
+    const sanitizedOperationId = sanitizeIdentifier(analysis.operationId);
+    const headersTypeName = `${sanitizedOperationId}Headers`;
+
+    /* If we have security headers, we need to combine both regular and security headers */
+    if (structure.processed.securityHeaders.length > 0) {
+      const securityHeaderProperties: string[] = [];
+      analysis.securityHeaderProperties.forEach((prop) => {
+        const requiredMarker = prop.isRequired ? "" : "?";
+        securityHeaderProperties.push(
+          `"${prop.headerName}"${requiredMarker}: string`,
+        );
+      });
+      return `headers${optionalMarker}: ${headersTypeName} & {\n      ${securityHeaderProperties.join(";\n      ")};\n    }`;
+    }
+
+    return `headers${optionalMarker}: ${headersTypeName}`;
+  }
+
+  /* Fallback to manual expansion if operationId is not available or no regular headers */
   const headerProperties: string[] = [];
 
   // Regular header parameters
@@ -149,7 +178,6 @@ function renderHeaderParametersSection(
     headerProperties.push(`"${prop.headerName}"${requiredMarker}: string`);
   });
 
-  const optionalMarker = analysis.optionalityRules.isHeadersOptional ? "?" : "";
   return `headers${optionalMarker}: {\n      ${headerProperties.join(";\n      ")};\n    }`;
 }
 
@@ -161,6 +189,14 @@ function renderPathParametersSection(
 ): null | string {
   if (analysis.structure.processed.pathParams.length === 0) return null;
 
+  if (analysis.operationId) {
+    /* Use the inferred Zod type which handles proper parameter validation */
+    const sanitizedOperationId = sanitizeIdentifier(analysis.operationId);
+    const pathTypeName = `${sanitizedOperationId}Path`;
+    return `path: ${pathTypeName}`;
+  }
+
+  /* Fallback to manual expansion if operationId is not available */
   const pathProperties: string[] = [];
   analysis.pathProperties.forEach((prop) => {
     const requiredMarker = prop.isRequired ? "" : "?";

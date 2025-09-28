@@ -61,7 +61,9 @@ describe("client-generator utils", () => {
       ];
 
       const result = generatePathInterpolation("/users/{userId}", pathParams);
-      expect(result).toBe('/users/${params.path["userId"]}');
+      expect(result).toBe(
+        '/users/${serializePathParam("userId", params.path["userId"], { style: "simple", explode: true })}',
+      );
     });
 
     it("should interpolate multiple path parameters", () => {
@@ -75,7 +77,7 @@ describe("client-generator utils", () => {
         pathParams,
       );
       expect(result).toBe(
-        '/users/${params.path["userId"]}/posts/${params.path["postId"]}',
+        '/users/${serializePathParam("userId", params.path["userId"], { style: "simple", explode: true })}/posts/${serializePathParam("postId", params.path["postId"], { style: "simple", explode: true })}',
       );
     });
 
@@ -90,7 +92,7 @@ describe("client-generator utils", () => {
         pathParams,
       );
       expect(result).toBe(
-        '/users/${params.path["user-id"]}/posts/${params.path["post-id"]}',
+        '/users/${serializePathParam("user-id", params.path["user-id"], { style: "simple", explode: true })}/posts/${serializePathParam("post-id", params.path["post-id"], { style: "simple", explode: true })}',
       );
     });
 
@@ -124,7 +126,7 @@ describe("client-generator utils", () => {
         pathParams,
       );
       expect(result).toBe(
-        '/users/${params.path["user_id"]}/data/${params.path["complex-param-name"]}',
+        '/users/${serializePathParam("user_id", params.path["user_id"], { style: "simple", explode: true })}/data/${serializePathParam("complex-param-name", params.path["complex-param-name"], { style: "simple", explode: true })}',
       ); // Now uses exact param names
     });
   });

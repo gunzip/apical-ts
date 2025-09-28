@@ -14,7 +14,7 @@ import { resolveResponseReference } from "../core-generator/openapi-utils.js";
 import { handleReservedKeyword } from "../shared/reserved-keywords.js";
 
 /**
- * Generates URL path with parameter interpolation using bracket notation
+ * Generates URL path with parameter interpolation using proper serialization
  */
 export function generatePathInterpolation(
   pathKey: string,
@@ -22,10 +22,12 @@ export function generatePathInterpolation(
 ): string {
   let finalPath = pathKey;
   for (const param of pathParams) {
-    finalPath = finalPath.replace(
-      `{${param.name}}`,
-      `\${params.path["${param.name}"]}`,
-    );
+    /* Extract OpenAPI serialization options */
+    const style = param.style || "simple";
+    const explode = param.explode !== false; // Default to true per OpenAPI spec
+
+    const serializedValue = `serializePathParam("${param.name}", params.path["${param.name}"], { style: "${style}", explode: ${explode} })`;
+    finalPath = finalPath.replace(`{${param.name}}`, `\${${serializedValue}}`);
   }
   return finalPath;
 }
