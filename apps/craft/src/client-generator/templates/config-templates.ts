@@ -571,7 +571,6 @@ export function serializeQueryParam(
       return entries;
     } else {
       const flatValues = entries.flatMap(([k, v]) => [k, v]);
-      let delimiter: string;
       switch (style) {
         case "spaceDelimited":
           return [[paramName, flatValues.join(" ")]];
