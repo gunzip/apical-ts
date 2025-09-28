@@ -27,16 +27,27 @@ and TypeScript development.
 You may ask: why another Typescript OpenAPI generator? The answer lies in full
 commitment to **strict type safety**. With @apical-ts/craft, you get:
 
-- no exceptions at runtime for client operations
-- no accidental access to properties that can be `undefined`
-- discriminated unions for polymorphic schemas
-- full support for multiple success responses (`201`, `202`) with payload
-- full support for multiple content types (json, xml, form data, etc.)
-- full support for wildcards responses (e.g., `2XX`, `4XX`)
-- full support for circular references in schemas
-- easy to debug operations with rich errors
-- precise Zod schemas for request and response validation with comprehensive
-  OpenAPI support
+- 🎯 **Operation-based architecture** – Each API operation is a standalone,
+  fully-typed function
+- 🛡️ **Runtime validation** – Zod v4 ensures robust type safety for requests and
+  responses
+- 🔄 **Multiple content types** – Supports JSON, XML, form data, and more
+- 📝 **OpenAPI compatibility** – Works with OpenAPI 2.0, 3.0.x, and 3.1.x specs
+- 🚀 **Minimal dependencies** – Generated code is lightweight and easy to
+  integrate
+- 🧪 **Self-contained schemas** – Zod schemas are generated for independent use
+- 🛑 **No runtime exceptions** – Client operations are safe and predictable
+- 🙅‍♂️ **No accidental undefined access** – Strict typings prevent undefined
+  property access
+- 🦄 **Discriminated unions** – Polymorphic schemas are handled with precise
+  union types
+- 🎉 **Multiple success responses** – Handles multiple success codes (e.g.,
+  `200`, `201`) with payloads
+- 🌐 **Wildcard response support** – Supports wildcard status codes (e.g.,
+  `2XX`, `4XX`)
+- 🔁 **Circular reference support** – Handles circular schema references
+  gracefully without overflows
+- 🐞 **Rich error reporting** – Debug operations easily with detailed errors
 
 ## Quick Start
 
@@ -111,21 +122,6 @@ build more robust and reliable implementations.
 Curious why you should choose this generator over others? See our
 [comparison with alternative libraries](./comparison-with-alternative-libraries.md)
 for more details or check our comprehensive feature list for more information.
-
-## Key Features
-
-- 🎯 **Operation-based architecture** - Each API operation becomes a standalone,
-  typed function
-- 🛡️ **Runtime validation** - Built on Zod v4 for robust type safety and
-  validation
-- 🔄 **Multiple content types** - Full support for JSON, XML, form data, and
-  more
-- 📝 **OpenAPI compatibility** - Supports OpenAPI 2.0, 3.0.x, and 3.1.x
-  specifications
-- 🚀 **Zero dependencies** - Generated code has minimal runtime dependencies
-- 🧪 **Self-contained schemas** - Generated Zod schemas can be used
-  independently
-- ✅ **Comprehensive testing** - Thoroughly tested with a full test suite
 
 ## Next Steps
 
