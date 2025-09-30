@@ -33,7 +33,7 @@ experience.
   automatically or call `response.parse()` as needed
 - � **Configurable validation modes**: Control how schemas handle additional
   properties with `--extra-props` flag (strip, loose, or strict validation)
-- �📦 **Small footprint**: Generates each operation and schema/type in its own
+- 📦 **Small footprint**: Generates each operation and schema/type in its own
   file for maximum tree-shaking and modularity
 - 🚀 **Fast code generation**: Optimized for quick generation times, even with
   large specs, sync types and changes in real-time
