@@ -14,6 +14,7 @@ import {
   generateResponseSchemaFile,
   generateSchemaFile,
 } from "../schema-generator/index.js";
+import { ResolvedSchemas } from "../schema-generator/schema-converter.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { isPlainSchemaObject } from "./openapi-utils.js";
 import {
@@ -38,6 +39,7 @@ interface SchemaGenerationContext {
   generateServer: boolean;
   limit: ReturnType<typeof pLimit>;
   openApiDoc: OpenAPIObject;
+  resolvedSchemas: ResolvedSchemas;
   schemasDir: string;
   strictValidation: boolean;
 }
@@ -71,6 +73,7 @@ export async function generateAllSchemas(
     generateServer,
     limit,
     openApiDoc,
+    resolvedSchemas: openApiDoc.components.schemas,
     schemasDir,
     strictValidation,
   };
@@ -148,12 +151,14 @@ function createComponentSchemaPromise(
           name: schemaName,
           originalSchemaName: originalSchemaName || schemaName,
           recursiveContext,
+          resolvedSchemas: context.resolvedSchemas,
           schema,
           strictValidation,
         })
       : generateSchemaFile(schemaName, schema, description, {
           originalSchemaName,
           recursiveContext,
+          resolvedSchemas: context.resolvedSchemas,
           strictValidation,
         });
 

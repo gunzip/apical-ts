@@ -121,10 +121,49 @@ describe("zodSchemaToCode", () => {
         },
       ],
     };
-    const result = zodSchemaToCode(schema);
+
+    // Mock resolved schemas registry
+    const resolvedSchemas = {
+      Profile: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          age: { type: "number" },
+        },
+      } as SchemaObject,
+    };
+
+    const result = zodSchemaToCode(schema, { resolvedSchemas });
     expect(result.code).toContain("Profile");
-    expect(result.code).toContain("intersection");
+    expect(result.code).toContain("z.object({...Profile.shape");
     expect(result.imports.has("Profile")).toBe(true);
+  });
+
+  it("should fallback to intersection for allOf with non-object $ref references", () => {
+    const schema: SchemaObject = {
+      allOf: [
+        { $ref: "#/components/schemas/UserId" }, // This references a string, not an object
+        {
+          properties: {
+            status: { type: "string" },
+          },
+          type: "object",
+        },
+      ],
+    };
+
+    // Mock resolved schemas registry with a non-object reference
+    const resolvedSchemas = {
+      UserId: {
+        type: "string",
+        pattern: "^[a-zA-Z0-9]+$",
+      } as SchemaObject,
+    };
+
+    const result = zodSchemaToCode(schema, { resolvedSchemas });
+    expect(result.code).toContain("UserId");
+    expect(result.code).toContain("z.intersection(");
+    expect(result.imports.has("UserId")).toBe(true);
   });
 
   it("should handle default values for boolean schemas", () => {

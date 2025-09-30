@@ -1,6 +1,9 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
+import { isReferenceObject, isSchemaObject } from "openapi3-ts/oas31";
+
 import type { RecursiveContext } from "./recursive-handlers.js";
+import type { ResolvedSchemas } from "./schema-converter.js";
 
 import { mergeImports } from "./utils.js";
 
@@ -22,6 +25,7 @@ interface ZodSchemaCodeOptions {
   imports?: Set<string>;
   isTopLevel?: boolean;
   recursiveContext?: RecursiveContext;
+  resolvedSchemas?: ResolvedSchemas;
   strictValidation?: boolean;
 }
 
@@ -45,19 +49,93 @@ export function handleAllOfSchema(
   options: {
     currentSchemaName?: string;
     recursiveContext?: RecursiveContext;
+    resolvedSchemas?: ResolvedSchemas;
     strictValidation?: boolean;
   } = {},
 ): ZodSchemaResult {
   const {
     currentSchemaName,
     recursiveContext,
+    resolvedSchemas,
     strictValidation = false,
   } = options;
+
+  // Check if all schemas are objects, including proper reference resolution
+  const canUseObjectSpread = schemas.every((schema) => {
+    if (isReferenceObject(schema)) {
+      // It's a reference - check if it resolves to an object type
+      if (resolvedSchemas) {
+        const refName = extractSchemaNameFromRef(schema.$ref);
+        if (refName) {
+          const resolvedSchema = resolvedSchemas[refName];
+          if (resolvedSchema && !("$ref" in resolvedSchema)) {
+            // Check if the resolved schema is an object type (not a reference)
+            return !resolvedSchema.type || resolvedSchema.type === "object";
+          }
+        }
+      }
+      // If we can't resolve the reference, assume it's not compatible for object spread
+      return false;
+    }
+    // Check if it's an object type in case of inline schema
+    return !schema.type || schema.type === "object";
+  });
+
+  if (canUseObjectSpread) {
+    // Try object spread approach using .shape
+    const shapeExpressions: string[] = [];
+    const allImports = new Set<string>();
+
+    // Collect all required fields from all schemas
+    const allRequiredFields = collectRequiredFields(schemas);
+
+    for (const schema of schemas) {
+      if (isReferenceObject(schema)) {
+        // Handle reference: extract Schema name and use .shape
+        const refName = extractSchemaNameFromRef(schema.$ref);
+        if (refName) {
+          allImports.add(refName);
+          shapeExpressions.push(`...${refName}.shape`);
+        }
+      } else if (
+        (!schema.type || schema.type === "object") &&
+        schema.properties
+      ) {
+        // Generate inline object for spread, applying required constraints
+        const modifiedSchema = applyRequiredConstraints(
+          schema,
+          allRequiredFields,
+        );
+        const subResult = zodSchemaToCode(modifiedSchema, {
+          currentSchemaName,
+          imports: new Set(),
+          recursiveContext,
+          resolvedSchemas,
+          strictValidation,
+        });
+        subResult.imports.forEach((imp) => allImports.add(imp));
+        shapeExpressions.push(`...${subResult.code}.shape`);
+      }
+      // Empty objects with only required (no properties)
+      // are handled by the required collection above
+    }
+
+    if (shapeExpressions.length > 0) {
+      const objectMethod = strictValidation ? "z.strictObject" : "z.object";
+      result.code = `${objectMethod}({${shapeExpressions.join(", ")}})`;
+      allImports.forEach((imp) => result.imports.add(imp));
+      return result;
+    }
+  }
+
+  // Fallback to intersection approach
+  // ie. in case of non-object types
   const subResults = schemas.map((s) =>
     zodSchemaToCode(s, {
       currentSchemaName,
       imports: result.imports,
       recursiveContext,
+      resolvedSchemas,
       strictValidation,
     }),
   );
@@ -75,7 +153,7 @@ export function handleAllOfSchema(
     return result;
   }
 
-  // If all are objects, merge; else intersection
+  // Generate nested intersections
   result.code = schemaCodes.reduce(
     (acc, curr) => `z.intersection(${acc}, ${curr})`,
   );
@@ -97,12 +175,14 @@ export function handleUnionSchema(
   options: {
     currentSchemaName?: string;
     recursiveContext?: RecursiveContext;
+    resolvedSchemas?: ResolvedSchemas;
     strictValidation?: boolean;
   } = {},
 ): ZodSchemaResult {
   const {
     currentSchemaName,
     recursiveContext,
+    resolvedSchemas,
     strictValidation = false,
   } = options;
   // Check if discriminator is present for discriminated unions
@@ -113,6 +193,7 @@ export function handleUnionSchema(
         currentSchemaName,
         imports: result.imports,
         recursiveContext,
+        resolvedSchemas,
         strictValidation,
       }),
     );
@@ -141,6 +222,7 @@ export function handleUnionSchema(
       currentSchemaName,
       imports: result.imports,
       recursiveContext,
+      resolvedSchemas,
       strictValidation,
     }),
   );
@@ -182,4 +264,60 @@ export function handleUnionSchema(
 })`;
   }
   return result;
+}
+
+/**
+ * Apply required constraints to a schema if the field exists in properties
+ */
+function applyRequiredConstraints(
+  schema: SchemaObject,
+  allRequiredFields: Set<string>,
+): SchemaObject {
+  if (!schema.properties || allRequiredFields.size === 0) {
+    return schema;
+  }
+
+  const schemaFields = Object.keys(schema.properties);
+  const requiredForThisSchema = schemaFields.filter((field) =>
+    allRequiredFields.has(field),
+  );
+
+  if (requiredForThisSchema.length === 0) {
+    return schema;
+  }
+
+  const requiredSet = new Set(schema.required || []);
+  return {
+    ...schema,
+    required: [
+      ...(schema.required || []),
+      ...requiredForThisSchema.filter((field) => !requiredSet.has(field)),
+    ],
+  };
+}
+
+/**
+ * Collect all required fields from allOf schemas
+ */
+function collectRequiredFields(
+  schemas: (ReferenceObject | SchemaObject)[],
+): Set<string> {
+  const allRequiredFields = new Set<string>();
+  for (const schema of schemas) {
+    if (isSchemaObject(schema) && schema.required) {
+      schema.required.forEach((field) => allRequiredFields.add(field));
+    }
+  }
+  return allRequiredFields;
+}
+
+/**
+ * Extract schema name from OpenAPI reference string
+ * @param ref - Reference string like "#/components/schemas/SchemaName"
+ * @returns Schema name or null if extraction fails
+ */
+function extractSchemaNameFromRef(ref: string | undefined): null | string {
+  if (!ref) return null;
+  const refMatch = ref.match(/\/([^/]+)$/);
+  return refMatch ? refMatch[1] : null;
 }
