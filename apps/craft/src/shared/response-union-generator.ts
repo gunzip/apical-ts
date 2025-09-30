@@ -4,10 +4,7 @@ import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import {
-  resolveSchemaTypeName,
-  resolveStrictSchemaTypeName,
-} from "./schema-type-resolver.js";
+import { resolveSchemaTypeName } from "./schema-type-resolver.js";
 
 /**
  * Response union member for type generation
@@ -21,11 +18,6 @@ export interface ResponseUnionMember {
 /**
  * Options for response union generation
  */
-export interface ResponseUnionOptions {
-  /* Whether to use strict schemas (for server generation) */
-  useStrictSchemas?: boolean;
-}
-
 /**
  * Result of response union generation
  */
@@ -44,7 +36,6 @@ export function generateResponseUnion(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
-  options: ResponseUnionOptions = {},
   doc?: OpenAPIObject,
 ): ResponseUnionResult {
   const unionMembers: ResponseUnionMember[] = [];
@@ -78,19 +69,12 @@ export function generateResponseUnion(
         );
         if (responseGroup) {
           for (const mapping of responseGroup.contentTypes) {
-            const dataType = options.useStrictSchemas
-              ? resolveStrictSchemaTypeName(
-                  mapping.schema,
-                  operationId,
-                  `${statusCode}Response`,
-                  typeImports,
-                )
-              : resolveSchemaTypeName(
-                  mapping.schema,
-                  operationId,
-                  `${statusCode}Response`,
-                  typeImports,
-                );
+            const dataType = resolveSchemaTypeName(
+              mapping.schema,
+              operationId,
+              `${statusCode}Response`,
+              typeImports,
+            );
             unionMembers.push({
               contentType: mapping.contentType,
               dataType,

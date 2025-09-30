@@ -27,7 +27,6 @@ export interface ZodSchemaCodeOptions {
   isTopLevel?: boolean;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
-  strictValidation?: boolean;
 }
 
 /**
@@ -73,13 +72,8 @@ export function zodSchemaToCode(
   schema: ReferenceObject | SchemaObject,
   options: ZodSchemaCodeOptions = {},
 ): ZodSchemaResult {
-  const {
-    currentSchemaName,
-    imports,
-    recursiveContext,
-    resolvedSchemas,
-    strictValidation = false,
-  } = options;
+  const { currentSchemaName, imports, recursiveContext, resolvedSchemas } =
+    options;
   const result = createResult(imports);
 
   /* References */
@@ -87,7 +81,6 @@ export function zodSchemaToCode(
     return handleReferenceWithContext(schema, result, {
       currentSchemaName,
       recursiveContext,
-      strictValidation,
     });
   }
 
@@ -99,7 +92,6 @@ export function zodSchemaToCode(
       schema,
       effectiveType,
       result,
-      strictValidation,
       recursiveContext,
       currentSchemaName,
       resolvedSchemas,
@@ -123,7 +115,6 @@ export function zodSchemaToCode(
     return handleNullableSchema(
       schema,
       result,
-      strictValidation,
       recursiveContext,
       currentSchemaName,
       resolvedSchemas,
@@ -134,7 +125,6 @@ export function zodSchemaToCode(
   const composition = tryHandleCompositions(
     schema,
     result,
-    strictValidation,
     recursiveContext,
     currentSchemaName,
     resolvedSchemas,
@@ -146,7 +136,6 @@ export function zodSchemaToCode(
     schema,
     effectiveType,
     result,
-    strictValidation,
     recursiveContext,
     currentSchemaName,
     resolvedSchemas,
@@ -168,7 +157,6 @@ function handleMultiTypeArray(
   schema: SchemaObject,
   effectiveType: string[],
   result: ZodSchemaResult,
-  strictValidation: boolean,
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
@@ -181,7 +169,6 @@ function handleMultiTypeArray(
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
-      strictValidation,
     });
     result.code = `(${subResult.code}).nullable()`;
     mergeImports(result.imports, subResult.imports);
@@ -193,7 +180,6 @@ function handleMultiTypeArray(
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
-      strictValidation,
     }),
   );
   const schemas = subResults.map((r) => r.code);
@@ -206,7 +192,6 @@ function handleMultiTypeArray(
 function handleNullableSchema(
   schema: SchemaObject,
   result: ZodSchemaResult,
-  strictValidation: boolean,
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
@@ -217,7 +202,6 @@ function handleNullableSchema(
     imports: result.imports,
     recursiveContext,
     resolvedSchemas,
-    strictValidation,
   });
   result.code = `(${subResult.code}).nullable()`;
   mergeImports(result.imports, subResult.imports);
@@ -229,7 +213,6 @@ function handlePrimitive(
   schema: SchemaObject,
   effectiveType: string | undefined,
   result: ZodSchemaResult,
-  strictValidation: boolean,
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
@@ -244,7 +227,6 @@ function handlePrimitive(
       currentSchemaName,
       recursiveContext,
       resolvedSchemas,
-      strictValidation,
     });
   }
   if (effectiveType === "object") {
@@ -252,7 +234,6 @@ function handlePrimitive(
       currentSchemaName,
       recursiveContext,
       resolvedSchemas,
-      strictValidation,
     });
   }
   return undefined;
@@ -262,7 +243,6 @@ function handlePrimitive(
 function tryHandleCompositions(
   schema: SchemaObject,
   result: ZodSchemaResult,
-  strictValidation: boolean,
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
@@ -272,7 +252,6 @@ function tryHandleCompositions(
       currentSchemaName,
       recursiveContext,
       resolvedSchemas,
-      strictValidation,
     });
   }
   if (schema.anyOf) {
@@ -286,7 +265,6 @@ function tryHandleCompositions(
         currentSchemaName,
         recursiveContext,
         resolvedSchemas,
-        strictValidation,
       },
     );
   }
@@ -301,7 +279,6 @@ function tryHandleCompositions(
         currentSchemaName,
         recursiveContext,
         resolvedSchemas,
-        strictValidation,
       },
     );
   }

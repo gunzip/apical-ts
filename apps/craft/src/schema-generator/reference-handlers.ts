@@ -12,7 +12,6 @@ export interface ReferenceHandlerOptions {
   currentSchemaName?: string;
   propertyName?: string;
   recursiveContext?: RecursiveContext;
-  strictValidation?: boolean;
 }
 
 // Import from schema-converter to avoid circular dependencies
@@ -28,8 +27,7 @@ interface ZodSchemaResult {
 export function handleReference(
   schema: ReferenceObject,
   result: ZodSchemaResult,
-  strictValidation = false,
-  options: Omit<ReferenceHandlerOptions, "strictValidation"> = {},
+  options: ReferenceHandlerOptions = {},
 ): ZodSchemaResult {
   if ("$ref" in schema && schema.$ref) {
     const ref = schema.$ref;
@@ -37,9 +35,6 @@ export function handleReference(
     if (ref.startsWith("#/components/schemas/")) {
       const originalSchemaName = ref.replace("#/components/schemas/", "");
       const schemaName: string = sanitizeIdentifier(originalSchemaName);
-      const finalSchemaName = strictValidation
-        ? `${schemaName}Strict`
-        : schemaName;
 
       /* Check for recursive references if context is available */
       if (options.recursiveContext) {
@@ -52,13 +47,13 @@ export function handleReference(
         if (analysis.isRecursive) {
           /* For recursive references, we don't add imports here as they'll be handled
              by the recursive schema generation */
-          result.code = finalSchemaName;
+          result.code = schemaName;
           return result;
         }
       }
 
-      result.imports.add(finalSchemaName);
-      result.code = finalSchemaName;
+      result.imports.add(schemaName);
+      result.code = schemaName;
       return result;
     }
   }
@@ -75,6 +70,5 @@ export function handleReferenceWithContext(
   result: ZodSchemaResult,
   options: ReferenceHandlerOptions = {},
 ): ZodSchemaResult {
-  const { strictValidation = false } = options;
-  return handleReference(schema, result, strictValidation, options);
+  return handleReference(schema, result, options);
 }

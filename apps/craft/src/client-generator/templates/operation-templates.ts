@@ -143,7 +143,7 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
       config.operationId,
       config.parameterGroups,
       {
-        strictValidation: false,
+        // Client parameters use default behavior without coercion or special validation rules.
       },
     );
     if (parameterSchemas.schemaCode.trim()) {

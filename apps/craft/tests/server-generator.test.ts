@@ -115,9 +115,9 @@ describe("server-generator operation wrapper", () => {
       doc as any,
     );
 
-    /* Verify that query and path schemas use z.strictObject, but headers use z.object */
-    expect(result.wrapperCode).toContain("z.strictObject(");
-    expect(result.wrapperCode).toContain("z.object("); // Headers still use z.object
+    /* Verify that query and path schemas use z.object since we eliminated strict validation */
+    expect(result.wrapperCode).toContain("z.object({");
+    expect(result.wrapperCode).not.toContain("z.strictObject(");
   });
 
   it("should use strict validation for request body when using schema.strict() method", () => {
@@ -165,9 +165,10 @@ describe("server-generator operation wrapper", () => {
       doc as any,
     );
 
-    /* Verify that request body validation uses strict schemas (no longer .strict() method) */
+    /* Verify that request body validation uses regular schemas (no more strict variants) */
     expect(result.wrapperCode).toContain("schema.safeParse(req.body)");
-    expect(result.wrapperCode).toContain(
+    expect(result.wrapperCode).toContain("TestStrictBodyValidationRequest");
+    expect(result.wrapperCode).not.toContain(
       "TestStrictBodyValidationRequestStrict",
     );
     expect(result.wrapperCode).toContain("testStrictBodyValidationWrapper");

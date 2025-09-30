@@ -5,6 +5,7 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
+import { generateObjectCode } from "./object-properties.js";
 import {
   createRecursiveContext,
   findReferencesInSchema,
@@ -21,7 +22,6 @@ export interface RecursiveSchemaFileOptions {
   recursiveContext: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
   schema: SchemaObject;
-  strictValidation?: boolean;
 }
 
 /**
@@ -39,7 +39,6 @@ export interface SchemaGenerationOptions {
   originalSchemaName?: string;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
-  strictValidation?: boolean;
 }
 
 /**
@@ -55,7 +54,6 @@ export async function generateRecursiveSchemaFile(
     recursiveContext,
     resolvedSchemas,
     schema,
-    strictValidation = false,
   } = options;
 
   if (schema.type !== "object" || !schema.properties) {
@@ -82,7 +80,6 @@ export async function generateRecursiveSchemaFile(
         imports: new Set(),
         recursiveContext,
         resolvedSchemas,
-        strictValidation,
       });
 
       propResult.imports.forEach((imp) => {
@@ -100,9 +97,30 @@ export async function generateRecursiveSchemaFile(
   }
 
   const importsSection = generateImportsSection(imports, name);
-  const objectMethod = strictValidation ? "z.strictObject" : "z.object";
-  const shapeContent = shape.join(",\n  ");
-  const schemaCode = `${objectMethod}({\n  ${shapeContent}\n})`;
+
+  /*
+   * Use additionalProperties to determine object type and generate code using common function
+   */
+  const objectCodeResult = generateObjectCode(
+    shape,
+    schema.additionalProperties,
+    zodSchemaToCode,
+    {
+      currentSchemaName: name,
+      formatShape: true,
+      imports,
+      recursiveContext,
+      resolvedSchemas,
+    },
+  );
+
+  objectCodeResult.imports.forEach((imp) => {
+    if (imp !== name) {
+      imports.add(imp);
+    }
+  });
+
+  const schemaCode = objectCodeResult.code;
 
   const content = assembleFileContent(
     name,
@@ -153,11 +171,7 @@ export async function generateSchemaFile(
   description?: string,
   options: SchemaGenerationOptions = {},
 ): Promise<SchemaFileResult> {
-  const {
-    recursiveContext,
-    resolvedSchemas,
-    strictValidation = false,
-  } = options;
+  const { recursiveContext, resolvedSchemas } = options;
 
   const context = recursiveContext || createRecursiveContext();
 
@@ -166,7 +180,6 @@ export async function generateSchemaFile(
     isTopLevel: true,
     recursiveContext: context,
     resolvedSchemas,
-    strictValidation,
   });
 
   const commentSection = generateCommentSection(description);

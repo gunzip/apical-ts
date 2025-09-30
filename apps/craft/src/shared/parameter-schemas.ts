@@ -14,12 +14,13 @@ import { zodSchemaToCode } from "../schema-generator/index.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 
 /**
- * Options for parameter schema generation
+ * Options for parameter schema generation, controlling transformations
+ * applied during Zod schema creation for OpenAPI parameters.
  */
-export interface ParameterSchemaGenerationOptions {
+export interface ParameterSchemaOptions {
+  /* Apply coercion transformations for primitive types */
   coercePrimitives?: boolean;
   lowercaseHeaderKeys?: boolean;
-  strictValidation?: boolean;
 }
 
 /**
@@ -51,18 +52,14 @@ export function generateParameterSchema(
   operationId: string,
   parameterType: "headers" | "path" | "query",
   parameters: ParameterObject[],
-  options: ParameterSchemaGenerationOptions = {},
+  options: ParameterSchemaOptions = {},
 ): {
   schemaCode: string;
   schemaName: string;
   typeImports: Set<string>;
   typeName: string;
 } {
-  const {
-    coercePrimitives = false,
-    lowercaseHeaderKeys = false,
-    strictValidation = false,
-  } = options;
+  const { coercePrimitives = false, lowercaseHeaderKeys = false } = options;
   const sanitizedId = sanitizeIdentifier(operationId);
   const typeImports = new Set<string>();
 
@@ -94,7 +91,6 @@ export function generateParameterSchema(
     if (schema) {
       const result = zodSchemaToCode(schema, {
         imports: typeImports,
-        strictValidation,
       });
       zodCode = result.code;
 
@@ -145,13 +141,9 @@ export function generateParameterSchema(
 export function generateParameterSchemas(
   operationId: string,
   parameterGroups: ParameterGroups,
-  options: ParameterSchemaGenerationOptions = {},
+  options: ParameterSchemaOptions = {},
 ): ParameterSchemaResult {
-  const {
-    coercePrimitives = false,
-    lowercaseHeaderKeys = false,
-    strictValidation = false,
-  } = options;
+  const { coercePrimitives = false, lowercaseHeaderKeys = false } = options;
   const sanitizedId = sanitizeIdentifier(operationId);
   const typeImports = new Set<string>();
   const schemas: string[] = [];
@@ -173,7 +165,6 @@ export function generateParameterSchemas(
     if (schema) {
       const result = zodSchemaToCode(schema, {
         imports: typeImports,
-        strictValidation,
       });
       zodCode = result.code;
       if (coercePrimitives && !isReferenceObject(schema)) {
@@ -198,9 +189,9 @@ export function generateParameterSchemas(
     return `${JSON.stringify(name)}: ${zodCode}`;
   };
 
-  /* Determine object method based on strict validation setting */
-  const objectMethod = strictValidation ? "z.strictObject" : "z.object";
-  /* Headers should never use strict validation due to standard HTTP headers */
+  /* Use z.object for all parameter types as OpenAPI parameters don't have additionalProperties */
+  const objectMethod = "z.object";
+  /* Headers should always use z.object due to standard HTTP headers */
   const headerObjectMethod = "z.object";
 
   /* Query schema */

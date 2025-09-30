@@ -2,6 +2,7 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import type { ResolvedSchemas } from "./schema-converter.js";
 
+import { generateObjectCode } from "./object-properties.js";
 import { addDefaultValue } from "./utils.js";
 
 /**
@@ -11,7 +12,6 @@ interface ObjectTypeOptions {
   currentSchemaName?: string;
   recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
-  strictValidation?: boolean;
 }
 
 type ZodSchemaCodeOptions = ObjectTypeOptions & {
@@ -38,12 +38,7 @@ export function handleObjectType(
   ) => ZodSchemaResult,
   options: ObjectTypeOptions = {},
 ): ZodSchemaResult {
-  const {
-    currentSchemaName,
-    recursiveContext,
-    resolvedSchemas,
-    strictValidation = false,
-  } = options;
+  const { currentSchemaName, recursiveContext, resolvedSchemas } = options;
   const shape: string[] = [];
   const requiredFields = schema.required || [];
 
@@ -54,7 +49,6 @@ export function handleObjectType(
         imports: result.imports,
         recursiveContext,
         resolvedSchemas,
-        strictValidation,
       });
       result.imports = new Set([...propResult.imports, ...result.imports]);
 
@@ -67,27 +61,23 @@ export function handleObjectType(
     }
   }
 
-  const objectMethod = strictValidation ? "z.strictObject" : "z.object";
-  let code = `${objectMethod}({${shape.join(", ")}})`;
+  /*
+   * Handle additionalProperties according to OpenAPI specification using the common function
+   */
+  const objectCodeResult = generateObjectCode(
+    shape,
+    schema.additionalProperties,
+    zodSchemaToCode,
+    {
+      currentSchemaName,
+      imports: result.imports,
+      recursiveContext,
+      resolvedSchemas,
+    },
+  );
 
-  if (schema.additionalProperties) {
-    if (typeof schema.additionalProperties === "boolean") {
-      code += ".catchall(z.unknown())";
-    } else {
-      const additionalResult = zodSchemaToCode(schema.additionalProperties, {
-        currentSchemaName,
-        imports: result.imports,
-        recursiveContext,
-        resolvedSchemas,
-        strictValidation,
-      });
-      result.imports = new Set([
-        ...additionalResult.imports,
-        ...result.imports,
-      ]);
-      code += `.catchall(${additionalResult.code})`;
-    }
-  }
+  result.imports = objectCodeResult.imports;
+  let code = objectCodeResult.code;
 
   // Add default value if present
   code = addDefaultValue(code, schema.default);

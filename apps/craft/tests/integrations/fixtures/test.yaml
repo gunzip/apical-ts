@@ -1031,6 +1031,19 @@ components:
       allOf:
         - $ref: "#/components/schemas/FiscalCode" # string
 
+    EmptyObject:
+      type: object
+      properties:
+        attributes:
+          type: object
+          properties:
+            properties:
+              type: object
+          required:
+            - properties
+      required:
+        - attributes
+
     PreferredLanguage:
       type: string
       x-extensible-enum:

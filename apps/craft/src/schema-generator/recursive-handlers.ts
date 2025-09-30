@@ -32,7 +32,6 @@ export interface RecursiveContext {
 export interface RecursiveSchemaOptions {
   currentSchemaName?: string;
   propertyName?: string;
-  strictValidation?: boolean;
 }
 
 /**
