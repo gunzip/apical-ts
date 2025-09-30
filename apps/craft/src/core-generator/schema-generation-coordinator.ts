@@ -17,6 +17,7 @@ import {
 } from "../schema-generator/index.js";
 import { ResolvedSchemas } from "../schema-generator/schema-converter.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { ExtraPropsMode } from "../shared/types.js";
 import { isPlainSchemaObject } from "./openapi-utils.js";
 import { extractOperationParameters } from "./parameter-extractor.js";
 import {
@@ -38,7 +39,7 @@ interface ComponentSchemaOptions {
 }
 
 interface SchemaGenerationContext {
-  extraProps: "loose" | "strict" | "strip";
+  extraProps: ExtraPropsMode;
   generateServer: boolean;
   limit: ReturnType<typeof pLimit>;
   openApiDoc: OpenAPIObject;
@@ -59,7 +60,7 @@ export async function generateSchemas(
   output: string,
   concurrency: number,
   generateServer: boolean,
-  extraProps: "loose" | "strict" | "strip",
+  extraProps: ExtraPropsMode,
   profiler?: Profiler,
 ): Promise<void> {
   if (!openApiDoc.components?.schemas) {

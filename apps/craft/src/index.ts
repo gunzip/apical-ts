@@ -4,6 +4,7 @@
 import { Command } from "commander";
 
 import { generate } from "./core-generator/index.js";
+import { ExtraPropsMode } from "./shared/types.js";
 
 const program = new Command();
 
@@ -48,7 +49,7 @@ program
       const started = process.hrtime.bigint();
       // Map CLI option names to GenerationOptions interface
       const generationOptions = {
-        extraProps: String(options.extraProps) as "loose" | "strict" | "strip",
+        extraProps: String(options.extraProps) as ExtraPropsMode,
         generateClient: Boolean(options.client),
         generateServer: Boolean(options.server),
         input: String(options.input),

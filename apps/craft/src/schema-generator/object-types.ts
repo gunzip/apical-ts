@@ -1,5 +1,6 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
+import type { ExtraPropsMode } from "../shared/types.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
 import { generateObjectCode } from "./object-properties.js";
@@ -10,7 +11,7 @@ import { addDefaultValue } from "./utils.js";
  */
 interface ObjectTypeOptions {
   currentSchemaName?: string;
-  extraProps?: "loose" | "strict" | "strip";
+  extraProps?: ExtraPropsMode;
   recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
 }

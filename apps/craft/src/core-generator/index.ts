@@ -7,6 +7,7 @@ import { promises as fs } from "fs";
 import { generateOperations } from "../client-generator/index.js";
 import { applyGeneratedOperationIds } from "../operation-id-generator/index.js";
 import { generateServerOperations } from "../server-generator/index.js";
+import { ExtraPropsMode } from "../shared/types.js";
 import { convertToOpenAPI31 } from "./converter.js";
 import { createPackageJson } from "./package-generator.js";
 import { parseOpenAPI } from "./parser.js";
@@ -47,7 +48,7 @@ export interface GenerationOptions {
    * - strict: adds .strict() to objects without explicit additionalProperties
    * @default "strip"
    */
-  extraProps?: "loose" | "strict" | "strip";
+  extraProps?: ExtraPropsMode;
   generateClient: boolean;
   generateServer?: boolean;
   input: string;

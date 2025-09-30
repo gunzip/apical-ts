@@ -2,6 +2,7 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
+import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
@@ -17,7 +18,7 @@ import { zodSchemaToCode } from "./schema-converter.js";
  */
 export interface RecursiveSchemaFileOptions {
   description?: string;
-  extraProps?: "loose" | "strict" | "strip";
+  extraProps?: ExtraPropsMode;
   name: string;
   originalSchemaName: string;
   recursiveContext: RecursiveContext;
@@ -37,7 +38,7 @@ export interface SchemaFileResult {
  * Options for schema file generation
  */
 export interface SchemaGenerationOptions {
-  extraProps?: "loose" | "strict" | "strip";
+  extraProps?: ExtraPropsMode;
   originalSchemaName?: string;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;

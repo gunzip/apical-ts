@@ -4,6 +4,7 @@ import type {
   SchemaObject,
 } from "openapi3-ts/oas31";
 
+import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 
 /**
@@ -23,7 +24,7 @@ export type ResolvedSchemas = NonNullable<
  */
 export interface ZodSchemaCodeOptions {
   currentSchemaName?: string;
-  extraProps?: "loose" | "strict" | "strip";
+  extraProps?: ExtraPropsMode;
   imports?: Set<string>;
   isTopLevel?: boolean;
   recursiveContext?: RecursiveContext;
@@ -170,7 +171,7 @@ function handleMultiTypeArray(
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
-  extraProps?: "loose" | "strict" | "strip",
+  extraProps?: ExtraPropsMode,
 ): ZodSchemaResult {
   const { isNullable: hasNull, nonNullTypes } = analyzeTypeArray(effectiveType);
   if (nonNullTypes.length === 1 && hasNull) {
@@ -208,7 +209,7 @@ function handleNullableSchema(
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
-  extraProps?: "loose" | "strict" | "strip",
+  extraProps?: ExtraPropsMode,
 ): ZodSchemaResult {
   const clone = cloneWithoutNullable(schema);
   const subResult = zodSchemaToCode(clone, {
@@ -231,7 +232,7 @@ function handlePrimitive(
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
-  extraProps?: "loose" | "strict" | "strip",
+  extraProps?: ExtraPropsMode,
 ): undefined | ZodSchemaResult {
   if (effectiveType === "string") return handleStringType(schema, result);
   if (effectiveType === "number" || effectiveType === "integer") {
@@ -264,7 +265,7 @@ function tryHandleCompositions(
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
-  extraProps?: "loose" | "strict" | "strip",
+  extraProps?: ExtraPropsMode,
 ): undefined | ZodSchemaResult {
   if (schema.allOf) {
     return handleAllOfSchema(schema.allOf, result, zodSchemaToCode, {

@@ -1,5 +1,6 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
+import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
@@ -16,7 +17,7 @@ export interface ObjectCodeResult {
  */
 export interface ObjectPropertyOptions {
   currentSchemaName?: string;
-  extraProps?: "loose" | "strict" | "strip";
+  extraProps?: ExtraPropsMode;
   formatShape?: boolean;
   imports?: Set<string>;
   recursiveContext?: RecursiveContext;
@@ -38,18 +39,9 @@ export function determineObjectMethod(
     return "z.strictObject";
   }
 
-  // If additionalProperties is a schema object, always use regular object with catchall
-  if (requiresCatchallValidation(additionalProperties)) {
-    return "z.object";
-  }
-
-  // For undefined additionalProperties, the behavior depends on extraProps
-  // - additionalProperties undefined means "not specified" (most objects fall here)
-  // For additionalProperties true, always use z.object (extraProps is ignored)
-  return "z.object";
-  //   - "strip": default Zod behavior (accepts unknown keys, strips them)
-  //   Note: extraProps only applies when additionalProperties is undefined.
-  // - If additionalProperties is true (explicitly allow any), extraProps is ignored and z.object is used (accepts any keys).
+  // - If additionalProperties is a schema object, always use regular object with catchall
+  // - For undefined additionalProperties, the behavior depends on extraProps
+  // - For additionalProperties true, always use z.object (extraProps is ignored)
   return "z.object";
 }
 
