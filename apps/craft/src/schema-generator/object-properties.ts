@@ -23,17 +23,6 @@ export interface ObjectPropertyOptions {
 }
 
 /**
- * Checks if additionalProperties allows additional properties
- * Returns true if undefined, true, or a schema object
- * Returns false only if explicitly set to false
- */
-export function allowsAdditionalProperties(
-  additionalProperties: SchemaObject["additionalProperties"],
-): boolean {
-  return additionalProperties !== false;
-}
-
-/**
  * Determines the object method to use based on additionalProperties
  * According to OpenAPI specification:
  * - false: no additional properties allowed (use z.strictObject)
