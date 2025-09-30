@@ -696,7 +696,7 @@ describe("zodSchemaToCode", () => {
       };
       const result = zodSchemaToCode(schema);
       expect(result.code).toBe(
-        'z.object({"attributes": z.object({"properties": z.object({})})})',
+        'z.object({"attributes": z.object({"properties": z.object({}).loose()})})',
       );
 
       const zodSchema = evalZod(result.code);
@@ -710,6 +710,38 @@ describe("zodSchemaToCode", () => {
           extraTop: "top-level-allowed",
         }).success,
       ).toBe(true);
+    });
+
+    it("should generate z.object({}).passthrough() for empty objects that should accept any properties", () => {
+      const schema: SchemaObject = {
+        type: "object",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe("z.object({}).loose()");
+
+      const zodSchema = evalZod(result.code);
+      /* Should accept any properties */
+      expect(
+        zodSchema.safeParse({ anyProperty: "any value", count: 42, flag: true })
+          .success,
+      ).toBe(true);
+      expect(zodSchema.safeParse({}).success).toBe(true);
+    });
+
+    it("should still generate z.strictObject({}) for empty objects with additionalProperties: false", () => {
+      const schema: SchemaObject = {
+        type: "object",
+        additionalProperties: false,
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe("z.strictObject({})");
+
+      const zodSchema = evalZod(result.code);
+      /* Should reject any additional properties */
+      expect(zodSchema.safeParse({}).success).toBe(true);
+      expect(zodSchema.safeParse({ anyProperty: "any value" }).success).toBe(
+        false,
+      );
     });
   });
 });

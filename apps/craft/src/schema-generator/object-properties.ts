@@ -47,8 +47,24 @@ export function generateObjectCode(
   ) => { code: string; imports: Set<string> },
   options: ObjectPropertyOptions = {},
 ): ObjectCodeResult {
-  const objectMethod = determineObjectMethod(additionalProperties);
   const imports = options.imports || new Set<string>();
+
+  /*
+   * Special case: empty object with undefined/true additionalProperties
+   * According to OpenAPI spec, this means "accept any properties"
+   * Use z.object({}).passthrough() instead of z.object({}) to allow any properties
+   */
+  if (
+    shape.length === 0 &&
+    (additionalProperties === undefined || additionalProperties === true)
+  ) {
+    return {
+      code: "z.object({}).loose()",
+      imports,
+    };
+  }
+
+  const objectMethod = determineObjectMethod(additionalProperties);
 
   /* Format shape based on options */
   const formattedShape = options.formatShape
