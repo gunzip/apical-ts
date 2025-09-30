@@ -71,9 +71,12 @@ export function handleAllOfSchema(
     const shapeExpressions: string[] = [];
     const allImports = new Set<string>();
 
+    // Collect all required fields from all schemas
+    const allRequiredFields = collectRequiredFields(schemas);
+
     for (const schema of schemas) {
       if (!isSchemaObject(schema)) {
-        // Handle reference: extract name and use .shape
+        // Handle reference: extract Schema name and use .shape
         const refMatch = schema.$ref?.match(/\/([^/]+)$/);
         if (refMatch) {
           const refName = refMatch[1];
@@ -84,8 +87,13 @@ export function handleAllOfSchema(
         (!schema.type || schema.type === "object") &&
         schema.properties
       ) {
-        // Generate inline object for spread
-        const subResult = zodSchemaToCode(schema, {
+        // Generate inline object for spread, applying required constraints
+        const modifiedSchema = applyRequiredConstraints(
+          schema,
+          allRequiredFields,
+        );
+
+        const subResult = zodSchemaToCode(modifiedSchema, {
           currentSchemaName,
           imports: new Set(),
           recursiveContext,
@@ -94,7 +102,8 @@ export function handleAllOfSchema(
         subResult.imports.forEach((imp) => allImports.add(imp));
         shapeExpressions.push(`...${subResult.code}.shape`);
       }
-      // Skip empty objects for now
+      // Empty objects with only required (no properties)
+      // are handled by the required collection above
     }
 
     if (shapeExpressions.length > 0) {
@@ -106,6 +115,7 @@ export function handleAllOfSchema(
   }
 
   // Fallback to intersection approach
+  // ie. in case of non-object types
   const subResults = schemas.map((s) =>
     zodSchemaToCode(s, {
       currentSchemaName,
@@ -235,4 +245,50 @@ export function handleUnionSchema(
 })`;
   }
   return result;
+}
+
+/**
+ * Apply required constraints to a schema if the field exists in properties
+ */
+function applyRequiredConstraints(
+  schema: SchemaObject,
+  allRequiredFields: Set<string>,
+): SchemaObject {
+  if (!schema.properties || allRequiredFields.size === 0) {
+    return schema;
+  }
+
+  const schemaFields = Object.keys(schema.properties);
+  const requiredForThisSchema = schemaFields.filter((field) =>
+    allRequiredFields.has(field),
+  );
+
+  if (requiredForThisSchema.length === 0) {
+    return schema;
+  }
+
+  return {
+    ...schema,
+    required: [
+      ...(schema.required || []),
+      ...requiredForThisSchema.filter(
+        (field) => !(schema.required || []).includes(field),
+      ),
+    ],
+  };
+}
+
+/**
+ * Collect all required fields from allOf schemas
+ */
+function collectRequiredFields(
+  schemas: (ReferenceObject | SchemaObject)[],
+): Set<string> {
+  const allRequiredFields = new Set<string>();
+  for (const schema of schemas) {
+    if (isSchemaObject(schema) && schema.required) {
+      schema.required.forEach((field) => allRequiredFields.add(field));
+    }
+  }
+  return allRequiredFields;
 }
