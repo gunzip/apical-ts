@@ -13,7 +13,11 @@ import { resolveSchemaTypeName } from "./schema-type-resolver.js";
  * Options for response map generation
  */
 export interface ResponseMapOptions {
-  /* Whether to also generate type definitions alongside the schema maps */
+  /**
+   * If true, also generate TypeScript type definitions for response objects
+   * for each status code and content type combination in the response map.
+   * Used when generating response maps for OpenAPI operations.
+   */
   generateTypes?: boolean;
 }
 
