@@ -2,6 +2,7 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import type { ResolvedSchemas } from "./schema-converter.js";
 
+import { generateObjectCode } from "./object-properties.js";
 import { addDefaultValue } from "./utils.js";
 
 /**
@@ -61,35 +62,22 @@ export function handleObjectType(
   }
 
   /*
-   * Handle additionalProperties according to OpenAPI specification:
-   * - false: no additional properties allowed (use z.strictObject)
-   * - undefined (not specified) or true: allow additional properties (use z.object)
-   * - schema object: allow additional properties matching the schema (use z.object with catchall)
+   * Handle additionalProperties according to OpenAPI specification using the common function
    */
-  let code: string;
-  if (schema.additionalProperties === false) {
-    /* Explicitly set to false - no additional properties allowed */
-    code = `z.strictObject({${shape.join(", ")}})`;
-  } else if (
-    schema.additionalProperties === true ||
-    schema.additionalProperties === undefined
-  ) {
-    /* Explicitly set to true OR not specified - allow additional properties */
-    code = `z.object({${shape.join(", ")}})`;
-  } else if (schema.additionalProperties) {
-    /* Schema object - validate additional properties against the schema */
-    const additionalResult = zodSchemaToCode(schema.additionalProperties, {
+  const objectCodeResult = generateObjectCode(
+    shape,
+    schema.additionalProperties,
+    zodSchemaToCode,
+    {
       currentSchemaName,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
-    });
-    result.imports = new Set([...additionalResult.imports, ...result.imports]);
-    code = `z.object({${shape.join(", ")}}).catchall(${additionalResult.code})`;
-  } else {
-    /* Fallback - should not happen */
-    code = `z.object({${shape.join(", ")}})`;
-  }
+    },
+  );
+
+  result.imports = objectCodeResult.imports;
+  let code = objectCodeResult.code;
 
   // Add default value if present
   code = addDefaultValue(code, schema.default);

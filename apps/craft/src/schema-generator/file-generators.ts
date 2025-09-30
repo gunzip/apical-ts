@@ -5,6 +5,7 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
+import { generateObjectCode } from "./object-properties.js";
 import {
   createRecursiveContext,
   findReferencesInSchema,
@@ -98,37 +99,28 @@ export async function generateRecursiveSchemaFile(
   const importsSection = generateImportsSection(imports, name);
 
   /*
-   * Use additionalProperties to determine object type:
-   * - false: no additional properties allowed (use z.strictObject)
-   * - undefined/true: allow additional properties (use z.object)
+   * Use additionalProperties to determine object type and generate code using common function
    */
-  const objectMethod =
-    schema.additionalProperties === false ? "z.strictObject" : "z.object";
-  const shapeContent = shape.join(",\n  ");
-  let schemaCode = `${objectMethod}({\n  ${shapeContent}\n})`;
+  const objectCodeResult = generateObjectCode(
+    shape,
+    schema.additionalProperties,
+    zodSchemaToCode,
+    {
+      currentSchemaName: name,
+      formatShape: true,
+      imports,
+      recursiveContext,
+      resolvedSchemas,
+    },
+  );
 
-  /* Handle additionalProperties according to OpenAPI specification */
-  if (schema.additionalProperties !== false) {
-    if (
-      schema.additionalProperties &&
-      typeof schema.additionalProperties === "object"
-    ) {
-      /* Schema object - validate additional properties against the schema */
-      const additionalResult = zodSchemaToCode(schema.additionalProperties, {
-        currentSchemaName: name,
-        imports: new Set(),
-        recursiveContext,
-        resolvedSchemas,
-      });
-      additionalResult.imports.forEach((imp) => {
-        if (imp !== name) {
-          imports.add(imp);
-        }
-      });
-      schemaCode += `.catchall(${additionalResult.code})`;
+  objectCodeResult.imports.forEach((imp) => {
+    if (imp !== name) {
+      imports.add(imp);
     }
-    /* For undefined or true, z.object already allows additional properties */
-  }
+  });
+
+  const schemaCode = objectCodeResult.code;
 
   const content = assembleFileContent(
     name,
