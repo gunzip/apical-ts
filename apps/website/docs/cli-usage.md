@@ -83,6 +83,9 @@ specification.
   false)
 - `--server`: Generate the operation wrapper functions for server-side usage
   (default: false)
+- `--extra-props <mode>`: Control how Zod schemas handle additional properties.
+  Options: `strip` (default), `loose`, `strict`. See
+  [Schema Validation Modes](./schema-validation-modes.md) for details.
 
 > **Note**: The long-form flags `--generate-client` and `--generate-server` are
 > deprecated in favor of the shorter `--client` and `--server` aliases.

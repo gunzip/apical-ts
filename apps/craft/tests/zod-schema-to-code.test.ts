@@ -650,7 +650,9 @@ describe("zodSchemaToCode", () => {
         type: "object",
       };
       const result = zodSchemaToCode(schema);
-      expect(result.code).toBe('z.object({"name": z.string()})');
+      expect(result.code).toBe(
+        'z.object({"name": z.string()}).catchall(z.unknown())',
+      );
 
       const zodSchema = evalZod(result.code);
       expect(

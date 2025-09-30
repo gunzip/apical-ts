@@ -31,6 +31,11 @@ program
     false,
   )
   .option("--profile", "Print timing breakdown for generation phases.", false)
+  .option(
+    "--extra-props <mode>",
+    "Control how additional properties are handled in object schemas. Options: strip (default), loose, strict",
+    "strip",
+  )
   // Disable strict validation setting, this should remain strict for the server
   // and loose for the client
   // .option(
@@ -43,6 +48,7 @@ program
       const started = process.hrtime.bigint();
       // Map CLI option names to GenerationOptions interface
       const generationOptions = {
+        extraProps: String(options.extraProps) as "loose" | "strict" | "strip",
         generateClient: Boolean(options.client),
         generateServer: Boolean(options.server),
         input: String(options.input),

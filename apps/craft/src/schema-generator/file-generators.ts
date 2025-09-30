@@ -17,6 +17,7 @@ import { zodSchemaToCode } from "./schema-converter.js";
  */
 export interface RecursiveSchemaFileOptions {
   description?: string;
+  extraProps?: "loose" | "strict" | "strip";
   name: string;
   originalSchemaName: string;
   recursiveContext: RecursiveContext;
@@ -36,6 +37,7 @@ export interface SchemaFileResult {
  * Options for schema file generation
  */
 export interface SchemaGenerationOptions {
+  extraProps?: "loose" | "strict" | "strip";
   originalSchemaName?: string;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
@@ -49,6 +51,7 @@ export async function generateRecursiveSchemaFile(
 ): Promise<SchemaFileResult> {
   const {
     description,
+    extraProps,
     name,
     originalSchemaName,
     recursiveContext,
@@ -77,6 +80,7 @@ export async function generateRecursiveSchemaFile(
     } else {
       const propResult = zodSchemaToCode(propSchema, {
         currentSchemaName: name,
+        extraProps,
         imports: new Set(),
         recursiveContext,
         resolvedSchemas,
@@ -107,6 +111,7 @@ export async function generateRecursiveSchemaFile(
     zodSchemaToCode,
     {
       currentSchemaName: name,
+      extraProps,
       formatShape: true,
       imports,
       recursiveContext,
@@ -171,12 +176,13 @@ export async function generateSchemaFile(
   description?: string,
   options: SchemaGenerationOptions = {},
 ): Promise<SchemaFileResult> {
-  const { recursiveContext, resolvedSchemas } = options;
+  const { extraProps, recursiveContext, resolvedSchemas } = options;
 
   const context = recursiveContext || createRecursiveContext();
 
   const schemaResult = zodSchemaToCode(schema, {
     currentSchemaName: name,
+    extraProps,
     isTopLevel: true,
     recursiveContext: context,
     resolvedSchemas,

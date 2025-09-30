@@ -7,6 +7,7 @@ import { addDefaultValue } from "./utils.js";
 
 interface ZodSchemaCodeOptions {
   currentSchemaName?: string;
+  extraProps?: "loose" | "strict" | "strip";
   imports?: Set<string>;
   isTopLevel?: boolean;
   recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
@@ -32,11 +33,13 @@ export function handleArrayType(
   ) => ZodSchemaResult,
   options: {
     currentSchemaName?: string;
+    extraProps?: "loose" | "strict" | "strip";
     recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
     resolvedSchemas?: ResolvedSchemas;
   } = {},
 ): ZodSchemaResult {
-  const { currentSchemaName, recursiveContext, resolvedSchemas } = options;
+  const { currentSchemaName, extraProps, recursiveContext, resolvedSchemas } =
+    options;
   if (!schema.items) {
     let code = "z.array(z.unknown())";
     code = addDefaultValue(code, schema.default);
@@ -46,6 +49,7 @@ export function handleArrayType(
 
   const itemsResult = zodSchemaToCode(schema.items, {
     currentSchemaName,
+    extraProps,
     imports: result.imports,
     recursiveContext,
     resolvedSchemas,

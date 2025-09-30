@@ -17,6 +17,7 @@ const sidebars: SidebarsConfig = {
   docsSidebar: [
     "introduction",
     "cli-usage",
+    "schema-validation-modes",
     "generated-architecture",
     {
       collapsible: false,

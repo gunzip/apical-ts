@@ -10,6 +10,7 @@ import { addDefaultValue } from "./utils.js";
  */
 interface ObjectTypeOptions {
   currentSchemaName?: string;
+  extraProps?: "loose" | "strict" | "strip";
   recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
 }
@@ -38,7 +39,8 @@ export function handleObjectType(
   ) => ZodSchemaResult,
   options: ObjectTypeOptions = {},
 ): ZodSchemaResult {
-  const { currentSchemaName, recursiveContext, resolvedSchemas } = options;
+  const { currentSchemaName, extraProps, recursiveContext, resolvedSchemas } =
+    options;
   const shape: string[] = [];
   const requiredFields = schema.required || [];
 
@@ -70,6 +72,7 @@ export function handleObjectType(
     zodSchemaToCode,
     {
       currentSchemaName,
+      extraProps,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,

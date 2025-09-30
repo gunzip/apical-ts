@@ -16,6 +16,7 @@ export interface ObjectCodeResult {
  */
 export interface ObjectPropertyOptions {
   currentSchemaName?: string;
+  extraProps?: "loose" | "strict" | "strip";
   formatShape?: boolean;
   imports?: Set<string>;
   recursiveContext?: RecursiveContext;
@@ -23,16 +24,33 @@ export interface ObjectPropertyOptions {
 }
 
 /**
- * Determines the object method to use based on additionalProperties
+ * Determines the object method to use based on additionalProperties and extraProps setting
  * According to OpenAPI specification:
  * - false: no additional properties allowed (use z.strictObject)
- * - undefined/true: allow additional properties (use z.object)
+ * - undefined/true: behavior depends on extraProps setting
  * - schema object: allow additional properties with validation (use z.object)
  */
 export function determineObjectMethod(
   additionalProperties: SchemaObject["additionalProperties"],
 ): "z.object" | "z.strictObject" {
-  return additionalProperties === false ? "z.strictObject" : "z.object";
+  // If additionalProperties is explicitly false, always use strict
+  if (additionalProperties === false) {
+    return "z.strictObject";
+  }
+
+  // If additionalProperties is a schema object, always use regular object with catchall
+  if (requiresCatchallValidation(additionalProperties)) {
+    return "z.object";
+  }
+
+  // For undefined additionalProperties, the behavior depends on extraProps
+  // - additionalProperties undefined means "not specified" (most objects fall here)
+  // For additionalProperties true, always use z.object (extraProps is ignored)
+  return "z.object";
+  //   - "strip": default Zod behavior (accepts unknown keys, strips them)
+  //   Note: extraProps only applies when additionalProperties is undefined.
+  // - If additionalProperties is true (explicitly allow any), extraProps is ignored and z.object is used (accepts any keys).
+  return "z.object";
 }
 
 /**
@@ -48,11 +66,12 @@ export function generateObjectCode(
   options: ObjectPropertyOptions = {},
 ): ObjectCodeResult {
   const imports = options.imports || new Set<string>();
+  const extraProps = options.extraProps || "strip";
 
   /*
    * Special case: empty object with undefined/true additionalProperties
    * According to OpenAPI spec, this means "accept any properties"
-   * Use z.object({}).passthrough() instead of z.object({}) to allow any properties
+   * Use z.object({}).catchall(z.unknown()) instead of z.object({}) to allow any properties
    */
   if (
     shape.length === 0 &&
@@ -78,10 +97,10 @@ export function generateObjectCode(
   let code = `${objectMethod}(${shapeContent})`;
 
   /*
-   * Handle additionalProperties according to OpenAPI specification:
-   * - false: no additional properties allowed (already handled by z.strictObject)
-   * - undefined or true: allow additional properties (already handled by z.object)
-   * - schema object: allow additional properties matching the schema (use catchall)
+   * Handle additionalProperties and extraProps setting:
+   * 1. If additionalProperties is false -> already handled by z.strictObject
+   * 2. If additionalProperties is a schema object -> use catchall with validation
+   * 3. If additionalProperties is undefined/true -> apply extraProps behavior
    */
   if (requiresCatchallValidation(additionalProperties)) {
     /* Schema object - validate additional properties against the schema */
@@ -99,6 +118,27 @@ export function generateObjectCode(
       code,
       imports: mergedImports,
     };
+  }
+
+  /*
+   * Apply extraProps behavior ONLY for objects without explicit additionalProperties
+   * This means additionalProperties is undefined (not specified in the schema)
+   */
+  if (additionalProperties === undefined) {
+    if (extraProps === "loose") {
+      code += ".loose()";
+    } else if (extraProps === "strict") {
+      code += ".strict()";
+    }
+    // For extraProps === "strip", we don't add anything (default Zod behavior)
+  }
+
+  /*
+   * Handle additionalProperties: true for non-empty objects
+   * Should allow any additional properties using catchall
+   */
+  if (additionalProperties === true) {
+    code += ".catchall(z.unknown())";
   }
 
   return {
