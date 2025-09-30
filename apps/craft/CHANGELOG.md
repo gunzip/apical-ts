@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.5.1
+
+### Patch Changes
+
+- 7a5d15f: Fix oneOf typings
+
 ## 0.4.0
 
 ### Minor Changes
