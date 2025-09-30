@@ -73,7 +73,7 @@ export function extractServerOperationMetadata(
   const hasBody = clientMeta.hasBody;
   const bodyTypeInfo = clientMeta.bodyInfo.bodyTypeInfo;
 
-  /* Generate strict server request body map */
+  /* Generate server request body map */
   const typeImports = new Set<string>();
   const serverRequestBodyMap = generateServerRequestBodyMap(
     operation,

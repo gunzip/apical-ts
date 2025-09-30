@@ -11,7 +11,6 @@ interface ObjectTypeOptions {
   currentSchemaName?: string;
   recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
-  strictValidation?: boolean;
 }
 
 type ZodSchemaCodeOptions = ObjectTypeOptions & {
@@ -38,12 +37,7 @@ export function handleObjectType(
   ) => ZodSchemaResult,
   options: ObjectTypeOptions = {},
 ): ZodSchemaResult {
-  const {
-    currentSchemaName,
-    recursiveContext,
-    resolvedSchemas,
-    strictValidation = false,
-  } = options;
+  const { currentSchemaName, recursiveContext, resolvedSchemas } = options;
   const shape: string[] = [];
   const requiredFields = schema.required || [];
 
@@ -54,7 +48,6 @@ export function handleObjectType(
         imports: result.imports,
         recursiveContext,
         resolvedSchemas,
-        strictValidation,
       });
       result.imports = new Set([...propResult.imports, ...result.imports]);
 
@@ -67,26 +60,35 @@ export function handleObjectType(
     }
   }
 
-  const objectMethod = strictValidation ? "z.strictObject" : "z.object";
-  let code = `${objectMethod}({${shape.join(", ")}})`;
-
-  if (schema.additionalProperties) {
-    if (typeof schema.additionalProperties === "boolean") {
-      code += ".catchall(z.unknown())";
-    } else {
-      const additionalResult = zodSchemaToCode(schema.additionalProperties, {
-        currentSchemaName,
-        imports: result.imports,
-        recursiveContext,
-        resolvedSchemas,
-        strictValidation,
-      });
-      result.imports = new Set([
-        ...additionalResult.imports,
-        ...result.imports,
-      ]);
-      code += `.catchall(${additionalResult.code})`;
-    }
+  /*
+   * Handle additionalProperties according to OpenAPI specification:
+   * - false: no additional properties allowed (use z.strictObject)
+   * - undefined (not specified) or true: allow additional properties (use z.object)
+   * - schema object: allow additional properties matching the schema (use z.object with catchall)
+   */
+  let code: string;
+  if (schema.additionalProperties === false) {
+    /* Explicitly set to false - no additional properties allowed */
+    code = `z.strictObject({${shape.join(", ")}})`;
+  } else if (
+    schema.additionalProperties === true ||
+    schema.additionalProperties === undefined
+  ) {
+    /* Explicitly set to true OR not specified - allow additional properties */
+    code = `z.object({${shape.join(", ")}})`;
+  } else if (schema.additionalProperties) {
+    /* Schema object - validate additional properties against the schema */
+    const additionalResult = zodSchemaToCode(schema.additionalProperties, {
+      currentSchemaName,
+      imports: result.imports,
+      recursiveContext,
+      resolvedSchemas,
+    });
+    result.imports = new Set([...additionalResult.imports, ...result.imports]);
+    code = `z.object({${shape.join(", ")}}).catchall(${additionalResult.code})`;
+  } else {
+    /* Fallback - should not happen */
+    code = `z.object({${shape.join(", ")}})`;
   }
 
   // Add default value if present

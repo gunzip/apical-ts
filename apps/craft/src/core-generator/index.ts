@@ -16,7 +16,7 @@ import {
   renameConflictingSchemas,
   renameSanitizationConflictingSchemas,
 } from "./schema-conflict-resolver.js";
-import { generateAllSchemas } from "./schema-generation-coordinator.js";
+import { generateSchemas } from "./schema-generation-coordinator.js";
 
 const DEFAULT_CONCURRENCY = 10;
 
@@ -29,7 +29,6 @@ const DEFAULT_CONCURRENCY = 10;
  *   input: './openapi.yaml',
  *   output: './generated',
  *   generateClient: true,
- *   strictValidation: false,
  *   concurrency: 10,
  * };
  * ```
@@ -46,13 +45,6 @@ export interface GenerationOptions {
   output: string;
   /** Enable timing breakdown of major phases */
   profile?: boolean;
-  /**
-   * Use strict object validation (z.strictObject) instead of loose validation (z.object).
-   * When false (default), allows additional properties in objects for client-side flexibility.
-   * When true, rejects unknown properties for server-side validation.
-   * @default false
-   */
-  strictValidation?: boolean;
 }
 
 /**
@@ -66,7 +58,6 @@ export async function generate(options: GenerationOptions): Promise<void> {
     input,
     output,
     profile = false,
-    strictValidation = false,
   } = options;
 
   await fs.mkdir(output, { recursive: true });
@@ -78,14 +69,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
   profiler?.end("parse+preprocess");
 
   profiler?.start("schemas:all");
-  await generateAllSchemas(
-    openApiDoc,
-    output,
-    concurrency,
-    strictValidation,
-    genServer,
-    profiler,
-  );
+  await generateSchemas(openApiDoc, output, concurrency, genServer, profiler);
   profiler?.end("schemas:all");
 
   await generateAllOperations(

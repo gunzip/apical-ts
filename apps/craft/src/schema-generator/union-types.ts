@@ -26,7 +26,6 @@ interface ZodSchemaCodeOptions {
   isTopLevel?: boolean;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
-  strictValidation?: boolean;
 }
 
 // Import from schema-converter to avoid circular dependencies
@@ -53,12 +52,7 @@ export function handleAllOfSchema(
     strictValidation?: boolean;
   } = {},
 ): ZodSchemaResult {
-  const {
-    currentSchemaName,
-    recursiveContext,
-    resolvedSchemas,
-    strictValidation = false,
-  } = options;
+  const { currentSchemaName, recursiveContext, resolvedSchemas } = options;
 
   // Check if all schemas are objects, including proper reference resolution
   const canUseObjectSpread = schemas.every((schema) => {
@@ -111,7 +105,6 @@ export function handleAllOfSchema(
           imports: new Set(),
           recursiveContext,
           resolvedSchemas,
-          strictValidation,
         });
         subResult.imports.forEach((imp) => allImports.add(imp));
         shapeExpressions.push(`...${subResult.code}.shape`);
@@ -121,8 +114,7 @@ export function handleAllOfSchema(
     }
 
     if (shapeExpressions.length > 0) {
-      const objectMethod = strictValidation ? "z.strictObject" : "z.object";
-      result.code = `${objectMethod}({${shapeExpressions.join(", ")}})`;
+      result.code = `z.object({${shapeExpressions.join(", ")}})`;
       allImports.forEach((imp) => result.imports.add(imp));
       return result;
     }
@@ -136,7 +128,6 @@ export function handleAllOfSchema(
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
-      strictValidation,
     }),
   );
   const schemaCodes = subResults.map((r) => r.code);
@@ -176,15 +167,9 @@ export function handleUnionSchema(
     currentSchemaName?: string;
     recursiveContext?: RecursiveContext;
     resolvedSchemas?: ResolvedSchemas;
-    strictValidation?: boolean;
   } = {},
 ): ZodSchemaResult {
-  const {
-    currentSchemaName,
-    recursiveContext,
-    resolvedSchemas,
-    strictValidation = false,
-  } = options;
+  const { currentSchemaName, recursiveContext, resolvedSchemas } = options;
   // Check if discriminator is present for discriminated unions
   if (discriminator && discriminator.propertyName) {
     const discriminatorProperty = discriminator.propertyName;
@@ -194,7 +179,6 @@ export function handleUnionSchema(
         imports: result.imports,
         recursiveContext,
         resolvedSchemas,
-        strictValidation,
       }),
     );
     const schemasCodes = subResults.map((r) => r.code);
@@ -223,7 +207,6 @@ export function handleUnionSchema(
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
-      strictValidation,
     }),
   );
   const schemasCodes = subResults.map((r) => r.code);

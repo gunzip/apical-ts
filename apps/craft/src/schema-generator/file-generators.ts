@@ -21,7 +21,6 @@ export interface RecursiveSchemaFileOptions {
   recursiveContext: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
   schema: SchemaObject;
-  strictValidation?: boolean;
 }
 
 /**
@@ -39,7 +38,6 @@ export interface SchemaGenerationOptions {
   originalSchemaName?: string;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
-  strictValidation?: boolean;
 }
 
 /**
@@ -55,7 +53,6 @@ export async function generateRecursiveSchemaFile(
     recursiveContext,
     resolvedSchemas,
     schema,
-    strictValidation = false,
   } = options;
 
   if (schema.type !== "object" || !schema.properties) {
@@ -82,7 +79,6 @@ export async function generateRecursiveSchemaFile(
         imports: new Set(),
         recursiveContext,
         resolvedSchemas,
-        strictValidation,
       });
 
       propResult.imports.forEach((imp) => {
@@ -100,9 +96,39 @@ export async function generateRecursiveSchemaFile(
   }
 
   const importsSection = generateImportsSection(imports, name);
-  const objectMethod = strictValidation ? "z.strictObject" : "z.object";
+
+  /*
+   * Use additionalProperties to determine object type:
+   * - false: no additional properties allowed (use z.strictObject)
+   * - undefined/true: allow additional properties (use z.object)
+   */
+  const objectMethod =
+    schema.additionalProperties === false ? "z.strictObject" : "z.object";
   const shapeContent = shape.join(",\n  ");
-  const schemaCode = `${objectMethod}({\n  ${shapeContent}\n})`;
+  let schemaCode = `${objectMethod}({\n  ${shapeContent}\n})`;
+
+  /* Handle additionalProperties according to OpenAPI specification */
+  if (schema.additionalProperties !== false) {
+    if (
+      schema.additionalProperties &&
+      typeof schema.additionalProperties === "object"
+    ) {
+      /* Schema object - validate additional properties against the schema */
+      const additionalResult = zodSchemaToCode(schema.additionalProperties, {
+        currentSchemaName: name,
+        imports: new Set(),
+        recursiveContext,
+        resolvedSchemas,
+      });
+      additionalResult.imports.forEach((imp) => {
+        if (imp !== name) {
+          imports.add(imp);
+        }
+      });
+      schemaCode += `.catchall(${additionalResult.code})`;
+    }
+    /* For undefined or true, z.object already allows additional properties */
+  }
 
   const content = assembleFileContent(
     name,
@@ -153,11 +179,7 @@ export async function generateSchemaFile(
   description?: string,
   options: SchemaGenerationOptions = {},
 ): Promise<SchemaFileResult> {
-  const {
-    recursiveContext,
-    resolvedSchemas,
-    strictValidation = false,
-  } = options;
+  const { recursiveContext, resolvedSchemas } = options;
 
   const context = recursiveContext || createRecursiveContext();
 
@@ -166,7 +188,6 @@ export async function generateSchemaFile(
     isTopLevel: true,
     recursiveContext: context,
     resolvedSchemas,
-    strictValidation,
   });
 
   const commentSection = generateCommentSection(description);

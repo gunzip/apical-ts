@@ -6,31 +6,25 @@ import {
 } from "../generated/server/testMultiContentTypes.js";
 import { setupTestRoute, mockData } from "./test-helpers.js";
 
-describe("Strict validation behavior", () => {
-  it("should reject request body with extra properties due to strict validation", async () => {
-    let validationErrorReceived = false;
-    let actualError: any = null;
-
-    // @ts-expect-error
+describe("Additional Properties behavior", () => {
+  it("should accept request body with extra properties (default behavior)", async () => {
     const handler: testMultiContentTypesHandler = async (params) => {
-      if (params.isValid) {
+      if ("isValid" in params && params.isValid) {
+        // Extra properties should be allowed since NewModel doesn't have additionalProperties: false
+        expect(params.value.body).toMatchObject({
+          id: "test-123",
+          name: "Test Object",
+          // Extra properties are allowed but may not be preserved in the parsed result
+        });
         return {
           status: 200,
           contentType: "application/json",
           data: mockData.newModel(),
         };
-      } else if (!params.isValid && params.kind === "body-error") {
-        validationErrorReceived = true;
-        actualError = params.error;
-        return {
-          status: 400,
-          contentType: "application/json",
-          data: { error: "Body validation failed" },
-        };
       }
 
       throw new Error(
-        `Unexpected validation error: ${!params.isValid ? params.kind : "unknown"}`,
+        `Unexpected validation error: ${"isValid" in params && !params.isValid ? params.kind : "unknown"}`,
       );
     };
 
@@ -41,25 +35,23 @@ describe("Strict validation behavior", () => {
       handler,
     );
 
-    // Send request with extra properties that should be rejected by strict validation
+    // Send request with extra properties that should be accepted (default behavior)
     const response = await supertest(app)
       .post("/test-multi-content-types")
       .send({
         id: "test-123",
         name: "Test Object",
-        extraProperty: "this should be rejected", // This extra property should cause validation failure
+        extraProperty: "this should be accepted", // This extra property should be accepted
         anotherExtra: 42,
       })
       .set("Content-Type", "application/json");
 
-    // Assert that validation error was received and handled
-    expect(validationErrorReceived).toBe(true);
-    expect(response.status).toBe(400);
-    expect(actualError).toBeDefined();
-    expect(actualError.issues).toBeDefined();
-    expect(actualError.issues[0].code).toBe("unrecognized_keys");
-    expect(actualError.issues[0].keys).toContain("extraProperty");
-    expect(actualError.issues[0].keys).toContain("anotherExtra");
+    // Assert that request succeeded
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      id: "model-123",
+      name: "Test Model",
+    });
   });
 
   it("should accept request body without extra properties", async () => {

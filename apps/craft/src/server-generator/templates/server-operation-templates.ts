@@ -64,7 +64,6 @@ export function buildServerResponseMap(
     metadata.operation,
     metadata.operationId,
     typeImports,
-    { useStrictSchemas: true }, // Use strict schemas for server responses
     doc, // Pass document for response reference resolution
   );
 
@@ -74,7 +73,7 @@ export function buildServerResponseMap(
     metadata.operationId,
     typeImports,
     doc, // Pass document for response reference resolution
-    { useStrictSchemas: true }, // Use strict schemas for server responses
+    {}, // Use standard schemas for server responses
   );
 
   /* Add type imports */
@@ -206,11 +205,10 @@ function renderParameterSchemas(
   parameterGroups: ParameterGroups,
   typeImports: Set<string>,
 ): string {
-  /* Use shared parameter schema generation logic with strict validation for server input */
+  /* Use shared parameter schema generation logic for server input */
   const result = generateParameterSchemas(operationId, parameterGroups, {
     coercePrimitives: true,
     lowercaseHeaderKeys: true,
-    strictValidation: true,
   });
 
   /* Merge type imports */

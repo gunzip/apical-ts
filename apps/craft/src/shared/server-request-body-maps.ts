@@ -1,11 +1,11 @@
-/* Server-specific request body mapping logic using strict schemas */
+/* Server-specific request body mapping logic */
 
 import type { OperationObject, RequestBodyObject } from "openapi3-ts/oas31";
 
 import type { ContentTypeMapping } from "./types.js";
 
 import { extractRequestContentTypes } from "../client-generator/operation-extractor.js";
-import { resolveStrictSchemaTypeName } from "./schema-type-resolver.js";
+import { resolveSchemaTypeName } from "./schema-type-resolver.js";
 
 /**
  * Result of server request body map generation
@@ -17,7 +17,7 @@ export interface ServerRequestBodyMapResult {
   contentTypeMappings: ContentTypeMapping[];
   /* Default content type if any */
   defaultContentType: null | string;
-  /* Map from content type to schema type (using strict schemas) */
+  /* Map from content type to schema type */
   requestMapType: string;
   /* Whether a request map should be generated */
   shouldGenerateRequestMap: boolean;
@@ -26,8 +26,8 @@ export interface ServerRequestBodyMapResult {
 }
 
 /**
- * Generates server request body content type mapping using strict schemas
- * Maps content type → Strict Zod schema for request bodies
+ * Generates server request body content type mapping
+ * Maps content type → Zod schema for request bodies
  */
 export function generateServerRequestBodyMap(
   operation: OperationObject,
@@ -63,7 +63,7 @@ export function generateServerRequestBodyMap(
   const requestMappings = requestContentTypes.contentTypes.map((mapping) => {
     contentTypeMappings.push(mapping);
 
-    const typeName = resolveStrictSchemaTypeName(
+    const typeName = resolveSchemaTypeName(
       mapping.schema,
       operationId,
       "Request",

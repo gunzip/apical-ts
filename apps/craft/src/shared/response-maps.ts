@@ -7,19 +7,14 @@ import {
   type ResponseContentTypes,
 } from "../client-generator/operation-extractor.js";
 import { resolveResponse } from "../client-generator/utils.js";
-import {
-  resolveSchemaTypeName,
-  resolveStrictSchemaTypeName,
-} from "./schema-type-resolver.js";
+import { resolveSchemaTypeName } from "./schema-type-resolver.js";
 
 /**
  * Options for response map generation
  */
 export interface ResponseMapOptions {
-  /* Whether to generate TypeScript types */
+  /* Whether to also generate type definitions alongside the schema maps */
   generateTypes?: boolean;
-  /* Whether to use strict schemas (for server generation) */
-  useStrictSchemas?: boolean;
 }
 
 /**
@@ -63,7 +58,6 @@ export function generateResponseMap(
     responseContentTypes,
     operationId,
     typeImports,
-    options,
   );
 
   // Handle default response
@@ -143,19 +137,12 @@ function applyDefaultResponse(
         resolvedDefault.content,
       )) {
         if (!mediaType.schema) continue;
-        const typeName = options.useStrictSchemas
-          ? resolveStrictSchemaTypeName(
-              mediaType.schema,
-              operationId,
-              `DefaultResponse`,
-              updatedTypeImports,
-            )
-          : resolveSchemaTypeName(
-              mediaType.schema,
-              operationId,
-              `DefaultResponse`,
-              updatedTypeImports,
-            );
+        const typeName = resolveSchemaTypeName(
+          mediaType.schema,
+          operationId,
+          `DefaultResponse`,
+          updatedTypeImports,
+        );
         updatedAllContentTypes.add(contentType);
         if (!updatedDefaultContentType) {
           updatedDefaultContentType = contentType;
@@ -217,7 +204,6 @@ function buildStatusToContentTypes(
   responseContentTypes: ResponseContentTypes[],
   operationId: string,
   typeImports: Set<string>,
-  options: ResponseMapOptions,
 ): {
   allContentTypes: Set<string>;
   defaultContentType: null | string;
@@ -249,19 +235,12 @@ function buildStatusToContentTypes(
 
       if (!defaultContentType) defaultContentType = ct;
 
-      const typeName = options.useStrictSchemas
-        ? resolveStrictSchemaTypeName(
-            mapping.schema,
-            operationId,
-            `${group.statusCode}Response`,
-            updatedTypeImports,
-          )
-        : resolveSchemaTypeName(
-            mapping.schema,
-            operationId,
-            `${group.statusCode}Response`,
-            updatedTypeImports,
-          );
+      const typeName = resolveSchemaTypeName(
+        mapping.schema,
+        operationId,
+        `${group.statusCode}Response`,
+        updatedTypeImports,
+      );
 
       statusToContentTypes[group.statusCode].push({
         contentType: ct,

@@ -32,7 +32,6 @@ interface ComponentSchemaOptions {
   recursiveContext: ReturnType<typeof createRecursiveContext>;
   schema: SchemaObject;
   schemaName: string;
-  strictValidation: boolean;
 }
 
 interface SchemaGenerationContext {
@@ -41,23 +40,20 @@ interface SchemaGenerationContext {
   openApiDoc: OpenAPIObject;
   resolvedSchemas: ResolvedSchemas;
   schemasDir: string;
-  strictValidation: boolean;
 }
 
 type SchemaGeneratorFunction<T = SchemaObject> = (
   name: string,
   schema: T,
-  options: { strictValidation: boolean },
 ) => Promise<{ content: string; fileName: string }>;
 
 /**
  * Generates all schemas (component, request, and response schemas)
  */
-export async function generateAllSchemas(
+export async function generateSchemas(
   openApiDoc: OpenAPIObject,
   output: string,
   concurrency: number,
-  strictValidation: boolean,
   generateServer: boolean,
   profiler?: Profiler,
 ): Promise<void> {
@@ -75,7 +71,6 @@ export async function generateAllSchemas(
     openApiDoc,
     resolvedSchemas: openApiDoc.components.schemas,
     schemasDir,
-    strictValidation,
   };
 
   if (!profiler) {
@@ -140,7 +135,6 @@ function createComponentSchemaPromise(
     recursiveContext,
     schema,
     schemaName,
-    strictValidation,
   } = options;
   const isRecursive = recursiveContext.recursiveSchemas.has(schemaName);
 
@@ -153,13 +147,11 @@ function createComponentSchemaPromise(
           recursiveContext,
           resolvedSchemas: context.resolvedSchemas,
           schema,
-          strictValidation,
         })
       : generateSchemaFile(schemaName, schema, description, {
           originalSchemaName,
           recursiveContext,
           resolvedSchemas: context.resolvedSchemas,
-          strictValidation,
         });
 
     const schemaFile = await generationPromise;
@@ -169,7 +161,7 @@ function createComponentSchemaPromise(
 }
 
 /**
- * Creates schema generation promises for both regular and strict variants
+ * Creates schema generation promises for schemas
  */
 function createSchemaGenerationPromises<T = SchemaObject>(
   schemaMap: Map<string, T>,
@@ -179,29 +171,14 @@ function createSchemaGenerationPromises<T = SchemaObject>(
   const promises: Promise<void>[] = [];
 
   for (const [name, schema] of schemaMap) {
-    // Generate regular schema
+    // Generate schema (used by both client and server)
     const promise = context.limit(() =>
-      generatorFn(name, schema, {
-        strictValidation: context.strictValidation,
-      }).then((schemaFile) => {
+      generatorFn(name, schema).then((schemaFile) => {
         const filePath = path.join(context.schemasDir, schemaFile.fileName);
         return fs.writeFile(filePath, schemaFile.content);
       }),
     );
     promises.push(promise);
-
-    // Generate strict schema for server when generateServer is enabled
-    if (context.generateServer) {
-      const strictPromise = context.limit(() =>
-        generatorFn(`${name}Strict`, schema, {
-          strictValidation: true,
-        }).then((schemaFile) => {
-          const filePath = path.join(context.schemasDir, schemaFile.fileName);
-          return fs.writeFile(filePath, schemaFile.content);
-        }),
-      );
-      promises.push(strictPromise);
-    }
   }
 
   return promises;
@@ -236,10 +213,6 @@ function generateComponentSchemas(
     const isRecursive = analyzeSchemaForRecursion(name, schema);
     if (isRecursive) {
       recursiveContext.recursiveSchemas.add(sanitizedName);
-      // Also add the strict variant if server generation is enabled
-      if (context.generateServer) {
-        recursiveContext.recursiveSchemas.add(`${sanitizedName}Strict`);
-      }
     }
   }
 
@@ -261,30 +234,15 @@ function generateComponentSchemas(
       ? schema.description.trim()
       : undefined;
 
-    // Generate regular schema
+    // Generate schema (used by both client and server)
     const promise = createComponentSchemaPromise({
       context,
       description,
       recursiveContext,
       schema,
       schemaName: sanitizedName,
-      strictValidation: context.strictValidation,
     });
     promises.push(promise);
-
-    // Generate strict schema for server when generateServer is enabled
-    if (context.generateServer) {
-      const strictPromise = createComponentSchemaPromise({
-        context,
-        description,
-        originalSchemaName: sanitizedName,
-        recursiveContext,
-        schema,
-        schemaName: `${sanitizedName}Strict`,
-        strictValidation: true,
-      });
-      promises.push(strictPromise);
-    }
   }
 
   return promises;

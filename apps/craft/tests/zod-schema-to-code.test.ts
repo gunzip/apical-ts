@@ -599,4 +599,117 @@ describe("zodSchemaToCode", () => {
     expect(zodSchema.safeParse("const-value").success).toBe(true);
     expect(zodSchema.safeParse("enum-value1").success).toBe(false);
   });
+
+  describe("additionalProperties handling", () => {
+    it("should allow additional properties when additionalProperties is not specified", () => {
+      const schema: SchemaObject = {
+        properties: {
+          name: { type: "string" },
+        },
+        required: ["name"],
+        type: "object",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.object({"name": z.string()})');
+
+      const zodSchema = evalZod(result.code);
+      expect(
+        zodSchema.safeParse({ name: "test", extra: "allowed" }).success,
+      ).toBe(true);
+    });
+
+    it("should not allow additional properties when additionalProperties is false", () => {
+      const schema: SchemaObject = {
+        additionalProperties: false,
+        properties: {
+          name: { type: "string" },
+        },
+        required: ["name"],
+        type: "object",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.strictObject({"name": z.string()})');
+
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse({ name: "test" }).success).toBe(true);
+      expect(
+        zodSchema.safeParse({ name: "test", extra: "not-allowed" }).success,
+      ).toBe(false);
+    });
+
+    it("should allow additional properties when additionalProperties is true", () => {
+      const schema: SchemaObject = {
+        additionalProperties: true,
+        properties: {
+          name: { type: "string" },
+        },
+        required: ["name"],
+        type: "object",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.object({"name": z.string()})');
+
+      const zodSchema = evalZod(result.code);
+      expect(
+        zodSchema.safeParse({ name: "test", extra: "allowed" }).success,
+      ).toBe(true);
+    });
+
+    it("should validate additional properties with schema when additionalProperties is an object", () => {
+      const schema: SchemaObject = {
+        additionalProperties: { type: "number" },
+        properties: {
+          name: { type: "string" },
+        },
+        required: ["name"],
+        type: "object",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe(
+        'z.object({"name": z.string()}).catchall(z.number())',
+      );
+
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse({ name: "test", count: 42 }).success).toBe(
+        true,
+      );
+      expect(
+        zodSchema.safeParse({ name: "test", count: "not-a-number" }).success,
+      ).toBe(false);
+    });
+
+    it("should handle nested objects with undefined additionalProperties correctly", () => {
+      const schema: SchemaObject = {
+        properties: {
+          attributes: {
+            properties: {
+              properties: {
+                type: "object",
+              },
+            },
+            required: ["properties"],
+            type: "object",
+          },
+        },
+        required: ["attributes"],
+        type: "object",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe(
+        'z.object({"attributes": z.object({"properties": z.object({})})})',
+      );
+
+      const zodSchema = evalZod(result.code);
+      /* All objects should allow additional properties */
+      expect(
+        zodSchema.safeParse({
+          attributes: {
+            properties: { extra: "allowed" },
+            additionalAttr: "also-allowed",
+          },
+          extraTop: "top-level-allowed",
+        }).success,
+      ).toBe(true);
+    });
+  });
 });

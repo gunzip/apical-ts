@@ -14,10 +14,7 @@ describe("core-generator response reference resolution", () => {
     // This uses the test fixture testResponseRefWithInlineSchema which has:
     // responses: "200": $ref: "#/components/responses/InlineSchemaResponse"
     // where InlineSchemaResponse contains an inline schema
-    const expectedFiles = [
-      "TestResponseRefWithInlineSchema200Response.ts",
-      "TestResponseRefWithInlineSchema200ResponseStrict.ts",
-    ];
+    const expectedFiles = ["TestResponseRefWithInlineSchema200Response.ts"];
 
     const existingFiles = await fs.readdir(schemasDir);
 
@@ -59,7 +56,7 @@ describe("core-generator response reference resolution", () => {
     const testContent = await fs.readFile(testFile, "utf-8");
 
     expect(testContent).toContain(
-      'import { TestResponseRefWithInlineSchema200ResponseStrict } from "../schemas/TestResponseRefWithInlineSchema200ResponseStrict.js"',
+      'import { TestResponseRefWithInlineSchema200Response } from "../schemas/TestResponseRefWithInlineSchema200Response.js"',
     );
   });
 });

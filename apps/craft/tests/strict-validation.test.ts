@@ -10,9 +10,9 @@ function evalZod(zodCode: string) {
   return eval(zodCode);
 }
 
-describe("Strict Validation Feature", () => {
+describe("Additional Properties Feature", () => {
   describe("loose validation (default behavior)", () => {
-    it("should use z.looseObject() by default to allow extra properties", () => {
+    it("should use z.object() by default to allow extra properties", () => {
       const schema = {
         type: "object" as const,
         properties: {
@@ -69,8 +69,8 @@ describe("Strict Validation Feature", () => {
     });
   });
 
-  describe("strict validation (opt-in behavior)", () => {
-    it("should use z.strictObject() when strictValidation is true", () => {
+  describe("strict validation (additionalProperties: false)", () => {
+    it("should use z.strictObject() when additionalProperties is false", () => {
       const schema = {
         type: "object" as const,
         properties: {
@@ -78,9 +78,10 @@ describe("Strict Validation Feature", () => {
           age: { type: "number" as const },
         },
         required: ["name"],
+        additionalProperties: false,
       };
 
-      const result = zodSchemaToCode(schema, { strictValidation: true });
+      const result = zodSchemaToCode(schema);
       expect(result.code).toContain("z.strictObject(");
       expect(result.code).not.toContain("z.object");
 
@@ -89,7 +90,7 @@ describe("Strict Validation Feature", () => {
       // Should accept valid objects
       expect(zodSchema.safeParse({ name: "John", age: 30 }).success).toBe(true);
 
-      // Should reject extra properties (strict validation)
+      // Should reject extra properties since additionalProperties: false
       expect(
         zodSchema.safeParse({ name: "John", age: 30, extra: "not allowed" })
           .success,
@@ -99,7 +100,7 @@ describe("Strict Validation Feature", () => {
       expect(zodSchema.safeParse({ name: 123 }).success).toBe(false);
     });
 
-    it("should use z.strictObject() for nested objects when strictValidation is true", () => {
+    it("should use z.strictObject() for nested objects when additionalProperties is false", () => {
       const schema = {
         type: "object" as const,
         properties: {
@@ -108,11 +109,13 @@ describe("Strict Validation Feature", () => {
             properties: {
               name: { type: "string" as const },
             },
+            additionalProperties: false,
           },
         },
+        additionalProperties: false,
       };
 
-      const result = zodSchemaToCode(schema, { strictValidation: true });
+      const result = zodSchemaToCode(schema);
       expect(result.code).toContain("z.strictObject(");
       expect(result.code).not.toContain("z.object");
 
@@ -143,7 +146,7 @@ describe("Strict Validation Feature", () => {
   });
 
   describe("consistency across schema types", () => {
-    it("should apply strictValidation consistently to discriminated unions", () => {
+    it("should apply additionalProperties consistently to discriminated unions", () => {
       const schema = {
         oneOf: [
           {
@@ -172,14 +175,16 @@ describe("Strict Validation Feature", () => {
       expect(looseResult.code).not.toContain("z.strictObject");
 
       // Test strict validation
-      const strictResult = zodSchemaToCode(schema as any, {
-        strictValidation: true,
-      });
+      const strictSchema = {
+        ...schema,
+        oneOf: schema.oneOf.map((s) => ({ ...s, additionalProperties: false })),
+      };
+      const strictResult = zodSchemaToCode(strictSchema as any);
       expect(strictResult.code).toContain("z.strictObject");
       expect(strictResult.code).not.toContain("z.object");
     });
 
-    it("should apply strictValidation consistently to array items", () => {
+    it("should apply additionalProperties consistently to array items", () => {
       const schema = {
         type: "array" as const,
         items: {
@@ -195,7 +200,14 @@ describe("Strict Validation Feature", () => {
       expect(looseResult.code).toContain("z.object");
 
       // Test strict validation
-      const strictResult = zodSchemaToCode(schema, { strictValidation: true });
+      const strictSchema = {
+        ...schema,
+        items: {
+          ...schema.items,
+          additionalProperties: false,
+        },
+      };
+      const strictResult = zodSchemaToCode(strictSchema);
       expect(strictResult.code).toContain("z.strictObject(");
       expect(strictResult.code).not.toContain("z.object");
     });
