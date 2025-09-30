@@ -1,10 +1,22 @@
-import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
+import type {
+  OpenAPIObject,
+  ReferenceObject,
+  SchemaObject,
+} from "openapi3-ts/oas31";
 
 import type { RecursiveContext } from "./recursive-handlers.js";
+
 /**
  * Union type for OpenAPI schema types
  */
 export type OpenAPISchema = ReferenceObject | SchemaObject;
+
+/**
+ * Type for resolved schemas from OpenAPI components
+ */
+export type ResolvedSchemas = NonNullable<
+  OpenAPIObject["components"]
+>["schemas"];
 
 /**
  * Options for zodSchemaToCode function
@@ -14,6 +26,7 @@ export interface ZodSchemaCodeOptions {
   imports?: Set<string>;
   isTopLevel?: boolean;
   recursiveContext?: RecursiveContext;
+  resolvedSchemas?: ResolvedSchemas;
   strictValidation?: boolean;
 }
 
@@ -64,6 +77,7 @@ export function zodSchemaToCode(
     currentSchemaName,
     imports,
     recursiveContext,
+    resolvedSchemas,
     strictValidation = false,
   } = options;
   const result = createResult(imports);
@@ -88,6 +102,7 @@ export function zodSchemaToCode(
       strictValidation,
       recursiveContext,
       currentSchemaName,
+      resolvedSchemas,
     );
   }
 
@@ -111,6 +126,7 @@ export function zodSchemaToCode(
       strictValidation,
       recursiveContext,
       currentSchemaName,
+      resolvedSchemas,
     );
   }
 
@@ -121,6 +137,7 @@ export function zodSchemaToCode(
     strictValidation,
     recursiveContext,
     currentSchemaName,
+    resolvedSchemas,
   );
   if (composition) return composition;
 
@@ -132,6 +149,7 @@ export function zodSchemaToCode(
     strictValidation,
     recursiveContext,
     currentSchemaName,
+    resolvedSchemas,
   );
   if (primitiveHandled) return primitiveHandled;
 
@@ -153,6 +171,7 @@ function handleMultiTypeArray(
   strictValidation: boolean,
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
+  resolvedSchemas?: ResolvedSchemas,
 ): ZodSchemaResult {
   const { isNullable: hasNull, nonNullTypes } = analyzeTypeArray(effectiveType);
   if (nonNullTypes.length === 1 && hasNull) {
@@ -161,6 +180,7 @@ function handleMultiTypeArray(
       currentSchemaName,
       imports: result.imports,
       recursiveContext,
+      resolvedSchemas,
       strictValidation,
     });
     result.code = `(${subResult.code}).nullable()`;
@@ -172,6 +192,7 @@ function handleMultiTypeArray(
       currentSchemaName,
       imports: result.imports,
       recursiveContext,
+      resolvedSchemas,
       strictValidation,
     }),
   );
@@ -188,12 +209,14 @@ function handleNullableSchema(
   strictValidation: boolean,
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
+  resolvedSchemas?: ResolvedSchemas,
 ): ZodSchemaResult {
   const clone = cloneWithoutNullable(schema);
   const subResult = zodSchemaToCode(clone, {
     currentSchemaName,
     imports: result.imports,
     recursiveContext,
+    resolvedSchemas,
     strictValidation,
   });
   result.code = `(${subResult.code}).nullable()`;
@@ -209,6 +232,7 @@ function handlePrimitive(
   strictValidation: boolean,
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
+  resolvedSchemas?: ResolvedSchemas,
 ): undefined | ZodSchemaResult {
   if (effectiveType === "string") return handleStringType(schema, result);
   if (effectiveType === "number" || effectiveType === "integer") {
@@ -219,6 +243,7 @@ function handlePrimitive(
     return handleArrayType(schema, result, zodSchemaToCode, {
       currentSchemaName,
       recursiveContext,
+      resolvedSchemas,
       strictValidation,
     });
   }
@@ -226,6 +251,7 @@ function handlePrimitive(
     return handleObjectType(schema, result, zodSchemaToCode, {
       currentSchemaName,
       recursiveContext,
+      resolvedSchemas,
       strictValidation,
     });
   }
@@ -239,11 +265,13 @@ function tryHandleCompositions(
   strictValidation: boolean,
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
+  resolvedSchemas?: ResolvedSchemas,
 ): undefined | ZodSchemaResult {
   if (schema.allOf) {
     return handleAllOfSchema(schema.allOf, result, zodSchemaToCode, {
       currentSchemaName,
       recursiveContext,
+      resolvedSchemas,
       strictValidation,
     });
   }
@@ -254,7 +282,12 @@ function tryHandleCompositions(
       result,
       zodSchemaToCode,
       schema.discriminator,
-      { currentSchemaName, recursiveContext, strictValidation },
+      {
+        currentSchemaName,
+        recursiveContext,
+        resolvedSchemas,
+        strictValidation,
+      },
     );
   }
   if (schema.oneOf) {
@@ -264,7 +297,12 @@ function tryHandleCompositions(
       result,
       zodSchemaToCode,
       schema.discriminator,
-      { currentSchemaName, recursiveContext, strictValidation },
+      {
+        currentSchemaName,
+        recursiveContext,
+        resolvedSchemas,
+        strictValidation,
+      },
     );
   }
   return undefined;

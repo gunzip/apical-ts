@@ -1,5 +1,7 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
+import type { ResolvedSchemas } from "./schema-converter.js";
+
 import { addDefaultValue } from "./utils.js";
 
 /**
@@ -8,6 +10,7 @@ import { addDefaultValue } from "./utils.js";
 interface ObjectTypeOptions {
   currentSchemaName?: string;
   recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
+  resolvedSchemas?: ResolvedSchemas;
   strictValidation?: boolean;
 }
 
@@ -38,6 +41,7 @@ export function handleObjectType(
   const {
     currentSchemaName,
     recursiveContext,
+    resolvedSchemas,
     strictValidation = false,
   } = options;
   const shape: string[] = [];
@@ -49,6 +53,7 @@ export function handleObjectType(
         currentSchemaName,
         imports: result.imports,
         recursiveContext,
+        resolvedSchemas,
         strictValidation,
       });
       result.imports = new Set([...propResult.imports, ...result.imports]);
@@ -73,6 +78,7 @@ export function handleObjectType(
         currentSchemaName,
         imports: result.imports,
         recursiveContext,
+        resolvedSchemas,
         strictValidation,
       });
       result.imports = new Set([

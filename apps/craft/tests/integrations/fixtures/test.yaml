@@ -1027,6 +1027,9 @@ components:
             - { type: string, format: uuid }
         - type: string
           minLength: 5
+    AllOfWithPrimitiveRef:
+      allOf:
+        - $ref: "#/components/schemas/FiscalCode" # string
 
     PreferredLanguage:
       type: string

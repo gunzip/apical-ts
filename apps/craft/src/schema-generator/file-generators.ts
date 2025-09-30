@@ -3,6 +3,7 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
 import type { RecursiveContext } from "./recursive-handlers.js";
+import type { ResolvedSchemas } from "./schema-converter.js";
 
 import {
   createRecursiveContext,
@@ -18,6 +19,7 @@ export interface RecursiveSchemaFileOptions {
   name: string;
   originalSchemaName: string;
   recursiveContext: RecursiveContext;
+  resolvedSchemas?: ResolvedSchemas;
   schema: SchemaObject;
   strictValidation?: boolean;
 }
@@ -36,6 +38,7 @@ export interface SchemaFileResult {
 export interface SchemaGenerationOptions {
   originalSchemaName?: string;
   recursiveContext?: RecursiveContext;
+  resolvedSchemas?: ResolvedSchemas;
   strictValidation?: boolean;
 }
 
@@ -50,6 +53,7 @@ export async function generateRecursiveSchemaFile(
     name,
     originalSchemaName,
     recursiveContext,
+    resolvedSchemas,
     schema,
     strictValidation = false,
   } = options;
@@ -77,6 +81,7 @@ export async function generateRecursiveSchemaFile(
         currentSchemaName: name,
         imports: new Set(),
         recursiveContext,
+        resolvedSchemas,
         strictValidation,
       });
 
@@ -148,7 +153,11 @@ export async function generateSchemaFile(
   description?: string,
   options: SchemaGenerationOptions = {},
 ): Promise<SchemaFileResult> {
-  const { recursiveContext, strictValidation = false } = options;
+  const {
+    recursiveContext,
+    resolvedSchemas,
+    strictValidation = false,
+  } = options;
 
   const context = recursiveContext || createRecursiveContext();
 
@@ -156,6 +165,7 @@ export async function generateSchemaFile(
     currentSchemaName: name,
     isTopLevel: true,
     recursiveContext: context,
+    resolvedSchemas,
     strictValidation,
   });
 
