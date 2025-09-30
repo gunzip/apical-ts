@@ -14,7 +14,8 @@ import { zodSchemaToCode } from "../schema-generator/index.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 
 /**
- * Options for parameter schema generation
+ * Options for parameter schema generation, controlling transformations
+ * applied during Zod schema creation for OpenAPI parameters.
  */
 export interface ParameterSchemaOptions {
   /* Apply coercion transformations for primitive types */
