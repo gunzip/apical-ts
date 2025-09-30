@@ -227,8 +227,8 @@ export function handleUnionSchema(
     // anyOf: accepts values that match any of the schemas
     result.code = `z.union([${schemasCodes.join(", ")}])`;
   } else {
-    // oneOf: must match exactly one schema - use superRefine for validation
-    result.code = `z.any().superRefine((x, ctx) => {
+    // oneOf: must match exactly one schema - use union with superRefine for validation
+    result.code = `z.union([${schemasCodes.join(", ")}]).superRefine((x, ctx) => {
   const schemas = [${schemasCodes.join(", ")}];
   const errors = schemas.reduce<z.ZodError[]>(
     (errors, schema) =>
