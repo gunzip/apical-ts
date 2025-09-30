@@ -696,7 +696,7 @@ describe("zodSchemaToCode", () => {
       };
       const result = zodSchemaToCode(schema);
       expect(result.code).toBe(
-        'z.object({"attributes": z.object({"properties": z.object({}).loose()})})',
+        'z.object({"attributes": z.object({"properties": z.object({}).catchall(z.unknown())})})',
       );
 
       const zodSchema = evalZod(result.code);
@@ -717,7 +717,7 @@ describe("zodSchemaToCode", () => {
         type: "object",
       };
       const result = zodSchemaToCode(schema);
-      expect(result.code).toBe("z.object({}).loose()");
+      expect(result.code).toBe("z.object({}).catchall(z.unknown())");
 
       const zodSchema = evalZod(result.code);
       /* Should accept any properties */

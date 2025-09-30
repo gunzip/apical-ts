@@ -59,7 +59,7 @@ export function generateObjectCode(
     (additionalProperties === undefined || additionalProperties === true)
   ) {
     return {
-      code: "z.object({}).loose()",
+      code: "z.object({}).catchall(z.unknown())",
       imports,
     };
   }
