@@ -378,7 +378,9 @@ describe("zodSchemaToCode", () => {
       oneOf: [{ type: "string" }, { type: "number" }],
     };
     const result = zodSchemaToCode(schema);
-    expect(result.code).toContain("z.any().superRefine(");
+    expect(result.code).toContain(
+      "z.union([z.string(), z.number()]).superRefine(",
+    );
     expect(result.code).toContain("Should pass exactly one schema");
     expect(result.code).not.toContain("discriminatedUnion");
     // Note: Skip evalZod for complex superRefine code as it contains TypeScript types
@@ -419,7 +421,8 @@ describe("zodSchemaToCode", () => {
       oneOf: [normalUserSchema, adminUserSchema],
     };
     const oneOfResult = zodSchemaToCode(oneOfSchema);
-    expect(oneOfResult.code).toContain("z.any().superRefine(");
+    expect(oneOfResult.code).toContain("z.union([");
+    expect(oneOfResult.code).toContain("]).superRefine(");
     expect(oneOfResult.code).toContain("Should pass exactly one schema");
   });
 
