@@ -1,5 +1,12 @@
 # @apical-ts/craft
 
+## 0.5.0
+
+### Minor Changes
+
+- b4f8ae9: Handle additional properties and empty objects
+- d2d15e8: Handle complex intersections when using allOf
+
 ## 0.4.0
 
 ### Minor Changes
