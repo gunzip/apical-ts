@@ -973,6 +973,61 @@ components:
               items:
                 $ref: "#/components/schemas/Message"
         - $ref: "#/components/schemas/PaginationResponse"
+        - $ref: "#/components/schemas/NewModel"
+    AllOfWithMixedTest:
+      allOf:
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Message"
+        - $ref: "#/components/schemas/PaginationResponse"
+        - $ref: "#/components/schemas/NewModel"
+        - type: string
+          format: email
+        - type: string
+          maxLength: 50
+    AllOfWithRecursiveSchema:
+      allOf:
+        - $ref: "#/components/schemas/PaginationResponse"
+        - $ref: "./definitions.yaml#/Category"
+        - $ref: "#/components/schemas/NewModel"
+    AllOfWithEmptyObjectTest:
+      allOf:
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Message"
+        - $ref: "#/components/schemas/NewModel"
+        - type: object
+    AllOfWithEmptyObjectAndRequireTest:
+      allOf:
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Message"
+        - $ref: "#/components/schemas/NewModel"
+        - type: object
+          required:
+            - items
+    AllOfWithConstraints:
+      allOf:
+        - $ref: "#/components/schemas/FiscalCode" # string
+        - type: string
+          maxLength: 2
+    AllOfWithInlineConstraints:
+      allOf:
+        - oneOf:
+            - { type: string, format: email }
+            - { type: string, format: uuid }
+        - type: string
+          minLength: 5
+
     PreferredLanguage:
       type: string
       x-extensible-enum:

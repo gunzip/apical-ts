@@ -1,5 +1,7 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
+import { isSchemaObject } from "openapi3-ts/oas31";
+
 import type { RecursiveContext } from "./recursive-handlers.js";
 
 import { mergeImports } from "./utils.js";
@@ -53,6 +55,57 @@ export function handleAllOfSchema(
     recursiveContext,
     strictValidation = false,
   } = options;
+
+  // Simple check: if all schemas are objects, try object spread
+  const canUseObjectSpread = schemas.every((schema) => {
+    if (!isSchemaObject(schema)) {
+      // It's a reference - assume it's compatible for now
+      return true;
+    }
+    // Check if it's an object type
+    return !schema.type || schema.type === "object";
+  });
+
+  if (canUseObjectSpread) {
+    // Try object spread approach
+    const shapeExpressions: string[] = [];
+    const allImports = new Set<string>();
+
+    for (const schema of schemas) {
+      if (!isSchemaObject(schema)) {
+        // Handle reference: extract name and use .shape
+        const refMatch = schema.$ref?.match(/\/([^/]+)$/);
+        if (refMatch) {
+          const refName = refMatch[1];
+          allImports.add(refName);
+          shapeExpressions.push(`...${refName}.shape`);
+        }
+      } else if (
+        (!schema.type || schema.type === "object") &&
+        schema.properties
+      ) {
+        // Generate inline object for spread
+        const subResult = zodSchemaToCode(schema, {
+          currentSchemaName,
+          imports: new Set(),
+          recursiveContext,
+          strictValidation,
+        });
+        subResult.imports.forEach((imp) => allImports.add(imp));
+        shapeExpressions.push(`...${subResult.code}.shape`);
+      }
+      // Skip empty objects for now
+    }
+
+    if (shapeExpressions.length > 0) {
+      const objectMethod = strictValidation ? "z.strictObject" : "z.object";
+      result.code = `${objectMethod}({${shapeExpressions.join(", ")}})`;
+      allImports.forEach((imp) => result.imports.add(imp));
+      return result;
+    }
+  }
+
+  // Fallback to intersection approach
   const subResults = schemas.map((s) =>
     zodSchemaToCode(s, {
       currentSchemaName,
@@ -75,7 +128,7 @@ export function handleAllOfSchema(
     return result;
   }
 
-  // If all are objects, merge; else intersection
+  // Generate nested intersections
   result.code = schemaCodes.reduce(
     (acc, curr) => `z.intersection(${acc}, ${curr})`,
   );

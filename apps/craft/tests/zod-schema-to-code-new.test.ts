@@ -39,7 +39,7 @@ describe("zodSchemaToCode", () => {
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toContain("Profile");
-    expect(result.code).toContain("intersection");
+    expect(result.code).toContain("z.object({...Profile.shape");
     expect(result.imports.has("Profile")).toBe(true);
   });
 });
