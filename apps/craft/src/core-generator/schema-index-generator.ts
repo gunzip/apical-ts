@@ -70,9 +70,7 @@ export async function generateSchemaIndex(
     ...imports,
     "",
     "export {",
-    ...exports.map((exp, index) =>
-      index === exports.length - 1 ? `  ${exp},` : `  ${exp},`,
-    ),
+    ...exports.map((exp) => `  ${exp},`),
     "};",
     "",
   ].join("\n");
