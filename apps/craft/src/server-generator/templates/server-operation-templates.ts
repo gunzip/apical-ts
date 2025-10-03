@@ -9,28 +9,6 @@ import { generateResponseMap } from "../../shared/response-maps.js";
 import { generateResponseUnion } from "../../shared/response-union-generator.js";
 
 /**
- * Generates inline parameter schemas with server-specific transformations
- */
-function generateInlineParameterSchemas(
-  operationId: string,
-  parameterGroups: ParameterGroups,
-  typeImports: Set<string>,
-): string {
-  const result = generateParameterSchemas(operationId, parameterGroups, {
-    /* Server requires coercion and lowercase headers */
-    coercePrimitives: true,
-    lowercaseHeaderKeys: true,
-  });
-
-  /* Add any type imports from schema generation */
-  for (const typeImport of result.typeImports) {
-    typeImports.add(typeImport);
-  }
-
-  return result.schemaCode;
-}
-
-/**
  * Template parameters for server operation wrapper generation
  */
 export interface ServerOperationTemplateParams {
@@ -217,6 +195,28 @@ ${validationLogic}
   ].filter(Boolean);
 
   return parts.join("\n\n");
+}
+
+/**
+ * Generates inline parameter schemas with server-specific transformations
+ */
+function generateInlineParameterSchemas(
+  operationId: string,
+  parameterGroups: ParameterGroups,
+  typeImports: Set<string>,
+): string {
+  const result = generateParameterSchemas(operationId, parameterGroups, {
+    /* Server requires coercion and lowercase headers */
+    coercePrimitives: true,
+    lowercaseHeaderKeys: true,
+  });
+
+  /* Add any type imports from schema generation */
+  for (const typeImport of result.typeImports) {
+    typeImports.add(typeImport);
+  }
+
+  return result.schemaCode;
 }
 
 /**
