@@ -4,6 +4,10 @@ import path from "path";
 import type { OperationMetadata } from "../client-generator/operation-extractor.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import {
+  categorizeImports,
+  filterServerParameterImports,
+} from "../shared/parameter-utils.js";
 
 /**
  * Creates server operations directory structure
@@ -78,21 +82,28 @@ export async function writeServerOperationFile(
   typeImports: Set<string>,
   serverOperationsDir: string,
 ): Promise<void> {
-  /* Separate different types of imports */
+  /* Use structured approach to categorize imports */
+  const categorized = categorizeImports(typeImports, operationId);
+
+  /* Filter out parameter schema imports that should be skipped for server generation */
+  const allowedParameterImports = filterServerParameterImports(
+    categorized.parameterImports,
+  );
+
+  /* Build schema imports from regular imports and allowed parameter imports */
   const schemaImports: string[] = [];
 
-  for (const imp of typeImports) {
-    if (
-      imp.endsWith("Schema") &&
-      (imp.includes("Query") || imp.includes("Path") || imp.includes("Headers"))
-    ) {
-      /* Parameter schemas are now generated inline, skip importing */
-      continue;
-    } else if (imp !== "z") {
-      /* Regular schema types */
-      schemaImports.push(`import { ${imp} } from "../schemas/${imp}.js";`);
-    }
-  }
+  // Add regular schema imports
+  categorized.regularImports.forEach((imp) => {
+    schemaImports.push(`import { ${imp} } from "../schemas/${imp}.js";`);
+  });
+
+  // Add allowed parameter imports (non-schema parameters)
+  allowedParameterImports.forEach((paramImport) => {
+    schemaImports.push(
+      `import { ${paramImport.importName} } from "../schemas/${paramImport.importName}.js";`,
+    );
+  });
 
   /* Build imports section */
   const imports: string[] = [];

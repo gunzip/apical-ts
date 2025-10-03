@@ -1,5 +1,9 @@
 import { promises as fs } from "fs";
 
+import {
+  categorizeImports,
+  groupStructuredParameterImports,
+} from "../shared/parameter-utils.js";
 import { ImportManager } from "./import-types.js";
 
 /**
@@ -8,7 +12,7 @@ import { ImportManager } from "./import-types.js";
 export function buildOperationFileContent(
   typeImports: Set<string>,
   functionCode: string,
-  operationId?: string,
+  operationId: string,
 ): string {
   const importManager = createImportManager(typeImports, operationId);
   const importLines = buildImportStatements(importManager, functionCode);
@@ -20,7 +24,8 @@ export function buildOperationFileContent(
  */
 export function buildOperationImports(
   typeImports: Set<string>,
-  functionCode?: string,
+  functionCode: string | undefined,
+  operationId: string,
 ): string[] {
   const configImports = getConfigImports(functionCode);
   const imports: string[] = [];
@@ -35,35 +40,29 @@ export function buildOperationImports(
     `import { ${configImports.valueImports.join(", ")} } from "./config.js";`,
   );
 
+  // Categorize imports using structured approach
+  const categorized = categorizeImports(typeImports, operationId);
+
   // Add Zod import if needed for parameter schemas
-  if (typeImports.has("z")) {
+  if (categorized.zodImport) {
     imports.push(`import { z } from "zod";`);
   }
 
-  // Separate parameter imports from normal schema imports
-  const normalSchemaImports: string[] = [];
-  const parameterImports: string[] = [];
-
-  for (const type of Array.from(typeImports).filter((t) => t !== "z")) {
-    if (isParameterImport(type)) {
-      parameterImports.push(type);
-    } else {
-      normalSchemaImports.push(type);
-    }
-  }
-
   // Add normal schema imports
-  normalSchemaImports.forEach((type) => {
+  categorized.regularImports.forEach((type) => {
     imports.push(`import { ${type} } from "../schemas/${type}.js";`);
   });
 
-  // Add parameter imports from combined Parameters files
-  if (parameterImports.length > 0) {
-    const operationGroups = groupParameterImports(parameterImports);
+  // Add parameter imports grouped by operation
+  if (categorized.parameterImports.length > 0) {
+    const operationGroups = groupStructuredParameterImports(
+      categorized.parameterImports,
+    );
 
-    for (const [operationId, importList] of operationGroups) {
+    for (const [operationId, paramImports] of operationGroups) {
+      const importNames = paramImports.map((pi) => pi.importName);
       imports.push(
-        `import { ${importList.join(", ")} } from "../schemas/${operationId}Parameters.js";`,
+        `import { ${importNames.join(", ")} } from "../schemas/${operationId}Parameters.js";`,
       );
     }
   }
@@ -141,50 +140,36 @@ function buildImportStatements(
  */
 function createImportManager(
   typeImports: Set<string>,
-  operationId?: string,
+  operationId: string,
 ): ImportManager {
   const manager = new ImportManager();
 
+  // Categorize imports using structured approach
+  const categorized = categorizeImports(typeImports, operationId);
+
   /* Add Zod import if needed */
-  if (typeImports.has("z")) {
+  if (categorized.zodImport) {
     manager.addZodImport();
   }
 
-  /* Process each import */
-  for (const imp of typeImports) {
-    if (imp === "z") continue;
+  /* Add regular schema imports */
+  for (const imp of categorized.regularImports) {
+    manager.addSchemaImport(imp);
+  }
 
-    if (isParameterImport(imp) && operationId) {
-      manager.addParameterImport(imp, operationId);
+  /* Add parameter imports with operation ID */
+  for (const paramImport of categorized.parameterImports) {
+    // Use the operationId from the structured import info, fallback to provided operationId
+    const targetOperationId = paramImport.operationId || operationId;
+    if (targetOperationId) {
+      manager.addParameterImport(paramImport.importName, targetOperationId);
     } else {
-      manager.addSchemaImport(imp);
+      // If no operation ID available, treat as regular schema import
+      manager.addSchemaImport(paramImport.importName);
     }
   }
 
   return manager;
-}
-
-/**
- * Formats TypeScript content using prettier
-
-/**
- * Extracts operation ID from parameter import name
- */
-function extractOperationId(imp: string): string {
-  if (
-    imp.endsWith("QuerySchema") ||
-    imp.endsWith("PathSchema") ||
-    imp.endsWith("HeadersSchema")
-  ) {
-    return imp.replace(/(Query|Path|Headers)Schema$/, "");
-  } else if (
-    imp.endsWith("Query") ||
-    imp.endsWith("Path") ||
-    imp.endsWith("Headers")
-  ) {
-    return imp.replace(/(Query|Path|Headers)$/, "");
-  }
-  return "";
 }
 
 /**
@@ -238,43 +223,4 @@ function getConfigImports(functionCode?: string): {
   }
 
   return { typeImports: configTypeImports, valueImports: configValueImports };
-}
-
-/**
- * Groups parameter imports by operation ID
- */
-function groupParameterImports(
-  parameterImports: string[],
-): Map<string, string[]> {
-  const operationGroups = new Map<string, string[]>();
-
-  for (const imp of parameterImports) {
-    const operationId = extractOperationId(imp);
-
-    if (operationId) {
-      if (!operationGroups.has(operationId)) {
-        operationGroups.set(operationId, []);
-      }
-      const group = operationGroups.get(operationId);
-      if (group) {
-        group.push(imp);
-      }
-    }
-  }
-
-  return operationGroups;
-}
-
-/**
- * Determines if an import is parameter-related
- */
-function isParameterImport(type: string): boolean {
-  const isParameterSchema =
-    type.endsWith("Schema") &&
-    (type.includes("Query") ||
-      type.includes("Path") ||
-      type.includes("Headers"));
-  const isParameterType =
-    type.endsWith("Query") || type.endsWith("Path") || type.endsWith("Headers");
-  return isParameterSchema || isParameterType;
 }
