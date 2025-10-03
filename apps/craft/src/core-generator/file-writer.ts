@@ -1,13 +1,17 @@
 import { promises as fs } from "fs";
 
+import { ImportManager } from "./import-types.js";
+
 /**
  * Builds the complete operation file content with imports and function code
  */
 export function buildOperationFileContent(
   typeImports: Set<string>,
   functionCode: string,
+  operationId?: string,
 ): string {
-  const importLines = buildOperationImports(typeImports, functionCode);
+  const importManager = createImportManager(typeImports, operationId);
+  const importLines = buildImportStatements(importManager, functionCode);
   return `${importLines.join("\n")}\n\n${functionCode}`;
 }
 
@@ -21,22 +25,22 @@ export function buildOperationImports(
   const configImports = getConfigImports(functionCode);
   const imports: string[] = [];
 
-  /* Add type imports from config */
+  // Add type imports from config
   imports.push(
     `import type { ${configImports.typeImports.join(", ")} } from "./config.js";`,
   );
 
-  /* Add value imports from config */
+  // Add value imports from config
   imports.push(
     `import { ${configImports.valueImports.join(", ")} } from "./config.js";`,
   );
 
-  /* Add Zod import if needed for parameter schemas */
+  // Add Zod import if needed for parameter schemas
   if (typeImports.has("z")) {
     imports.push(`import { z } from "zod";`);
   }
 
-  /* Separate parameter imports from normal schema imports */
+  // Separate parameter imports from normal schema imports
   const normalSchemaImports: string[] = [];
   const parameterImports: string[] = [];
 
@@ -48,12 +52,12 @@ export function buildOperationImports(
     }
   }
 
-  /* Add normal schema imports */
+  // Add normal schema imports
   normalSchemaImports.forEach((type) => {
     imports.push(`import { ${type} } from "../schemas/${type}.js";`);
   });
 
-  /* Add parameter imports from combined Parameters files */
+  // Add parameter imports from combined Parameters files
   if (parameterImports.length > 0) {
     const operationGroups = groupParameterImports(parameterImports);
 
@@ -91,6 +95,77 @@ export async function writeTypeScriptFile(
     throw new Error(`Failed to write file ${filePath}: ${error}`);
   }
 }
+
+/**
+ * Builds import statements from ImportManager
+ */
+function buildImportStatements(
+  importManager: ImportManager,
+  functionCode?: string,
+): string[] {
+  const imports: string[] = [];
+
+  /* Add config imports */
+  const configImports = getConfigImports(functionCode);
+  imports.push(
+    `import type { ${configImports.typeImports.join(", ")} } from "./config.js";`,
+  );
+  imports.push(
+    `import { ${configImports.valueImports.join(", ")} } from "./config.js";`,
+  );
+
+  /* Add Zod import */
+  if (importManager.hasZodImport()) {
+    imports.push(`import { z } from "zod";`);
+  }
+
+  /* Add schema imports */
+  for (const schemaImport of importManager.getSchemaImports()) {
+    imports.push(
+      `import { ${schemaImport.name} } from "../schemas/${schemaImport.name}.js";`,
+    );
+  }
+
+  /* Add parameter imports grouped by operation */
+  for (const paramGroup of importManager.getParameterGroups()) {
+    imports.push(
+      `import { ${paramGroup.imports.join(", ")} } from "../schemas/${paramGroup.operationId}Parameters.js";`,
+    );
+  }
+
+  return imports;
+}
+
+/**
+ * Creates an import manager from type imports and operation ID
+ */
+function createImportManager(
+  typeImports: Set<string>,
+  operationId?: string,
+): ImportManager {
+  const manager = new ImportManager();
+
+  /* Add Zod import if needed */
+  if (typeImports.has("z")) {
+    manager.addZodImport();
+  }
+
+  /* Process each import */
+  for (const imp of typeImports) {
+    if (imp === "z") continue;
+
+    if (isParameterImport(imp) && operationId) {
+      manager.addParameterImport(imp, operationId);
+    } else {
+      manager.addSchemaImport(imp);
+    }
+  }
+
+  return manager;
+}
+
+/**
+ * Formats TypeScript content using prettier
 
 /**
  * Extracts operation ID from parameter import name

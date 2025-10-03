@@ -4,8 +4,31 @@ import type { ParameterGroups } from "../../client-generator/models/parameter-mo
 import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
 
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
+import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
 import { generateResponseMap } from "../../shared/response-maps.js";
 import { generateResponseUnion } from "../../shared/response-union-generator.js";
+
+/**
+ * Generates inline parameter schemas with server-specific transformations
+ */
+function generateInlineParameterSchemas(
+  operationId: string,
+  parameterGroups: ParameterGroups,
+  typeImports: Set<string>,
+): string {
+  const result = generateParameterSchemas(operationId, parameterGroups, {
+    /* Server requires coercion and lowercase headers */
+    coercePrimitives: true,
+    lowercaseHeaderKeys: true,
+  });
+
+  /* Add any type imports from schema generation */
+  for (const typeImport of result.typeImports) {
+    typeImports.add(typeImport);
+  }
+
+  return result.schemaCode;
+}
 
 /**
  * Template parameters for server operation wrapper generation
@@ -105,26 +128,21 @@ export function renderServerOperationWrapper(
     hasBody,
     method,
     operationId,
-    parameterGroups,
     pathKey,
     requestMapCode,
     requestMapTypeName,
     responseMapCode,
     responseMapTypeName,
-    // summary,
   } = params;
 
   const sanitizedId = sanitizeIdentifier(operationId);
 
-  /* Add parameter schema imports instead of generating inline */
-  const addParameterImports = (typeImports: Set<string>) => {
-    /* Always add parameter imports since we always generate parameter schemas */
-    typeImports.add(`${sanitizedId}QuerySchema`);
-    typeImports.add(`${sanitizedId}PathSchema`);
-    typeImports.add(`${sanitizedId}HeadersSchema`);
-  };
-
-  addParameterImports(params.typeImports);
+  /* Generate inline parameter schemas with server-specific transformations */
+  const parameterSchemas = generateInlineParameterSchemas(
+    operationId,
+    params.parameterGroups,
+    params.typeImports,
+  );
   const validationLogic = renderValidationLogic(
     operationId,
     requestMapTypeName,
@@ -146,9 +164,9 @@ export function renderServerOperationWrapper(
   | { kind: "body-error"; error: z.ZodError; isValid: false };`;
 
   const parsedParamsType = `type ${sanitizedId}ParsedParams = {
-  query: ${sanitizedId}QuerySchema;
-  path: ${sanitizedId}PathSchema;
-  headers: ${sanitizedId}HeadersSchema;
+  query: z.infer<typeof ${sanitizedId}QuerySchema>;
+  path: z.infer<typeof ${sanitizedId}PathSchema>;
+  headers: z.infer<typeof ${sanitizedId}HeadersSchema>;
   body?: ${bodyType};
 };`;
 
@@ -188,6 +206,7 @@ ${validationLogic}
   /* Combine all parts */
   const parts = [
     `import { z } from "zod";`,
+    parameterSchemas,
     requestMapCode,
     responseMapCode,
     validationErrorType,

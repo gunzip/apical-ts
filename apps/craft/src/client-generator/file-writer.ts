@@ -88,7 +88,11 @@ export async function writeOperationFile(
   operationsDir: string,
 ): Promise<void> {
   const sanitizedOperationId = sanitizeIdentifier(operationId);
-  const operationContent = buildOperationFileContent(typeImports, functionCode);
+  const operationContent = buildOperationFileContent(
+    typeImports,
+    functionCode,
+    operationId,
+  );
   const operationPath = path.join(operationsDir, `${sanitizedOperationId}.ts`);
   await writeTypeScriptFile(operationPath, operationContent);
 }

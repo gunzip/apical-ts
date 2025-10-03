@@ -44,8 +44,11 @@ describe("server-generator operation wrapper", () => {
 
     expect(result.wrapperCode).toContain("testSimpleQueryWrapper");
     expect(result.wrapperCode).toContain("testSimpleQueryQuerySchema");
-    expect(result.wrapperCode).toContain('"query1": z.string()');
-    expect(result.wrapperCode).toContain('"query2": z.string()');
+    // Parameter schemas are now imported, not inline, so we test for usage, not definition
+    expect(result.wrapperCode).toContain(
+      "testSimpleQueryQuerySchema.safeParse",
+    );
+    expect(result.wrapperCode).toContain("testSimpleQueryPathSchema.safeParse");
     expect(result.wrapperCode).toContain('kind: "query-error"');
     expect(result.wrapperCode).toContain('kind: "path-error"');
     expect(result.wrapperCode).toContain('kind: "headers-error"');
@@ -115,8 +118,13 @@ describe("server-generator operation wrapper", () => {
       doc as any,
     );
 
-    /* Verify that query and path schemas use z.object since we eliminated strict validation */
-    expect(result.wrapperCode).toContain("z.object({");
+    /* Schema validation now happens via imported schemas, not inline */
+    expect(result.wrapperCode).toContain(
+      "testStrictValidationQuerySchema.safeParse",
+    );
+    expect(result.wrapperCode).toContain(
+      "testStrictValidationPathSchema.safeParse",
+    );
     expect(result.wrapperCode).not.toContain("z.strictObject(");
   });
 
@@ -205,7 +213,8 @@ describe("server-generator operation wrapper", () => {
     );
 
     expect(result.wrapperCode).toContain("testWithPathPathSchema");
-    expect(result.wrapperCode).toContain('"id": z.string()');
+    // Path parameter schemas are now imported, not inline, so we test for usage
+    expect(result.wrapperCode).toContain("testWithPathPathSchema.safeParse");
     expect(result.wrapperCode).toContain("pathParse.data");
   });
 

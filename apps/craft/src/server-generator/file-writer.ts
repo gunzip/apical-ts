@@ -78,20 +78,16 @@ export async function writeServerOperationFile(
   typeImports: Set<string>,
   serverOperationsDir: string,
 ): Promise<void> {
-  const sanitizedId = sanitizeIdentifier(operationId);
-
   /* Separate different types of imports */
   const schemaImports: string[] = [];
-  const parameterSchemaImports: string[] = [];
-  const parameterTypeImports: string[] = [];
 
   for (const imp of typeImports) {
     if (
       imp.endsWith("Schema") &&
       (imp.includes("Query") || imp.includes("Path") || imp.includes("Headers"))
     ) {
-      /* Parameter schemas - all come from the Parameters.ts file */
-      parameterSchemaImports.push(imp);
+      /* Parameter schemas are now generated inline, skip importing */
+      continue;
     } else if (imp !== "z") {
       /* Regular schema types */
       schemaImports.push(`import { ${imp} } from "../schemas/${imp}.js";`);
@@ -102,17 +98,6 @@ export async function writeServerOperationFile(
   const imports: string[] = [];
   if (schemaImports.length > 0) {
     imports.push(...schemaImports);
-  }
-
-  /* Add parameter imports from the combined Parameters file */
-  if (parameterSchemaImports.length > 0 || parameterTypeImports.length > 0) {
-    const parameterImportItems = [
-      ...parameterSchemaImports,
-      ...parameterTypeImports,
-    ].join(", ");
-    imports.push(
-      `import { ${parameterImportItems} } from "../schemas/${sanitizedId}Parameters.js";`,
-    );
   }
 
   const fullCode =

@@ -152,7 +152,7 @@ describe("Express server wrappers integration", () => {
     const base = `http://127.0.0.1:${addr.port}`;
     const res = await request(base)
       .get("/test-parameter-with-dash/abcdef")
-      .set("headerinlineparam", "inline-header")
+      .set("headerInlineParam", "inline-header")
       .set("x-header-param", "xvalue")
       .query({ "foo-bar": "qb", "request-id": "1234567890" });
 
