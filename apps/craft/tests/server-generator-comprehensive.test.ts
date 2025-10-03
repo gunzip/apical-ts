@@ -132,9 +132,15 @@ describe("server-generator comprehensive validation", () => {
 
     /* Should include parsed params type */
     expect(result.wrapperCode).toContain("testOperationParsedParams");
-    expect(result.wrapperCode).toContain("query: z.infer<typeof testOperationQuerySchema>");
-    expect(result.wrapperCode).toContain("path: z.infer<typeof testOperationPathSchema>");
-    expect(result.wrapperCode).toContain("headers: z.infer<typeof testOperationHeadersSchema>");
+    expect(result.wrapperCode).toContain(
+      "query: z.infer<typeof testOperationQuerySchema>",
+    );
+    expect(result.wrapperCode).toContain(
+      "path: z.infer<typeof testOperationPathSchema>",
+    );
+    expect(result.wrapperCode).toContain(
+      "headers: z.infer<typeof testOperationHeadersSchema>",
+    );
 
     /* Should include handler type with discriminated union */
     expect(result.wrapperCode).toContain("testOperationHandler");
