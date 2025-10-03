@@ -6,7 +6,7 @@ import type {
 } from "../responses.js";
 import type { getOperationSecuritySchemes } from "../security.js";
 
-import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
+import { sanitizeIdentifier } from "../../schema-generator/utils.js";
 
 /* TypeScript rendering functions for operation code generation */
 
@@ -137,24 +137,14 @@ export function buildParameterDeclaration(
 export function buildTypeAliases(config: TypeAliasesConfig): string {
   let typeAliases = "";
 
-  /* Generate parameter schemas for client operations (for type-safe input parameters) */
+  /* Add parameter schema imports instead of generating them inline */
   if (config.operationId) {
-    const parameterSchemas = generateParameterSchemas(
-      config.operationId,
-      config.parameterGroups,
-      {
-        // Client parameters use default behavior without coercion or special validation rules.
-      },
-    );
-    if (parameterSchemas.schemaCode.trim()) {
-      /* Add Zod import for parameter schemas */
-      config.typeImports.add("z");
-      /* Merge parameter schema imports */
-      parameterSchemas.typeImports.forEach((imp) =>
-        config.typeImports.add(imp),
-      );
-      typeAliases += `/* Parameter schemas for type-safe inputs */\n${parameterSchemas.schemaCode}\n\n`;
-    }
+    const sanitizedId = sanitizeIdentifier(config.operationId);
+
+    /* Add imports for parameter schemas from the centralized schema files */
+    config.typeImports.add(`${sanitizedId}QuerySchema`);
+    config.typeImports.add(`${sanitizedId}PathSchema`);
+    config.typeImports.add(`${sanitizedId}HeadersSchema`);
   }
 
   /*

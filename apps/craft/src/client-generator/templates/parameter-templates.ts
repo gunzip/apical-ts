@@ -146,7 +146,7 @@ function renderHeaderParametersSection(
   if (analysis.operationId && structure.processed.headerParams.length > 0) {
     /* Use the inferred Zod type which handles proper parameter validation */
     const sanitizedOperationId = sanitizeIdentifier(analysis.operationId);
-    const headersTypeName = `${sanitizedOperationId}Headers`;
+    const headersTypeName = `${sanitizedOperationId}HeadersSchema`;
 
     /* If we have security headers, we need to combine both regular and security headers */
     if (structure.processed.securityHeaders.length > 0) {
@@ -192,7 +192,7 @@ function renderPathParametersSection(
   if (analysis.operationId) {
     /* Use the inferred Zod type which handles proper parameter validation */
     const sanitizedOperationId = sanitizeIdentifier(analysis.operationId);
-    const pathTypeName = `${sanitizedOperationId}Path`;
+    const pathTypeName = `${sanitizedOperationId}PathSchema`;
     return `path: ${pathTypeName}`;
   }
 
@@ -222,7 +222,7 @@ function renderQueryParametersSection(
   if (analysis.operationId) {
     /* Use the inferred Zod type which handles arrays, enums, and complex types correctly */
     const sanitizedOperationId = sanitizeIdentifier(analysis.operationId);
-    const queryTypeName = `${sanitizedOperationId}Query`;
+    const queryTypeName = `${sanitizedOperationId}QuerySchema`;
     /* Remove key-value pairs since the type is already defined by the Zod schema */
     return `query${optionalMarker}: ${queryTypeName}`;
   }

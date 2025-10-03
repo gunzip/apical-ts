@@ -4,7 +4,6 @@ import type { ParameterGroups } from "../../client-generator/models/parameter-mo
 import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
 
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
-import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
 import { generateResponseMap } from "../../shared/response-maps.js";
 import { generateResponseUnion } from "../../shared/response-union-generator.js";
 
@@ -116,11 +115,16 @@ export function renderServerOperationWrapper(
   } = params;
 
   const sanitizedId = sanitizeIdentifier(operationId);
-  const parameterSchemas = renderParameterSchemas(
-    operationId,
-    parameterGroups,
-    params.typeImports,
-  );
+
+  /* Add parameter schema imports instead of generating inline */
+  const addParameterImports = (typeImports: Set<string>) => {
+    /* Always add parameter imports since we always generate parameter schemas */
+    typeImports.add(`${sanitizedId}QuerySchema`);
+    typeImports.add(`${sanitizedId}PathSchema`);
+    typeImports.add(`${sanitizedId}HeadersSchema`);
+  };
+
+  addParameterImports(params.typeImports);
   const validationLogic = renderValidationLogic(
     operationId,
     requestMapTypeName,
@@ -142,9 +146,9 @@ export function renderServerOperationWrapper(
   | { kind: "body-error"; error: z.ZodError; isValid: false };`;
 
   const parsedParamsType = `type ${sanitizedId}ParsedParams = {
-  query: ${sanitizedId}Query;
-  path: ${sanitizedId}Path;
-  headers: ${sanitizedId}Headers;
+  query: ${sanitizedId}QuerySchema;
+  path: ${sanitizedId}PathSchema;
+  headers: ${sanitizedId}HeadersSchema;
   body?: ${bodyType};
 };`;
 
@@ -186,7 +190,6 @@ ${validationLogic}
     `import { z } from "zod";`,
     requestMapCode,
     responseMapCode,
-    parameterSchemas,
     validationErrorType,
     parsedParamsType,
     handlerType,
@@ -195,26 +198,6 @@ ${validationLogic}
   ].filter(Boolean);
 
   return parts.join("\n\n");
-}
-
-/**
- * Renders Zod schema definitions for parameters
- */
-function renderParameterSchemas(
-  operationId: string,
-  parameterGroups: ParameterGroups,
-  typeImports: Set<string>,
-): string {
-  /* Use shared parameter schema generation logic for server input */
-  const result = generateParameterSchemas(operationId, parameterGroups, {
-    coercePrimitives: true,
-    lowercaseHeaderKeys: true,
-  });
-
-  /* Merge type imports */
-  result.typeImports.forEach((imp) => typeImports.add(imp));
-
-  return result.schemaCode;
 }
 
 /**

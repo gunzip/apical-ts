@@ -122,9 +122,9 @@ export function generateParameterSchema(
   let schemaCode: string;
   if (parameters.length > 0) {
     const props = parameters.map((p) => buildProp(p.name, p)).join(", ");
-    schemaCode = `const ${schemaName} = z.object({ ${props} });\ntype ${typeName} = z.infer<typeof ${schemaName}>;`;
+    schemaCode = `const ${schemaName} = z.object({ ${props} });`;
   } else {
-    schemaCode = `const ${schemaName} = z.object({});\ntype ${typeName} = z.infer<typeof ${schemaName}>;`;
+    schemaCode = `const ${schemaName} = z.object({});`;
   }
 
   return {
@@ -196,7 +196,7 @@ export function generateParameterSchemas(
 
   /* Query schema */
   const querySchemaName = `${sanitizedId}QuerySchema`;
-  const queryTypeName = `${sanitizedId}Query`;
+  const queryTypeName = `${sanitizedId}QuerySchema`;
 
   if (parameterGroups.queryParams.length > 0) {
     const queryProps = parameterGroups.queryParams
@@ -208,11 +208,10 @@ export function generateParameterSchemas(
   } else {
     schemas.push(`const ${querySchemaName} = ${objectMethod}({});`);
   }
-  schemas.push(`type ${queryTypeName} = z.infer<typeof ${querySchemaName}>;`);
 
   /* Path schema */
   const pathSchemaName = `${sanitizedId}PathSchema`;
-  const pathTypeName = `${sanitizedId}Path`;
+  const pathTypeName = `${sanitizedId}PathSchema`;
 
   if (parameterGroups.pathParams.length > 0) {
     const pathProps = parameterGroups.pathParams
@@ -224,11 +223,10 @@ export function generateParameterSchemas(
   } else {
     schemas.push(`const ${pathSchemaName} = ${objectMethod}({});`);
   }
-  schemas.push(`type ${pathTypeName} = z.infer<typeof ${pathSchemaName}>;`);
 
   /* Headers schema */
   const headersSchemaName = `${sanitizedId}HeadersSchema`;
-  const headersTypeName = `${sanitizedId}Headers`;
+  const headersTypeName = `${sanitizedId}HeadersSchema`;
 
   if (parameterGroups.headerParams.length > 0) {
     const headerProps = parameterGroups.headerParams
@@ -240,9 +238,6 @@ export function generateParameterSchemas(
   } else {
     schemas.push(`const ${headersSchemaName} = ${headerObjectMethod}({});`);
   }
-  schemas.push(
-    `type ${headersTypeName} = z.infer<typeof ${headersSchemaName}>;`,
-  );
 
   return {
     schemaCode: schemas.join("\n"),

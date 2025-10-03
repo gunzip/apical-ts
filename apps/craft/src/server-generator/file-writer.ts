@@ -78,12 +78,47 @@ export async function writeServerOperationFile(
   typeImports: Set<string>,
   serverOperationsDir: string,
 ): Promise<void> {
-  /* Add schema imports */
-  const imports = Array.from(typeImports)
-    .map((imp) => `import { ${imp} } from "../schemas/${imp}.js";`)
-    .join("\n");
+  const sanitizedId = sanitizeIdentifier(operationId);
 
-  const fullCode = imports ? `${imports}\n\n${wrapperCode}` : wrapperCode;
+  /* Separate different types of imports */
+  const schemaImports: string[] = [];
+  const parameterSchemaImports: string[] = [];
+  const parameterTypeImports: string[] = [];
+
+  for (const imp of typeImports) {
+    if (
+      imp.endsWith("Schema") &&
+      (imp.includes("Query") || imp.includes("Path") || imp.includes("Headers"))
+    ) {
+      /* Parameter schemas - all come from the Parameters.ts file */
+      parameterSchemaImports.push(imp);
+    } else if (imp !== "z") {
+      /* Regular schema types */
+      schemaImports.push(`import { ${imp} } from "../schemas/${imp}.js";`);
+    }
+  }
+
+  /* Build imports section */
+  const imports: string[] = [];
+  if (schemaImports.length > 0) {
+    imports.push(...schemaImports);
+  }
+
+  /* Add parameter imports from the combined Parameters file */
+  if (parameterSchemaImports.length > 0 || parameterTypeImports.length > 0) {
+    const parameterImportItems = [
+      ...parameterSchemaImports,
+      ...parameterTypeImports,
+    ].join(", ");
+    imports.push(
+      `import { ${parameterImportItems} } from "../schemas/${sanitizedId}Parameters.js";`,
+    );
+  }
+
+  const fullCode =
+    imports.length > 0
+      ? `${imports.join("\n")}\n\n${wrapperCode}`
+      : wrapperCode;
 
   const filePath = path.join(serverOperationsDir, `${operationId}.ts`);
   await fs.writeFile(filePath, fullCode);
