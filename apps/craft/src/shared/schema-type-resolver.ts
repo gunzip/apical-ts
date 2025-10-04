@@ -32,5 +32,3 @@ export function resolveSchemaTypeName(
   typeImports.add(typeName);
   return typeName;
 }
-
-
