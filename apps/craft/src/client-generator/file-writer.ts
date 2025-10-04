@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+import type { ImportManager } from "../core-generator/import-types.js";
 import type { OperationMetadata } from "./operation-extractor.js";
 
 import {
@@ -84,14 +85,13 @@ export {
 export async function writeOperationFile(
   operationId: string,
   functionCode: string,
-  typeImports: Set<string>,
+  importManager: ImportManager,
   operationsDir: string,
 ): Promise<void> {
   const sanitizedOperationId = sanitizeIdentifier(operationId);
   const operationContent = buildOperationFileContent(
-    typeImports,
+    importManager,
     functionCode,
-    operationId,
   );
   const operationPath = path.join(operationsDir, `${sanitizedOperationId}.ts`);
   await writeTypeScriptFile(operationPath, operationContent);

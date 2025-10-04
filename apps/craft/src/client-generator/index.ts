@@ -60,7 +60,7 @@ async function processOperations(
     pathLevelParameters,
   } of operations) {
     const promise = limit(async () => {
-      const { functionCode, typeImports } = generateOperationFunction(
+      const { functionCode, importManager } = generateOperationFunction(
         pathKey,
         method,
         operation,
@@ -71,7 +71,7 @@ async function processOperations(
       await writeOperationFile(
         operationId,
         functionCode,
-        typeImports,
+        importManager,
         operationsDir,
       );
     });

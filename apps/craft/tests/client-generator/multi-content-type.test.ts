@@ -143,10 +143,17 @@ describe("Multi-content-type operation function generation", () => {
     );
 
     // Check type imports
-    expect(result.typeImports.has("Pet")).toBe(true);
-    expect(result.typeImports.has("PetFindByStatusRequest")).toBe(true);
-    expect(result.typeImports.has("PetFindByStatus200Response")).toBe(true);
-    expect(result.typeImports.has("PetFindByStatus404Response")).toBe(true);
+    const schemaImports = result.importManager.getSchemaImports();
+    expect(schemaImports.some((imp) => imp.name === "Pet")).toBe(true);
+    expect(
+      schemaImports.some((imp) => imp.name === "PetFindByStatusRequest"),
+    ).toBe(true);
+    expect(
+      schemaImports.some((imp) => imp.name === "PetFindByStatus200Response"),
+    ).toBe(true);
+    expect(
+      schemaImports.some((imp) => imp.name === "PetFindByStatus404Response"),
+    ).toBe(true);
   });
 
   it("should generate function with type maps even for single content type operations", () => {

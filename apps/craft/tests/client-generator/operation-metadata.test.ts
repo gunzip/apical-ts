@@ -61,8 +61,11 @@ describe("extractOperationMetadata", () => {
     expect(metadata.hasBody).toBe(true);
 
     /* Type imports should include referenced schemas */
-    expect(metadata.typeImports.has("User")).toBe(true);
-    expect(metadata.typeImports.has("CreateUser400Response")).toBe(true);
+    const schemaImports = metadata.importManager.getSchemaImports();
+    expect(schemaImports.some((imp) => imp.name === "User")).toBe(true);
+    expect(
+      schemaImports.some((imp) => imp.name === "CreateUser400Response"),
+    ).toBe(true);
 
     /* Body info */
     expect(metadata.bodyInfo.shouldGenerateRequestMap).toBe(true);
@@ -192,13 +195,13 @@ describe("extractOperationMetadata", () => {
         name: "id",
         in: "path" as const,
         required: true,
-        schema: { type: "string" },
+        schema: { type: "string" as const },
       },
       {
         name: "version",
         in: "header" as const,
         required: false,
-        schema: { type: "string" },
+        schema: { type: "string" as const },
       },
     ];
 

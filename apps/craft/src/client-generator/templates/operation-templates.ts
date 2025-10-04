@@ -1,3 +1,4 @@
+import type { ImportManager } from "../../core-generator/import-types.js";
 import type { extractParameterGroups } from "../parameters.js";
 import type { resolveRequestBodyType } from "../request-body.js";
 import type {
@@ -52,6 +53,7 @@ export interface OperationMetadata {
   functionBodyCode: string;
   functionName: string;
   hasBody: boolean;
+  importManager: ImportManager;
   operationName: string;
   operationSecurityHeaders: ReturnType<typeof getOperationSecuritySchemes>;
   overridesSecurity: boolean;
@@ -62,7 +64,6 @@ export interface OperationMetadata {
   };
   responseHandlers: ResponseHandlerResult;
   summary: string;
-  typeImports: Set<string>;
 }
 
 export interface ParameterDeclarationConfig {
@@ -71,13 +72,13 @@ export interface ParameterDeclarationConfig {
 }
 
 export type TypeAliasesConfig = ContentTypeMapsConfig & {
+  /* ImportManager for handling type imports */
+  importManager: ImportManager;
   /* Parameter schema generation */
   operationId: string | undefined;
   parameterGroups: ReturnType<typeof extractParameterGroups>;
   responseMapName?: string;
   responseMapType?: string;
-  /* Type imports to merge parameter schema imports */
-  typeImports: Set<string>;
 };
 
 /*
@@ -142,9 +143,9 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
     const sanitizedId = sanitizeIdentifier(config.operationId);
 
     /* Add imports for parameter schemas from the centralized schema files */
-    config.typeImports.add(`${sanitizedId}QuerySchema`);
-    config.typeImports.add(`${sanitizedId}PathSchema`);
-    config.typeImports.add(`${sanitizedId}HeadersSchema`);
+    config.importManager.addParameterSchema(sanitizedId, "Query");
+    config.importManager.addParameterSchema(sanitizedId, "Path");
+    config.importManager.addParameterSchema(sanitizedId, "Headers");
   }
 
   /*

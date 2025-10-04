@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { generateResponseHandlers } from "../../src/client-generator/responses.js";
 import { buildTypeAliases } from "../../src/client-generator/templates/operation-templates.js";
 import { renderConfigInterface } from "../../src/client-generator/templates/config-templates.js";
+import { ImportManager } from "../../src/core-generator/import-types.js";
 import type { OperationObject } from "openapi3-ts/oas31";
 
 /*
@@ -13,12 +14,15 @@ describe("DeserializerMap Refactoring", () => {
   it("should include deserializers in GlobalConfig interface", () => {
     const configStructure = {
       auth: {
+        authHeaders: ["X-API-Key"],
         hasAuthHeaders: true,
         authHeadersType: "AuthHeaders",
       },
       server: {
         baseURLType: "string",
         defaultBaseURL: "https://api.example.com",
+        hasServerUrls: false,
+        serverUrls: [],
       },
     };
 
@@ -82,15 +86,20 @@ describe("DeserializerMap Refactoring", () => {
       requestMapTypeName: "TestOperationRequestMap",
       parameterGroups: mockParameterGroups,
       contentTypeMaps: {
+        defaultRequestContentType: null,
+        defaultResponseContentType: "application/json",
+        requestContentTypeCount: 0,
+        requestMapType: "{}",
+        responseContentTypeCount: 2,
         responseMapType: `{
   "200": {
     "application/json": TestSchema,
     "application/xml": TestSchema,
   },
 }`,
-        requestMapType: "{}",
+        typeImports: new Set<string>(),
       },
-      typeImports: new Set<string>(),
+      importManager: new ImportManager(),
     };
 
     const result = buildTypeAliases(config);
