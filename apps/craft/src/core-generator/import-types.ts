@@ -19,38 +19,34 @@ export interface ParameterImportGroup {
 export type ParameterType = "Headers" | "Path" | "Query";
 
 export class ImportManager {
+  private importKeys = new Set<string>();
   private imports: ImportInfo[] = [];
 
   addConfigImport(configName: string): void {
-    // Check for existing import to avoid duplicates
-    if (
-      !this.imports.some(
-        (imp) => imp.type === "config" && imp.name === configName,
-      )
-    ) {
-      this.imports.push({
-        filePath: "./config.js",
-        name: configName,
-        type: "config",
-      });
+    const importInfo: ImportInfo = {
+      filePath: "./config.js",
+      name: configName,
+      type: "config",
+    };
+    const key = this.generateKey(importInfo);
+
+    if (!this.importKeys.has(key)) {
+      this.importKeys.add(key);
+      this.imports.push(importInfo);
     }
   }
 
   addParameterImport(schemaName: string, operationId: string): void {
-    // Check for existing import to avoid duplicates
-    if (
-      !this.imports.some(
-        (imp) =>
-          imp.type === "parameter" &&
-          imp.name === schemaName &&
-          imp.operationId === operationId,
-      )
-    ) {
-      this.imports.push({
-        name: schemaName,
-        operationId,
-        type: "parameter",
-      });
+    const importInfo: ImportInfo = {
+      name: schemaName,
+      operationId,
+      type: "parameter",
+    };
+    const key = this.generateKey(importInfo);
+
+    if (!this.importKeys.has(key)) {
+      this.importKeys.add(key);
+      this.imports.push(importInfo);
     }
   }
 
@@ -60,24 +56,18 @@ export class ImportManager {
     name?: string,
   ): void {
     const schemaName = name || `${operationId}${parameterType}Schema`;
-    // Check for existing import to avoid duplicates
-    if (
-      !this.imports.some(
-        (imp) =>
-          imp.type === "parameter" &&
-          imp.name === schemaName &&
-          imp.operationId === operationId &&
-          imp.parameterType === parameterType &&
-          imp.isSchema === true,
-      )
-    ) {
-      this.imports.push({
-        isSchema: true,
-        name: schemaName,
-        operationId,
-        parameterType,
-        type: "parameter",
-      });
+    const importInfo: ImportInfo = {
+      isSchema: true,
+      name: schemaName,
+      operationId,
+      parameterType,
+      type: "parameter",
+    };
+    const key = this.generateKey(importInfo);
+
+    if (!this.importKeys.has(key)) {
+      this.importKeys.add(key);
+      this.imports.push(importInfo);
     }
   }
 
@@ -87,49 +77,45 @@ export class ImportManager {
     name?: string,
   ): void {
     const typeName = name || `${operationId}${parameterType}`;
-    // Check for existing import to avoid duplicates
-    if (
-      !this.imports.some(
-        (imp) =>
-          imp.type === "parameter" &&
-          imp.name === typeName &&
-          imp.operationId === operationId &&
-          imp.parameterType === parameterType &&
-          imp.isSchema === false,
-      )
-    ) {
-      this.imports.push({
-        isSchema: false,
-        name: typeName,
-        operationId,
-        parameterType,
-        type: "parameter",
-      });
+    const importInfo: ImportInfo = {
+      isSchema: false,
+      name: typeName,
+      operationId,
+      parameterType,
+      type: "parameter",
+    };
+    const key = this.generateKey(importInfo);
+
+    if (!this.importKeys.has(key)) {
+      this.importKeys.add(key);
+      this.imports.push(importInfo);
     }
   }
 
   addSchemaImport(schemaName: string): void {
-    // Check for existing import to avoid duplicates
-    if (
-      !this.imports.some(
-        (imp) => imp.type === "schema" && imp.name === schemaName,
-      )
-    ) {
-      this.imports.push({
-        filePath: `../schemas/${schemaName}.js`,
-        name: schemaName,
-        type: "schema",
-      });
+    const importInfo: ImportInfo = {
+      filePath: `../schemas/${schemaName}.js`,
+      name: schemaName,
+      type: "schema",
+    };
+    const key = this.generateKey(importInfo);
+
+    if (!this.importKeys.has(key)) {
+      this.importKeys.add(key);
+      this.imports.push(importInfo);
     }
   }
 
   addZodImport(): void {
-    // Check for existing import to avoid duplicates
-    if (!this.imports.some((imp) => imp.type === "zod")) {
-      this.imports.push({
-        name: "z",
-        type: "zod",
-      });
+    const importInfo: ImportInfo = {
+      name: "z",
+      type: "zod",
+    };
+    const key = this.generateKey(importInfo);
+
+    if (!this.importKeys.has(key)) {
+      this.importKeys.add(key);
+      this.imports.push(importInfo);
     }
   }
 
@@ -175,5 +161,17 @@ export class ImportManager {
 
   hasZodImport(): boolean {
     return this.imports.some((imp) => imp.type === "zod");
+  }
+
+  private generateKey(importInfo: Partial<ImportInfo>): string {
+    const parts = [
+      importInfo.type,
+      importInfo.name,
+      importInfo.filePath,
+      importInfo.operationId,
+      importInfo.parameterType,
+      importInfo.isSchema?.toString(),
+    ];
+    return parts.filter(Boolean).join("|");
   }
 }
