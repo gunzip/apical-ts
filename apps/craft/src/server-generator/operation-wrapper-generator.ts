@@ -11,6 +11,7 @@ import { extractOperationMetadata } from "../client-generator/operation-function
 import { extractParameterGroups } from "../client-generator/parameters.js";
 import { resolveRequestBodyType } from "../client-generator/request-body.js";
 import { generateContentTypeMaps } from "../client-generator/responses.js";
+import { ImportManager } from "../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateServerRequestBodyMap } from "../shared/server-request-body-maps.js";
 import {
@@ -21,7 +22,7 @@ import {
 
 /* Result of generating a server wrapper function with imports */
 export interface GeneratedServerWrapper {
-  typeImports: Set<string>;
+  importManager: ImportManager;
   wrapperCode: string;
 }
 
@@ -130,34 +131,36 @@ export function generateServerOperationWrapper(
     doc,
   );
 
-  const typeImports = new Set<string>();
+  const importManager = new ImportManager();
 
   /* Build request map if needed */
   const requestMapCode = metadata.bodyInfo.shouldGenerateRequestMap
-    ? buildServerRequestMap(metadata, typeImports)
+    ? buildServerRequestMap(metadata, importManager)
     : "";
 
   /* Build response map */
-  const responseMapCode = buildServerResponseMap(metadata, typeImports, doc);
+  const responseMapCode = buildServerResponseMap(metadata, importManager, doc);
 
   /* Render the complete wrapper function */
-  const wrapperCode = renderServerOperationWrapper({
-    functionName: metadata.functionName,
-    hasBody: metadata.bodyInfo.hasBody,
-    method: method.toLowerCase(),
-    operationId: metadata.operationId,
-    parameterGroups: metadata.parameterGroups,
-    pathKey,
-    requestMapCode,
-    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
-    responseMapCode,
-    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
-    summary: metadata.summary,
-    typeImports,
-  });
+  const wrapperCode = renderServerOperationWrapper(
+    {
+      functionName: metadata.functionName,
+      hasBody: metadata.bodyInfo.hasBody,
+      method: method.toLowerCase(),
+      operationId: metadata.operationId,
+      parameterGroups: metadata.parameterGroups,
+      pathKey,
+      requestMapCode,
+      requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
+      responseMapCode,
+      responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+      summary: metadata.summary,
+    },
+    importManager,
+  );
 
   return {
-    typeImports,
+    importManager,
     wrapperCode,
   };
 }

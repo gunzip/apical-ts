@@ -3,10 +3,11 @@ import path from "path";
 
 import type { OperationMetadata } from "../client-generator/operation-extractor.js";
 
+import type { ImportManager } from "../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import {
-  categorizeImports,
-  filterServerParameterImports,
+  categorizeImportsFromManager,
+  filterServerParameterImportsFromManager,
 } from "../shared/parameter-utils.js";
 
 /**
@@ -79,16 +80,15 @@ ${routesObject}
 export async function writeServerOperationFile(
   operationId: string,
   wrapperCode: string,
-  typeImports: Set<string>,
+  importManager: ImportManager,
   serverOperationsDir: string,
 ): Promise<void> {
   /* Use structured approach to categorize imports */
-  const categorized = categorizeImports(typeImports, operationId);
+  const categorized = categorizeImportsFromManager(importManager);
 
   /* Filter out parameter schema imports that should be skipped for server generation */
-  const allowedParameterImports = filterServerParameterImports(
-    categorized.parameterImports,
-  );
+  const allowedParameterImports =
+    filterServerParameterImportsFromManager(importManager);
 
   /* Build schema imports from regular imports and allowed parameter imports */
   const schemaImports: string[] = [];
