@@ -4,6 +4,7 @@ import { promises as fs } from "fs";
 import pLimit from "p-limit";
 import path from "path";
 
+import type { ZodTransform } from "./index.js";
 import type { Profiler } from "./profiler.js";
 
 import {
@@ -43,6 +44,7 @@ interface SchemaGenerationContext {
   openApiDoc: OpenAPIObject;
   resolvedSchemas: ResolvedSchemas;
   schemasDir: string;
+  zodTransform?: ZodTransform;
 }
 
 type SchemaGeneratorFunction<T = SchemaObject> = (
@@ -59,6 +61,7 @@ export async function generateSchemas(
   concurrency: number,
   generateServer: boolean,
   profiler?: Profiler,
+  zodTransform?: ZodTransform,
 ): Promise<void> {
   if (!openApiDoc.components?.schemas) {
     return;
@@ -74,6 +77,7 @@ export async function generateSchemas(
     openApiDoc,
     resolvedSchemas: openApiDoc.components.schemas,
     schemasDir,
+    zodTransform,
   };
 
   if (!profiler) {
@@ -157,6 +161,15 @@ function createComponentSchemaPromise(
   const isRecursive = recursiveContext.recursiveSchemas.has(schemaName);
 
   return context.limit(async () => {
+    /* Build transform context for component schemas */
+    const transformContext: import("./index.js").TransformContext = {
+      componentName: originalSchemaName || schemaName,
+      exportName: schemaName,
+      kind: "component",
+      location: "components",
+      pointer: `#/components/schemas/${originalSchemaName || schemaName}`,
+    };
+
     const generationPromise = isRecursive
       ? generateRecursiveSchemaFile({
           description,
@@ -170,6 +183,8 @@ function createComponentSchemaPromise(
           originalSchemaName,
           recursiveContext,
           resolvedSchemas: context.resolvedSchemas,
+          transformContext,
+          zodTransform: context.zodTransform,
         });
 
     const schemaFile = await generationPromise;

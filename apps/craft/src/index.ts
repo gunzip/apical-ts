@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 
 import { Command } from "commander";
+import { pathToFileURL } from "url";
 
 import { generate } from "./core-generator/index.js";
 
@@ -31,6 +32,10 @@ program
     false,
   )
   .option("--profile", "Print timing breakdown for generation phases.", false)
+  .option(
+    "--zod-transform <file>",
+    "Path to a file that exports a Zod transform function",
+  )
   // Disable strict validation setting, this should remain strict for the server
   // and loose for the client
   // .option(
@@ -41,6 +46,29 @@ program
   .action(async (options: Record<string, unknown>) => {
     try {
       const started = process.hrtime.bigint();
+
+      // Load zodTransform function if provided
+      let zodTransform;
+      if (options.zodTransform) {
+        try {
+          const transformPath = String(options.zodTransform);
+          const transformUrl = pathToFileURL(transformPath).href;
+          const transformModule = await import(transformUrl);
+          zodTransform = transformModule.default;
+
+          if (typeof zodTransform !== "function") {
+            console.error(
+              "❌ The zodTransform file must export a default function",
+            );
+            process.exit(1);
+          }
+          console.log(`✅ Loaded zodTransform from ${transformPath}`);
+        } catch (error) {
+          console.error("❌ Failed to load zodTransform:", error);
+          process.exit(1);
+        }
+      }
+
       // Map CLI option names to GenerationOptions interface
       const generationOptions = {
         generateClient: Boolean(options.client),
@@ -48,6 +76,7 @@ program
         input: String(options.input),
         output: String(options.output),
         profile: Boolean(options.profile),
+        zodTransform,
       };
 
       await generate(generationOptions);

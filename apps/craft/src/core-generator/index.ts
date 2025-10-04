@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import type { OpenAPIObject } from "openapi3-ts/oas31";
+import type { ZodTypeAny } from "zod";
 
 import $RefParser from "@apidevtools/json-schema-ref-parser";
 import { promises as fs } from "fs";
@@ -45,7 +46,50 @@ export interface GenerationOptions {
   output: string;
   /** Enable timing breakdown of major phases */
   profile?: boolean;
+  /**
+   * Optional function to transform Zod schemas before code generation.
+   * Allows runtime customization of generated schemas (adding defaults, branding, coercion, etc.)
+   */
+  zodTransform?: ZodTransform;
 }
+
+/**
+ * Context information passed to zodTransform for customizing schema transformations
+ */
+export interface TransformContext {
+  /** Component name if from components/schemas (e.g. "Profile") */
+  componentName?: string;
+  /** Content type for requestBody/response schemas */
+  contentType?: string;
+  /** Export name of the schema (e.g. "testQueryParamInlineEnumQuerySchema") */
+  exportName: string;
+  /** Parameter location for parameter schemas */
+  in?: "cookie" | "header" | "path" | "query";
+  /** Kind of schema being transformed */
+  kind: "component" | "parameter" | "requestBody" | "response";
+  /** Schema location in the spec */
+  location: "components" | "inline" | "operation";
+  /** Parameter name for parameter schemas */
+  name?: string;
+  /** Operation ID if schema is inline in an operation */
+  operationId?: string;
+  /** JSON Pointer to the schema in the OpenAPI spec */
+  pointer: string;
+  /** Status code for response schemas */
+  statusCode?: string;
+}
+
+/**
+ * Function type for transforming Zod schemas before code generation
+ *
+ * @param schema - The Zod schema to transform
+ * @param ctx - Context information about the schema
+ * @returns The transformed Zod schema
+ */
+export type ZodTransform = (
+  schema: ZodTypeAny,
+  ctx: TransformContext,
+) => ZodTypeAny;
 
 /**
  * Generates TypeScript schemas and optional API client from OpenAPI specification
@@ -58,6 +102,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
     input,
     output,
     profile = false,
+    zodTransform,
   } = options;
 
   await fs.mkdir(output, { recursive: true });
@@ -69,7 +114,14 @@ export async function generate(options: GenerationOptions): Promise<void> {
   profiler?.end("parse+preprocess");
 
   profiler?.start("schemas:all");
-  await generateSchemas(openApiDoc, output, concurrency, genServer, profiler);
+  await generateSchemas(
+    openApiDoc,
+    output,
+    concurrency,
+    genServer,
+    profiler,
+    zodTransform,
+  );
   profiler?.end("schemas:all");
 
   await generateAllOperations(

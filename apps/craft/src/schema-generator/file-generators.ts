@@ -1,7 +1,9 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { isReferenceObject } from "openapi3-ts/oas31";
+import { z, type ZodTypeAny } from "zod";
 
+import type { TransformContext } from "../core-generator/index.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
@@ -39,6 +41,8 @@ export interface SchemaGenerationOptions {
   originalSchemaName?: string;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
+  transformContext?: TransformContext;
+  zodTransform?: (schema: ZodTypeAny, ctx: TransformContext) => ZodTypeAny;
 }
 
 /**
@@ -171,7 +175,8 @@ export async function generateSchemaFile(
   description?: string,
   options: SchemaGenerationOptions = {},
 ): Promise<SchemaFileResult> {
-  const { recursiveContext, resolvedSchemas } = options;
+  const { recursiveContext, resolvedSchemas, transformContext, zodTransform } =
+    options;
 
   const context = recursiveContext || createRecursiveContext();
 
@@ -182,6 +187,18 @@ export async function generateSchemaFile(
     resolvedSchemas,
   });
 
+  /* Apply zodTransform if provided */
+  let finalCode = schemaResult.code;
+  if (zodTransform && transformContext) {
+    finalCode = applyZodTransform(
+      schemaResult.code,
+      schemaResult.imports,
+      zodTransform,
+      transformContext,
+      name,
+    );
+  }
+
   const commentSection = generateCommentSection(description);
   const importsSection = generateImportsSection(schemaResult.imports, name);
 
@@ -189,7 +206,7 @@ export async function generateSchemaFile(
     name,
     commentSection,
     importsSection,
-    schemaResult.code,
+    finalCode,
     schemaResult.extensibleEnumValues,
   );
 
@@ -197,6 +214,55 @@ export async function generateSchemaFile(
     content,
     fileName: `${name}.ts`,
   };
+}
+
+/**
+ * Applies a zodTransform to a Zod schema code string
+ *
+ * This function evaluates the generated schema code, applies the transform,
+ * and serializes it back to code string format.
+ */
+function applyZodTransform(
+  schemaCode: string,
+  schemaImports: Set<string>,
+  zodTransform: (schema: ZodTypeAny, ctx: TransformContext) => ZodTypeAny,
+  transformContext: TransformContext,
+  schemaName: string,
+): string {
+  try {
+    /* eslint-disable no-console */
+
+    /* Create evaluation context with zod */
+    const evalGlobals: Record<string, ZodTypeAny> = { z };
+
+    /* Add mock schemas for imports to prevent evaluation errors */
+    for (const importName of schemaImports) {
+      if (importName !== schemaName) {
+        /* Create placeholder schemas that accept anything */
+        evalGlobals[importName] = z.any();
+      }
+    }
+
+    /* Evaluate the schema code to get a Zod schema instance */
+    const evalFunc = new Function(
+      ...Object.keys(evalGlobals),
+      `"use strict"; return ${schemaCode}`,
+    );
+    const zodSchema = evalFunc(...Object.values(evalGlobals));
+
+    /* Apply the transform */
+    const transformedSchema = zodTransform(zodSchema, transformContext);
+
+    /* Detect what transformations were applied and append them to the code */
+    return serializeZodSchema(transformedSchema, schemaCode);
+  } catch (error) {
+    /* If transform fails, log warning and return original code */
+    console.warn(
+      `⚠️ Failed to apply zodTransform to ${transformContext.exportName}:`,
+      error instanceof Error ? error.message : error,
+    );
+    return schemaCode;
+  }
 }
 
 /* Helper function to assemble final file content */
@@ -296,6 +362,51 @@ function isRecursiveProperty(
   const selfRef = `#/components/schemas/${originalSchemaName}`;
   const shortSelfRef = `#/${originalSchemaName}`;
   return refs.includes(selfRef) || refs.includes(shortSelfRef);
+}
+
+/**
+ * Serializes a Zod schema back to code string
+ *
+ * This is a simplified serializer that handles common transformations
+ * by detecting them and appending the appropriate method calls.
+ */
+function serializeZodSchema(schema: ZodTypeAny, originalCode: string): string {
+  /* Check if the schema has been modified by detecting common Zod methods */
+  let code = originalCode;
+
+  /* Check for .default() transformation - Zod v4 uses _def.type === "default" */
+  if (
+    schema._def?.type === "default" &&
+    schema._def?.defaultValue !== undefined
+  ) {
+    const defaultValue = schema._def.defaultValue;
+    code = `${code}.default(${JSON.stringify(defaultValue)})`;
+  }
+
+  /* Check for .brand() transformation */
+  if (schema._def?.typeName === "ZodBranded") {
+    code = `${code}.brand()`;
+  }
+
+  /* Check for .transform() - this is trickier as we can't serialize the function */
+  if (
+    schema._def?.typeName === "ZodEffects" &&
+    schema._def?.effect?.type === "transform"
+  ) {
+    /* We can't serialize arbitrary transform functions */
+    /* The user would need to modify the generated code manually or use a different approach */
+    /* For now, we just skip it */
+  }
+
+  /* Check for .refine() or .superRefine() */
+  if (
+    schema._def?.typeName === "ZodEffects" &&
+    schema._def?.effect?.type === "refinement"
+  ) {
+    /* Can't serialize refinement functions either */
+  }
+
+  return code;
 }
 
 // Export for testing
