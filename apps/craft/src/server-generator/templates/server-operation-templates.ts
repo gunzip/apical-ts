@@ -227,7 +227,12 @@ function generateInlineParameterSchemas(
     importManager.addSchemaImport(typeImport);
   }
 
-  return result.schemaCode;
+  /* Combine the schema code for all parameter types */
+  return [
+    `const ${result.schemaNames.querySchema} = ${result.schemaCode.query};`,
+    `const ${result.schemaNames.pathSchema} = ${result.schemaCode.path};`,
+    `const ${result.schemaNames.headersSchema} = ${result.schemaCode.headers};`,
+  ].join("\n");
 }
 
 /**

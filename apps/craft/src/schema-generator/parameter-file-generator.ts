@@ -1,6 +1,8 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { z, type ZodTypeAny } from "zod";
 
+import type { TransformContext } from "../core-generator/index.js";
 import type { OperationParameterMetadata } from "../core-generator/parameter-extractor.js";
 
 import { generateParameterSchemas } from "../shared/parameter-schemas.js";
@@ -26,6 +28,7 @@ export async function generateParameterSchemaFile(
     /* Use client defaults for parameter schema generation */
     coercePrimitives?: boolean;
     lowercaseHeaderKeys?: boolean;
+    zodTransform?: (schema: ZodTypeAny, ctx: TransformContext) => ZodTypeAny;
   } = {},
 ): Promise<ParameterSchemaFileResult> {
   const sanitizedId = sanitizeIdentifier(operationId);
@@ -37,6 +40,55 @@ export async function generateParameterSchemaFile(
     parameterMetadata.parameterGroups,
     options,
   );
+
+  /* Apply zodTransform if provided */
+  let querySchemaCode = result.schemaCode.query;
+  let pathSchemaCode = result.schemaCode.path;
+  let headersSchemaCode = result.schemaCode.headers;
+
+  if (options.zodTransform) {
+    /* Apply transform to query schema */
+    querySchemaCode = applyParameterTransform(
+      querySchemaCode,
+      options.zodTransform,
+      {
+        exportName: result.schemaNames.querySchema,
+        in: "query",
+        kind: "parameter",
+        location: "inline",
+        operationId,
+        pointer: `#/paths/${parameterMetadata.path}/${parameterMetadata.method}/parameters`,
+      },
+    );
+
+    /* Apply transform to path schema */
+    pathSchemaCode = applyParameterTransform(
+      pathSchemaCode,
+      options.zodTransform,
+      {
+        exportName: result.schemaNames.pathSchema,
+        in: "path",
+        kind: "parameter",
+        location: "inline",
+        operationId,
+        pointer: `#/paths/${parameterMetadata.path}/${parameterMetadata.method}/parameters`,
+      },
+    );
+
+    /* Apply transform to headers schema */
+    headersSchemaCode = applyParameterTransform(
+      headersSchemaCode,
+      options.zodTransform,
+      {
+        exportName: result.schemaNames.headersSchema,
+        in: "header",
+        kind: "parameter",
+        location: "inline",
+        operationId,
+        pointer: `#/paths/${parameterMetadata.path}/${parameterMetadata.method}/parameters`,
+      },
+    );
+  }
 
   /* Build the file content */
   const imports: string[] = [];
@@ -58,7 +110,9 @@ export async function generateParameterSchemaFile(
     ...imports,
     "",
     "/* Parameter schemas for type-safe inputs */",
-    result.schemaCode,
+    `const ${result.schemaNames.querySchema} = ${querySchemaCode};`,
+    `const ${result.schemaNames.pathSchema} = ${pathSchemaCode};`,
+    `const ${result.schemaNames.headersSchema} = ${headersSchemaCode};`,
     "",
     "/* Export schemas for external use */",
     `export { ${result.schemaNames.querySchema} };`,
@@ -89,6 +143,7 @@ export async function writeParameterSchemaFile(
   options: {
     coercePrimitives?: boolean;
     lowercaseHeaderKeys?: boolean;
+    zodTransform?: (schema: ZodTypeAny, ctx: TransformContext) => ZodTypeAny;
   } = {},
 ): Promise<void> {
   const result = await generateParameterSchemaFile(
@@ -99,4 +154,60 @@ export async function writeParameterSchemaFile(
 
   const filePath = path.join(schemasDir, result.fileName);
   await fs.writeFile(filePath, result.content, "utf-8");
+}
+
+/**
+ * Applies a zodTransform to a parameter schema code string
+ */
+function applyParameterTransform(
+  schemaCode: string,
+  zodTransform: (schema: ZodTypeAny, ctx: TransformContext) => ZodTypeAny,
+  transformContext: TransformContext,
+): string {
+  try {
+    /* eslint-disable no-console */
+
+    /* Evaluate the schema code to get a Zod schema instance */
+    const evalFunc = new Function("z", `"use strict"; return ${schemaCode}`);
+    const zodSchema = evalFunc(z);
+
+    /* Apply the transform */
+    const transformedSchema = zodTransform(zodSchema, transformContext);
+
+    /* Serialize back to code */
+    return serializeParameterSchema(transformedSchema, schemaCode);
+  } catch (error) {
+    /* If transform fails, log warning and return original code */
+    console.warn(
+      `⚠️ Failed to apply zodTransform to ${transformContext.exportName}:`,
+      error instanceof Error ? error.message : error,
+    );
+    return schemaCode;
+  }
+}
+
+/**
+ * Serializes a Zod schema back to code string for parameter schemas
+ */
+function serializeParameterSchema(
+  schema: ZodTypeAny,
+  originalCode: string,
+): string {
+  let code = originalCode;
+
+  /* Check for .default() transformation */
+  if (
+    schema._def?.type === "default" &&
+    schema._def?.defaultValue !== undefined
+  ) {
+    const defaultValue = schema._def.defaultValue;
+    code = `${code}.default(${JSON.stringify(defaultValue)})`;
+  }
+
+  /* Check for .brand() transformation */
+  if (schema._def?.typeName === "ZodBranded") {
+    code = `${code}.brand()`;
+  }
+
+  return code;
 }

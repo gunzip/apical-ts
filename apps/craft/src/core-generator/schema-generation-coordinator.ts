@@ -304,6 +304,7 @@ function generateParameterSchemas(
           /* Client defaults - no coercion or special handling */
           coercePrimitives: false,
           lowercaseHeaderKeys: false,
+          zodTransform: context.zodTransform,
         },
       ),
     );

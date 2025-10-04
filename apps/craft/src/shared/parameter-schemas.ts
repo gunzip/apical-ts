@@ -27,8 +27,12 @@ export interface ParameterSchemaOptions {
  * Result of parameter schema generation
  */
 export interface ParameterSchemaResult {
-  /* Generated Zod schemas and TypeScript types */
-  schemaCode: string;
+  /* Generated Zod schema code for each parameter type */
+  schemaCode: {
+    headers: string;
+    path: string;
+    query: string;
+  };
   /* Schema names for external reference */
   schemaNames: {
     headersSchema: string;
@@ -56,7 +60,6 @@ export function generateParameterSchemas(
   const { coercePrimitives = false, lowercaseHeaderKeys = false } = options;
   const sanitizedId = sanitizeIdentifier(operationId);
   const typeImports = new Set<string>();
-  const schemas: string[] = [];
 
   /* Helper to build property entry using zodSchemaToCode; fallback to z.string()
      For servers, applies parameter-specific transformations:
@@ -108,49 +111,50 @@ export function generateParameterSchemas(
   const querySchemaName = `${sanitizedId}QuerySchema`;
   const queryTypeName = `${sanitizedId}QuerySchema`;
 
+  let querySchemaCode: string;
   if (parameterGroups.queryParams.length > 0) {
     const queryProps = parameterGroups.queryParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
-    schemas.push(
-      `const ${querySchemaName} = ${objectMethod}({ ${queryProps} });`,
-    );
+    querySchemaCode = `${objectMethod}({ ${queryProps} })`;
   } else {
-    schemas.push(`const ${querySchemaName} = ${objectMethod}({});`);
+    querySchemaCode = `${objectMethod}({})`;
   }
 
   /* Path schema */
   const pathSchemaName = `${sanitizedId}PathSchema`;
   const pathTypeName = `${sanitizedId}PathSchema`;
 
+  let pathSchemaCode: string;
   if (parameterGroups.pathParams.length > 0) {
     const pathProps = parameterGroups.pathParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
-    schemas.push(
-      `const ${pathSchemaName} = ${objectMethod}({ ${pathProps} });`,
-    );
+    pathSchemaCode = `${objectMethod}({ ${pathProps} })`;
   } else {
-    schemas.push(`const ${pathSchemaName} = ${objectMethod}({});`);
+    pathSchemaCode = `${objectMethod}({})`;
   }
 
   /* Headers schema */
   const headersSchemaName = `${sanitizedId}HeadersSchema`;
   const headersTypeName = `${sanitizedId}HeadersSchema`;
 
+  let headersSchemaCode: string;
   if (parameterGroups.headerParams.length > 0) {
     const headerProps = parameterGroups.headerParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
-    schemas.push(
-      `const ${headersSchemaName} = ${headerObjectMethod}({ ${headerProps} });`,
-    );
+    headersSchemaCode = `${headerObjectMethod}({ ${headerProps} })`;
   } else {
-    schemas.push(`const ${headersSchemaName} = ${headerObjectMethod}({});`);
+    headersSchemaCode = `${headerObjectMethod}({})`;
   }
 
   return {
-    schemaCode: schemas.join("\n"),
+    schemaCode: {
+      headers: headersSchemaCode,
+      path: pathSchemaCode,
+      query: querySchemaCode,
+    },
     schemaNames: {
       headersSchema: headersSchemaName,
       pathSchema: pathSchemaName,
