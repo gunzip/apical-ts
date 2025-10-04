@@ -7,7 +7,9 @@ export { handleExtensibleEnum, handleRegularEnum } from "./enum-handlers.js";
 export {
   generateRecursiveSchemaFile,
   generateRequestSchemaFile,
+  generateRequestSchemaFileWithMetadata,
   generateResponseSchemaFile,
+  generateResponseSchemaFileWithMetadata,
   generateSchemaFile,
   type SchemaFileResult,
 } from "./file-generators.js";

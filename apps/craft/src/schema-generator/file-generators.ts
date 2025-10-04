@@ -4,6 +4,10 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 import { z, type ZodTypeAny } from "zod";
 
 import type { TransformContext } from "../core-generator/index.js";
+import type {
+  RequestSchemaMetadata,
+  ResponseSchemaMetadata,
+} from "../core-generator/schema-extractor.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
@@ -154,6 +158,39 @@ export async function generateRequestSchemaFile(
 }
 
 /**
+ * Generates file content for a request schema with metadata
+ */
+export async function generateRequestSchemaFileWithMetadata(
+  metadata: {
+    metadata: RequestSchemaMetadata;
+    name: string;
+    schema: SchemaObject;
+  },
+  options: SchemaGenerationOptions = {},
+): Promise<SchemaFileResult> {
+  const schemaVar = `${metadata.name.charAt(0).toUpperCase() + metadata.name.slice(1)}`;
+  const description = `Request schema for ${metadata.name.replace("Request", "")} operation`;
+
+  // Build transform context if zodTransform is provided
+  if (options.zodTransform && metadata.metadata) {
+    const transformContext: TransformContext = {
+      contentType: metadata.metadata.contentType,
+      exportName: schemaVar,
+      kind: "requestBody",
+      location: "operation",
+      operationId: metadata.metadata.operationId,
+      pointer: metadata.metadata.pointer,
+    };
+    return generateSchemaFile(schemaVar, metadata.schema, description, {
+      ...options,
+      transformContext,
+    });
+  }
+
+  return generateSchemaFile(schemaVar, metadata.schema, description, options);
+}
+
+/**
  * Generates file content for a response schema
  */
 export async function generateResponseSchemaFile(
@@ -164,6 +201,44 @@ export async function generateResponseSchemaFile(
   const description = `Response schema for ${name.replace(/Response$/, "").replace(/\d+Response/, " operation")}`;
 
   return generateSchemaFile(name, schema, description, options);
+}
+
+/**
+ * Generates file content for a response schema with metadata
+ */
+export async function generateResponseSchemaFileWithMetadata(
+  metadata: {
+    metadata: ResponseSchemaMetadata;
+    name: string;
+    schema: SchemaObject;
+  },
+  options: SchemaGenerationOptions = {},
+): Promise<SchemaFileResult> {
+  const description = `Response schema for ${metadata.name.replace(/Response$/, "").replace(/\d+Response/, " operation")}`;
+
+  // Build transform context if zodTransform is provided
+  if (options.zodTransform && metadata.metadata) {
+    const transformContext: TransformContext = {
+      contentType: metadata.metadata.contentType,
+      exportName: metadata.name,
+      kind: "response",
+      location: "operation",
+      operationId: metadata.metadata.operationId,
+      pointer: metadata.metadata.pointer,
+      statusCode: metadata.metadata.statusCode,
+    };
+    return generateSchemaFile(metadata.name, metadata.schema, description, {
+      ...options,
+      transformContext,
+    });
+  }
+
+  return generateSchemaFile(
+    metadata.name,
+    metadata.schema,
+    description,
+    options,
+  );
 }
 
 /**

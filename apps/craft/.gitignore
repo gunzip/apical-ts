@@ -1,2 +1,3 @@
 tests/integrations/generated-transform-test/
 tests/integrations/generated-param-transform-test/
+tests/integrations/generated-req-res-transform-test/

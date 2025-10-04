@@ -12,7 +12,9 @@ import {
   createRecursiveContext,
   generateRecursiveSchemaFile,
   generateRequestSchemaFile,
+  generateRequestSchemaFileWithMetadata,
   generateResponseSchemaFile,
+  generateResponseSchemaFileWithMetadata,
   generateSchemaFile,
   writeParameterSchemaFile,
 } from "../schema-generator/index.js";
@@ -22,7 +24,11 @@ import { isPlainSchemaObject } from "./openapi-utils.js";
 import { extractOperationParameters } from "./parameter-extractor.js";
 import {
   extractRequestSchemas,
+  extractRequestSchemasWithMetadata,
   extractResponseSchemas,
+  extractResponseSchemasWithMetadata,
+  type RequestSchemaMetadata,
+  type ResponseSchemaMetadata,
 } from "./schema-extractor.js";
 import { generateSchemaIndex } from "./schema-index-generator.js";
 
@@ -84,21 +90,47 @@ export async function generateSchemas(
     const schemaGenerationPromises: Promise<void>[] = [
       // Generate schemas from components/schemas
       ...generateComponentSchemas(context),
-      // Generate request schemas from operations
-      ...createSchemaGenerationPromises(
-        extractRequestSchemas(openApiDoc),
-        context,
-        generateRequestSchemaFile,
-      ),
-      // Generate response schemas from operations
-      ...createSchemaGenerationPromises(
-        extractResponseSchemas(openApiDoc),
-        context,
-        generateResponseSchemaFile,
-      ),
       // Generate parameter schemas from operations
       ...generateParameterSchemas(openApiDoc, context),
     ];
+
+    // Generate request schemas with or without metadata based on zodTransform
+    if (context.zodTransform) {
+      schemaGenerationPromises.push(
+        ...createSchemaGenerationPromisesWithMetadata(
+          extractRequestSchemasWithMetadata(openApiDoc),
+          context,
+          generateRequestSchemaFileWithMetadata,
+        ),
+      );
+    } else {
+      schemaGenerationPromises.push(
+        ...createSchemaGenerationPromises(
+          extractRequestSchemas(openApiDoc),
+          context,
+          generateRequestSchemaFile,
+        ),
+      );
+    }
+
+    // Generate response schemas with or without metadata based on zodTransform
+    if (context.zodTransform) {
+      schemaGenerationPromises.push(
+        ...createSchemaGenerationPromisesWithMetadata(
+          extractResponseSchemasWithMetadata(openApiDoc),
+          context,
+          generateResponseSchemaFileWithMetadata,
+        ),
+      );
+    } else {
+      schemaGenerationPromises.push(
+        ...createSchemaGenerationPromises(
+          extractResponseSchemas(openApiDoc),
+          context,
+          generateResponseSchemaFile,
+        ),
+      );
+    }
 
     await Promise.all(schemaGenerationPromises);
 
@@ -112,23 +144,43 @@ export async function generateSchemas(
     profiler.end("schemas:components");
 
     profiler.start("schemas:requests");
-    await Promise.all(
-      createSchemaGenerationPromises(
-        extractRequestSchemas(openApiDoc),
-        context,
-        generateRequestSchemaFile,
-      ),
-    );
+    if (context.zodTransform) {
+      await Promise.all(
+        createSchemaGenerationPromisesWithMetadata(
+          extractRequestSchemasWithMetadata(openApiDoc),
+          context,
+          generateRequestSchemaFileWithMetadata,
+        ),
+      );
+    } else {
+      await Promise.all(
+        createSchemaGenerationPromises(
+          extractRequestSchemas(openApiDoc),
+          context,
+          generateRequestSchemaFile,
+        ),
+      );
+    }
     profiler.end("schemas:requests");
 
     profiler.start("schemas:responses");
-    await Promise.all(
-      createSchemaGenerationPromises(
-        extractResponseSchemas(openApiDoc),
-        context,
-        generateResponseSchemaFile,
-      ),
-    );
+    if (context.zodTransform) {
+      await Promise.all(
+        createSchemaGenerationPromisesWithMetadata(
+          extractResponseSchemasWithMetadata(openApiDoc),
+          context,
+          generateResponseSchemaFileWithMetadata,
+        ),
+      );
+    } else {
+      await Promise.all(
+        createSchemaGenerationPromises(
+          extractResponseSchemas(openApiDoc),
+          context,
+          generateResponseSchemaFile,
+        ),
+      );
+    }
     profiler.end("schemas:responses");
 
     profiler.start("schemas:parameters");
@@ -207,6 +259,40 @@ function createSchemaGenerationPromises<T = SchemaObject>(
     // Generate schema (used by both client and server)
     const promise = context.limit(() =>
       generatorFn(name, schema).then((schemaFile) => {
+        const filePath = path.join(context.schemasDir, schemaFile.fileName);
+        return fs.writeFile(filePath, schemaFile.content);
+      }),
+    );
+    promises.push(promise);
+  }
+
+  return promises;
+}
+
+/**
+ * Creates schema generation promises for schemas with metadata
+ */
+function createSchemaGenerationPromisesWithMetadata<
+  T extends RequestSchemaMetadata | ResponseSchemaMetadata,
+>(
+  schemaMap: Map<string, T>,
+  context: SchemaGenerationContext,
+  generatorFn: (
+    metadata: { metadata: T; name: string; schema: SchemaObject },
+    options: SchemaGenerationOptions,
+  ) => Promise<{ content: string; fileName: string }>,
+): Promise<void>[] {
+  const promises: Promise<void>[] = [];
+
+  for (const [name, metadata] of schemaMap) {
+    const promise = context.limit(() =>
+      generatorFn(
+        { metadata, name, schema: metadata.schema },
+        {
+          resolvedSchemas: context.resolvedSchemas,
+          zodTransform: context.zodTransform,
+        },
+      ).then((schemaFile) => {
         const filePath = path.join(context.schemasDir, schemaFile.fileName);
         return fs.writeFile(filePath, schemaFile.content);
       }),
