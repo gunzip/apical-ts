@@ -15,6 +15,12 @@ export {
 export { handleObjectType } from "./object-types.js";
 
 export {
+  generateParameterSchemaFile,
+  type ParameterSchemaFileResult,
+  writeParameterSchemaFile,
+} from "./parameter-file-generator.js";
+
+export {
   handleArrayType,
   handleBooleanType,
   handleNumberType,

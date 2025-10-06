@@ -3,6 +3,7 @@ import type { OpenAPIObject } from "openapi3-ts/oas31";
 import type { ParameterGroups } from "../../client-generator/models/parameter-models.js";
 import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
 
+import { ImportManager } from "../../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
 import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
 import { generateResponseMap } from "../../shared/response-maps.js";
@@ -26,7 +27,6 @@ export interface ServerOperationTemplateParams {
   responseMapCode: string;
   responseMapTypeName?: string;
   summary?: string;
-  typeImports: Set<string>;
 }
 
 /**
@@ -34,7 +34,7 @@ export interface ServerOperationTemplateParams {
  */
 export function buildServerRequestMap(
   metadata: ServerOperationMetadata,
-  typeImports: Set<string>,
+  importManager: ImportManager,
 ): string {
   if (!metadata.bodyInfo.shouldGenerateRequestMap) return "";
 
@@ -42,7 +42,9 @@ export function buildServerRequestMap(
   const mapName = metadata.bodyInfo.requestMapTypeName;
 
   /* Add imports for request schemas */
-  serverRequestBodyMap.typeImports.forEach((imp) => typeImports.add(imp));
+  for (const typeImport of serverRequestBodyMap.typeImports) {
+    importManager.addSchemaImport(typeImport);
+  }
 
   /* Convert the client generator format (with semicolons) to object literal format (with commas) */
   const fixedMapType = serverRequestBodyMap.requestMapType.replace(/;/g, ",");
@@ -56,9 +58,12 @@ export type ${mapName} = typeof ${mapName};`;
  */
 export function buildServerResponseMap(
   metadata: ServerOperationMetadata,
-  typeImports: Set<string>,
+  importManager: ImportManager,
   doc: OpenAPIObject,
 ): string {
+  /* Create a temporary Set to collect type imports */
+  const typeImports = new Set<string>();
+
   /* Generate response union type using existing logic */
   const unionResult = generateResponseUnion(
     metadata.operation,
@@ -76,8 +81,13 @@ export function buildServerResponseMap(
     {}, // Use standard schemas for server responses
   );
 
-  /* Add type imports */
-  responseMapResult.typeImports.forEach((imp) => typeImports.add(imp));
+  /* Add type imports to ImportManager */
+  for (const typeImport of typeImports) {
+    importManager.addSchemaImport(typeImport);
+  }
+  for (const typeImport of responseMapResult.typeImports) {
+    importManager.addSchemaImport(typeImport);
+  }
 
   /* Generate response map constant and type like client generator */
   const responseMapName = `${sanitizeIdentifier(metadata.operationId)}ResponseMap`;
@@ -100,26 +110,27 @@ export type ${responseMapName} = typeof ${responseMapName};`;
  */
 export function renderServerOperationWrapper(
   params: ServerOperationTemplateParams,
+  importManager: ImportManager,
 ): string {
   const {
     functionName,
     hasBody,
     method,
     operationId,
-    parameterGroups,
     pathKey,
     requestMapCode,
     requestMapTypeName,
     responseMapCode,
     responseMapTypeName,
-    // summary,
   } = params;
 
   const sanitizedId = sanitizeIdentifier(operationId);
-  const parameterSchemas = renderParameterSchemas(
+
+  /* Generate inline parameter schemas with server-specific transformations */
+  const parameterSchemas = generateInlineParameterSchemas(
     operationId,
-    parameterGroups,
-    params.typeImports,
+    params.parameterGroups,
+    importManager,
   );
   const validationLogic = renderValidationLogic(
     operationId,
@@ -142,9 +153,9 @@ export function renderServerOperationWrapper(
   | { kind: "body-error"; error: z.ZodError; isValid: false };`;
 
   const parsedParamsType = `type ${sanitizedId}ParsedParams = {
-  query: ${sanitizedId}Query;
-  path: ${sanitizedId}Path;
-  headers: ${sanitizedId}Headers;
+  query: z.infer<typeof ${sanitizedId}QuerySchema>;
+  path: z.infer<typeof ${sanitizedId}PathSchema>;
+  headers: z.infer<typeof ${sanitizedId}HeadersSchema>;
   body?: ${bodyType};
 };`;
 
@@ -184,9 +195,9 @@ ${validationLogic}
   /* Combine all parts */
   const parts = [
     `import { z } from "zod";`,
+    parameterSchemas,
     requestMapCode,
     responseMapCode,
-    parameterSchemas,
     validationErrorType,
     parsedParamsType,
     handlerType,
@@ -198,21 +209,23 @@ ${validationLogic}
 }
 
 /**
- * Renders Zod schema definitions for parameters
+ * Generates inline parameter schemas with server-specific transformations
  */
-function renderParameterSchemas(
+function generateInlineParameterSchemas(
   operationId: string,
   parameterGroups: ParameterGroups,
-  typeImports: Set<string>,
+  importManager: ImportManager,
 ): string {
-  /* Use shared parameter schema generation logic for server input */
   const result = generateParameterSchemas(operationId, parameterGroups, {
+    /* Server requires coercion and lowercase headers */
     coercePrimitives: true,
     lowercaseHeaderKeys: true,
   });
 
-  /* Merge type imports */
-  result.typeImports.forEach((imp) => typeImports.add(imp));
+  /* Add any type imports from schema generation to ImportManager */
+  for (const typeImport of result.typeImports) {
+    importManager.addSchemaImport(typeImport);
+  }
 
   return result.schemaCode;
 }

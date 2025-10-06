@@ -13,14 +13,17 @@ import {
   generateRequestSchemaFile,
   generateResponseSchemaFile,
   generateSchemaFile,
+  writeParameterSchemaFile,
 } from "../schema-generator/index.js";
 import { ResolvedSchemas } from "../schema-generator/schema-converter.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { isPlainSchemaObject } from "./openapi-utils.js";
+import { extractOperationParameters } from "./parameter-extractor.js";
 import {
   extractRequestSchemas,
   extractResponseSchemas,
 } from "./schema-extractor.js";
+import { generateSchemaIndex } from "./schema-index-generator.js";
 
 /**
  * Options for component schema promise creation
@@ -48,7 +51,7 @@ type SchemaGeneratorFunction<T = SchemaObject> = (
 ) => Promise<{ content: string; fileName: string }>;
 
 /**
- * Generates all schemas (component, request, and response schemas)
+ * Generates all schemas (component, request, response, and parameter schemas)
  */
 export async function generateSchemas(
   openApiDoc: OpenAPIObject,
@@ -89,9 +92,15 @@ export async function generateSchemas(
         context,
         generateResponseSchemaFile,
       ),
+      // Generate parameter schemas from operations
+      ...generateParameterSchemas(openApiDoc, context),
     ];
 
     await Promise.all(schemaGenerationPromises);
+
+    /* Generate the schema index barrel file */
+    const operationParameters = extractOperationParameters(openApiDoc);
+    await generateSchemaIndex(context.schemasDir, operationParameters);
   } else {
     // Profiled path: run phases sequentially to get isolated timings
     profiler.start("schemas:components");
@@ -117,6 +126,15 @@ export async function generateSchemas(
       ),
     );
     profiler.end("schemas:responses");
+
+    profiler.start("schemas:parameters");
+    await Promise.all(generateParameterSchemas(openApiDoc, context));
+    profiler.end("schemas:parameters");
+
+    profiler.start("schemas:index");
+    const operationParameters = extractOperationParameters(openApiDoc);
+    await generateSchemaIndex(context.schemasDir, operationParameters);
+    profiler.end("schemas:index");
   }
   /* eslint-disable-next-line no-console */
   console.log("✅ Schemas generated successfully");
@@ -242,6 +260,38 @@ function generateComponentSchemas(
       schema,
       schemaName: sanitizedName,
     });
+    promises.push(promise);
+  }
+
+  return promises;
+}
+
+/**
+ * Generates parameter schemas for all operations
+ */
+function generateParameterSchemas(
+  openApiDoc: OpenAPIObject,
+  context: SchemaGenerationContext,
+): Promise<void>[] {
+  const promises: Promise<void>[] = [];
+
+  /* Extract all operation parameters */
+  const operationParameters = extractOperationParameters(openApiDoc);
+
+  /* Generate parameter schema files for each operation */
+  for (const parameterMetadata of operationParameters) {
+    const promise = context.limit(() =>
+      writeParameterSchemaFile(
+        context.schemasDir,
+        parameterMetadata.operationId,
+        parameterMetadata,
+        {
+          /* Client defaults - no coercion or special handling */
+          coercePrimitives: false,
+          lowercaseHeaderKeys: false,
+        },
+      ),
+    );
     promises.push(promise);
   }
 

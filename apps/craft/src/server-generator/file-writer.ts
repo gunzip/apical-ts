@@ -2,8 +2,13 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import type { OperationMetadata } from "../client-generator/operation-extractor.js";
+import type { ImportManager } from "../core-generator/import-types.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import {
+  categorizeImportsFromManager,
+  filterServerParameterImportsFromManager,
+} from "../shared/parameter-utils.js";
 
 /**
  * Creates server operations directory structure
@@ -75,15 +80,41 @@ ${routesObject}
 export async function writeServerOperationFile(
   operationId: string,
   wrapperCode: string,
-  typeImports: Set<string>,
+  importManager: ImportManager,
   serverOperationsDir: string,
 ): Promise<void> {
-  /* Add schema imports */
-  const imports = Array.from(typeImports)
-    .map((imp) => `import { ${imp} } from "../schemas/${imp}.js";`)
-    .join("\n");
+  /* Use structured approach to categorize imports */
+  const categorized = categorizeImportsFromManager(importManager);
 
-  const fullCode = imports ? `${imports}\n\n${wrapperCode}` : wrapperCode;
+  /* Filter out parameter schema imports that should be skipped for server generation */
+  const allowedParameterImports =
+    filterServerParameterImportsFromManager(importManager);
+
+  /* Build schema imports from regular imports and allowed parameter imports */
+  const schemaImports: string[] = [];
+
+  // Add regular schema imports
+  categorized.regularImports.forEach((imp) => {
+    schemaImports.push(`import { ${imp} } from "../schemas/${imp}.js";`);
+  });
+
+  // Add allowed parameter imports (non-schema parameters)
+  allowedParameterImports.forEach((paramImport) => {
+    schemaImports.push(
+      `import { ${paramImport.importName} } from "../schemas/${paramImport.importName}.js";`,
+    );
+  });
+
+  /* Build imports section */
+  const imports: string[] = [];
+  if (schemaImports.length > 0) {
+    imports.push(...schemaImports);
+  }
+
+  const fullCode =
+    imports.length > 0
+      ? `${imports.join("\n")}\n\n${wrapperCode}`
+      : wrapperCode;
 
   const filePath = path.join(serverOperationsDir, `${operationId}.ts`);
   await fs.writeFile(filePath, fullCode);

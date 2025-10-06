@@ -46,96 +46,6 @@ export interface ParameterSchemaResult {
 }
 
 /**
- * Generates a single parameter schema for a specific parameter type
- */
-export function generateParameterSchema(
-  operationId: string,
-  parameterType: "headers" | "path" | "query",
-  parameters: ParameterObject[],
-  options: ParameterSchemaOptions = {},
-): {
-  schemaCode: string;
-  schemaName: string;
-  typeImports: Set<string>;
-  typeName: string;
-} {
-  const { coercePrimitives = false, lowercaseHeaderKeys = false } = options;
-  const sanitizedId = sanitizeIdentifier(operationId);
-  const typeImports = new Set<string>();
-
-  const paramTypeMap = {
-    headers: "Headers",
-    path: "Path",
-    query: "Query",
-  };
-
-  const suffix = paramTypeMap[parameterType];
-  const schemaName = `${sanitizedId}${suffix}Schema`;
-  const typeName = `${sanitizedId}${suffix}`;
-
-  /* Helper to build property entry using zodSchemaToCode; fallback to z.string()
-     For servers, applies parameter-specific transformations:
-       - Header parameter keys are lowercased (Express normalizes headers)
-       - Primitive number/integer/boolean schemas are coerced (z.coerce.*) to accept string inputs
-       - Original OpenAPI keys preserved verbatim (quoted) */
-  const buildProp = (originalName: string, param: ParameterObject): string => {
-    const schema = param.schema as ReferenceObject | SchemaObject | undefined;
-    const isRequired = param.required === true;
-    /* Lowercase header parameter keys to match server runtime headers */
-    const name =
-      lowercaseHeaderKeys && parameterType === "headers"
-        ? originalName.toLowerCase()
-        : originalName;
-
-    let zodCode: string;
-    if (schema) {
-      const result = zodSchemaToCode(schema, {
-        imports: typeImports,
-      });
-      zodCode = result.code;
-
-      /* Apply coercion for primitive types when schema is a direct SchemaObject (not a $ref) */
-      if (coercePrimitives && !isReferenceObject(schema)) {
-        const schemaObj = schema as SchemaObject;
-        const hasEnum = Array.isArray(schemaObj.enum);
-        if (!hasEnum) {
-          if (schemaObj.type === "number" || schemaObj.type === "integer") {
-            /* Replace only leading z.number() occurrence */
-            zodCode = zodCode.replace(/^z\.number\(\)/, "z.coerce.number()");
-          } else if (schemaObj.type === "boolean") {
-            zodCode = zodCode.replace(/^z\.boolean\(\)/, "z.stringbool()");
-          }
-        }
-      }
-    } else {
-      zodCode = "z.string()";
-    }
-
-    /* Make parameter optional if not explicitly required */
-    if (!isRequired) {
-      zodCode = `${zodCode}.optional()`;
-    }
-
-    return `${JSON.stringify(name)}: ${zodCode}`;
-  };
-
-  let schemaCode: string;
-  if (parameters.length > 0) {
-    const props = parameters.map((p) => buildProp(p.name, p)).join(", ");
-    schemaCode = `const ${schemaName} = z.object({ ${props} });\ntype ${typeName} = z.infer<typeof ${schemaName}>;`;
-  } else {
-    schemaCode = `const ${schemaName} = z.object({});\ntype ${typeName} = z.infer<typeof ${schemaName}>;`;
-  }
-
-  return {
-    schemaCode,
-    schemaName,
-    typeImports,
-    typeName,
-  };
-}
-
-/**
  * Generates Zod schemas for all parameter types (query, path, headers)
  */
 export function generateParameterSchemas(
@@ -196,7 +106,7 @@ export function generateParameterSchemas(
 
   /* Query schema */
   const querySchemaName = `${sanitizedId}QuerySchema`;
-  const queryTypeName = `${sanitizedId}Query`;
+  const queryTypeName = `${sanitizedId}QuerySchema`;
 
   if (parameterGroups.queryParams.length > 0) {
     const queryProps = parameterGroups.queryParams
@@ -208,11 +118,10 @@ export function generateParameterSchemas(
   } else {
     schemas.push(`const ${querySchemaName} = ${objectMethod}({});`);
   }
-  schemas.push(`type ${queryTypeName} = z.infer<typeof ${querySchemaName}>;`);
 
   /* Path schema */
   const pathSchemaName = `${sanitizedId}PathSchema`;
-  const pathTypeName = `${sanitizedId}Path`;
+  const pathTypeName = `${sanitizedId}PathSchema`;
 
   if (parameterGroups.pathParams.length > 0) {
     const pathProps = parameterGroups.pathParams
@@ -224,11 +133,10 @@ export function generateParameterSchemas(
   } else {
     schemas.push(`const ${pathSchemaName} = ${objectMethod}({});`);
   }
-  schemas.push(`type ${pathTypeName} = z.infer<typeof ${pathSchemaName}>;`);
 
   /* Headers schema */
   const headersSchemaName = `${sanitizedId}HeadersSchema`;
-  const headersTypeName = `${sanitizedId}Headers`;
+  const headersTypeName = `${sanitizedId}HeadersSchema`;
 
   if (parameterGroups.headerParams.length > 0) {
     const headerProps = parameterGroups.headerParams
@@ -240,9 +148,6 @@ export function generateParameterSchemas(
   } else {
     schemas.push(`const ${headersSchemaName} = ${headerObjectMethod}({});`);
   }
-  schemas.push(
-    `type ${headersTypeName} = z.infer<typeof ${headersSchemaName}>;`,
-  );
 
   return {
     schemaCode: schemas.join("\n"),

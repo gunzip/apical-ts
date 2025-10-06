@@ -10,6 +10,7 @@ import assert from "assert";
 
 import type { OperationMetadata } from "./templates/operation-templates.js";
 
+import { ImportManager } from "../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateFunctionBody } from "./code-generation.js";
 import { extractParameterGroups } from "./parameters.js";
@@ -38,7 +39,7 @@ import { renderDefaultResponseHandler } from "./templates/response-templates.js"
 /* Result of generating a function with imports */
 export interface GeneratedFunction {
   functionCode: string;
-  typeImports: Set<string>;
+  importManager: ImportManager;
 }
 
 /**
@@ -60,7 +61,9 @@ export function extractOperationMetadata(
     functionName.charAt(0).toUpperCase() + functionName.slice(1);
 
   const summary = operation.summary ? `/** ${operation.summary} */\n` : "";
-  const typeImports = new Set<string>();
+  const importManager = new ImportManager();
+  // Create a temporary Set for legacy response functions
+  const responseTypeImports = new Set<string>();
 
   /* Extract parameters & security */
   const parameterGroups = extractParameterGroups(
@@ -77,7 +80,7 @@ export function extractOperationMetadata(
     hasBody,
     operation,
     functionName,
-    typeImports,
+    importManager,
     operationName,
     doc,
   );
@@ -100,11 +103,14 @@ export function extractOperationMetadata(
   /* Build response handlers + discriminated union return type (ApiResponse<code, data>) */
   const responseHandlers = generateResponseHandlers(
     operation,
-    typeImports,
+    responseTypeImports,
     bodyInfo.shouldExportResponseMap,
     bodyInfo.shouldExportResponseMap ? bodyInfo.responseMapTypeName : undefined,
     doc,
   );
+
+  // Migrate response type imports to ImportManager
+  responseTypeImports.forEach((imp) => importManager.addSchemaImport(imp));
 
   /* Security overrides/auth headers */
   const overridesSecurity = hasSecurityOverride(operation);
@@ -144,6 +150,7 @@ export function extractOperationMetadata(
     functionBodyCode,
     functionName,
     hasBody,
+    importManager,
     operationName,
     operationSecurityHeaders,
     overridesSecurity,
@@ -151,7 +158,6 @@ export function extractOperationMetadata(
     parameterStructures,
     responseHandlers,
     summary,
-    typeImports,
   };
 }
 
@@ -204,6 +210,7 @@ export function generateOperationFunction(
   /* Emit request/response map type aliases (only when non-empty / applicable) */
   const typeAliases = buildTypeAliases({
     contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+    importManager: metadata.importManager,
     /* Parameter schema generation */
     operationId: operation.operationId,
     parameterGroups: metadata.parameterGroups,
@@ -211,8 +218,7 @@ export function generateOperationFunction(
     responseMapName: metadata.responseHandlers.responseMapName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
-    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap, // Use shouldGenerateResponseMap for type aliases
-    typeImports: metadata.typeImports,
+    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
   });
 
   /* Render the complete function */
@@ -230,7 +236,10 @@ export function generateOperationFunction(
     updatedReturnType,
   });
 
-  return { functionCode: functionStr, typeImports: metadata.typeImports };
+  return {
+    functionCode: functionStr,
+    importManager: metadata.importManager,
+  };
 }
 
 /* ---------------- Helper extraction functions (kept local to module) ---------------- */
@@ -284,7 +293,7 @@ function collectBodyAndContentTypes(
   hasBody: boolean,
   operation: OperationObject,
   functionName: string,
-  typeImports: Set<string>,
+  importManager: ImportManager,
   operationName: string,
   doc: OpenAPIObject,
 ) {
@@ -295,14 +304,18 @@ function collectBodyAndContentTypes(
     const requestBody = operation.requestBody as RequestBodyObject;
     bodyTypeInfo = resolveRequestBodyType(requestBody, functionName);
     requestContentType = bodyTypeInfo.contentType;
-    bodyTypeInfo.typeImports.forEach((imp) => typeImports.add(imp));
+    bodyTypeInfo.typeImports.forEach((imp) => {
+      importManager.addSchemaImport(imp);
+    });
   }
 
   const requestMapTypeName = `${operationName}RequestMap`;
   const responseMapTypeName = `${operationName}ResponseMap`;
 
   const contentTypeMaps = generateContentTypeMaps(operation, doc);
-  contentTypeMaps.typeImports.forEach((imp) => typeImports.add(imp));
+  contentTypeMaps.typeImports.forEach((imp) => {
+    importManager.addSchemaImport(imp);
+  });
 
   let requestContentTypes: string[] = [];
   if (hasBody && (operation.requestBody as RequestBodyObject)?.content) {

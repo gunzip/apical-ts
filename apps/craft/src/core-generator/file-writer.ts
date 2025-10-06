@@ -1,111 +1,16 @@
 import { promises as fs } from "fs";
 
+import { ImportManager } from "./import-types.js";
+
 /**
  * Builds the complete operation file content with imports and function code
  */
 export function buildOperationFileContent(
-  typeImports: Set<string>,
+  importManager: ImportManager,
   functionCode: string,
 ): string {
-  const importLines = buildOperationImports(typeImports, functionCode);
+  const importLines = buildImportStatements(importManager, functionCode);
   return `${importLines.join("\n")}\n\n${functionCode}`;
-}
-
-/**
- * Builds import statements for operation files with separate type and value imports
- *
- * @example
- * ```javascript
- * const typeImports = new Set(['User', 'Pet']);
- * const imports = buildOperationImports(typeImports);
- * // Result: [
- * //   "import type { GlobalConfig, ApiResponse, ApiResponseError } from './config.js';",
- * //   "import { globalConfig, parseResponseBody, parseApiResponseUnknownData } from './config.js';",
- * //   "import { User } from '../schemas/User.js';",
- * //   "import { Pet } from '../schemas/Pet.js';",
- * // ]
- * ```
- */
-export function buildOperationImports(
-  typeImports: Set<string>,
-  functionCode?: string,
-): string[] {
-  /* Categorize config imports into types and runtime values */
-  const configTypeImports = ["GlobalConfig", "ApiResponse", "ApiResponseError"];
-  const configValueImports = [
-    "globalConfig",
-    "parseResponseBody",
-    "parseApiResponseUnknownData",
-  ];
-
-  /* Add ApiResponseWithParse if used in the function */
-  if (functionCode && functionCode.includes("ApiResponseWithParse")) {
-    configTypeImports.push("ApiResponseWithParse");
-  }
-
-  /* Add ApiResponseWithForcedParse if used in the function */
-  if (functionCode && functionCode.includes("ApiResponseWithForcedParse")) {
-    configTypeImports.push("ApiResponseWithForcedParse");
-  }
-
-  /* Add createForcedParseResponse helper function if used */
-  if (functionCode && functionCode.includes("createForcedParseResponse")) {
-    configValueImports.push("createForcedParseResponse");
-  }
-
-  /* Add formUrlEncode helper import when operation body handling uses urlencoded serialization */
-  if (functionCode && functionCode.includes("formUrlEncode(")) {
-    configValueImports.push("formUrlEncode");
-  }
-
-  /* Add buildFormData helper import when multipart/form-data handling is used */
-  if (functionCode && functionCode.includes("buildFormData(")) {
-    configValueImports.push("buildFormData");
-  }
-
-  /* Add parameter serialization helper imports when used */
-  if (functionCode && functionCode.includes("serializeQueryParam(")) {
-    configValueImports.push("serializeQueryParam");
-  }
-
-  if (functionCode && functionCode.includes("serializePathParam(")) {
-    configValueImports.push("serializePathParam");
-  }
-
-  if (functionCode && functionCode.includes("serializeHeaderParam(")) {
-    configValueImports.push("serializeHeaderParam");
-  }
-
-  /* RequestBody alias used by generated operation body typing */
-  if (functionCode && functionCode.includes("RequestBody")) {
-    configTypeImports.push("RequestBody");
-  }
-
-  const imports: string[] = [];
-
-  /* Add type imports from config */
-  imports.push(
-    `import type { ${configTypeImports.join(", ")} } from "./config.js";`,
-  );
-
-  /* Add value imports from config */
-  imports.push(
-    `import { ${configValueImports.join(", ")} } from "./config.js";`,
-  );
-
-  /* Add Zod import if needed for parameter schemas */
-  if (typeImports.has("z")) {
-    imports.push(`import { z } from "zod";`);
-  }
-
-  /* Add schema imports */
-  const schemaImports = Array.from(typeImports)
-    .filter((type) => type !== "z") // Exclude Zod import
-    .map((type) => `import { ${type} } from "../schemas/${type}.js";`);
-
-  imports.push(...schemaImports);
-
-  return imports;
 }
 
 /**
@@ -131,4 +36,97 @@ export async function writeTypeScriptFile(
   } catch (error) {
     throw new Error(`Failed to write file ${filePath}: ${error}`);
   }
+}
+
+/**
+ * Builds import statements from ImportManager
+ */
+function buildImportStatements(
+  importManager: ImportManager,
+  functionCode?: string,
+): string[] {
+  const imports: string[] = [];
+
+  /* Add config imports */
+  const configImports = getConfigImports(functionCode);
+  imports.push(
+    `import type { ${configImports.typeImports.join(", ")} } from "./config.js";`,
+  );
+  imports.push(
+    `import { ${configImports.valueImports.join(", ")} } from "./config.js";`,
+  );
+
+  /* Add Zod import */
+  if (importManager.hasZodImport()) {
+    imports.push(`import { z } from "zod";`);
+  }
+
+  /* Add schema imports */
+  for (const schemaImport of importManager.getSchemaImports()) {
+    imports.push(
+      `import { ${schemaImport.name} } from "../schemas/${schemaImport.name}.js";`,
+    );
+  }
+
+  /* Add parameter imports grouped by operation */
+  for (const paramGroup of importManager.getParameterGroups()) {
+    imports.push(
+      `import { ${paramGroup.imports.join(", ")} } from "../schemas/${paramGroup.operationId}Parameters.js";`,
+    );
+  }
+
+  return imports;
+}
+
+/**
+ * Determines dynamic config imports based on function code usage
+ */
+function getConfigImports(functionCode?: string): {
+  typeImports: string[];
+  valueImports: string[];
+} {
+  const configTypeImports = ["GlobalConfig", "ApiResponse", "ApiResponseError"];
+  const configValueImports = [
+    "globalConfig",
+    "parseResponseBody",
+    "parseApiResponseUnknownData",
+  ];
+
+  if (functionCode?.includes("ApiResponseWithParse")) {
+    configTypeImports.push("ApiResponseWithParse");
+  }
+
+  if (functionCode?.includes("ApiResponseWithForcedParse")) {
+    configTypeImports.push("ApiResponseWithForcedParse");
+  }
+
+  if (functionCode?.includes("createForcedParseResponse")) {
+    configValueImports.push("createForcedParseResponse");
+  }
+
+  if (functionCode?.includes("formUrlEncode(")) {
+    configValueImports.push("formUrlEncode");
+  }
+
+  if (functionCode?.includes("buildFormData(")) {
+    configValueImports.push("buildFormData");
+  }
+
+  if (functionCode?.includes("serializeQueryParam(")) {
+    configValueImports.push("serializeQueryParam");
+  }
+
+  if (functionCode?.includes("serializePathParam(")) {
+    configValueImports.push("serializePathParam");
+  }
+
+  if (functionCode?.includes("serializeHeaderParam(")) {
+    configValueImports.push("serializeHeaderParam");
+  }
+
+  if (functionCode?.includes("RequestBody")) {
+    configTypeImports.push("RequestBody");
+  }
+
+  return { typeImports: configTypeImports, valueImports: configValueImports };
 }

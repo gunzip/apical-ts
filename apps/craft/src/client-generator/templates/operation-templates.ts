@@ -1,3 +1,4 @@
+import type { ImportManager } from "../../core-generator/import-types.js";
 import type { extractParameterGroups } from "../parameters.js";
 import type { resolveRequestBodyType } from "../request-body.js";
 import type {
@@ -6,7 +7,7 @@ import type {
 } from "../responses.js";
 import type { getOperationSecuritySchemes } from "../security.js";
 
-import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
+import { sanitizeIdentifier } from "../../schema-generator/utils.js";
 
 /* TypeScript rendering functions for operation code generation */
 
@@ -52,6 +53,7 @@ export interface OperationMetadata {
   functionBodyCode: string;
   functionName: string;
   hasBody: boolean;
+  importManager: ImportManager;
   operationName: string;
   operationSecurityHeaders: ReturnType<typeof getOperationSecuritySchemes>;
   overridesSecurity: boolean;
@@ -62,7 +64,6 @@ export interface OperationMetadata {
   };
   responseHandlers: ResponseHandlerResult;
   summary: string;
-  typeImports: Set<string>;
 }
 
 export interface ParameterDeclarationConfig {
@@ -71,13 +72,13 @@ export interface ParameterDeclarationConfig {
 }
 
 export type TypeAliasesConfig = ContentTypeMapsConfig & {
+  /* ImportManager for handling type imports */
+  importManager: ImportManager;
   /* Parameter schema generation */
   operationId: string | undefined;
   parameterGroups: ReturnType<typeof extractParameterGroups>;
   responseMapName?: string;
   responseMapType?: string;
-  /* Type imports to merge parameter schema imports */
-  typeImports: Set<string>;
 };
 
 /*
@@ -137,24 +138,14 @@ export function buildParameterDeclaration(
 export function buildTypeAliases(config: TypeAliasesConfig): string {
   let typeAliases = "";
 
-  /* Generate parameter schemas for client operations (for type-safe input parameters) */
+  /* Add parameter schema imports instead of generating them inline */
   if (config.operationId) {
-    const parameterSchemas = generateParameterSchemas(
-      config.operationId,
-      config.parameterGroups,
-      {
-        // Client parameters use default behavior without coercion or special validation rules.
-      },
-    );
-    if (parameterSchemas.schemaCode.trim()) {
-      /* Add Zod import for parameter schemas */
-      config.typeImports.add("z");
-      /* Merge parameter schema imports */
-      parameterSchemas.typeImports.forEach((imp) =>
-        config.typeImports.add(imp),
-      );
-      typeAliases += `/* Parameter schemas for type-safe inputs */\n${parameterSchemas.schemaCode}\n\n`;
-    }
+    const sanitizedId = sanitizeIdentifier(config.operationId);
+
+    /* Add imports for parameter schemas from the centralized schema files */
+    config.importManager.addParameterSchema(sanitizedId, "Query");
+    config.importManager.addParameterSchema(sanitizedId, "Path");
+    config.importManager.addParameterSchema(sanitizedId, "Headers");
   }
 
   /*

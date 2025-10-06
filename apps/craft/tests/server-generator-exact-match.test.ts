@@ -155,13 +155,10 @@ describe("server-generator - problem statement validation", () => {
       doc as any,
     );
 
-    /* Should generate empty schemas for missing parameters with regular z.object */
-    expect(result.wrapperCode).toContain("noParamsQuerySchema = z.object({})");
-    expect(result.wrapperCode).toContain("noParamsPathSchema = z.object({})");
-    expect(result.wrapperCode).toContain(
-      "noParamsHeadersSchema = z.object({})",
-    );
-    expect(result.wrapperCode).not.toContain("z.strictObject(");
+    /* Should reference parameter schemas (now imported) */
+    expect(result.wrapperCode).toContain("noParamsQuerySchema");
+    expect(result.wrapperCode).toContain("noParamsPathSchema");
+    expect(result.wrapperCode).toContain("noParamsHeadersSchema");
 
     /* Should still perform validation even with empty schemas */
     expect(result.wrapperCode).toContain(

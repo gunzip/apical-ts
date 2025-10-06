@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { ImportManager } from "../../src/core-generator/import-types.js";
 import {
   buildGenericParams,
   buildParameterDeclaration,
@@ -210,9 +211,9 @@ describe("operation-templates", () => {
           responseContentTypeCount: 2,
           responseMapType:
             "{ 'application/json': User; 'text/plain': string; }",
-          typeImports: new Set(),
+          typeImports: new Set<string>(),
         },
-        typeImports: new Set(),
+        importManager: new ImportManager(),
       };
 
       const result = buildTypeAliases(config);
@@ -248,9 +249,9 @@ describe("operation-templates", () => {
           requestMapType: "{ 'application/json': User; }",
           responseContentTypeCount: 0,
           responseMapType: "{}",
-          typeImports: new Set(),
+          typeImports: new Set<string>(),
         },
-        typeImports: new Set(),
+        importManager: new ImportManager(),
       };
 
       const result = buildTypeAliases(config);
@@ -283,9 +284,9 @@ describe("operation-templates", () => {
           requestMapType: "{}",
           responseContentTypeCount: 1,
           responseMapType: "{ 'application/json': User; }",
-          typeImports: new Set(),
+          typeImports: new Set<string>(),
         },
-        typeImports: new Set(),
+        importManager: new ImportManager(),
       };
 
       const result = buildTypeAliases(config);
@@ -320,9 +321,9 @@ describe("operation-templates", () => {
           requestMapType: "{}",
           responseContentTypeCount: 0,
           responseMapType: "{}",
-          typeImports: new Set(),
+          typeImports: new Set<string>(),
         },
-        typeImports: new Set(),
+        importManager: new ImportManager(),
       };
 
       const result = buildTypeAliases(config);
