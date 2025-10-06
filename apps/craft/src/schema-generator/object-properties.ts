@@ -25,11 +25,10 @@ export interface ObjectPropertyOptions {
 }
 
 /**
- * Determines the object method to use based on additionalProperties and extraProps setting
+ * Determines the object method to use based on additionalProperties
  * According to OpenAPI specification:
  * - false: no additional properties allowed (use z.strictObject)
- * - undefined/true: behavior depends on extraProps setting
- * - schema object: allow additional properties with validation (use z.object)
+ * - undefined/true or schema object: use z.object
  */
 export function determineObjectMethod(
   additionalProperties: SchemaObject["additionalProperties"],
@@ -75,6 +74,7 @@ export function generateObjectCode(
     };
   }
 
+  // Determine schema strictness when additionalProperties is defined
   const objectMethod = determineObjectMethod(additionalProperties);
 
   /* Format shape based on options */
@@ -94,7 +94,7 @@ export function generateObjectCode(
    * 2. If additionalProperties is a schema object -> use catchall with validation
    * 3. If additionalProperties is undefined/true -> apply extraProps behavior
    */
-  if (requiresCatchallValidation(additionalProperties)) {
+  if (requiresAdditionalSchema(additionalProperties)) {
     /* Schema object - validate additional properties against the schema */
     const additionalResult = zodSchemaToCode(additionalProperties, {
       currentSchemaName: options.currentSchemaName,
@@ -112,10 +112,8 @@ export function generateObjectCode(
     };
   }
 
-  /*
-   * Apply extraProps behavior ONLY for objects without explicit additionalProperties
-   * This means additionalProperties is undefined (not specified in the schema)
-   */
+  // Determines object strictness based on extraProps
+  // when additionalProperties is undefined
   if (additionalProperties === undefined) {
     if (extraProps === "loose") {
       code += ".loose()";
@@ -143,7 +141,7 @@ export function generateObjectCode(
  * Type guard to check if additionalProperties requires catchall validation
  * Returns true only if it's a schema object (not boolean or undefined)
  */
-export function requiresCatchallValidation(
+export function requiresAdditionalSchema(
   additionalProperties: SchemaObject["additionalProperties"],
 ): additionalProperties is ReferenceObject | SchemaObject {
   return (
