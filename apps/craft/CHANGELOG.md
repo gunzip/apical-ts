@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.6.0
+
+### Minor Changes
+
+- 36cfb82: BREAKING: Moved shema definitions for parameters in their own modules
+
 ## 0.5.1
 
 ### Patch Changes
