@@ -2,6 +2,7 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { isReferenceObject, isSchemaObject } from "openapi3-ts/oas31";
 
+import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
@@ -22,6 +23,7 @@ export type UnionType = "anyOf" | "oneOf";
 
 interface ZodSchemaCodeOptions {
   currentSchemaName?: string;
+  extraProps?: ExtraPropsMode;
   imports?: Set<string>;
   isTopLevel?: boolean;
   recursiveContext?: RecursiveContext;
@@ -47,12 +49,14 @@ export function handleAllOfSchema(
   ) => ZodSchemaResult,
   options: {
     currentSchemaName?: string;
+    extraProps?: ExtraPropsMode;
     recursiveContext?: RecursiveContext;
     resolvedSchemas?: ResolvedSchemas;
     strictValidation?: boolean;
   } = {},
 ): ZodSchemaResult {
-  const { currentSchemaName, recursiveContext, resolvedSchemas } = options;
+  const { currentSchemaName, extraProps, recursiveContext, resolvedSchemas } =
+    options;
 
   // Check if all schemas are objects, including proper reference resolution
   const canUseObjectSpread = schemas.every((schema) => {
@@ -102,6 +106,7 @@ export function handleAllOfSchema(
         );
         const subResult = zodSchemaToCode(modifiedSchema, {
           currentSchemaName,
+          extraProps,
           imports: new Set(),
           recursiveContext,
           resolvedSchemas,
@@ -125,6 +130,7 @@ export function handleAllOfSchema(
   const subResults = schemas.map((s) =>
     zodSchemaToCode(s, {
       currentSchemaName,
+      extraProps,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
@@ -165,17 +171,20 @@ export function handleUnionSchema(
   discriminator?: DiscriminatorConfig,
   options: {
     currentSchemaName?: string;
+    extraProps?: ExtraPropsMode;
     recursiveContext?: RecursiveContext;
     resolvedSchemas?: ResolvedSchemas;
   } = {},
 ): ZodSchemaResult {
-  const { currentSchemaName, recursiveContext, resolvedSchemas } = options;
+  const { currentSchemaName, extraProps, recursiveContext, resolvedSchemas } =
+    options;
   // Check if discriminator is present for discriminated unions
   if (discriminator && discriminator.propertyName) {
     const discriminatorProperty = discriminator.propertyName;
     const subResults = schemas.map((s) =>
       zodSchemaToCode(s, {
         currentSchemaName,
+        extraProps,
         imports: result.imports,
         recursiveContext,
         resolvedSchemas,
@@ -204,6 +213,7 @@ export function handleUnionSchema(
   const subResults = schemas.map((s) =>
     zodSchemaToCode(s, {
       currentSchemaName,
+      extraProps,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,

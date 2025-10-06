@@ -31,6 +31,8 @@ experience.
   blacklisting operations you don't need!
 - 🛡️ **Zod v4 runtime validation (automatic or manual)**: Get parsed responses
   automatically or call `response.parse()` as needed
+- ⚙️ **Configurable validation modes**: Control how schemas handle additional
+  properties with `--extra-props` flag (strip, loose, or strict validation)
 - 📦 **Small footprint**: Generates each operation and schema/type in its own
   file for maximum tree-shaking and modularity
 - 🚀 **Fast code generation**: Optimized for quick generation times, even with
@@ -85,6 +87,8 @@ experience.
 - Response validation (opt-in or automatic)
 - Comprehensive error types with context
 - Validation error details with field-level information
+- Configurable additional properties handling (strip/loose/strict modes)
+- Respect for explicit OpenAPI `additionalProperties` settings
 
 ### File Handling
 

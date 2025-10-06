@@ -11,6 +11,14 @@ export interface ContentTypeMapping {
 }
 
 /**
+ * Represents how Zod schemas handle extra properties in objects
+ * - "loose": Allows extra properties (.passthrough())
+ * - "strict": Disallows extra properties (.strict())
+ * - "strip": Removes extra properties (default Zod behavior)
+ */
+export type ExtraPropsMode = "loose" | "strict" | "strip";
+
+/**
  * Groups parameters by their location (query, path, header)
  * Re-exported from client generator for compatibility
  */

@@ -1,5 +1,6 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
+import type { ExtraPropsMode } from "../shared/types.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
 import { handleExtensibleEnum, handleRegularEnum } from "./enum-handlers.js";
@@ -7,6 +8,7 @@ import { addDefaultValue } from "./utils.js";
 
 interface ZodSchemaCodeOptions {
   currentSchemaName?: string;
+  extraProps?: ExtraPropsMode;
   imports?: Set<string>;
   isTopLevel?: boolean;
   recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
@@ -32,11 +34,13 @@ export function handleArrayType(
   ) => ZodSchemaResult,
   options: {
     currentSchemaName?: string;
+    extraProps?: ExtraPropsMode;
     recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
     resolvedSchemas?: ResolvedSchemas;
   } = {},
 ): ZodSchemaResult {
-  const { currentSchemaName, recursiveContext, resolvedSchemas } = options;
+  const { currentSchemaName, extraProps, recursiveContext, resolvedSchemas } =
+    options;
   if (!schema.items) {
     let code = "z.array(z.unknown())";
     code = addDefaultValue(code, schema.default);
@@ -46,6 +50,7 @@ export function handleArrayType(
 
   const itemsResult = zodSchemaToCode(schema.items, {
     currentSchemaName,
+    extraProps,
     imports: result.imports,
     recursiveContext,
     resolvedSchemas,

@@ -17,6 +17,7 @@ import {
 } from "../schema-generator/index.js";
 import { ResolvedSchemas } from "../schema-generator/schema-converter.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { ExtraPropsMode } from "../shared/types.js";
 import { isPlainSchemaObject } from "./openapi-utils.js";
 import { extractOperationParameters } from "./parameter-extractor.js";
 import {
@@ -38,6 +39,7 @@ interface ComponentSchemaOptions {
 }
 
 interface SchemaGenerationContext {
+  extraProps: ExtraPropsMode;
   generateServer: boolean;
   limit: ReturnType<typeof pLimit>;
   openApiDoc: OpenAPIObject;
@@ -58,6 +60,7 @@ export async function generateSchemas(
   output: string,
   concurrency: number,
   generateServer: boolean,
+  extraProps: ExtraPropsMode,
   profiler?: Profiler,
 ): Promise<void> {
   if (!openApiDoc.components?.schemas) {
@@ -69,6 +72,7 @@ export async function generateSchemas(
 
   const limit = pLimit(concurrency);
   const context: SchemaGenerationContext = {
+    extraProps,
     generateServer,
     limit,
     openApiDoc,
@@ -160,6 +164,7 @@ function createComponentSchemaPromise(
     const generationPromise = isRecursive
       ? generateRecursiveSchemaFile({
           description,
+          extraProps: context.extraProps,
           name: schemaName,
           originalSchemaName: originalSchemaName || schemaName,
           recursiveContext,
@@ -167,6 +172,7 @@ function createComponentSchemaPromise(
           schema,
         })
       : generateSchemaFile(schemaName, schema, description, {
+          extraProps: context.extraProps,
           originalSchemaName,
           recursiveContext,
           resolvedSchemas: context.resolvedSchemas,

@@ -1166,15 +1166,30 @@ components:
             - value3
     AdditionalPropsTest:
       type: object
+      properties:
+        family_name:
+          type: string
       additionalProperties:
         type: array
         items:
           type: number
+    AdditionalPropsFalseTest:
+      type: object
+      properties:
+        family_name:
+          type: string
+      additionalProperties: false
     AdditionalPropsTrueTest:
       type: object
+      properties:
+        family_name:
+          type: string
       additionalProperties: true
     AdditionalpropsDefault:
       type: object
+      properties:
+        family_name:
+          type: string
       default: { "test": [1000] }
       additionalProperties:
         type: array
@@ -1336,6 +1351,46 @@ components:
       properties:
         size:
           type: integer
+
+    # Test schemas for --extra-props feature
+    ObjectWithoutAdditionalProperties:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+      required:
+        - name
+
+    ObjectWithAdditionalPropertiesTrue:
+      type: object
+      properties:
+        name:
+          type: string
+      additionalProperties: true
+
+    ObjectWithAdditionalPropertiesFalse:
+      type: object
+      properties:
+        name:
+          type: string
+      additionalProperties: false
+
+    ObjectWithAdditionalPropertiesSchema:
+      type: object
+      properties:
+        name:
+          type: string
+      additionalProperties:
+        type: string
+
+    EmptyObjectWithoutAdditionalProperties:
+      type: object
+
+    EmptyObjectWithAdditionalPropertiesTrue:
+      type: object
+      additionalProperties: true
 
   # -------------
   # Parameters

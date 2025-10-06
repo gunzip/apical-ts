@@ -1,5 +1,6 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
+import type { ExtraPropsMode } from "../shared/types.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
 import { generateObjectCode } from "./object-properties.js";
@@ -10,6 +11,7 @@ import { addDefaultValue } from "./utils.js";
  */
 interface ObjectTypeOptions {
   currentSchemaName?: string;
+  extraProps?: ExtraPropsMode;
   recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
 }
@@ -38,7 +40,8 @@ export function handleObjectType(
   ) => ZodSchemaResult,
   options: ObjectTypeOptions = {},
 ): ZodSchemaResult {
-  const { currentSchemaName, recursiveContext, resolvedSchemas } = options;
+  const { currentSchemaName, extraProps, recursiveContext, resolvedSchemas } =
+    options;
   const shape: string[] = [];
   const requiredFields = schema.required || [];
 
@@ -70,6 +73,7 @@ export function handleObjectType(
     zodSchemaToCode,
     {
       currentSchemaName,
+      extraProps,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,

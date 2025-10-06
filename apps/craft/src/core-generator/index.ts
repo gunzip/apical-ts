@@ -7,6 +7,7 @@ import { promises as fs } from "fs";
 import { generateOperations } from "../client-generator/index.js";
 import { applyGeneratedOperationIds } from "../operation-id-generator/index.js";
 import { generateServerOperations } from "../server-generator/index.js";
+import { ExtraPropsMode } from "../shared/types.js";
 import { convertToOpenAPI31 } from "./converter.js";
 import { createPackageJson } from "./package-generator.js";
 import { parseOpenAPI } from "./parser.js";
@@ -30,6 +31,7 @@ const DEFAULT_CONCURRENCY = 10;
  *   output: './generated',
  *   generateClient: true,
  *   concurrency: 10,
+ *   extraProps: 'strip'
  * };
  * ```
  */
@@ -39,6 +41,14 @@ export interface GenerationOptions {
    * @default 10
    */
   concurrency?: number;
+  /**
+   * Control how additional properties are handled in object schemas
+   * - strip: standard behavior, validates but strips unknown properties (default)
+   * - loose: adds .loose() to objects without explicit additionalProperties
+   * - strict: adds .strict() to objects without explicit additionalProperties
+   * @default "strip"
+   */
+  extraProps?: ExtraPropsMode;
   generateClient: boolean;
   generateServer?: boolean;
   input: string;
@@ -53,6 +63,7 @@ export interface GenerationOptions {
 export async function generate(options: GenerationOptions): Promise<void> {
   const {
     concurrency = DEFAULT_CONCURRENCY,
+    extraProps = "strip",
     generateClient: genClient,
     generateServer: genServer = false,
     input,
@@ -69,7 +80,14 @@ export async function generate(options: GenerationOptions): Promise<void> {
   profiler?.end("parse+preprocess");
 
   profiler?.start("schemas:all");
-  await generateSchemas(openApiDoc, output, concurrency, genServer, profiler);
+  await generateSchemas(
+    openApiDoc,
+    output,
+    concurrency,
+    genServer,
+    extraProps,
+    profiler,
+  );
   profiler?.end("schemas:all");
 
   await generateAllOperations(

@@ -4,6 +4,7 @@ import type {
   SchemaObject,
 } from "openapi3-ts/oas31";
 
+import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 
 /**
@@ -23,6 +24,7 @@ export type ResolvedSchemas = NonNullable<
  */
 export interface ZodSchemaCodeOptions {
   currentSchemaName?: string;
+  extraProps?: ExtraPropsMode;
   imports?: Set<string>;
   isTopLevel?: boolean;
   recursiveContext?: RecursiveContext;
@@ -72,8 +74,13 @@ export function zodSchemaToCode(
   schema: ReferenceObject | SchemaObject,
   options: ZodSchemaCodeOptions = {},
 ): ZodSchemaResult {
-  const { currentSchemaName, imports, recursiveContext, resolvedSchemas } =
-    options;
+  const {
+    currentSchemaName,
+    extraProps,
+    imports,
+    recursiveContext,
+    resolvedSchemas,
+  } = options;
   const result = createResult(imports);
 
   /* References */
@@ -95,6 +102,7 @@ export function zodSchemaToCode(
       recursiveContext,
       currentSchemaName,
       resolvedSchemas,
+      extraProps,
     );
   }
 
@@ -118,6 +126,7 @@ export function zodSchemaToCode(
       recursiveContext,
       currentSchemaName,
       resolvedSchemas,
+      extraProps,
     );
   }
 
@@ -128,6 +137,7 @@ export function zodSchemaToCode(
     recursiveContext,
     currentSchemaName,
     resolvedSchemas,
+    extraProps,
   );
   if (composition) return composition;
 
@@ -139,6 +149,7 @@ export function zodSchemaToCode(
     recursiveContext,
     currentSchemaName,
     resolvedSchemas,
+    extraProps,
   );
   if (primitiveHandled) return primitiveHandled;
 
@@ -160,12 +171,14 @@ function handleMultiTypeArray(
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
+  extraProps?: ExtraPropsMode,
 ): ZodSchemaResult {
   const { isNullable: hasNull, nonNullTypes } = analyzeTypeArray(effectiveType);
   if (nonNullTypes.length === 1 && hasNull) {
     const clone = { ...schema, type: nonNullTypes[0] };
     const subResult = zodSchemaToCode(clone as SchemaObject, {
       currentSchemaName,
+      extraProps,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
@@ -177,6 +190,7 @@ function handleMultiTypeArray(
   const subResults = effectiveType.map((t: string) =>
     zodSchemaToCode({ ...schema, type: t } as SchemaObject, {
       currentSchemaName,
+      extraProps,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
@@ -195,10 +209,12 @@ function handleNullableSchema(
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
+  extraProps?: ExtraPropsMode,
 ): ZodSchemaResult {
   const clone = cloneWithoutNullable(schema);
   const subResult = zodSchemaToCode(clone, {
     currentSchemaName,
+    extraProps,
     imports: result.imports,
     recursiveContext,
     resolvedSchemas,
@@ -216,6 +232,7 @@ function handlePrimitive(
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
+  extraProps?: ExtraPropsMode,
 ): undefined | ZodSchemaResult {
   if (effectiveType === "string") return handleStringType(schema, result);
   if (effectiveType === "number" || effectiveType === "integer") {
@@ -225,6 +242,7 @@ function handlePrimitive(
   if (effectiveType === "array") {
     return handleArrayType(schema, result, zodSchemaToCode, {
       currentSchemaName,
+      extraProps,
       recursiveContext,
       resolvedSchemas,
     });
@@ -232,6 +250,7 @@ function handlePrimitive(
   if (effectiveType === "object") {
     return handleObjectType(schema, result, zodSchemaToCode, {
       currentSchemaName,
+      extraProps,
       recursiveContext,
       resolvedSchemas,
     });
@@ -246,10 +265,12 @@ function tryHandleCompositions(
   recursiveContext?: RecursiveContext,
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
+  extraProps?: ExtraPropsMode,
 ): undefined | ZodSchemaResult {
   if (schema.allOf) {
     return handleAllOfSchema(schema.allOf, result, zodSchemaToCode, {
       currentSchemaName,
+      extraProps,
       recursiveContext,
       resolvedSchemas,
     });
@@ -263,6 +284,7 @@ function tryHandleCompositions(
       schema.discriminator,
       {
         currentSchemaName,
+        extraProps,
         recursiveContext,
         resolvedSchemas,
       },
@@ -277,6 +299,7 @@ function tryHandleCompositions(
       schema.discriminator,
       {
         currentSchemaName,
+        extraProps,
         recursiveContext,
         resolvedSchemas,
       },
