@@ -1,5 +1,12 @@
 # @apical-ts/craft
 
+## 0.7.0
+
+### Minor Changes
+
+- def0286: Add command line flags to control additional properties handling in
+  schema generation
+
 ## 0.6.0
 
 ### Minor Changes
