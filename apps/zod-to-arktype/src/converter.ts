@@ -167,17 +167,6 @@ function convertLiteral(zodExpr: string): string {
 }
 
 /**
- * Helper: detect optional() chain
- */
-function isOptional(zodExpr: string): boolean {
-  return /\.optional\(\)/.test(zodExpr);
-}
-
-function stripOptional(zodExpr: string): string {
-  return zodExpr.replace(/\.optional\(\)/g, "");
-}
-
-/**
  * Converts z.object() to ArkType object definition using type({...})
  */
 function convertObject(zodExpr: string): string {
@@ -225,23 +214,55 @@ function convertStringToType(zodExpr: string): string {
 }
 
 /**
- * Converts z.union() to ArkType union using .or()
+ * Converts a Zod expression to an ArkType definition usable as an object property value
  */
-function convertUnion(zodExpr: string): string {
-  /* Extract union members from z.union([...]) */
-  const match = zodExpr.match(/z\.union\(\[([^\]]+)\]\)/);
-  if (!match) {
-    return 'type("unknown")';
+function convertToPropertyValue(zodExpr: string): string {
+  // Object values may be string expressions (e.g., "string.email"), Types (e.g., Message),
+  // or definitions like SomeType.optional
+
+  // Nested arrays/objects/unions become Type expressions via convertToType
+  if (
+    zodExpr.startsWith("z.object(") ||
+    zodExpr.startsWith("z.union(") ||
+    zodExpr.startsWith("z.discriminatedUnion(") ||
+    zodExpr.startsWith("z.intersection(") ||
+    zodExpr.startsWith("z.array(") ||
+    zodExpr.startsWith("z.enum(") ||
+    zodExpr.startsWith("z.literal(")
+  ) {
+    return convertToType(zodExpr);
   }
 
-  const members = match[1].split(",").map((m) => m.trim());
-  const convertedMembers = members.map((m) => convertToType(m));
-  if (convertedMembers.length === 0) return 'type("unknown")';
-  let expr = convertedMembers[0];
-  for (let i = 1; i < convertedMembers.length; i++) {
-    expr = `(${expr}).or(${convertedMembers[i]})`;
+  if (zodExpr.startsWith("z.string(")) {
+    // map modifiers to string expression
+    const base = stripOptional(zodExpr);
+    if (base.includes(".email()")) return '"string.email"';
+    if (base.includes(".url()")) return '"string.url"';
+    if (base.includes(".uuid()")) return '"string.uuid"';
+    return '"string"';
   }
-  return expr;
+
+  if (zodExpr.startsWith("z.number(")) {
+    const base = stripOptional(zodExpr);
+    if (base.includes(".int()")) return '"number.integer"';
+    return '"number"';
+  }
+
+  if (zodExpr.startsWith("z.boolean(")) {
+    return '"boolean"';
+  }
+
+  if (zodExpr === "z.unknown()") return '"unknown"';
+  if (zodExpr === "z.null()") return '"null"';
+  if (zodExpr === "z.undefined()") return '"undefined"';
+
+  // If it's a reference to another schema, return as-is
+  if (!zodExpr.includes("z.")) {
+    return zodExpr;
+  }
+
+  // Fallback
+  return 'type("unknown")';
 }
 
 /**
@@ -324,6 +345,26 @@ function convertToType(zodExpr: string): string {
 }
 
 /**
+ * Converts z.union() to ArkType union using .or()
+ */
+function convertUnion(zodExpr: string): string {
+  /* Extract union members from z.union([...]) */
+  const match = zodExpr.match(/z\.union\(\[([^\]]+)\]\)/);
+  if (!match) {
+    return 'type("unknown")';
+  }
+
+  const members = match[1].split(",").map((m) => m.trim());
+  const convertedMembers = members.map((m) => convertToType(m));
+  if (convertedMembers.length === 0) return 'type("unknown")';
+  let expr = convertedMembers[0];
+  for (let i = 1; i < convertedMembers.length; i++) {
+    expr = `(${expr}).or(${convertedMembers[i]})`;
+  }
+  return expr;
+}
+
+/**
  * Extracts import statements from schema code
  */
 function extractImports(code: string): Set<string> {
@@ -337,6 +378,13 @@ function extractImports(code: string): Set<string> {
   }
 
   return imports;
+}
+
+/**
+ * Helper: detect optional() chain
+ */
+function isOptional(zodExpr: string): boolean {
+  return /\.optional\(\)/.test(zodExpr);
 }
 
 /**
@@ -407,54 +455,6 @@ function parseObjectProperties(
   return properties;
 }
 
-/**
- * Converts a Zod expression to an ArkType definition usable as an object property value
- */
-function convertToPropertyValue(zodExpr: string): string {
-  // Object values may be string expressions (e.g., "string.email"), Types (e.g., Message),
-  // or definitions like SomeType.optional
-
-  // Nested arrays/objects/unions become Type expressions via convertToType
-  if (
-    zodExpr.startsWith("z.object(") ||
-    zodExpr.startsWith("z.union(") ||
-    zodExpr.startsWith("z.discriminatedUnion(") ||
-    zodExpr.startsWith("z.intersection(") ||
-    zodExpr.startsWith("z.array(") ||
-    zodExpr.startsWith("z.enum(") ||
-    zodExpr.startsWith("z.literal(")
-  ) {
-    return convertToType(zodExpr);
-  }
-
-  if (zodExpr.startsWith("z.string(")) {
-    // map modifiers to string expression
-    const base = stripOptional(zodExpr);
-    if (base.includes(".email()")) return '"string.email"';
-    if (base.includes(".url()")) return '"string.url"';
-    if (base.includes(".uuid()")) return '"string.uuid"';
-    return '"string"';
-  }
-
-  if (zodExpr.startsWith("z.number(")) {
-    const base = stripOptional(zodExpr);
-    if (base.includes(".int()")) return '"number.integer"';
-    return '"number"';
-  }
-
-  if (zodExpr.startsWith("z.boolean(")) {
-    return '"boolean"';
-  }
-
-  if (zodExpr === "z.unknown()") return '"unknown"';
-  if (zodExpr === "z.null()") return '"null"';
-  if (zodExpr === "z.undefined()") return '"undefined"';
-
-  // If it's a reference to another schema, return as-is
-  if (!zodExpr.includes("z.")) {
-    return zodExpr;
-  }
-
-  // Fallback
-  return 'type("unknown")';
+function stripOptional(zodExpr: string): string {
+  return zodExpr.replace(/\.optional\(\)/g, "");
 }
