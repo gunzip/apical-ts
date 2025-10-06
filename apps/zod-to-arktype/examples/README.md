@@ -1,10 +1,12 @@
 # Examples
 
-This directory contains example Zod schemas and their converted ArkType equivalents.
+This directory contains example Zod schemas and their converted ArkType
+equivalents.
 
 ## Input (Zod Schemas)
 
 The `input/` directory contains sample Zod v4 schemas:
+
 - `User.ts` - Simple object with optional fields
 - `ProductStatus.ts` - Enum example
 - `Tags.ts` - Array example
@@ -26,6 +28,7 @@ pnpm --filter @apical-ts/zod-to-arktype start convert -i apps/zod-to-arktype/exa
 ## Output (ArkType Schemas)
 
 The `output/` directory will contain the converted ArkType schemas with:
+
 - Preserved JSDoc comments
 - Proper type inference
 - Import statements updated

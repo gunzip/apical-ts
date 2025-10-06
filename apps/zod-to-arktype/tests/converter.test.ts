@@ -7,91 +7,91 @@ import { convertZodToArkType } from "../src/converter.js";
 
 describe("convertZodToArkType", () => {
   describe("primitive types", () => {
-    it("should convert z.string() to type.string", () => {
+    it('should convert z.string() to type("string")', () => {
       const result = convertZodToArkType("z.string()", "TestSchema");
-      expect(result.code).toBe("type.string");
+      expect(result.code).toBe('type("string")');
       expect(result.schemaName).toBe("TestSchema");
     });
 
-    it("should convert z.number() to type.number", () => {
+    it('should convert z.number() to type("number")', () => {
       const result = convertZodToArkType("z.number()", "TestSchema");
-      expect(result.code).toBe("type.number");
+      expect(result.code).toBe('type("number")');
     });
 
-    it("should convert z.boolean() to type.boolean", () => {
+    it('should convert z.boolean() to type("boolean")', () => {
       const result = convertZodToArkType("z.boolean()", "TestSchema");
-      expect(result.code).toBe("type.boolean");
+      expect(result.code).toBe('type("boolean")');
     });
 
-    it("should convert z.unknown() to type.unknown", () => {
+    it('should convert z.unknown() to type("unknown")', () => {
       const result = convertZodToArkType("z.unknown()", "TestSchema");
-      expect(result.code).toBe("type.unknown");
+      expect(result.code).toBe('type("unknown")');
     });
 
-    it("should convert z.any() to type.any", () => {
+    it('should convert z.any() to type("unknown")', () => {
       const result = convertZodToArkType("z.any()", "TestSchema");
-      expect(result.code).toBe("type.any");
+      expect(result.code).toBe('type("unknown")');
     });
 
-    it("should convert z.null() to type.null", () => {
+    it('should convert z.null() to type("null")', () => {
       const result = convertZodToArkType("z.null()", "TestSchema");
-      expect(result.code).toBe("type.null");
+      expect(result.code).toBe('type("null")');
     });
 
-    it("should convert z.undefined() to type.undefined", () => {
+    it('should convert z.undefined() to type("undefined")', () => {
       const result = convertZodToArkType("z.undefined()", "TestSchema");
-      expect(result.code).toBe("type.undefined");
+      expect(result.code).toBe('type("undefined")');
     });
   });
 
   describe("string modifiers", () => {
-    it("should convert z.string().optional() to type.string.optional", () => {
+    it('should convert z.string().optional() to type("string") | undefined', () => {
       const result = convertZodToArkType("z.string().optional()", "TestSchema");
-      expect(result.code).toBe("type.string.optional");
+      expect(result.code).toBe('(type("string")).or(type("undefined"))');
     });
 
-    it("should convert z.string().email() to type.email", () => {
+    it('should convert z.string().email() to type("string.email")', () => {
       const result = convertZodToArkType("z.string().email()", "TestSchema");
-      expect(result.code).toBe("type.email");
+      expect(result.code).toBe('type("string.email")');
     });
 
-    it("should convert z.string().url() to type.url", () => {
+    it('should convert z.string().url() to type("string.url")', () => {
       const result = convertZodToArkType("z.string().url()", "TestSchema");
-      expect(result.code).toBe("type.url");
+      expect(result.code).toBe('type("string.url")');
     });
 
-    it("should convert z.string().uuid() to type.uuid", () => {
+    it('should convert z.string().uuid() to type("string.uuid")', () => {
       const result = convertZodToArkType("z.string().uuid()", "TestSchema");
-      expect(result.code).toBe("type.uuid");
+      expect(result.code).toBe('type("string.uuid")');
     });
   });
 
   describe("number modifiers", () => {
-    it("should convert z.number().optional() to type.number.optional", () => {
+    it('should convert z.number().optional() to type("number") | undefined', () => {
       const result = convertZodToArkType("z.number().optional()", "TestSchema");
-      expect(result.code).toBe("type.number.optional");
+      expect(result.code).toBe('(type("number")).or(type("undefined"))');
     });
 
-    it("should convert z.number().int() to type.integer", () => {
+    it('should convert z.number().int() to type("number.integer")', () => {
       const result = convertZodToArkType("z.number().int()", "TestSchema");
-      expect(result.code).toBe("type.integer");
+      expect(result.code).toBe('type("number.integer")');
     });
   });
 
   describe("arrays", () => {
-    it("should convert z.array(z.string()) to type.string[]", () => {
+    it('should convert z.array(z.string()) to (type("string")).array()', () => {
       const result = convertZodToArkType("z.array(z.string())", "TestSchema");
-      expect(result.code).toBe("type.string[]");
+      expect(result.code).toBe('(type("string")).array()');
     });
 
-    it("should convert z.array(z.number()) to type.number[]", () => {
+    it('should convert z.array(z.number()) to (type("number")).array()', () => {
       const result = convertZodToArkType("z.array(z.number())", "TestSchema");
-      expect(result.code).toBe("type.number[]");
+      expect(result.code).toBe('(type("number")).array()');
     });
 
-    it("should convert z.array(SchemaRef) to SchemaRef[]", () => {
+    it("should convert z.array(SchemaRef) to (SchemaRef).array()", () => {
       const result = convertZodToArkType("z.array(Message)", "TestSchema");
-      expect(result.code).toBe("Message[]");
+      expect(result.code).toBe("(Message).array()");
     });
   });
 
@@ -99,30 +99,26 @@ describe("convertZodToArkType", () => {
     it("should convert simple object", () => {
       const zodCode = 'z.object({"id": z.string()})';
       const result = convertZodToArkType(zodCode, "TestSchema");
-      expect(result.code).toBe("type.object({id: type.string})");
+      expect(result.code).toBe('type({id: "string"})');
     });
 
     it("should convert object with multiple properties", () => {
       const zodCode = 'z.object({"id": z.string(), "age": z.number()})';
       const result = convertZodToArkType(zodCode, "TestSchema");
-      expect(result.code).toBe(
-        "type.object({id: type.string, age: type.number})",
-      );
+      expect(result.code).toBe('type({id: "string", age: "number"})');
     });
 
     it("should convert object with optional properties", () => {
       const zodCode =
         'z.object({"id": z.string(), "name": z.string().optional()})';
       const result = convertZodToArkType(zodCode, "TestSchema");
-      expect(result.code).toBe(
-        "type.object({id: type.string, name: type.string.optional})",
-      );
+      expect(result.code).toBe('type({id: "string", "name?": "string"})');
     });
 
     it("should convert object with schema references", () => {
       const zodCode = 'z.object({"prop1": SimpleDefinition})';
       const result = convertZodToArkType(zodCode, "TestSchema");
-      expect(result.code).toBe("type.object({prop1: SimpleDefinition})");
+      expect(result.code).toBe("type({prop1: SimpleDefinition})");
     });
   });
 
@@ -131,8 +127,8 @@ describe("convertZodToArkType", () => {
       const zodCode =
         "z.object({...PaginationResponse.shape, ...NewModel.shape})";
       const result = convertZodToArkType(zodCode, "TestSchema");
-      /* Should handle allOf pattern */
-      expect(result.code).toContain("intersection");
+      /* Should handle allOf pattern via .and() */
+      expect(result.code).toContain(".and(");
     });
 
     it("should convert single shape spread to schema reference", () => {
@@ -143,31 +139,33 @@ describe("convertZodToArkType", () => {
   });
 
   describe("unions", () => {
-    it("should convert z.union() to type.union()", () => {
+    it("should convert z.union() to a chain of .or()", () => {
       const zodCode = "z.union([EnabledUserTest, DisabledUserTest])";
       const result = convertZodToArkType(zodCode, "TestSchema");
-      expect(result.code).toBe("type.union(EnabledUserTest, DisabledUserTest)");
+      expect(result.code).toBe("(EnabledUserTest).or(DisabledUserTest)");
     });
 
     it("should convert discriminated union", () => {
       const zodCode = 'z.discriminatedUnion("type", [SchemaA, SchemaB])';
       const result = convertZodToArkType(zodCode, "TestSchema");
-      expect(result.code).toBe("type.union(SchemaA, SchemaB)");
+      expect(result.code).toBe("(SchemaA).or(SchemaB)");
     });
   });
 
   describe("literals and enums", () => {
-    it("should convert z.literal() to type.literal()", () => {
+    it("should convert z.literal() to type.enumerated()", () => {
       const result = convertZodToArkType('z.literal("active")', "TestSchema");
-      expect(result.code).toBe('type.literal("active")');
+      expect(result.code).toBe('type.enumerated("active")');
     });
 
-    it("should convert z.enum() to type.union()", () => {
+    it("should convert z.enum() to type.enumerated()", () => {
       const result = convertZodToArkType(
         'z.enum(["pending", "active", "closed"])',
         "TestSchema",
       );
-      expect(result.code).toBe('type.union("pending", "active", "closed")');
+      expect(result.code).toBe(
+        'type.enumerated("pending", "active", "closed")',
+      );
     });
   });
 
@@ -205,8 +203,8 @@ z.object({})`;
   describe("error handling", () => {
     it("should handle empty input", () => {
       const result = convertZodToArkType("", "TestSchema");
-      /* Empty input should return unknown */
-      expect(result.code).toBe("type.unknown");
+      /* Empty input should return type("unknown") */
+      expect(result.code).toBe('type("unknown")');
     });
   });
 });

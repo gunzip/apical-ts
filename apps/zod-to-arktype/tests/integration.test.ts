@@ -46,9 +46,9 @@ export type User = z.infer<typeof User>;`;
       parsed.schemaDefinition,
       parsed.schemaName,
     );
-    expect(converted.code).toContain("type.object");
-    expect(converted.code).toContain("type.string");
-    expect(converted.code).toContain("type.email");
+    expect(converted.code).toContain("type({");
+    expect(converted.code).toContain('"string"');
+    expect(converted.code).toContain('"string.email"');
 
     /* Write the ArkType schema */
     const outputPath = join(outputDir, "User.ts");
@@ -141,7 +141,7 @@ export type Tags = z.infer<typeof Tags>;`;
       parsed.schemaName,
     );
 
-    expect(converted.code).toBe("type.string[]");
+    expect(converted.code).toBe('(type("string")).array()');
   });
 
   it("should handle unions", async () => {
@@ -159,8 +159,8 @@ export type Status = z.infer<typeof Status>;`;
       parsed.schemaName,
     );
 
-    expect(converted.code).toContain("type.union");
-    expect(converted.code).toContain("type.literal");
+    expect(converted.code).toContain(".or(");
+    expect(converted.code).toContain("type.enumerated");
   });
 
   it("should handle optional fields", async () => {
@@ -178,6 +178,6 @@ export type User = z.infer<typeof User>;`;
       parsed.schemaName,
     );
 
-    expect(converted.code).toContain("type.number.optional");
+    expect(converted.code).toContain('"age?"');
   });
 });

@@ -52,7 +52,7 @@
     "vitest": "catalog:"
   },
   "dependencies": {
-    "arktype": "^2.0.0-rc.34",
+    "arktype": "^2.1.22",
     "commander": "^14.0.0"
   },
   "engines": {

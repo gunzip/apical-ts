@@ -28,14 +28,14 @@ export function convertZodToArkType(
     /* Handle empty input */
     if (!trimmedCode) {
       return {
-        code: "type.unknown",
+        code: 'type("unknown")',
         imports: new Set<string>(),
         schemaName,
       };
     }
 
     /* Convert the schema definition */
-    const arktypeCode = convertZodExpression(trimmedCode);
+    const arktypeCode = convertToType(trimmedCode);
 
     /* Extract imports from the original code */
     const imports = extractImports(zodCode);
@@ -71,7 +71,7 @@ function convertAllOfObject(zodExpr: string): string {
     inlinePropsMatch && !inlinePropsMatch[1].includes("...");
 
   if (shapeRefs.length === 0) {
-    return "type.object";
+    return "type({})";
   }
 
   /* Create intersection of all shapes */
@@ -79,21 +79,26 @@ function convertAllOfObject(zodExpr: string): string {
     return shapeRefs[0];
   }
 
-  return `type.intersection(${shapeRefs.join(", ")})`;
+  // Chain intersections using .and()
+  let expr = shapeRefs[0];
+  for (let i = 1; i < shapeRefs.length; i++) {
+    expr = `(${expr}).and(${shapeRefs[i]})`;
+  }
+  return expr;
 }
 
 /**
- * Converts z.array() to ArkType array
+ * Converts z.array() to ArkType array Type expression
  */
 function convertArray(zodExpr: string): string {
   /* Extract array element type from z.array(...) */
   const match = zodExpr.match(/z\.array\((.+)\)/);
   if (!match) {
-    return "type.array";
+    return 'type("unknown").array()';
   }
 
-  const elementType = convertZodExpression(match[1].trim());
-  return `${elementType}[]`;
+  const elementType = convertToType(match[1].trim());
+  return `(${elementType}).array()`;
 }
 
 /**
@@ -105,14 +110,19 @@ function convertDiscriminatedUnion(zodExpr: string): string {
     /z\.discriminatedUnion\("([^"]+)",\s*\[([^\]]+)\]\)/,
   );
   if (!match) {
-    return "type.unknown";
+    return 'type("unknown")';
   }
 
   const members = match[2].split(",").map((m) => m.trim());
 
-  /* ArkType doesn't have discriminatedUnion, use regular union */
-  const convertedMembers = members.map((m) => convertZodExpression(m));
-  return `type.union(${convertedMembers.join(", ")})`;
+  /* ArkType doesn't have discriminatedUnion, use regular union via .or() */
+  const convertedMembers = members.map((m) => convertToType(m));
+  if (convertedMembers.length === 0) return 'type("unknown")';
+  let expr = convertedMembers[0];
+  for (let i = 1; i < convertedMembers.length; i++) {
+    expr = `(${expr}).or(${convertedMembers[i]})`;
+  }
+  return expr;
 }
 
 /**
@@ -121,68 +131,60 @@ function convertDiscriminatedUnion(zodExpr: string): string {
 function convertEnum(zodExpr: string): string {
   const match = zodExpr.match(/z\.enum\(\[([^\]]+)\]\)/);
   if (!match) {
-    return "type.unknown";
+    return 'type("unknown")';
   }
 
   const values = match[1].split(",").map((v) => v.trim());
-  return `type.union(${values.join(", ")})`;
+  return `type.enumerated(${values.join(", ")})`;
 }
 
 /**
- * Converts z.intersection() to ArkType intersection
+ * Converts z.intersection() to ArkType intersection via .and()
  */
 function convertIntersection(zodExpr: string): string {
   /* Extract intersection members */
   const match = zodExpr.match(/z\.intersection\(([^,]+),\s*(.+)\)/);
   if (!match) {
-    return "type.unknown";
+    return 'type("unknown")';
   }
 
-  const left = convertZodExpression(match[1].trim());
-  const right = convertZodExpression(match[2].trim());
+  const left = convertToType(match[1].trim());
+  const right = convertToType(match[2].trim());
 
-  return `type.intersection(${left}, ${right})`;
+  return `(${left}).and(${right})`;
 }
 
 /**
- * Converts z.literal() to ArkType literal
+ * Converts z.literal() to ArkType enumerated literal
  */
 function convertLiteral(zodExpr: string): string {
   const match = zodExpr.match(/z\.literal\((.+)\)/);
   if (!match) {
-    return "type.unknown";
+    return 'type("unknown")';
   }
 
-  return `type.literal(${match[1]})`;
+  return `type.enumerated(${match[1]})`;
 }
 
 /**
- * Converts z.number() with modifiers to ArkType number
+ * Helper: detect optional() chain
  */
-function convertNumber(zodExpr: string): string {
-  let result = "type.number";
+function isOptional(zodExpr: string): boolean {
+  return /\.optional\(\)/.test(zodExpr);
+}
 
-  /* Handle optional */
-  if (zodExpr.includes(".optional()")) {
-    result += ".optional";
-  }
-
-  /* Handle int */
-  if (zodExpr.includes(".int()")) {
-    result = "type.integer";
-  }
-
-  return result;
+function stripOptional(zodExpr: string): string {
+  return zodExpr.replace(/\.optional\(\)/g, "");
 }
 
 /**
- * Converts z.object() to ArkType object definition
+ * Converts z.object() to ArkType object definition using type({...})
  */
 function convertObject(zodExpr: string): string {
   /* Extract the object shape from z.object({...}) */
   const shapeMatch = zodExpr.match(/z\.object\((\{[\s\S]*?\})\)/);
   if (!shapeMatch) {
-    return "type.object";
+    return "type({})";
   }
 
   const shape = shapeMatch[1];
@@ -195,62 +197,57 @@ function convertObject(zodExpr: string): string {
   /* Parse object properties */
   const properties = parseObjectProperties(shape);
   const convertedProps = properties.map(({ key, value }) => {
-    const convertedValue = convertZodExpression(value);
-    return `${key}: ${convertedValue}`;
+    const opt = isOptional(value);
+    const clean = stripOptional(value);
+    const convertedValue = convertToPropertyValue(clean);
+    // use key-embedded optional syntax which requires quoted key
+    const outKey = opt ? JSON.stringify(`${key}?`) : key;
+    return `${outKey}: ${convertedValue}`;
   });
 
-  return `type.object({${convertedProps.join(", ")}})`;
+  return `type({${convertedProps.join(", ")}})`;
 }
 
 /**
- * Converts z.string() with modifiers to ArkType string
+ * Converts z.string() with modifiers to ArkType type() expression (top-level)
  */
-function convertString(zodExpr: string): string {
-  let result = "type.string";
+function convertStringToType(zodExpr: string): string {
+  const optional = isOptional(zodExpr);
+  const base = stripOptional(zodExpr);
+  let expr = "string";
+  if (base.includes(".email()")) expr = "string.email";
+  else if (base.includes(".url()")) expr = "string.url";
+  else if (base.includes(".uuid()")) expr = "string.uuid";
 
-  /* Handle optional */
-  if (zodExpr.includes(".optional()")) {
-    result += ".optional";
-  }
-
-  /* Handle email */
-  if (zodExpr.includes(".email()")) {
-    result = "type.email";
-  }
-
-  /* Handle url */
-  if (zodExpr.includes(".url()")) {
-    result = "type.url";
-  }
-
-  /* Handle uuid */
-  if (zodExpr.includes(".uuid()")) {
-    result = "type.uuid";
-  }
-
-  return result;
+  const typeExpr = `type("${expr}")`;
+  if (optional) return `(${typeExpr}).or(type("undefined"))`;
+  return typeExpr;
 }
 
 /**
- * Converts z.union() to ArkType union
+ * Converts z.union() to ArkType union using .or()
  */
 function convertUnion(zodExpr: string): string {
   /* Extract union members from z.union([...]) */
   const match = zodExpr.match(/z\.union\(\[([^\]]+)\]\)/);
   if (!match) {
-    return "type.unknown";
+    return 'type("unknown")';
   }
 
   const members = match[1].split(",").map((m) => m.trim());
-  const convertedMembers = members.map((m) => convertZodExpression(m));
-
-  return `type.union(${convertedMembers.join(", ")})`;
+  const convertedMembers = members.map((m) => convertToType(m));
+  if (convertedMembers.length === 0) return 'type("unknown")';
+  let expr = convertedMembers[0];
+  for (let i = 1; i < convertedMembers.length; i++) {
+    expr = `(${expr}).or(${convertedMembers[i]})`;
+  }
+  return expr;
 }
 
 /**
- * Converts a Zod expression to ArkType expression
+ * Converts a Zod expression to an ArkType Type expression (usable at top-level or in chaining)
  */
-function convertZodExpression(zodExpr: string): string {
+function convertToType(zodExpr: string): string {
   /* Handle z.object() */
   if (zodExpr.startsWith("z.object(")) {
     return convertObject(zodExpr);
@@ -278,15 +275,19 @@ function convertZodExpression(zodExpr: string): string {
 
   /* Handle primitive types */
   if (zodExpr.startsWith("z.string(")) {
-    return convertString(zodExpr);
+    return convertStringToType(zodExpr);
   }
 
   if (zodExpr.startsWith("z.number(")) {
-    return convertNumber(zodExpr);
+    const optional = isOptional(zodExpr);
+    const base = stripOptional(zodExpr);
+    const isInt = base.includes(".int()");
+    const inner = isInt ? 'type("number.integer")' : 'type("number")';
+    return optional ? `(${inner}).or(type("undefined"))` : inner;
   }
 
   if (zodExpr.startsWith("z.boolean(")) {
-    return "type.boolean";
+    return 'type("boolean")';
   }
 
   if (zodExpr.startsWith("z.literal(")) {
@@ -298,19 +299,19 @@ function convertZodExpression(zodExpr: string): string {
   }
 
   if (zodExpr === "z.unknown()") {
-    return "type.unknown";
+    return 'type("unknown")';
   }
 
   if (zodExpr === "z.any()") {
-    return "type.any";
+    return 'type("unknown")';
   }
 
   if (zodExpr === "z.null()") {
-    return "type.null";
+    return 'type("null")';
   }
 
   if (zodExpr === "z.undefined()") {
-    return "type.undefined";
+    return 'type("undefined")';
   }
 
   /* If it's a reference to another schema, return as-is */
@@ -319,7 +320,7 @@ function convertZodExpression(zodExpr: string): string {
   }
 
   /* Fallback to unknown for unhandled cases */
-  return "type.unknown";
+  return 'type("unknown")';
 }
 
 /**
@@ -404,4 +405,56 @@ function parseObjectProperties(
   }
 
   return properties;
+}
+
+/**
+ * Converts a Zod expression to an ArkType definition usable as an object property value
+ */
+function convertToPropertyValue(zodExpr: string): string {
+  // Object values may be string expressions (e.g., "string.email"), Types (e.g., Message),
+  // or definitions like SomeType.optional
+
+  // Nested arrays/objects/unions become Type expressions via convertToType
+  if (
+    zodExpr.startsWith("z.object(") ||
+    zodExpr.startsWith("z.union(") ||
+    zodExpr.startsWith("z.discriminatedUnion(") ||
+    zodExpr.startsWith("z.intersection(") ||
+    zodExpr.startsWith("z.array(") ||
+    zodExpr.startsWith("z.enum(") ||
+    zodExpr.startsWith("z.literal(")
+  ) {
+    return convertToType(zodExpr);
+  }
+
+  if (zodExpr.startsWith("z.string(")) {
+    // map modifiers to string expression
+    const base = stripOptional(zodExpr);
+    if (base.includes(".email()")) return '"string.email"';
+    if (base.includes(".url()")) return '"string.url"';
+    if (base.includes(".uuid()")) return '"string.uuid"';
+    return '"string"';
+  }
+
+  if (zodExpr.startsWith("z.number(")) {
+    const base = stripOptional(zodExpr);
+    if (base.includes(".int()")) return '"number.integer"';
+    return '"number"';
+  }
+
+  if (zodExpr.startsWith("z.boolean(")) {
+    return '"boolean"';
+  }
+
+  if (zodExpr === "z.unknown()") return '"unknown"';
+  if (zodExpr === "z.null()") return '"null"';
+  if (zodExpr === "z.undefined()") return '"undefined"';
+
+  // If it's a reference to another schema, return as-is
+  if (!zodExpr.includes("z.")) {
+    return zodExpr;
+  }
+
+  // Fallback
+  return 'type("unknown")';
 }

@@ -208,7 +208,7 @@ importers:
   apps/zod-to-arktype:
     dependencies:
       arktype:
-        specifier: ^2.0.0-rc.34
+        specifier: ^2.1.22
         version: 2.1.22
       commander:
         specifier: ^14.0.0
