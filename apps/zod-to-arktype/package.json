@@ -1,0 +1,62 @@
+{
+  "name": "@apical-ts/zod-to-arktype",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Converts Zod v4 schemas to ArkType schemas",
+  "main": "dist/index.js",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gunzip/apical-ts.git"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "zod-to-arktype": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck:code": "tsc --noEmit",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage",
+    "start": "node dist/index.js",
+    "prepublishOnly": "pnpm run build",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "zod",
+    "arktype",
+    "converter",
+    "typescript",
+    "schema"
+  ],
+  "author": "gunzip",
+  "license": "MIT",
+  "devDependencies": {
+    "@pagopa/eslint-config": "^5.0.0",
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "arktype": "^2.0.0-rc.34",
+    "commander": "^14.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
+}
