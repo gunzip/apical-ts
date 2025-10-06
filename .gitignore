@@ -25,10 +25,10 @@ audit-results.json
 security-report.json
 
 # Additional temporary and sensitive files
+tmp/
 *.tmp
 *.temp
 .vscode/settings.json
 .idea/
 
 .playwright-mcp
-
