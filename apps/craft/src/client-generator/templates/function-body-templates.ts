@@ -100,7 +100,7 @@ ${headersContent}
     };
     ${headerParamLines ? `    ${headerParamLines}` : ""}${securityHeaderLines ? `    ${securityHeaderLines}` : ""}
 
-    const url = new URL(\`${finalPath}\`, config.baseURL);
+    const url = new URL(\`\${config.baseURL.replace(/\\/$/, '')}/${finalPath.replace(/^\//, "")}\`);
     ${queryParamLines ? `    ${queryParamLines}` : ""}
 
     /* Inner try/catch for fetch-specific errors */

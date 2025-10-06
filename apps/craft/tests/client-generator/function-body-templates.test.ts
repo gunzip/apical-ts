@@ -237,7 +237,7 @@ describe("function-body-templates", () => {
       expect(result).toContain("finalHeaders['X-Custom'] = customHeader;");
       expect(result).toContain("finalHeaders['Authorization'] = token;");
       expect(result).toContain(
-        "const url = new URL(`/api/users/${userId}`, config.baseURL);",
+        "const url = new URL(`${config.baseURL.replace(/\\/$/, '')}/api/users/${userId}`);",
       );
       expect(result).toContain("url.searchParams.append('filter', filter);");
       expect(result).toContain('method: "POST",');
