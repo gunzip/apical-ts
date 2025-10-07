@@ -10,7 +10,12 @@ import { basename, extname, join } from "node:path";
 import { z } from "zod";
 
 import { convertZodToArkType } from "./converter.js";
-import { writeArktypeSchema, writeIndexFile } from "./file-writer.js";
+import {
+  writeArktypeSchema,
+  writeIndexFile,
+  writePackageJson,
+  writeTsConfig,
+} from "./file-writer.js";
 import { parseZodSchemaFile } from "./parser.js";
 
 /**
@@ -118,6 +123,12 @@ async function convertDirectory(
   // eslint-disable-next-line no-console
   console.log("  📝 Writing index file...");
   await writeIndexFile(outputDir, schemaNames);
+
+  /* Write package.json and tsconfig.json to help consumers typecheck/build */
+  // eslint-disable-next-line no-console
+  console.log("  📦 Writing package.json and tsconfig.json...");
+  await writePackageJson(outputDir);
+  await writeTsConfig(outputDir);
 }
 
 async function main() {

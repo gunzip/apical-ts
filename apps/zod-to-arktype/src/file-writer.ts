@@ -66,6 +66,52 @@ export async function writeIndexFile(
 }
 
 /**
+ * Writes a minimal package.json with a build script for typechecking the generated schemas.
+ */
+export async function writePackageJson(outputDir: string): Promise<void> {
+  const pkgPath = join(outputDir, "package.json");
+  const pkg = {
+    dependencies: {
+      arktype: "^2.1.22",
+    },
+    devDependencies: {
+      typescript: "^5.4.5",
+    },
+    name: "arktype-schemas",
+    private: true,
+    scripts: {
+      build: "tsc --noEmit",
+    },
+    type: "module",
+    version: "0.0.0",
+  } satisfies Record<string, unknown>;
+  await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+}
+
+/**
+ * Writes a minimal tsconfig.json enabling NodeNext resolution to support .js extension imports.
+ */
+export async function writeTsConfig(outputDir: string): Promise<void> {
+  const tsconfigPath = join(outputDir, "tsconfig.json");
+  const tsconfig = {
+    compilerOptions: {
+      module: "NodeNext",
+      moduleResolution: "NodeNext",
+      noEmit: true,
+      skipLibCheck: true,
+      strict: true,
+      target: "ES2022",
+    },
+    include: ["*.ts"],
+  } satisfies Record<string, unknown>;
+  await writeFile(
+    tsconfigPath,
+    JSON.stringify(tsconfig, null, 2) + "\n",
+    "utf-8",
+  );
+}
+
+/**
  * Generates the content of an ArkType schema file
  */
 function generateSchemaFile(schemaInfo: SchemaFileInfo): string {
@@ -76,8 +122,12 @@ function generateSchemaFile(schemaInfo: SchemaFileInfo): string {
 
   /* Add schema imports */
   if (schemaInfo.imports.size > 0) {
+    // Avoid self-imports by filtering out the current schema name
+    const filtered = new Set(
+      Array.from(schemaInfo.imports).filter((n) => n !== schemaInfo.schemaName),
+    );
     const importsBySource = groupImportsBySource(
-      schemaInfo.imports,
+      filtered,
       schemaInfo.importSources,
     );
     for (const [source, names] of importsBySource) {
@@ -90,7 +140,9 @@ function generateSchemaFile(schemaInfo: SchemaFileInfo): string {
 
   /* Add comments if present */
   if (schemaInfo.comments) {
-    parts.push(schemaInfo.comments.trim());
+    // Normalize JSDoc opening to a regular block to avoid toolchains that strip JSDoc
+    const normalized = schemaInfo.comments.replace(/^\/\*\*/m, "/*").trim();
+    parts.push(normalized);
   }
 
   /* Add schema definition */
