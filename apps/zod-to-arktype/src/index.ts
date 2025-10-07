@@ -7,6 +7,7 @@
 import { Command } from "commander";
 import { readdir } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
+import { z } from "zod";
 
 import { convertZodToArkType } from "./converter.js";
 import { writeArktypeSchema, writeIndexFile } from "./file-writer.js";
@@ -56,11 +57,30 @@ async function convertDirectory(
       /* Parse the Zod schema file */
       const parsed = await parseZodSchemaFile(inputPath);
 
-      /* Convert to ArkType */
-      const converted = convertZodToArkType(
-        parsed.schemaDefinition,
-        parsed.schemaName,
+      /* Evaluate the schema definition into a Zod instance.
+       * We provide `z` and placeholders for imported symbols.
+       */
+      const importedNames = new Set<string>();
+      for (const imp of parsed.imports) {
+        for (const name of imp.names) {
+          if (name !== "z") importedNames.add(name);
+        }
+      }
+      const paramNames = ["z", ...Array.from(importedNames)];
+      const importedList = Array.from(importedNames);
+      const paramValues: unknown[] = [
+        z,
+        ...importedList.map((name) => z.any().describe(`ref:${name}`)),
+      ];
+      // Wrap in parentheses to ensure expression evaluation
+      const expr = new Function(
+        ...paramNames,
+        `return (${parsed.schemaDefinition});`,
       );
+      const zodInstance = expr(...paramValues);
+
+      /* Convert to ArkType */
+      const converted = convertZodToArkType(zodInstance, parsed.schemaName);
 
       /* Build import sources map */
       const sources = new Map<string, string>();

@@ -1,9 +1,12 @@
 /*
- * Zod to ArkType Schema Converter
+ * Zod to ArkType Schema Converter (fold-based)
  *
- * This module converts Zod v4 schema definitions to ArkType schemas.
- * It handles various Zod patterns including objects, unions, arrays, and primitives.
+ * Implements a structured conversion using @traversable/zod's zx.fold and zx.tagged.
+ * Regex-based transformations have been removed to keep the logic predictable and simple.
  */
+
+import { zx } from "@traversable/zod";
+import * as z from "zod";
 
 /**
  * Result of converting a Zod schema to ArkType
@@ -15,36 +18,20 @@ export interface ConversionResult {
 }
 
 /**
- * Converts a Zod schema code string to ArkType schema code
+ * Public API: convert a Zod schema instance to ArkType code string.
+ * If a non-Zod value is passed, returns type("unknown").
  */
 export function convertZodToArkType(
-  zodCode: string,
+  zodSchema: unknown,
   schemaName: string,
 ): ConversionResult {
   try {
-    /* Remove leading/trailing whitespace */
-    const trimmedCode = zodCode.trim();
-
-    /* Handle empty input */
-    if (!trimmedCode) {
-      return {
-        code: 'type("unknown")',
-        imports: new Set<string>(),
-        schemaName,
-      };
+    if (!isZodSchema(zodSchema)) {
+      return { code: 'type("unknown")', imports: new Set(), schemaName };
     }
 
-    /* Convert the schema definition */
-    const arktypeCode = convertToType(trimmedCode);
-
-    /* Extract imports from the original code */
-    const imports = extractImports(zodCode);
-
-    return {
-      code: arktypeCode,
-      imports,
-      schemaName,
-    };
+    const arktypeCode = toArkType(zodSchema);
+    return { code: arktypeCode, imports: new Set(), schemaName };
   } catch (error) {
     throw new Error(
       `Failed to convert schema ${schemaName}: ${error instanceof Error ? error.message : String(error)}`,
@@ -53,408 +40,216 @@ export function convertZodToArkType(
 }
 
 /**
- * Converts allOf pattern (object with spread shapes) to ArkType intersection
+ * Core fold: maps a Zod schema to an ArkType expression string.
  */
-function convertAllOfObject(zodExpr: string): string {
-  /* Extract all spread shape references */
-  const shapeRefs: string[] = [];
-  const shapePattern = /\.\.\.([A-Za-z0-9_]+)\.shape/g;
-  let match;
+// eslint-disable-next-line complexity
+const toArkType = zx.fold<string>((x, _i, schema) => {
+  const ref = refIdentifierFromZod(schema);
+  if (ref) return ref;
+  switch (true) {
+    case zx.tagged("never")(x):
+      return 'type("never")';
+    case zx.tagged("unknown")(x): {
+      const r = refIdentifierFromZod(schema) ?? refIdentifierFromZod(x);
+      return r ?? 'type("unknown")';
+    }
+    case zx.tagged("any")(x): {
+      const r = refIdentifierFromZod(schema) ?? refIdentifierFromZod(x);
+      return r ?? 'type("unknown")';
+    }
+    case zx.tagged("void")(x):
+      return 'type("unknown")';
+    case zx.tagged("null")(x):
+      return 'type("null")';
+    case zx.tagged("undefined")(x):
+      return 'type("undefined")';
+    case zx.tagged("boolean")(x):
+      return 'type("boolean")';
+    case zx.tagged("int")(x):
+      return 'type("number.integer")';
+    case zx.tagged("number")(x):
+      return 'type("number")';
+    case zx.tagged("string")(x):
+      return mapZodStringToArk(x);
+    case zx.tagged("literal")(x):
+      return mapZodLiteralToArk(x);
+    case zx.tagged("enum")(x):
+      return mapZodEnumToArk(x);
+    case zx.tagged("union")(x): {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const opts = (x as any)._zod.def.options as readonly string[];
+      return joinWithBinary(opts, ".or");
+    }
+    case zx.tagged("intersection")(x): {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const left: string = (x as any)._zod.def.left;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const right: string = (x as any)._zod.def.right;
+      return `(${left}).and(${right})`;
+    }
+    case zx.tagged("array")(x): {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const item: string = (x as any)._zod.def.element;
+      return `(${item}).array()`;
+    }
+    case zx.tagged("tuple")(x): {
+      // Keep it simple: represent tuples as array of anyOf items
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const items: string[] = (x as any)._zod.def.items ?? [];
+      if (items.length === 0) return '(type("unknown")).array()';
+      // Approximate: union all items as element type
+      const union = joinWithBinary(items, ".or");
+      return `(${union}).array()`;
+    }
+    case zx.tagged("optional")(x): {
+      // Return the inner type; optionality is handled in object properties
+      // If inner is a reference placeholder, keep as raw identifier
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const inner: string = (x as any)._zod.def.innerType;
+      return inner;
+    }
+    case zx.tagged("nullable")(x): {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const inner: string = (x as any)._zod.def.innerType;
+      return `(${inner}).or(type("null"))`;
+    }
+    case zx.tagged("object")(x): {
+      // x._zod.def.shape contains the folded property values
+      // To detect optional keys and references, inspect the original (unfolded) schema
+      const original = schema as z.ZodTypeAny;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const shape: Record<string, string> = (x as any)._zod.def.shape;
+      // Extract original Zod object shape from _def.shape() or _def.shape
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const o: any = original as any;
+      const originalShape: Record<string, z.ZodTypeAny> | undefined =
+        typeof o?._def?.shape === "function"
+          ? // shape() returns ZodRawShape
+            (o._def.shape() as Record<string, z.ZodTypeAny>)
+          : o?._def?.shape;
+      const parts: string[] = [];
 
-  while ((match = shapePattern.exec(zodExpr)) !== null) {
-    shapeRefs.push(match[1]);
+      for (const [key, val] of Object.entries(shape)) {
+        const rawChild = originalShape ? originalShape[key] : undefined;
+        // Detect optional, unwrapping to inner type for reference detection
+        const isOpt =
+          !!rawChild &&
+          (rawChild instanceof z.ZodOptional ||
+            zx.tagged("optional")(rawChild));
+        const outKey = isOpt ? JSON.stringify(`${key}?`) : key;
+        // Prefer recomputing from original child to preserve references
+        const computed = rawChild ? toArkType(rawChild) : val;
+        const propVal = toPropertyValue(computed);
+        parts.push(`${outKey}: ${propVal}`);
+      }
+
+      return `type({${parts.join(", ")}})`;
+    }
+    default: {
+      return 'type("unknown")';
+    }
   }
+});
 
-  /* Also extract inline properties if any */
-  const inlinePropsMatch = zodExpr.match(/\{([^.}]+):/);
-  const hasInlineProps =
-    inlinePropsMatch && !inlinePropsMatch[1].includes("...");
+/** Internal helpers and types (alphabetically sorted) */
 
-  if (shapeRefs.length === 0) {
-    return "type({})";
-  }
+// (no-op) previously used InternalObjectNode interface removed as unused
 
-  /* Create intersection of all shapes */
-  if (shapeRefs.length === 1 && !hasInlineProps) {
-    return shapeRefs[0];
-  }
-
-  // Chain intersections using .and()
-  let expr = shapeRefs[0];
-  for (let i = 1; i < shapeRefs.length; i++) {
-    expr = `(${expr}).and(${shapeRefs[i]})`;
-  }
-  return expr;
+function isZodSchema(input: unknown): input is z.ZodTypeAny {
+  return !!input && input instanceof z.ZodType;
 }
 
-/**
- * Converts z.array() to ArkType array Type expression
- */
-function convertArray(zodExpr: string): string {
-  /* Extract array element type from z.array(...) */
-  const match = zodExpr.match(/z\.array\((.+)\)/);
-  if (!match) {
-    return 'type("unknown").array()';
-  }
-
-  const elementType = convertToType(match[1].trim());
-  return `(${elementType}).array()`;
+/** Utility: join binary expressions left .op right .op ... */
+function joinWithBinary(items: readonly string[], op: ".and" | ".or"): string {
+  if (items.length === 0) return 'type("unknown")';
+  let out = items[0];
+  for (let i = 1; i < items.length; i++) out = `(${out})${op}(${items[i]})`;
+  return out;
 }
 
-/**
- * Converts z.discriminatedUnion() to ArkType discriminated union
- */
-function convertDiscriminatedUnion(zodExpr: string): string {
-  /* Extract discriminator and members */
-  const match = zodExpr.match(
-    /z\.discriminatedUnion\("([^"]+)",\s*\[([^\]]+)\]\)/,
+/** Map ZodEnum to ArkType enumerated */
+function mapZodEnumToArk(x: unknown): string {
+  const values = Array.from(
+    (x as { _zod?: { values?: Iterable<string> } })?._zod?.values ?? [],
   );
-  if (!match) {
-    return 'type("unknown")';
-  }
-
-  const members = match[2].split(",").map((m) => m.trim());
-
-  /* ArkType doesn't have discriminatedUnion, use regular union via .or() */
-  const convertedMembers = members.map((m) => convertToType(m));
-  if (convertedMembers.length === 0) return 'type("unknown")';
-  let expr = convertedMembers[0];
-  for (let i = 1; i < convertedMembers.length; i++) {
-    expr = `(${expr}).or(${convertedMembers[i]})`;
-  }
-  return expr;
+  const vals = values.map((v) => JSON.stringify(v)).join(", ");
+  return `type.enumerated(${vals})`;
 }
 
-/**
- * Converts z.enum() to ArkType enum
- */
-function convertEnum(zodExpr: string): string {
-  const match = zodExpr.match(/z\.enum\(\[([^\]]+)\]\)/);
-  if (!match) {
-    return 'type("unknown")';
+/** Map ZodLiteral to ArkType enumerated */
+function mapZodLiteralToArk(x: unknown): string {
+  const def =
+    (x as { _zod?: { def?: { value?: unknown; values?: unknown[] } } })?._zod
+      ?.def ?? {};
+  if (Array.isArray((def as { values?: unknown[] }).values)) {
+    const vals = (def as { values: unknown[] }).values
+      .map((v) => JSON.stringify(v))
+      .join(", ");
+    return `type.enumerated(${vals})`;
   }
-
-  const values = match[1].split(",").map((v) => v.trim());
-  return `type.enumerated(${values.join(", ")})`;
+  return `type.enumerated(${JSON.stringify((def as { value?: unknown }).value)})`;
 }
 
-/**
- * Converts z.intersection() to ArkType intersection via .and()
- */
-function convertIntersection(zodExpr: string): string {
-  /* Extract intersection members */
-  const match = zodExpr.match(/z\.intersection\(([^,]+),\s*(.+)\)/);
-  if (!match) {
-    return 'type("unknown")';
-  }
-
-  const left = convertToType(match[1].trim());
-  const right = convertToType(match[2].trim());
-
-  return `(${left}).and(${right})`;
-}
-
-/**
- * Converts z.literal() to ArkType enumerated literal
- */
-function convertLiteral(zodExpr: string): string {
-  const match = zodExpr.match(/z\.literal\((.+)\)/);
-  if (!match) {
-    return 'type("unknown")';
-  }
-
-  return `type.enumerated(${match[1]})`;
-}
-
-/**
- * Converts z.object() to ArkType object definition using type({...})
- */
-function convertObject(zodExpr: string): string {
-  /* Extract the object shape from z.object({...}) */
-  const shapeMatch = zodExpr.match(/z\.object\((\{[\s\S]*?\})\)/);
-  if (!shapeMatch) {
-    return "type({})";
-  }
-
-  const shape = shapeMatch[1];
-
-  /* Check for allOf pattern with shape spreading */
-  if (shape.includes("...") && shape.includes(".shape")) {
-    return convertAllOfObject(zodExpr);
-  }
-
-  /* Parse object properties */
-  const properties = parseObjectProperties(shape);
-  const convertedProps = properties.map(({ key, value }) => {
-    const opt = isOptional(value);
-    const clean = stripOptional(value);
-    const convertedValue = convertToPropertyValue(clean);
-    // use key-embedded optional syntax which requires quoted key
-    const outKey = opt ? JSON.stringify(`${key}?`) : key;
-    return `${outKey}: ${convertedValue}`;
-  });
-
-  return `type({${convertedProps.join(", ")}})`;
-}
-
-/**
- * Converts z.string() with modifiers to ArkType type() expression (top-level)
- */
-function convertStringToType(zodExpr: string): string {
-  const optional = isOptional(zodExpr);
-  const base = stripOptional(zodExpr);
-  let expr = "string";
-  if (base.includes(".email()")) expr = "string.email";
-  else if (base.includes(".url()")) expr = "string.url";
-  else if (base.includes(".uuid()")) expr = "string.uuid";
-
-  const typeExpr = `type("${expr}")`;
-  if (optional) return `(${typeExpr}).or(type("undefined"))`;
-  return typeExpr;
-}
-
-/**
- * Converts a Zod expression to an ArkType definition usable as an object property value
- */
-function convertToPropertyValue(zodExpr: string): string {
-  // Object values may be string expressions (e.g., "string.email"), Types (e.g., Message),
-  // or definitions like SomeType.optional
-
-  // Nested arrays/objects/unions become Type expressions via convertToType
-  if (
-    zodExpr.startsWith("z.object(") ||
-    zodExpr.startsWith("z.union(") ||
-    zodExpr.startsWith("z.discriminatedUnion(") ||
-    zodExpr.startsWith("z.intersection(") ||
-    zodExpr.startsWith("z.array(") ||
-    zodExpr.startsWith("z.enum(") ||
-    zodExpr.startsWith("z.literal(")
-  ) {
-    return convertToType(zodExpr);
-  }
-
-  if (zodExpr.startsWith("z.string(")) {
-    // map modifiers to string expression
-    const base = stripOptional(zodExpr);
-    if (base.includes(".email()")) return '"string.email"';
-    if (base.includes(".url()")) return '"string.url"';
-    if (base.includes(".uuid()")) return '"string.uuid"';
-    return '"string"';
-  }
-
-  if (zodExpr.startsWith("z.number(")) {
-    const base = stripOptional(zodExpr);
-    if (base.includes(".int()")) return '"number.integer"';
-    return '"number"';
-  }
-
-  if (zodExpr.startsWith("z.boolean(")) {
-    return '"boolean"';
-  }
-
-  if (zodExpr === "z.unknown()") return '"unknown"';
-  if (zodExpr === "z.null()") return '"null"';
-  if (zodExpr === "z.undefined()") return '"undefined"';
-
-  // If it's a reference to another schema, return as-is
-  if (!zodExpr.includes("z.")) {
-    return zodExpr;
-  }
-
-  // Fallback
-  return 'type("unknown")';
-}
-
-/**
- * Converts a Zod expression to an ArkType Type expression (usable at top-level or in chaining)
- */
-function convertToType(zodExpr: string): string {
-  /* Handle z.object() */
-  if (zodExpr.startsWith("z.object(")) {
-    return convertObject(zodExpr);
-  }
-
-  /* Handle z.union() */
-  if (zodExpr.startsWith("z.union(")) {
-    return convertUnion(zodExpr);
-  }
-
-  /* Handle z.discriminatedUnion() */
-  if (zodExpr.startsWith("z.discriminatedUnion(")) {
-    return convertDiscriminatedUnion(zodExpr);
-  }
-
-  /* Handle z.intersection() */
-  if (zodExpr.startsWith("z.intersection(")) {
-    return convertIntersection(zodExpr);
-  }
-
-  /* Handle z.array() */
-  if (zodExpr.startsWith("z.array(")) {
-    return convertArray(zodExpr);
-  }
-
-  /* Handle primitive types */
-  if (zodExpr.startsWith("z.string(")) {
-    return convertStringToType(zodExpr);
-  }
-
-  if (zodExpr.startsWith("z.number(")) {
-    const optional = isOptional(zodExpr);
-    const base = stripOptional(zodExpr);
-    const isInt = base.includes(".int()");
-    const inner = isInt ? 'type("number.integer")' : 'type("number")';
-    return optional ? `(${inner}).or(type("undefined"))` : inner;
-  }
-
-  if (zodExpr.startsWith("z.boolean(")) {
-    return 'type("boolean")';
-  }
-
-  if (zodExpr.startsWith("z.literal(")) {
-    return convertLiteral(zodExpr);
-  }
-
-  if (zodExpr.startsWith("z.enum(")) {
-    return convertEnum(zodExpr);
-  }
-
-  if (zodExpr === "z.unknown()") {
-    return 'type("unknown")';
-  }
-
-  if (zodExpr === "z.any()") {
-    return 'type("unknown")';
-  }
-
-  if (zodExpr === "z.null()") {
-    return 'type("null")';
-  }
-
-  if (zodExpr === "z.undefined()") {
-    return 'type("undefined")';
-  }
-
-  /* If it's a reference to another schema, return as-is */
-  if (!zodExpr.includes("z.")) {
-    return zodExpr;
-  }
-
-  /* Fallback to unknown for unhandled cases */
-  return 'type("unknown")';
-}
-
-/**
- * Converts z.union() to ArkType union using .or()
- */
-function convertUnion(zodExpr: string): string {
-  /* Extract union members from z.union([...]) */
-  const match = zodExpr.match(/z\.union\(\[([^\]]+)\]\)/);
-  if (!match) {
-    return 'type("unknown")';
-  }
-
-  const members = match[1].split(",").map((m) => m.trim());
-  const convertedMembers = members.map((m) => convertToType(m));
-  if (convertedMembers.length === 0) return 'type("unknown")';
-  let expr = convertedMembers[0];
-  for (let i = 1; i < convertedMembers.length; i++) {
-    expr = `(${expr}).or(${convertedMembers[i]})`;
-  }
-  return expr;
-}
-
-/**
- * Extracts import statements from schema code
- */
-function extractImports(code: string): Set<string> {
-  const imports = new Set<string>();
-  const importPattern = /import\s+\{([^}]+)\}\s+from\s+["']([^"']+)["']/g;
-  let match;
-
-  while ((match = importPattern.exec(code)) !== null) {
-    const importedNames = match[1].split(",").map((name) => name.trim());
-    importedNames.forEach((name) => imports.add(name));
-  }
-
-  return imports;
-}
-
-/**
- * Helper: detect optional() chain
- */
-function isOptional(zodExpr: string): boolean {
-  return /\.optional\(\)/.test(zodExpr);
-}
-
-/**
- * Parses object properties from a shape string
- */
-function parseObjectProperties(
-  shape: string,
-): { key: string; value: string }[] {
-  const properties: { key: string; value: string }[] = [];
-
-  /* Remove outer braces */
-  const content = shape.slice(1, -1).trim();
-  if (!content) {
-    return properties;
-  }
-
-  /* Split by commas at the top level */
-  let depth = 0;
-  let currentKey = "";
-  let currentValue = "";
-  let inKey = true;
-  let i = 0;
-
-  while (i < content.length) {
-    const char = content[i];
-
-    if (char === "{" || char === "[" || char === "(") {
-      depth++;
-    } else if (char === "}" || char === "]" || char === ")") {
-      depth--;
-    }
-
-    if (depth === 0 && char === ":" && inKey) {
-      inKey = false;
-      i++;
-      continue;
-    }
-
-    if (depth === 0 && char === "," && !inKey) {
-      properties.push({
-        key: currentKey.trim().replace(/["']/g, ""),
-        value: currentValue.trim(),
+/** Map ZodString checks into ArkType flavors when possible */
+function mapZodStringToArk(node: unknown): string {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const zxnode = node as any;
+    // Try wrapper -> raw order for checks
+    const checks: unknown =
+      zxnode?._zod?._def?.checks ??
+      zxnode?._zod?.def?.checks ??
+      zxnode?._def?.checks ??
+      [];
+    const arr: Record<string, unknown>[] = Array.isArray(checks)
+      ? (checks as Record<string, unknown>[])
+      : [];
+    const has = (k: string): boolean =>
+      arr.some((c) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const v: any = c;
+        return (
+          v?.kind === k ||
+          v?.format === k ||
+          (typeof v?.def?.format === "string" && v.def.format === k)
+        );
       });
-      currentKey = "";
-      currentValue = "";
-      inKey = true;
-      i++;
-      continue;
-    }
-
-    if (inKey) {
-      currentKey += char;
-    } else {
-      currentValue += char;
-    }
-
-    i++;
+    if (has("email")) return 'type("string.email")';
+    if (has("url")) return 'type("string.url")';
+    if (has("uuid")) return 'type("string.uuid")';
+  } catch {
+    // ignore and fall back to plain string
   }
-
-  /* Add the last property */
-  if (currentKey || currentValue) {
-    properties.push({
-      key: currentKey.trim().replace(/["']/g, ""),
-      value: currentValue.trim(),
-    });
-  }
-
-  return properties;
+  return 'type("string")';
 }
 
-function stripOptional(zodExpr: string): string {
-  return zodExpr.replace(/\.optional\(\)/g, "");
+/** Convert a top-level ArkType expression to a property value where possible */
+/** Detect reference placeholders (z.any().describe("ref:Name")) and map to bare identifier */
+function refIdentifierFromZod(node: unknown): null | string {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const v: any = node;
+    const description: unknown =
+      v?.description ??
+      v?._def?.description ??
+      v?._zod?.description ??
+      v?._zod?._def?.description ??
+      v?._zod?.def?.description;
+    if (typeof description === "string" && description.startsWith("ref:")) {
+      const name = description.slice(4).trim();
+      if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name)) return name;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function toPropertyValue(code: string): string {
+  // convert type("string") -> "string"; same for number, boolean, number.integer, string.email/url/uuid
+  const m = code.match(/^type\("([^"]+)"\)$/);
+  if (m) return JSON.stringify(m[1]);
+  // pass-through for reference identifiers e.g. Address, User
+  if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(code)) return code;
+  return code;
 }

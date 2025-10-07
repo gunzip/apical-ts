@@ -41,11 +41,15 @@ export type User = z.infer<typeof User>;`;
     expect(parsed.schemaName).toBe("User");
     expect(parsed.imports).toHaveLength(1);
 
-    /* Convert to ArkType */
-    const converted = convertZodToArkType(
-      parsed.schemaDefinition,
-      parsed.schemaName,
-    );
+    /* Convert to ArkType: build a Zod schema instance */
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
+    const { z } = await import("zod");
+    const schema = z.object({
+      id: z.string(),
+      name: z.string(),
+      email: z.string().email(),
+    });
+    const converted = convertZodToArkType(schema, parsed.schemaName);
     expect(converted.code).toContain("type({");
     expect(converted.code).toContain('"string"');
     expect(converted.code).toContain('"string.email"');
@@ -86,12 +90,16 @@ export type User = z.infer<typeof User>;`;
 
     /* Parse and convert */
     const parsed = await parseZodSchemaFile(join(inputDir, "User2.ts"));
-    const converted = convertZodToArkType(
-      parsed.schemaDefinition,
-      parsed.schemaName,
-    );
+    // Build a minimal Zod schema emulating the parsed shape
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
+    const { z } = await import("zod");
+    const userZodSchema = z.object({
+      id: z.string(),
+      address: z.any().describe("ref:Address"),
+    });
+    const converted = convertZodToArkType(userZodSchema, parsed.schemaName);
 
-    /* Schema references should be preserved in code */
+    /* With reference placeholder, address stays a bare identifier */
     expect(converted.code).toContain("Address");
 
     /* Imports should be extracted from the parsed file, not the definition */
@@ -136,10 +144,10 @@ export type Tags = z.infer<typeof Tags>;`;
     await writeFile(inputPath, zodSchema);
 
     const parsed = await parseZodSchemaFile(inputPath);
-    const converted = convertZodToArkType(
-      parsed.schemaDefinition,
-      parsed.schemaName,
-    );
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
+    const { z } = await import("zod");
+    const tagsSchema = z.array(z.string());
+    const converted = convertZodToArkType(tagsSchema, parsed.schemaName);
 
     expect(converted.code).toBe('(type("string")).array()');
   });
@@ -154,10 +162,10 @@ export type Status = z.infer<typeof Status>;`;
     await writeFile(inputPath, zodSchema);
 
     const parsed = await parseZodSchemaFile(inputPath);
-    const converted = convertZodToArkType(
-      parsed.schemaDefinition,
-      parsed.schemaName,
-    );
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
+    const { z } = await import("zod");
+    const statusSchema = z.union([z.literal("active"), z.literal("inactive")]);
+    const converted = convertZodToArkType(statusSchema, parsed.schemaName);
 
     expect(converted.code).toContain(".or(");
     expect(converted.code).toContain("type.enumerated");
@@ -173,10 +181,13 @@ export type User = z.infer<typeof User>;`;
     await writeFile(inputPath, zodSchema);
 
     const parsed = await parseZodSchemaFile(inputPath);
-    const converted = convertZodToArkType(
-      parsed.schemaDefinition,
-      parsed.schemaName,
-    );
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
+    const { z } = await import("zod");
+    const optUserSchema = z.object({
+      name: z.string(),
+      age: z.number().optional(),
+    });
+    const converted = convertZodToArkType(optUserSchema, parsed.schemaName);
 
     expect(converted.code).toContain('"age?"');
   });

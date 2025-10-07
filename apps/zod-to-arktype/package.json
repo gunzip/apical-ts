@@ -53,7 +53,9 @@
   },
   "dependencies": {
     "arktype": "^2.1.22",
-    "commander": "^14.0.0"
+    "commander": "^14.0.0",
+    "zod": "^4.1.12",
+    "@traversable/zod": "^0.0.57"
   },
   "engines": {
     "node": ">=20.0.0"
