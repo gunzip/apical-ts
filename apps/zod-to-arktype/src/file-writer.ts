@@ -10,12 +10,33 @@ import { dirname, join } from "node:path";
 /**
  * Information needed to write a schema file
  */
+export interface ModuleFileInfo {
+  exports: { code: string; comments: string; name: string }[];
+  imports: Set<string>;
+  importSources: Map<string, string>;
+}
+
 export interface SchemaFileInfo {
   arktypeCode: string;
   comments: string;
   imports: Set<string>;
   importSources: Map<string, string>;
   schemaName: string;
+}
+
+export async function writeArktypeModule(
+  outputPath: string,
+  moduleInfo: ModuleFileInfo,
+): Promise<void> {
+  try {
+    await mkdir(dirname(outputPath), { recursive: true });
+    const content = generateModuleFile(moduleInfo);
+    await writeFile(outputPath, content, "utf-8");
+  } catch (error) {
+    throw new Error(
+      `Failed to write module file ${outputPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 /**
@@ -46,15 +67,16 @@ export async function writeArktypeSchema(
  */
 export async function writeIndexFile(
   outputDir: string,
-  schemaNames: string[],
+  exportsList: { name: string; source: string }[],
 ): Promise<void> {
   try {
     const indexPath = join(outputDir, "index.ts");
 
     /* Generate exports */
-    const exports = schemaNames
-      .sort()
-      .map((name) => `export { ${name} } from "./${name}.js";`)
+    const exports = exportsList
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((e) => `export { ${e.name} } from "${e.source}";`)
       .join("\n");
 
     await writeFile(indexPath, exports + "\n", "utf-8");
@@ -109,6 +131,49 @@ export async function writeTsConfig(outputDir: string): Promise<void> {
     JSON.stringify(tsconfig, null, 2) + "\n",
     "utf-8",
   );
+}
+
+/**
+ * Generates the content of an ArkType module file with multiple schema exports
+ */
+/**
+ * Writes an ArkType module with multiple schema exports
+ */
+function generateModuleFile(moduleInfo: ModuleFileInfo): string {
+  const parts: string[] = [];
+
+  /* Add imports */
+  parts.push('import { type } from "arktype";');
+
+  /* Add schema imports (exclude self-imports for names exported in this module) */
+  if (moduleInfo.imports.size > 0) {
+    const exportedNames = new Set(moduleInfo.exports.map((e) => e.name));
+    const filtered = new Set(
+      Array.from(moduleInfo.imports).filter((n) => !exportedNames.has(n)),
+    );
+    const importsBySource = groupImportsBySource(
+      filtered,
+      moduleInfo.importSources,
+    );
+    for (const [source, names] of importsBySource) {
+      const importNames = Array.from(names).sort().join(", ");
+      parts.push(`import { ${importNames} } from "${source}";`);
+    }
+  }
+
+  parts.push("");
+
+  for (const exp of moduleInfo.exports) {
+    if (exp.comments) {
+      const normalized = exp.comments.replace(/^\/\*\*/m, "/*").trim();
+      parts.push(normalized);
+    }
+    parts.push(`export const ${exp.name} = ${exp.code};`);
+    parts.push(`export type ${exp.name} = typeof ${exp.name}.infer;`);
+    parts.push("");
+  }
+
+  return parts.join("\n").trimEnd() + "\n";
 }
 
 /**

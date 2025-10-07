@@ -11,7 +11,7 @@ import { z } from "zod";
 
 import { convertZodToArkType } from "./converter.js";
 import {
-  writeArktypeSchema,
+  writeArktypeModule,
   writeIndexFile,
   writePackageJson,
   writeTsConfig,
@@ -38,38 +38,24 @@ async function convertDirectory(
   // eslint-disable-next-line no-console
   console.log(`📁 Found ${tsFiles.length} schema files`);
 
-  /* Track import sources for cross-schema references */
-  const importSourceMap = new Map<string, string>();
-  const schemaNames: string[] = [];
-
-  /* First pass: collect all schema names and their sources */
-  for (const file of tsFiles) {
-    const schemaName = basename(file, ".ts");
-    schemaNames.push(schemaName);
-    importSourceMap.set(schemaName, `./${schemaName}.js`);
-  }
+  const indexExports: { name: string; source: string }[] = [];
 
   /* Second pass: convert each schema */
   for (const file of tsFiles) {
     const inputPath = join(inputDir, file);
-    const schemaName = basename(file, ".ts");
+    const moduleBase = basename(file, ".ts");
     const outputPath = join(outputDir, file);
 
     // eslint-disable-next-line no-console
-    console.log(`  ⚙️  Converting ${schemaName}...`);
+    console.log(`  ⚙️  Converting ${moduleBase}...`);
 
     try {
-      /* Parse the Zod schema file */
-      const parsed = await parseZodSchemaFile(inputPath);
+      const parsedModule = await parseZodSchemaFile(inputPath);
 
-      /* Evaluate the schema definition into a Zod instance.
-       * We provide `z` and placeholders for imported symbols.
-       */
+      // Build placeholder params for evaluating schema definitions
       const importedNames = new Set<string>();
-      for (const imp of parsed.imports) {
-        for (const name of imp.names) {
-          if (name !== "z") importedNames.add(name);
-        }
+      for (const imp of parsedModule.imports) {
+        for (const name of imp.names) if (name !== "z") importedNames.add(name);
       }
       const paramNames = ["z", ...Array.from(importedNames)];
       const importedList = Array.from(importedNames);
@@ -77,43 +63,51 @@ async function convertDirectory(
         z,
         ...importedList.map((name) => z.any().describe(`ref:${name}`)),
       ];
-      // Wrap in parentheses to ensure expression evaluation
-      const expr = new Function(
-        ...paramNames,
-        `return (${parsed.schemaDefinition});`,
-      );
-      const zodInstance = expr(...paramValues);
 
-      /* Convert to ArkType */
-      const converted = convertZodToArkType(zodInstance, parsed.schemaName);
-
-      /* Build import sources map */
-      const sources = new Map<string, string>();
-      for (const importInfo of parsed.imports) {
-        for (const name of importInfo.names) {
-          /* Map to relative import path */
-          const mappedSource = importSourceMap.get(name);
-          if (mappedSource) {
-            sources.set(name, mappedSource);
+      const moduleImports = new Set<string>();
+      const importSourceMap = new Map<string, string>();
+      const localNames = new Set(parsedModule.schemas.map((s) => s.name));
+      for (const imp of parsedModule.imports) {
+        for (const name of imp.names) {
+          if (localNames.has(name)) {
+            importSourceMap.set(name, `./${moduleBase}.js`);
           } else {
-            /* Keep original source if not a schema */
-            sources.set(name, importInfo.source);
+            importSourceMap.set(name, imp.source);
           }
         }
       }
 
-      /* Write the converted schema */
-      await writeArktypeSchema(outputPath, {
-        arktypeCode: converted.code,
-        comments: parsed.comments,
-        imports: converted.imports,
-        importSources: sources,
-        schemaName: parsed.schemaName,
+      const exportsBlocks: {
+        code: string;
+        comments: string;
+        name: string;
+      }[] = [];
+      for (const s of parsedModule.schemas) {
+        const expr = new Function(...paramNames, `return (${s.definition});`);
+        const zodInstance = expr(...paramValues);
+        const converted = convertZodToArkType(zodInstance, s.name);
+        converted.imports.forEach((n) => moduleImports.add(n));
+        exportsBlocks.push({
+          code: converted.code,
+          comments: s.comments,
+          name: s.name,
+        });
+      }
+
+      await writeArktypeModule(outputPath, {
+        exports: exportsBlocks,
+        imports: moduleImports,
+        importSources: importSourceMap,
       });
+
+      // Record index exports only after successful conversion/write
+      for (const s of parsedModule.schemas) {
+        indexExports.push({ name: s.name, source: `./${moduleBase}.js` });
+      }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.warn(
-        `  ⚠️  Failed to convert ${schemaName}:`,
+        `  ⚠️  Failed to convert ${moduleBase}:`,
         error instanceof Error ? error.message : String(error),
       );
     }
@@ -122,7 +116,7 @@ async function convertDirectory(
   /* Write index file */
   // eslint-disable-next-line no-console
   console.log("  📝 Writing index file...");
-  await writeIndexFile(outputDir, schemaNames);
+  await writeIndexFile(outputDir, indexExports);
 
   /* Write package.json and tsconfig.json to help consumers typecheck/build */
   // eslint-disable-next-line no-console

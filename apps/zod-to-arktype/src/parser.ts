@@ -17,13 +17,16 @@ export interface ImportInfo {
 /**
  * Parsed schema information
  */
-export interface ParsedSchema {
-  comments: string;
+export interface ParsedModule {
   filePath: string;
   imports: ImportInfo[];
-  schemaDefinition: string;
-  schemaName: string;
-  typeDefinition: string;
+  schemas: ParsedSchemaItem[];
+}
+
+export interface ParsedSchemaItem {
+  comments: string;
+  definition: string;
+  name: string;
 }
 
 /**
@@ -33,7 +36,6 @@ interface SchemaDefinition {
   comments: string;
   definition: string;
   name: string;
-  typeDefinition: string;
 }
 
 /**
@@ -42,25 +44,18 @@ interface SchemaDefinition {
 export function parseZodSchemaContent(
   content: string,
   filePath: string,
-): ParsedSchema {
+): ParsedModule {
   /* Extract imports */
   const imports = extractImports(content);
 
   /* Extract schema name and definition */
-  const schema = extractSchemaDefinition(content);
+  const schemas = extractModuleSchemas(content);
 
-  if (!schema) {
+  if (schemas.length === 0) {
     throw new Error(`No schema definition found in ${filePath}`);
   }
 
-  return {
-    comments: schema.comments,
-    filePath,
-    imports,
-    schemaDefinition: schema.definition,
-    schemaName: schema.name,
-    typeDefinition: schema.typeDefinition,
-  };
+  return { filePath, imports, schemas };
 }
 
 /**
@@ -68,7 +63,7 @@ export function parseZodSchemaContent(
  */
 export async function parseZodSchemaFile(
   filePath: string,
-): Promise<ParsedSchema> {
+): Promise<ParsedModule> {
   try {
     const content = await readFile(filePath, "utf-8");
     return parseZodSchemaContent(content, filePath);
@@ -110,75 +105,98 @@ function extractImports(content: string): ImportInfo[] {
 /**
  * Extracts the main schema definition from content
  */
-function extractSchemaDefinition(content: string): null | SchemaDefinition {
-  /* Look for patterns like: export const SchemaName = z.object(...) */
-  const exportPattern = /export\s+const\s+([A-Za-z0-9_]+)\s+=\s+(.+);/;
-  const typePattern =
-    /export\s+type\s+([A-Za-z0-9_]+)\s+=\s+z\.infer<typeof\s+([A-Za-z0-9_]+)>;/;
-
+function extractModuleSchemas(content: string): SchemaDefinition[] {
   const lines = content.split("\n");
-  let schemaName = "";
-  let schemaDefinition = "";
-  let typeDefinition = "";
-  let comments = "";
-  let currentComment = "";
+
+  const exportConstPattern = /^export\s+const\s+([A-Za-z0-9_]+)\s*=\s*(.*)$/;
+  const constPattern = /^const\s+([A-Za-z0-9_]+)\s*=\s*(.*)$/;
+  const exportNamesPattern = /^export\s*\{([^}]+)\}\s*;?/;
+
+  const constDefs = new Map<string, { comments: string; def: string }>();
+  const exportedNames = new Set<string>();
+  const results: SchemaDefinition[] = [];
+
+  let pendingComment: null | string = null;
+  let inJsDoc = false;
+
+  const readDefinitionFrom = (
+    startIndex: number,
+    initialRhs: string,
+  ): { end: number; rhs: string } => {
+    let rhs = initialRhs.trim();
+    if (rhs.endsWith(";"))
+      return { end: startIndex, rhs: rhs.replace(/;$/, "").trim() };
+    let j = startIndex + 1;
+    while (j < lines.length) {
+      const l = lines[j];
+      rhs += l;
+      if (l.includes(";")) {
+        break;
+      }
+      j++;
+    }
+    return { end: j, rhs: rhs.replace(/;.*$/, "").trim() };
+  };
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    const trimmed = line.trim();
 
-    /* Check for JSDoc comments */
-    if (line.trim().startsWith("/**")) {
-      currentComment = "";
+    // Track a JSDoc block to attach to the next definition
+    if (trimmed.startsWith("/**")) {
+      inJsDoc = true;
+      pendingComment = "";
     }
-    if (
-      line.includes("/**") ||
-      line.includes("*/") ||
-      line.trim().startsWith("*")
-    ) {
-      currentComment += line + "\n";
+    if (inJsDoc) {
+      pendingComment = (pendingComment ?? "") + line + "\n";
+      if (trimmed.endsWith("*/")) inJsDoc = false;
+      continue;
     }
 
-    /* Check for schema export */
-    const exportMatch = line.match(exportPattern);
-    if (exportMatch) {
-      schemaName = exportMatch[1];
-      schemaDefinition = exportMatch[2];
+    const mExportConst = trimmed.match(exportConstPattern);
+    if (mExportConst) {
+      const name = mExportConst[1];
+      const { end, rhs } = readDefinitionFrom(i, mExportConst[2]);
+      results.push({ comments: pendingComment ?? "", definition: rhs, name });
+      pendingComment = null;
+      i = end;
+      exportedNames.add(name);
+      continue;
+    }
 
-      /* If definition spans multiple lines, continue reading */
-      if (!schemaDefinition.includes(";") && i < lines.length - 1) {
-        let j = i + 1;
-        while (j < lines.length && !lines[j].includes("export type")) {
-          schemaDefinition += lines[j];
-          if (lines[j].includes(";")) {
-            break;
-          }
-          j++;
-        }
-        schemaDefinition = schemaDefinition.replace(/;$/, "").trim();
-      } else {
-        schemaDefinition = schemaDefinition.replace(/;$/, "").trim();
+    const mConst = trimmed.match(constPattern);
+    if (mConst) {
+      const name = mConst[1];
+      const { end, rhs } = readDefinitionFrom(i, mConst[2]);
+      constDefs.set(name, { comments: pendingComment ?? "", def: rhs });
+      pendingComment = null;
+      i = end;
+      continue;
+    }
+
+    const mExportNames = trimmed.match(exportNamesPattern);
+    if (mExportNames) {
+      const names = mExportNames[1]
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((s) => s.split(/\s+as\s+/)[0]?.trim());
+      for (const n of names) {
+        if (!n) continue;
+        exportedNames.add(n);
       }
-
-      if (currentComment) {
-        comments = currentComment;
-      }
-    }
-
-    /* Check for type definition */
-    const typeMatch = line.match(typePattern);
-    if (typeMatch && typeMatch[2] === schemaName) {
-      typeDefinition = line.trim();
+      continue;
     }
   }
 
-  if (!schemaName || !schemaDefinition) {
-    return null;
+  // Add exported names that came from plain const definitions
+  for (const name of exportedNames) {
+    if (results.find((r) => r.name === name)) continue;
+    const rec = constDefs.get(name);
+    if (rec) {
+      results.push({ comments: rec.comments, definition: rec.def, name });
+    }
   }
 
-  return {
-    comments,
-    definition: schemaDefinition,
-    name: schemaName,
-    typeDefinition,
-  };
+  return results;
 }

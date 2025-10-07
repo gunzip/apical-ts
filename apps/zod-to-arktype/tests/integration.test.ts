@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { convertZodToArkType } from "../src/converter.js";
 import { parseZodSchemaFile } from "../src/parser.js";
-import { writeArktypeSchema } from "../src/file-writer.js";
+import { writeArktypeModule, writeArktypeSchema } from "../src/file-writer.js";
 
 describe("Zod to ArkType Integration", () => {
   const testDir = "/tmp/zod-to-arktype-integration-test";
@@ -38,7 +38,7 @@ export type User = z.infer<typeof User>;`;
 
     /* Parse the Zod schema */
     const parsed = await parseZodSchemaFile(inputPath);
-    expect(parsed.schemaName).toBe("User");
+    expect(parsed.schemas[0]?.name).toBe("User");
     expect(parsed.imports).toHaveLength(1);
 
     /* Convert to ArkType: build a Zod schema instance */
@@ -49,7 +49,7 @@ export type User = z.infer<typeof User>;`;
       name: z.string(),
       email: z.string().email(),
     });
-    const converted = convertZodToArkType(schema, parsed.schemaName);
+    const converted = convertZodToArkType(schema, parsed.schemas[0]!.name);
     expect(converted.code).toContain("type({");
     expect(converted.code).toContain('"string"');
     expect(converted.code).toContain('"string.email"');
@@ -58,10 +58,10 @@ export type User = z.infer<typeof User>;`;
     const outputPath = join(outputDir, "User.ts");
     await writeArktypeSchema(outputPath, {
       arktypeCode: converted.code,
-      comments: parsed.comments,
+      comments: parsed.schemas[0]?.comments ?? "",
       importSources: new Map(),
       imports: converted.imports,
-      schemaName: parsed.schemaName,
+      schemaName: parsed.schemas[0]!.name,
     });
 
     /* Verify the output file */
@@ -97,7 +97,10 @@ export type User = z.infer<typeof User>;`;
       id: z.string(),
       address: z.any().describe("ref:Address"),
     });
-    const converted = convertZodToArkType(userZodSchema, parsed.schemaName);
+    const converted = convertZodToArkType(
+      userZodSchema,
+      parsed.schemas[0]!.name,
+    );
 
     /* With reference placeholder, address stays a bare identifier */
     expect(converted.code).toContain("Address");
@@ -124,10 +127,10 @@ export type User = z.infer<typeof User>;`;
 
     await writeArktypeSchema(join(outputDir, "User2.ts"), {
       arktypeCode: converted.code,
-      comments: parsed.comments,
+      comments: parsed.schemas[0]?.comments ?? "",
       importSources: sources,
       imports,
-      schemaName: parsed.schemaName,
+      schemaName: parsed.schemas[0]!.name,
     });
 
     const output = await readFile(join(outputDir, "User2.ts"), "utf-8");

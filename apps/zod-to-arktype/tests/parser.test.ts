@@ -13,10 +13,9 @@ export const SimpleDefinition = z.object({"id": z.string()});
 export type SimpleDefinition = z.infer<typeof SimpleDefinition>;`;
 
     const result = parseZodSchemaContent(content, "test.ts");
-
-    expect(result.schemaName).toBe("SimpleDefinition");
-    expect(result.schemaDefinition).toBe('z.object({"id": z.string()})');
-    expect(result.typeDefinition).toContain("export type SimpleDefinition");
+    expect(result.schemas).toHaveLength(1);
+    expect(result.schemas[0]?.name).toBe("SimpleDefinition");
+    expect(result.schemas[0]?.definition).toBe('z.object({"id": z.string()})');
   });
 
   it("should extract imports", () => {
@@ -45,8 +44,12 @@ export const AnObjectWithRefImport = z.object({"prop1": SimpleDefinition});
 export type AnObjectWithRefImport = z.infer<typeof AnObjectWithRefImport>;`;
 
     const result = parseZodSchemaContent(content, "test.ts");
-
-    expect(result.comments).toContain("Describes an object with a ref import");
+    const schema = result.schemas.find(
+      (s) => s.name === "AnObjectWithRefImport",
+    );
+    expect(schema?.comments ?? "").toContain(
+      "Describes an object with a ref import",
+    );
   });
 
   it("should handle single-line complete schema definitions", () => {
@@ -56,9 +59,8 @@ export const ComplexSchema = z.object({"id": z.string(), "name": z.string()});
 export type ComplexSchema = z.infer<typeof ComplexSchema>;`;
 
     const result = parseZodSchemaContent(content, "test.ts");
-
-    expect(result.schemaDefinition).toContain("z.object({");
-    expect(result.schemaDefinition).toContain("z.string()");
+    expect(result.schemas[0]?.definition ?? "").toContain("z.object({");
+    expect(result.schemas[0]?.definition ?? "").toContain("z.string()");
   });
 
   it("should handle imports with multiple names", () => {
@@ -95,9 +97,8 @@ export const AllOfTest = z.object({...z.object({"items": z.array(Message).option
 export type AllOfTest = z.infer<typeof AllOfTest>;`;
 
     const result = parseZodSchemaContent(content, "test.ts");
-
-    expect(result.schemaName).toBe("AllOfTest");
-    expect(result.schemaDefinition).toContain("z.object({");
-    expect(result.schemaDefinition).toContain("...z.object");
+    expect(result.schemas[0]?.name).toBe("AllOfTest");
+    expect(result.schemas[0]?.definition ?? "").toContain("z.object({");
+    expect(result.schemas[0]?.definition ?? "").toContain("...z.object");
   });
 });
