@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.7.2
+
+### Patch Changes
+
+- 183b1fa: Mod generated zod imports to save some space when bundling
+
 ## 0.7.1
 
 ### Patch Changes
