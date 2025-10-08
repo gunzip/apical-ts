@@ -194,7 +194,7 @@ ${validationLogic}
 
   /* Combine all parts */
   const parts = [
-    `import { z } from "zod";`,
+    `import * as z from "zod";`,
     parameterSchemas,
     requestMapCode,
     responseMapCode,

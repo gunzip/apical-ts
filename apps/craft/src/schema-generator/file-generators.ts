@@ -220,11 +220,11 @@ function assembleFileContent(
       .join(" | ");
     const typeContent = `export type ${name} = ${enumValues} | (string & {});`;
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
-    return `import { z } from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
+    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
   } else {
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
     const typeContent = `export type ${name} = z.infer<typeof ${name}>;`;
-    return `import { z } from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
+    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
   }
 }
 

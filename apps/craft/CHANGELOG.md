@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.7.1
+
+### Patch Changes
+
+- 9bbcdcc: Fix wrong URLs concatenation
+
 ## 0.7.0
 
 ### Minor Changes
