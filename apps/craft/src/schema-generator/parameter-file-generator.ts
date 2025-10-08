@@ -42,7 +42,7 @@ export async function generateParameterSchemaFile(
   const imports: string[] = [];
 
   /* Always include Zod import */
-  imports.push(`import { z } from "zod";`);
+  imports.push(`import * as z from "zod";`);
 
   /* Add other type imports */
   if (result.typeImports.size > 0) {

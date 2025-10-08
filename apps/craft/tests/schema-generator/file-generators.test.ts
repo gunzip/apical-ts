@@ -39,7 +39,7 @@ describe("schema-generator file-generators", () => {
       expect(result.fileName).toBe("User.ts");
       expect(result.content).toContain("export const User");
       expect(result.content).toContain("export type User");
-      expect(result.content).toContain("import { z } from 'zod';");
+      expect(result.content).toContain("import * as z from 'zod';");
     });
 
     it("should generate schema file with description", async () => {

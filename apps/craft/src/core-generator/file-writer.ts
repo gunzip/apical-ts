@@ -58,7 +58,7 @@ function buildImportStatements(
 
   /* Add Zod import */
   if (importManager.hasZodImport()) {
-    imports.push(`import { z } from "zod";`);
+    imports.push(`import * as z from "zod";`);
   }
 
   /* Add schema imports */
