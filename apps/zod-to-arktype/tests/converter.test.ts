@@ -66,6 +66,37 @@ describe("convertZodToArkType", () => {
       const result = convertZodToArkType(z.string().uuid(), "TestSchema");
       expect(result.code).toBe('type("string.uuid")');
     });
+
+    it('should convert z.string().min(3) to type("string.min(3)")', () => {
+      const result = convertZodToArkType(z.string().min(3), "TestSchema");
+      expect(result.code).toBe('type("string.min(3)")');
+    });
+
+    it('should convert z.string().max(10) to type("string.max(10)")', () => {
+      const result = convertZodToArkType(z.string().max(10), "TestSchema");
+      expect(result.code).toBe('type("string.max(10)")');
+    });
+
+    it("should convert z.string().min(3).max(10) to include both constraints", () => {
+      const result = convertZodToArkType(
+        z.string().min(3).max(10),
+        "TestSchema",
+      );
+      expect(result.code).toBe('type("string.max(10).min(3)")');
+    });
+
+    it("should convert z.string().regex(/abc/) to include regex constraint", () => {
+      const result = convertZodToArkType(z.string().regex(/abc/), "TestSchema");
+      expect(result.code).toBe('type("string.regex(/abc/)")');
+    });
+
+    it("should preserve email format with length constraints", () => {
+      const result = convertZodToArkType(
+        z.string().email().min(5),
+        "TestSchema",
+      );
+      expect(result.code).toBe('type("string.email.min(5)")');
+    });
   });
 
   describe("number modifiers", () => {
@@ -77,6 +108,50 @@ describe("convertZodToArkType", () => {
     it('should convert z.number().int() to type("number.integer")', () => {
       const result = convertZodToArkType(z.number().int(), "TestSchema");
       expect(result.code).toBe('type("number.integer")');
+    });
+
+    it('should convert z.number().min(5) to type("number.min(5)")', () => {
+      const result = convertZodToArkType(z.number().min(5), "TestSchema");
+      expect(result.code).toBe('type("number.min(5)")');
+    });
+
+    it('should convert z.number().max(100) to type("number.max(100)")', () => {
+      const result = convertZodToArkType(z.number().max(100), "TestSchema");
+      expect(result.code).toBe('type("number.max(100)")');
+    });
+
+    it("should convert z.number().min(1).max(10) to include both constraints", () => {
+      const result = convertZodToArkType(
+        z.number().min(1).max(10),
+        "TestSchema",
+      );
+      expect(result.code).toBe('type("number.max(10).min(1)")');
+    });
+
+    it('should convert z.number().gt(0) to type("number.gt(0)")', () => {
+      const result = convertZodToArkType(z.number().gt(0), "TestSchema");
+      expect(result.code).toBe('type("number.gt(0)")');
+    });
+
+    it('should convert z.number().lt(100) to type("number.lt(100)")', () => {
+      const result = convertZodToArkType(z.number().lt(100), "TestSchema");
+      expect(result.code).toBe('type("number.lt(100)")');
+    });
+
+    it("should convert z.number().multipleOf(5) to include multipleOf constraint", () => {
+      const result = convertZodToArkType(
+        z.number().multipleOf(5),
+        "TestSchema",
+      );
+      expect(result.code).toBe('type("number.multipleOf(5)")');
+    });
+
+    it("should convert z.number().int().min(1).max(100) to include all constraints", () => {
+      const result = convertZodToArkType(
+        z.number().int().min(1).max(100),
+        "TestSchema",
+      );
+      expect(result.code).toBe('type("number.integer.max(100).min(1)")');
     });
   });
 

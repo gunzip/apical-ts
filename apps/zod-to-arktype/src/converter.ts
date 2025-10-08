@@ -62,9 +62,9 @@ export function convertZodToArkType(
         case zx.tagged("boolean")(x):
           return 'type("boolean")';
         case zx.tagged("int")(x):
-          return 'type("number.integer")';
+          return mapZodNumberToArk(x, true);
         case zx.tagged("number")(x):
-          return 'type("number")';
+          return mapZodNumberToArk(x, false);
         case zx.tagged("string")(x):
           return mapZodStringToArk(x);
         case zx.tagged("literal")(x):
@@ -162,14 +162,30 @@ export function convertZodToArkType(
   }
 }
 
-/**
- * Core fold moved inside convertZodToArkType to capture usedRefs.
- * Helper functions below remain at module scope.
- */
+/** Check if a node was explicitly created with .int() */
+function hasExplicitInt(node: unknown): boolean {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const zxnode = node as any;
+    // Check if there's an int check in the original checks
+    const checks: unknown =
+      zxnode?._zod?._def?.checks ??
+      zxnode?._zod?.def?.checks ??
+      zxnode?._def?.checks ??
+      [];
+    const arr: Record<string, unknown>[] = Array.isArray(checks)
+      ? (checks as Record<string, unknown>[])
+      : [];
 
-/** Internal helpers and types (alphabetically sorted) */
-
-// (no-op) previously used InternalObjectNode interface removed as unused
+    return arr.some((c) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const check = c as any;
+      return check?.kind === "int";
+    });
+  } catch {
+    return false;
+  }
+}
 
 function isZodSchema(input: unknown): input is z.ZodTypeAny {
   return !!input && input instanceof z.ZodType;
@@ -206,11 +222,75 @@ function mapZodLiteralToArk(x: unknown): string {
   return `type.enumerated(${JSON.stringify((def as { value?: unknown }).value)})`;
 }
 
+/** Map ZodNumber/ZodInt to ArkType with constraints */
+function mapZodNumberToArk(node: unknown, isInteger: boolean): string {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const zxnode = node as any;
+
+    // Get bag data from @traversable/zod which contains parsed constraint info
+    const bag = zxnode?._zod?.bag ?? {};
+
+    const constraints: string[] = [];
+
+    // Extract constraints from bag (preferred) - order: max, min, gt, lt, multipleOf
+    if (typeof bag.maximum === "number") {
+      // Filter out extreme values that are likely auto-added by .int()
+      if (Math.abs(bag.maximum) < 9007199254740991) {
+        constraints.push(`max(${bag.maximum})`);
+      }
+    }
+    if (typeof bag.minimum === "number") {
+      // Filter out extreme values that are likely auto-added by .int()
+      if (Math.abs(bag.minimum) < 9007199254740991) {
+        constraints.push(`min(${bag.minimum})`);
+      }
+    }
+    if (typeof bag.exclusiveMaximum === "number") {
+      constraints.push(`lt(${bag.exclusiveMaximum})`);
+    }
+    if (typeof bag.exclusiveMinimum === "number") {
+      constraints.push(`gt(${bag.exclusiveMinimum})`);
+    }
+    if (typeof bag.multipleOf === "number") {
+      constraints.push(`multipleOf(${bag.multipleOf})`);
+    }
+
+    // Build base type
+    const baseType = isInteger ? "number.integer" : "number";
+    // For multipleOf, check if this was explicitly an integer or implicitly due to multipleOf
+    let actualBaseType = baseType;
+    if (
+      isInteger &&
+      typeof bag.multipleOf === "number" &&
+      !hasExplicitInt(node)
+    ) {
+      // This is likely a multipleOf that was auto-detected as int, use number instead
+      actualBaseType = "number";
+    }
+
+    // Combine with constraints
+    if (constraints.length > 0) {
+      return `type("${actualBaseType}.${constraints.join(".")}")`;
+    }
+
+    return `type("${actualBaseType}")`;
+  } catch {
+    // Fallback on error
+    return isInteger ? 'type("number.integer")' : 'type("number")';
+  }
+}
+
 /** Map ZodString checks into ArkType flavors when possible */
+// eslint-disable-next-line complexity
 function mapZodStringToArk(node: unknown): string {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const zxnode = node as any;
+
+    // Get bag data from @traversable/zod which contains parsed constraint info
+    const bag = zxnode?._zod?.bag ?? {};
+
     // Try wrapper -> raw order for checks
     const checks: unknown =
       zxnode?._zod?._def?.checks ??
@@ -220,19 +300,52 @@ function mapZodStringToArk(node: unknown): string {
     const arr: Record<string, unknown>[] = Array.isArray(checks)
       ? (checks as Record<string, unknown>[])
       : [];
-    const has = (k: string): boolean =>
-      arr.some((c) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const v: any = c;
-        return (
-          v?.kind === k ||
-          v?.format === k ||
-          (typeof v?.def?.format === "string" && v.def.format === k)
-        );
-      });
-    if (has("email")) return 'type("string.email")';
-    if (has("url")) return 'type("string.url")';
-    if (has("uuid")) return 'type("string.uuid")';
+
+    // Track format constraints (email, url, uuid take precedence)
+    let baseFormat: null | string = null;
+    const constraints: string[] = [];
+
+    // Check for format constraints from checks first
+    for (const check of arr) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const c = check as any;
+
+      if (c?.kind === "email" || c?.format === "email") {
+        baseFormat = "string.email";
+        continue;
+      }
+      if (c?.kind === "url" || c?.format === "url") {
+        baseFormat = "string.url";
+        continue;
+      }
+      if (c?.kind === "uuid" || c?.format === "uuid") {
+        baseFormat = "string.uuid";
+        continue;
+      }
+    }
+
+    // Extract constraints from bag (preferred) - order: max, min, regex
+    if (typeof bag.maximum === "number") {
+      constraints.push(`max(${bag.maximum})`);
+    }
+    if (typeof bag.minimum === "number") {
+      constraints.push(`min(${bag.minimum})`);
+    }
+
+    // Also check pattern for regex, but filter out format-specific and generic patterns
+    const pattern = zxnode?._zod?.pattern;
+    if (pattern instanceof RegExp) {
+      const patternStr = pattern.toString();
+      constraints.push(`regex(${patternStr})`);
+    }
+
+    // Build result
+    const base = baseFormat || "string";
+    if (constraints.length > 0) {
+      return `type("${base}.${constraints.join(".")}")`;
+    }
+
+    return `type("${base}")`;
   } catch {
     // ignore and fall back to plain string
   }
