@@ -59,7 +59,7 @@ export async function parseApiResponseUnknownData<
   }
 
   const schema = schemaMap[contentType];
-  if (!schema || typeof schema["~standard"]?.validate !== "function") {
+  if (!schema || !schema["~standard"] || typeof schema["~standard"].validate !== "function") {
     if (deserializationError) {
       return { kind: "deserialization-error", error: deserializationError } as const;
     }
