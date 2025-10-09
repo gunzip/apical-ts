@@ -66,9 +66,11 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain("petFindByStatusPathSchema");
     // Parameter schemas are now imported, not inline, so we test for usage, not definition
     expect(result.wrapperCode).toContain(
-      "petFindByStatusQuerySchema.safeParse",
+      'petFindByStatusQuerySchema["~standard"].validate',
     );
-    expect(result.wrapperCode).toContain("petFindByStatusPathSchema.safeParse");
+    expect(result.wrapperCode).toContain(
+      'petFindByStatusPathSchema["~standard"].validate',
+    );
 
     /* Verify validation error types */
     expect(result.wrapperCode).toContain("query-error");
@@ -83,17 +85,16 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain("text/plain");
 
     /* Verify validation logic sequence */
-    expect(result.wrapperCode).toContain("queryParse.success");
-    expect(result.wrapperCode).toContain("pathParse.success");
-    expect(result.wrapperCode).toContain("headersParse.success");
-    expect(result.wrapperCode).toContain("bodyParse.success");
+    expect(result.wrapperCode).toContain('if ("issues" in queryResult)');
+    expect(result.wrapperCode).toContain('if ("issues" in pathResult)');
+    expect(result.wrapperCode).toContain('if ("issues" in headersResult)');
 
     /* Verify success handler call */
     expect(result.wrapperCode).toContain("isValid: true");
     expect(result.wrapperCode).toContain("value: {");
-    expect(result.wrapperCode).toContain("query: queryParse.data");
-    expect(result.wrapperCode).toContain("path: pathParse.data");
-    expect(result.wrapperCode).toContain("headers: headersParse.data");
+    expect(result.wrapperCode).toContain("query: queryResult.value");
+    expect(result.wrapperCode).toContain("path: pathResult.value");
+    expect(result.wrapperCode).toContain("headers: headersResult.value");
     expect(result.wrapperCode).toContain("body: parsedBody");
   });
 
@@ -133,13 +134,13 @@ describe("server-generator comprehensive validation", () => {
     /* Should include parsed params type */
     expect(result.wrapperCode).toContain("testOperationParsedParams");
     expect(result.wrapperCode).toContain(
-      "query: z.infer<typeof testOperationQuerySchema>",
+      "query: StandardSchemaV1.InferOutput<typeof testOperationQuerySchema>",
     );
     expect(result.wrapperCode).toContain(
-      "path: z.infer<typeof testOperationPathSchema>",
+      "path: StandardSchemaV1.InferOutput<typeof testOperationPathSchema>",
     );
     expect(result.wrapperCode).toContain(
-      "headers: z.infer<typeof testOperationHeadersSchema>",
+      "headers: StandardSchemaV1.InferOutput<typeof testOperationHeadersSchema>",
     );
 
     /* Should include handler type with discriminated union */

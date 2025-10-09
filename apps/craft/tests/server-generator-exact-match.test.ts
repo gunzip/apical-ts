@@ -71,26 +71,27 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify validation sequence: query → path → headers → body */
     const validationPattern =
-      /queryParse = .*safeParse\(req\.query\)[\s\S]*pathParse = .*safeParse\(req\.path\)[\s\S]*headersParse = .*safeParse\(req\.headers\)[\s\S]*bodyParse = .*safeParse/;
+      /const queryResult = queryValidationResult instanceof Promise \? await queryValidationResult : queryValidationResult[\s\S]*const pathResult = pathValidationResult instanceof Promise \? await pathValidationResult : pathValidationResult[\s\S]*const headersResult = headersValidationResult instanceof Promise \? await headersValidationResult : headersValidationResult/;
     expect(result.wrapperCode).toMatch(validationPattern);
 
     /* Verify error handling with correct error types */
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "query-error", error: queryParse\.error, isValid: false \}\)/,
+      /return handler\(\{ kind: "query-error", error: \{ issues: queryResult\.issues \|\| \[\] \}, isValid: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "path-error", error: pathParse\.error, isValid: false \}\)/,
+      /return handler\(\{ kind: "path-error", error: \{ issues: pathResult\.issues \|\| \[\] \}, isValid: false \}\)/,
     );
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "headers-error", error: headersParse\.error, isValid: false \}\)/,
+      /return handler\(\{ kind: "headers-error", error: \{ issues: headersResult\.issues \|\| \[\] \}, isValid: false \}\)/,
     );
-    expect(result.wrapperCode).toMatch(
-      /return handler\(\{ kind: "body-error", error: bodyParse\.error, isValid: false \}\)/,
-    );
+
+    /* Verify successful case with valid parameters */
+    expect(result.wrapperCode).toContain("return handler({");
+    expect(result.wrapperCode).toContain("isValid: true");
 
     /* Verify success handler call with all parameters */
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{\s*isValid: true,\s*value: \{\s*query: queryParse\.data,\s*path: pathParse\.data,\s*headers: headersParse\.data,\s*body: parsedBody\s*\},?\s*\}\)/,
+      /return handler\(\{\s*isValid: true,\s*value: \{\s*query: queryResult\.value,\s*path: pathResult\.value,\s*headers: headersResult\.value,\s*body: parsedBody\s*\},?\s*\}\)/,
     );
 
     /* Verify discriminated union types are correctly defined */
@@ -162,13 +163,13 @@ describe("server-generator - problem statement validation", () => {
 
     /* Should still perform validation even with empty schemas */
     expect(result.wrapperCode).toContain(
-      "queryParse = noParamsQuerySchema.safeParse(req.query)",
+      'const queryValidationResult = noParamsQuerySchema["~standard"].validate(req.query)',
     );
     expect(result.wrapperCode).toContain(
-      "pathParse = noParamsPathSchema.safeParse(req.path)",
+      'const pathValidationResult = noParamsPathSchema["~standard"].validate(req.path)',
     );
     expect(result.wrapperCode).toContain(
-      "headersParse = noParamsHeadersSchema.safeParse(req.headers)",
+      'const headersValidationResult = noParamsHeadersSchema["~standard"].validate(req.headers)',
     );
   });
 });

@@ -57,6 +57,9 @@ importers:
       '@apidevtools/json-schema-ref-parser':
         specifier: ^14.2.0
         version: 14.2.1(@types/json-schema@7.0.15)
+      '@standard-schema/spec':
+        specifier: ^1.0.0
+        version: 1.0.0
       commander:
         specifier: ^14.0.0
         version: 14.0.1
@@ -1922,6 +1925,9 @@ packages:
 
   '@slorber/remark-comment@1.0.0':
     resolution: {integrity: sha512-RCE24n7jsOj1M0UPvIQCHTe7fI0sFL4S2nwKVWwHyVr/wI/H8GosgsJGyhnsZoGFnD/P2hLf1mSbrrgSLN93NA==}
+
+  '@standard-schema/spec@1.0.0':
+    resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
   '@stoplight/http-spec@7.1.0':
     resolution: {integrity: sha512-Z2XqKX2SV8a1rrgSzFqccX2TolfcblT+l4pNvUU+THaLl50tKDoeidwWWZTzYUzqU0+UV97ponvqEbWWN3PaXg==}
@@ -9578,6 +9584,8 @@ snapshots:
       micromark-factory-space: 1.1.0
       micromark-util-character: 1.2.0
       micromark-util-symbol: 1.1.0
+
+  '@standard-schema/spec@1.0.0': {}
 
   '@stoplight/http-spec@7.1.0':
     dependencies:

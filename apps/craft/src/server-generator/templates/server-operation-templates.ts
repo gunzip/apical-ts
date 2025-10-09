@@ -141,21 +141,21 @@ export function renderServerOperationWrapper(
   /* Build handler and parsed params types */
   const responseType = `${sanitizedId}Response`;
   const bodyType = requestMapTypeName
-    ? `z.infer<(typeof ${requestMapTypeName})["application/json"]>`
+    ? `StandardSchemaV1.InferOutput<(typeof ${requestMapTypeName})["application/json"]>`
     : hasBody
       ? "unknown"
       : "undefined";
 
   const validationErrorType = `type ${sanitizedId}ValidationError =
-  | { kind: "query-error"; error: z.ZodError; isValid: false }
-  | { kind: "path-error"; error: z.ZodError; isValid: false }
-  | { kind: "headers-error"; error: z.ZodError; isValid: false }
-  | { kind: "body-error"; error: z.ZodError; isValid: false };`;
+  | { kind: "query-error"; error: { issues: readonly StandardSchemaV1.Issue[] }; isValid: false }
+  | { kind: "path-error"; error: { issues: readonly StandardSchemaV1.Issue[] }; isValid: false }
+  | { kind: "headers-error"; error: { issues: readonly StandardSchemaV1.Issue[] }; isValid: false }
+  | { kind: "body-error"; error: { issues: readonly StandardSchemaV1.Issue[] }; isValid: false };`;
 
   const parsedParamsType = `type ${sanitizedId}ParsedParams = {
-  query: z.infer<typeof ${sanitizedId}QuerySchema>;
-  path: z.infer<typeof ${sanitizedId}PathSchema>;
-  headers: z.infer<typeof ${sanitizedId}HeadersSchema>;
+  query: StandardSchemaV1.InferOutput<typeof ${sanitizedId}QuerySchema>;
+  path: StandardSchemaV1.InferOutput<typeof ${sanitizedId}PathSchema>;
+  headers: StandardSchemaV1.InferOutput<typeof ${sanitizedId}HeadersSchema>;
   body?: ${bodyType};
 };`;
 
@@ -194,7 +194,7 @@ ${validationLogic}
 
   /* Combine all parts */
   const parts = [
-    `import * as z from "zod";`,
+    `import type { StandardSchemaV1 } from "@standard-schema/spec";`,
     parameterSchemas,
     requestMapCode,
     responseMapCode,
@@ -222,6 +222,9 @@ function generateInlineParameterSchemas(
     lowercaseHeaderKeys: true,
   });
 
+  /* Add Zod import since we're generating Zod schemas */
+  importManager.addZodImport();
+
   /* Add any type imports from schema generation to ImportManager */
   for (const typeImport of result.typeImports) {
     importManager.addSchemaImport(typeImport);
@@ -240,16 +243,19 @@ function renderValidationLogic(
 ): string {
   const sanitizedId = sanitizeIdentifier(operationId);
   const bodyType = requestMapTypeName
-    ? `z.infer<(typeof ${requestMapTypeName})["application/json"]>`
+    ? `StandardSchemaV1.InferOutput<(typeof ${requestMapTypeName})["application/json"]>`
     : "undefined";
-  const shared = `  const queryParse = ${sanitizedId}QuerySchema.safeParse(req.query);
-  if (!queryParse.success) return handler({ kind: "query-error", error: queryParse.error, isValid: false });
+  const shared = `  const queryValidationResult = ${sanitizedId}QuerySchema["~standard"].validate(req.query);
+  const queryResult = queryValidationResult instanceof Promise ? await queryValidationResult : queryValidationResult;
+  if ("issues" in queryResult) return handler({ kind: "query-error", error: { issues: queryResult.issues || [] }, isValid: false });
 
-  const pathParse = ${sanitizedId}PathSchema.safeParse(req.path);
-  if (!pathParse.success) return handler({ kind: "path-error", error: pathParse.error, isValid: false });
+  const pathValidationResult = ${sanitizedId}PathSchema["~standard"].validate(req.path);
+  const pathResult = pathValidationResult instanceof Promise ? await pathValidationResult : pathValidationResult;
+  if ("issues" in pathResult) return handler({ kind: "path-error", error: { issues: pathResult.issues || [] }, isValid: false });
 
-  const headersParse = ${sanitizedId}HeadersSchema.safeParse(req.headers);
-  if (!headersParse.success) return handler({ kind: "headers-error", error: headersParse.error, isValid: false });`;
+  const headersValidationResult = ${sanitizedId}HeadersSchema["~standard"].validate(req.headers);
+  const headersResult = headersValidationResult instanceof Promise ? await headersValidationResult : headersValidationResult;
+  if ("issues" in headersResult) return handler({ kind: "headers-error", error: { issues: headersResult.issues || [] }, isValid: false });`;
 
   const bodyLogic = requestMapTypeName
     ? `
@@ -257,23 +263,20 @@ function renderValidationLogic(
   if (req.body !== undefined && req.contentType) {
     const schema = ${requestMapTypeName}[req.contentType];
     if (schema) {
-      const bodyParse = schema.safeParse(req.body);
-      if (!bodyParse.success) return handler({ kind: "body-error", error: bodyParse.error, isValid: false });
-      parsedBody = bodyParse.data as ${bodyType};
+      const bodyValidationResult = schema["~standard"].validate(req.body);
+      const bodyResult = bodyValidationResult instanceof Promise ? await bodyValidationResult : bodyValidationResult;
+      if ("issues" in bodyResult) return handler({ kind: "body-error", error: { issues: bodyResult.issues || [] }, isValid: false });
+      parsedBody = bodyResult.value as ${bodyType};
     } else {
       /* Unknown content-type fallback: accept any */
-      const bodyParse = z.any().safeParse(req.body);
-      if (!bodyParse.success) return handler({ kind: "body-error", error: bodyParse.error, isValid: false });
-      parsedBody = bodyParse.data as ${bodyType};
+      parsedBody = req.body as ${bodyType};
     }
   }`
     : hasBody
       ? `
   let parsedBody: unknown | undefined = undefined;
   if (req.body !== undefined) {
-    const bodyParse = z.any().safeParse(req.body);
-    if (!bodyParse.success) return handler({ kind: "body-error", error: bodyParse.error, isValid: false });
-    parsedBody = bodyParse.data as unknown;
+    parsedBody = req.body as unknown;
   }`
       : `
   let parsedBody: undefined | undefined = undefined;`;
@@ -282,9 +285,9 @@ function renderValidationLogic(
   return handler({
     isValid: true,
     value: {
-      query: queryParse.data,
-      path: pathParse.data,
-      headers: headersParse.data,
+      query: queryResult.value,
+      path: pathResult.value,
+      headers: headersResult.value,
       body: parsedBody
     },
   });`;

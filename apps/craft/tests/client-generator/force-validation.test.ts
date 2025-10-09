@@ -44,7 +44,7 @@ describe("force validation flag", () => {
         "/* Manual validation: provide parse method */",
       );
       expect(result.responseHandlers[0]).toContain(
-        "parse: () => parseApiResponseUnknownData",
+        "parse: async () => await parseApiResponseUnknownData",
       );
       expect(result.responseHandlers[0]).toContain(
         "parseApiResponseUnknownData(minimalResponse, data, GetUserResponseMap",
@@ -106,7 +106,7 @@ describe("force validation flag", () => {
 
       /* Should also contain manual validation branch */
       expect(result.responseHandlers[0]).toContain("} else {");
-      expect(result.responseHandlers[0]).toContain("parse: () =>");
+      expect(result.responseHandlers[0]).toContain("parse: async () =>");
 
       /* Verify return type uses conditional types */
       expect(result.returnType).toBe(

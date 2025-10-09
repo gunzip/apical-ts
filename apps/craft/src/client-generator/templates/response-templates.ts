@@ -22,7 +22,7 @@ export function renderDefaultResponseHandler(
         /* Handle OpenAPI default response with schema validation */
         if (config.forceValidation) {
           /* Force validation: automatically parse and return result */
-          const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {});
+          const parseResult = await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {});
           if ("parsed" in parseResult) {
             const forcedResult = createForcedParseResponse("default", data, response, parseResult);
             // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
@@ -44,7 +44,7 @@ export function renderDefaultResponseHandler(
             status: "default" as const,
             data,
             response,
-            parse: () => parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {})
+            parse: async () => await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {})
           } satisfies ApiResponseWithParse<"default", typeof ${responseMapName}>;
           return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}> : ApiResponseWithParse<"default", typeof ${responseMapName}>);
         }
@@ -97,7 +97,7 @@ export function renderResponseHandler(
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
       if (config.forceValidation) {
         /* Force validation: automatically parse and return result */
-        const parseResult = parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {});
+        const parseResult = await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {});
         if ("parsed" in parseResult) {
           const forcedResult = createForcedParseResponse("${statusCode}", data, response, parseResult);
           // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
@@ -119,7 +119,7 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
           status: "${statusCode}" as const,
           data,
           response,
-          parse: () => parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {})
+          parse: async () => await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {})
         } satisfies ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}>;
         return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"${statusCode}", typeof ${responseMapName}> : ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}>);
       }

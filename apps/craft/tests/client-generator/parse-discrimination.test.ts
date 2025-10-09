@@ -8,10 +8,12 @@ import { renderApiResponseTypes } from "../../src/client-generator/templates/con
 describe("ApiResponseWithParse discriminated parse narrowing", () => {
   it("should generate parse() signature with per-content-type parsed narrowing", () => {
     const code = renderApiResponseTypes();
-    // Should use z.infer<Map[`S`][K]> not the broader ExtractResponseUnion
-    expect(code).toContain("parsed: z.infer<Map");
+    // Should use StandardSchemaV1.InferOutput<Map[`S`][K]> not the broader ExtractResponseUnion
+    expect(code).toContain("parsed: StandardSchemaV1.InferOutput<Map");
     // Template literal in emitted code uses `${S}` inside brackets
-    expect(code).toContain("parsed: z.infer<Map[`${S}`][K]>");
+    expect(code).toContain(
+      "parsed: StandardSchemaV1.InferOutput<Map[`${S}`][K]>",
+    );
     // Should no longer contain the old broader helper usage inside parse mapping
     expect(code).not.toContain("parsed: ExtractResponseUnion<Map,");
   });

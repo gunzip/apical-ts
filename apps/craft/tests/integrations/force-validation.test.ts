@@ -25,7 +25,7 @@ describe("Dynamic Force Validation Integration Test", () => {
     expect(content).toContain(
       "const forcedResult = createForcedParseResponse(",
     );
-    expect(content).toContain("parse: () =>");
+    expect(content).toContain("parse: async () =>");
   });
 
   it("response map is defined once", () => {
@@ -45,7 +45,7 @@ describe("Dynamic Force Validation Integration Test", () => {
     expect(content).toContain(
       "const forcedResult = createForcedParseResponse(",
     );
-    expect(content).toContain("parse: () =>");
+    expect(content).toContain("parse: async () =>");
     expect(content).toContain("TestMultiContentTypesResponseMap");
   });
 
@@ -54,7 +54,7 @@ describe("Dynamic Force Validation Integration Test", () => {
     const operationPath = join(generatedDir, "client/testSimplePatch.ts");
     const content = readFileSync(operationPath, "utf-8");
     expect(content).toContain('ApiResponse<"200", void>');
-    expect(content).not.toContain("parse: () =>");
+    expect(content).not.toContain("parse: async () =>");
     expect(content).not.toContain("parsed: parseResult");
   });
 });

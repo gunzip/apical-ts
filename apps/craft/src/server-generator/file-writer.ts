@@ -107,6 +107,12 @@ export async function writeServerOperationFile(
 
   /* Build imports section */
   const imports: string[] = [];
+
+  /* Add Zod import if needed */
+  if (categorized.zodImport) {
+    imports.push(`import * as z from "zod";`);
+  }
+
   if (schemaImports.length > 0) {
     imports.push(...schemaImports);
   }

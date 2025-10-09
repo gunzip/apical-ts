@@ -47,6 +47,6 @@ describe("Focused test for forced validation response structure", () => {
 
     /* Verify manual validation branch still exists */
     expect(result.responseHandlers[0]).toContain("} else {");
-    expect(result.responseHandlers[0]).toContain("parse: () =>");
+    expect(result.responseHandlers[0]).toContain("parse: async () =>");
   });
 });

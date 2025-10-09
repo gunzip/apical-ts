@@ -46,9 +46,11 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("testSimpleQueryQuerySchema");
     // Parameter schemas are now imported, not inline, so we test for usage, not definition
     expect(result.wrapperCode).toContain(
-      "testSimpleQueryQuerySchema.safeParse",
+      'testSimpleQueryQuerySchema["~standard"].validate',
     );
-    expect(result.wrapperCode).toContain("testSimpleQueryPathSchema.safeParse");
+    expect(result.wrapperCode).toContain(
+      'testSimpleQueryPathSchema["~standard"].validate',
+    );
     expect(result.wrapperCode).toContain('kind: "query-error"');
     expect(result.wrapperCode).toContain('kind: "path-error"');
     expect(result.wrapperCode).toContain('kind: "headers-error"');
@@ -120,10 +122,10 @@ describe("server-generator operation wrapper", () => {
 
     /* Schema validation now happens via imported schemas, not inline */
     expect(result.wrapperCode).toContain(
-      "testStrictValidationQuerySchema.safeParse",
+      'testStrictValidationQuerySchema["~standard"].validate',
     );
     expect(result.wrapperCode).toContain(
-      "testStrictValidationPathSchema.safeParse",
+      'testStrictValidationPathSchema["~standard"].validate',
     );
     expect(result.wrapperCode).not.toContain("z.strictObject(");
   });
@@ -174,7 +176,9 @@ describe("server-generator operation wrapper", () => {
     );
 
     /* Verify that request body validation uses regular schemas (no more strict variants) */
-    expect(result.wrapperCode).toContain("schema.safeParse(req.body)");
+    expect(result.wrapperCode).toContain(
+      'schema["~standard"].validate(req.body)',
+    );
     expect(result.wrapperCode).toContain("TestStrictBodyValidationRequest");
     expect(result.wrapperCode).not.toContain(
       "TestStrictBodyValidationRequestStrict",
@@ -214,8 +218,10 @@ describe("server-generator operation wrapper", () => {
 
     expect(result.wrapperCode).toContain("testWithPathPathSchema");
     // Path parameter schemas are now imported, not inline, so we test for usage
-    expect(result.wrapperCode).toContain("testWithPathPathSchema.safeParse");
-    expect(result.wrapperCode).toContain("pathParse.data");
+    expect(result.wrapperCode).toContain(
+      'testWithPathPathSchema["~standard"].validate',
+    );
+    expect(result.wrapperCode).toContain("pathResult.value");
   });
 
   it("should generate wrapper with request body", () => {
