@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.7.3
+
+### Patch Changes
+
+- 591b920: Fix condition on nullable recursive objects
+
 ## 0.7.2
 
 ### Patch Changes
