@@ -60,7 +60,12 @@ export async function generateRecursiveSchemaFile(
     schema,
   } = options;
 
-  if (schema.type !== "object" || !schema.properties) {
+  /* Check if schema.type is "object" or an array containing "object" */
+  const isObjectType =
+    schema.type === "object" ||
+    (Array.isArray(schema.type) && schema.type.includes("object"));
+
+  if (!isObjectType || !schema.properties) {
     throw new Error(
       `Recursive schema ${name} must be an object with properties`,
     );

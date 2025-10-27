@@ -1,0 +1,17 @@
+ConditionGroupConfiguration:
+  additionalProperties: false
+  description: The conditions group associated with the transition.
+  nullable: true
+  properties:
+    conditionGroups:
+      description: The nested conditions of the condition group.
+      items:
+        $ref: "#/components/schemas/ConditionGroupConfiguration"
+      type: array
+    operation:
+      description: Determines how the conditions.
+      enum:
+        - ANY
+        - ALL
+      type: string
+  type: object
