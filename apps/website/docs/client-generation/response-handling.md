@@ -63,7 +63,7 @@ are validated against the OpenAPI schema and the `parsed` field is populated.
 ```ts
 const result = await getPetById({ path: { petId: "123" } });
 
-if (result.isValid && result.status === 200) {
+if (result.isValid && result.status === "200") {
   // Data is automatically validated and includes content type
   const { data, contentType } = result.parsed;
   console.log("Content type:", contentType);
@@ -83,7 +83,7 @@ you can call when needed:
 ```ts
 const result = await getPetById({ path: { petId: "123" } });
 
-if (result.isValid && result.status === 200) {
+if (result.isValid && result.status === "200") {
   const outcome = result.parse();
   if (isParsed(outcome)) {
     console.log("Pet:", outcome.parsed);

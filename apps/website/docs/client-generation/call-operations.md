@@ -29,7 +29,7 @@ const result = await getPetById({ path: { petId: "123" } }, apiConfig);
 // You must check for status code since
 // different status codes may have different response shapes
 // TypeScript will narrow the type based on the status code
-if (result.isValid && result.status === 200) {
+if (result.isValid && result.status === "200") {
   const { data, contentType } = result.parsed;
   // Different content types may have different schemas
   console.log("Content type:", contentType);
@@ -155,7 +155,7 @@ if (result.isValid) {
   // TypeScript knows this is a compliant response
   // but you still have to check for status
   console.log("Status:", result.status);
-  if (result.status === 200) {
+  if (result.status === "200") {
     const { data, contentType } = result.parsed;
     console.log("Content type:", contentType);
     console.log("Data:", data);
@@ -174,7 +174,7 @@ const result = await getPetById({ path: { petId: "123" } });
 
 if (!result.isValid) {
   console.error("Operation failed:", result.kind, result.error);
-} else if (result.status === 200) {
+} else if (result.status === "200") {
   const { data, contentType } = result.parsed;
   console.log("Content type:", contentType);
   console.log("Pet found:", data);
