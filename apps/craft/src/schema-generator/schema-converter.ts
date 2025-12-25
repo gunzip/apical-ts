@@ -236,7 +236,7 @@ function handlePrimitive(
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
   extraProps?: ExtraPropsMode,
-  schemaContext?: import("../shared/types.js").SchemaContext,
+  schemaContext?: SchemaContext,
 ): undefined | ZodSchemaResult {
   if (effectiveType === "string") return handleStringType(schema, result);
   if (effectiveType === "number" || effectiveType === "integer") {

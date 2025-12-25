@@ -1,4 +1,8 @@
-import type { RequestBodyObject, SchemaObject } from "openapi3-ts/oas31";
+import type {
+  ReferenceObject,
+  RequestBodyObject,
+  SchemaObject,
+} from "openapi3-ts/oas31";
 
 import { isSchemaObject } from "openapi3-ts/oas31";
 
@@ -55,7 +59,7 @@ export function determineContentTypeStrategy(contentType: string) {
 export function determineRequestBodyStructure(
   requestBody: RequestBodyObject | undefined,
   operationId: string,
-  resolvedSchemas?: Record<string, SchemaObject>,
+  resolvedSchemas?: Record<string, ReferenceObject | SchemaObject>,
 ): RequestBodyStructure {
   const hasBody = !!requestBody;
 
@@ -160,7 +164,7 @@ export function prioritizeContentTypes(
 export function resolveRequestBodyType(
   requestBody: RequestBodyObject,
   operationId: string,
-  resolvedSchemas?: Record<string, SchemaObject>,
+  resolvedSchemas?: Record<string, ReferenceObject | SchemaObject>,
 ): RequestBodyTypeInfo {
   // Check if request body is required (default is false)
   const isRequired = requestBody.required === true;

@@ -3,7 +3,6 @@ import type {
   OperationObject,
   ParameterObject,
   ReferenceObject,
-  SchemaObject,
 } from "openapi3-ts/oas31";
 
 import assert from "assert";
@@ -301,13 +300,6 @@ function collectBodyAndContentTypes(
   let bodyTypeInfo: ReturnType<typeof resolveRequestBodyType> | undefined;
   let requestContentType: string | undefined;
 
-  /* Get resolved schemas for readOnly/writeOnly analysis.
-   * We can safely cast here as doc.components.schemas
-   * references are already resolved */
-  const resolvedSchemas = doc.components?.schemas as
-    | Record<string, SchemaObject>
-    | undefined;
-
   if (
     hasBody &&
     operation.requestBody &&
@@ -317,7 +309,7 @@ function collectBodyAndContentTypes(
     bodyTypeInfo = resolveRequestBodyType(
       requestBody,
       functionName,
-      resolvedSchemas,
+      doc.components?.schemas,
     );
     requestContentType = bodyTypeInfo.contentType;
     bodyTypeInfo.typeImports.forEach((imp) => {
