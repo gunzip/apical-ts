@@ -1,6 +1,6 @@
 /* Shared schema type name resolution logic */
 
-import type { SchemaObject } from "openapi3-ts/oas31";
+import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 import { isReferenceObject, isSchemaObject } from "openapi3-ts/oas31";
@@ -31,7 +31,7 @@ export function resolveSchemaTypeName(
   suffix: string,
   typeImports: Set<string>,
   context?: SchemaResolverContext,
-  resolvedSchemas?: Record<string, SchemaObject>,
+  resolvedSchemas?: Record<string, ReferenceObject | SchemaObject>,
 ): string {
   if (isReferenceObject(schema)) {
     const originalSchemaName = schema.$ref.split("/").pop();

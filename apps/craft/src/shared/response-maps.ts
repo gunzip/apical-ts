@@ -3,6 +3,7 @@
 import {
   type OpenAPIObject,
   type OperationObject,
+  type ReferenceObject,
   type SchemaObject,
 } from "openapi3-ts/oas31";
 
@@ -54,7 +55,7 @@ export function generateResponseMap(
   typeImports: Set<string>,
   doc?: OpenAPIObject,
   options: ResponseMapOptions = {},
-  resolvedSchemas?: Record<string, SchemaObject>,
+  resolvedSchemas?: Record<string, ReferenceObject | SchemaObject>,
 ): ResponseMapResult {
   let contentTypeCount = 0;
   let responseMapType = "{}";
@@ -117,7 +118,7 @@ function applyDefaultResponse(
   >,
   allContentTypes: Set<string>,
   defaultContentType: null | string,
-  resolvedSchemas?: Record<string, SchemaObject>,
+  resolvedSchemas?: Record<string, ReferenceObject | SchemaObject>,
 ): {
   allContentTypes: Set<string>;
   defaultContentType: null | string;
@@ -218,7 +219,7 @@ function buildStatusToContentTypes(
   responseContentTypes: ResponseContentTypes[],
   operationId: string,
   typeImports: Set<string>,
-  resolvedSchemas?: Record<string, SchemaObject>,
+  resolvedSchemas?: Record<string, ReferenceObject | SchemaObject>,
 ): {
   allContentTypes: Set<string>;
   defaultContentType: null | string;

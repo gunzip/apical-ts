@@ -2,6 +2,7 @@
 
 import type {
   OperationObject,
+  ReferenceObject,
   RequestBodyObject,
   SchemaObject,
 } from "openapi3-ts/oas31";
@@ -45,7 +46,7 @@ export function generateRequestBodyMap(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
-  resolvedSchemas?: Record<string, SchemaObject>,
+  resolvedSchemas?: Record<string, ReferenceObject | SchemaObject>,
 ): RequestBodyMapResult {
   let defaultContentType: null | string = null;
   let contentTypeCount = 0;
