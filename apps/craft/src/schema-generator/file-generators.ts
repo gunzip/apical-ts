@@ -33,6 +33,8 @@ export interface RecursiveSchemaFileOptions {
 export interface SchemaFileResult {
   content: string;
   fileName: string;
+  /** Additional files for schema variants (re-exports) */
+  variantFiles?: { content: string; fileName: string }[];
 }
 
 /**
@@ -220,9 +222,13 @@ export async function generateSchemaFile(
     variants,
   );
 
+  /* Generate variant re-export files for proper import resolution */
+  const variantFiles = generateVariantReexportFiles(name, variants);
+
   return {
     content,
     fileName: `${name}.ts`,
+    variantFiles,
   };
 }
 
@@ -367,6 +373,43 @@ function generateImportsSection(
     .map((importName) => `import { ${importName} } from "./${importName}.js";`)
     .join("\n");
   return importStatements ? `${importStatements}\n` : "";
+}
+
+/*
+ * Generates re-export files for schema variants.
+ * These files allow imports like `import { UserRequest } from "./UserRequest.js"`
+ * which re-exports from the base schema file.
+ *
+ * We export only the value - TypeScript will handle type inference automatically.
+ * The type is also exported from the base file, so imports work correctly.
+ */
+function generateVariantReexportFiles(
+  baseName: string,
+  variants?: SchemaVariantsResult,
+): undefined | { content: string; fileName: string }[] {
+  if (!variants?.hasVariants) {
+    return undefined;
+  }
+
+  const files: { content: string; fileName: string }[] = [];
+
+  if (variants.requestContent) {
+    const variantName = `${baseName}Request`;
+    files.push({
+      content: `export { ${variantName} } from "./${baseName}.js";\n`,
+      fileName: `${variantName}.ts`,
+    });
+  }
+
+  if (variants.responseContent) {
+    const variantName = `${baseName}Response`;
+    files.push({
+      content: `export { ${variantName} } from "./${baseName}.js";\n`,
+      fileName: `${variantName}.ts`,
+    });
+  }
+
+  return files.length > 0 ? files : undefined;
 }
 
 /* Helper function to check if a property is recursive */
