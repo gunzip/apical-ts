@@ -97,7 +97,7 @@ async function demonstrateClient() {
     return r.error;
   }
 
-  if (r.status === 200) {
+  if (r.status === "200") {
     console.log("Raw data:", r.data);
     if (r.parsed.contentType == "application/xml") {
       // Only here we can access the parsed XML data properties!
@@ -170,7 +170,7 @@ const result = await updatePet({
   contentType: { response: "application/xml" },
 });
 
-if (result.isValid && result.status === 200) {
+if (result.isValid && result.status === "200") {
   // With forceValidation=true (default)
   // parsed field contains both data and contentType
   const { data, contentType } = result.parsed;
