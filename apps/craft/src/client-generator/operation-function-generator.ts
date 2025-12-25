@@ -300,9 +300,18 @@ function collectBodyAndContentTypes(
   let bodyTypeInfo: ReturnType<typeof resolveRequestBodyType> | undefined;
   let requestContentType: string | undefined;
 
+  /* Get resolved schemas for readOnly/writeOnly analysis */
+  const resolvedSchemas = doc.components?.schemas as
+    | Record<string, import("openapi3-ts/oas31").SchemaObject>
+    | undefined;
+
   if (hasBody) {
     const requestBody = operation.requestBody as RequestBodyObject;
-    bodyTypeInfo = resolveRequestBodyType(requestBody, functionName);
+    bodyTypeInfo = resolveRequestBodyType(
+      requestBody,
+      functionName,
+      resolvedSchemas,
+    );
     requestContentType = bodyTypeInfo.contentType;
     bodyTypeInfo.typeImports.forEach((imp) => {
       importManager.addSchemaImport(imp);

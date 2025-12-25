@@ -4,7 +4,7 @@ import type {
   SchemaObject,
 } from "openapi3-ts/oas31";
 
-import type { ExtraPropsMode } from "../shared/types.js";
+import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 
 /**
@@ -29,6 +29,7 @@ export interface ZodSchemaCodeOptions {
   isTopLevel?: boolean;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
+  schemaContext?: SchemaContext;
 }
 
 /**
@@ -80,6 +81,7 @@ export function zodSchemaToCode(
     imports,
     recursiveContext,
     resolvedSchemas,
+    schemaContext,
   } = options;
   const result = createResult(imports);
 
@@ -150,6 +152,7 @@ export function zodSchemaToCode(
     currentSchemaName,
     resolvedSchemas,
     extraProps,
+    schemaContext,
   );
   if (primitiveHandled) return primitiveHandled;
 
@@ -233,6 +236,7 @@ function handlePrimitive(
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
   extraProps?: ExtraPropsMode,
+  schemaContext?: import("../shared/types.js").SchemaContext,
 ): undefined | ZodSchemaResult {
   if (effectiveType === "string") return handleStringType(schema, result);
   if (effectiveType === "number" || effectiveType === "integer") {
@@ -245,6 +249,7 @@ function handlePrimitive(
       extraProps,
       recursiveContext,
       resolvedSchemas,
+      schemaContext,
     });
   }
   if (effectiveType === "object") {
@@ -253,6 +258,7 @@ function handlePrimitive(
       extraProps,
       recursiveContext,
       resolvedSchemas,
+      schemaContext,
     });
   }
   return undefined;

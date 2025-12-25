@@ -2,10 +2,11 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
-import type { ExtraPropsMode } from "../shared/types.js";
+import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
+import { analyzeReadWriteProperties } from "../shared/types.js";
 import { generateObjectCode } from "./object-properties.js";
 import {
   createRecursiveContext,
@@ -42,6 +43,16 @@ export interface SchemaGenerationOptions {
   originalSchemaName?: string;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
+  schemaContext?: SchemaContext;
+}
+
+/**
+ * Result of generating schema variants for readOnly/writeOnly handling
+ */
+export interface SchemaVariantsResult {
+  hasVariants: boolean;
+  requestContent?: string;
+  responseContent?: string;
 }
 
 /**
@@ -197,17 +208,63 @@ export async function generateSchemaFile(
   const commentSection = generateCommentSection(description);
   const importsSection = generateImportsSection(schemaResult.imports, name);
 
+  /* Generate readOnly/writeOnly variants if needed */
+  const variants = generateSchemaVariants(name, schema);
+
   const content = assembleFileContent(
     name,
     commentSection,
     importsSection,
     schemaResult.code,
     schemaResult.extensibleEnumValues,
+    variants,
   );
 
   return {
     content,
     fileName: `${name}.ts`,
+  };
+}
+
+/**
+ * Generates schema variant content for readOnly/writeOnly properties using .omit()
+ * Returns the code to append to the schema file for Request and Response variants
+ */
+export function generateSchemaVariants(
+  name: string,
+  schema: SchemaObject,
+): SchemaVariantsResult {
+  const analysis = analyzeReadWriteProperties(schema);
+
+  if (!analysis.hasReadOnly && !analysis.hasWriteOnly) {
+    return { hasVariants: false };
+  }
+
+  let requestContent: string | undefined;
+  let responseContent: string | undefined;
+
+  /* Generate Request variant (excludes readOnly properties) */
+  if (analysis.hasReadOnly && analysis.readOnlyKeys.length > 0) {
+    const omitKeys = analysis.readOnlyKeys
+      .map((key) => `${JSON.stringify(key)}: true`)
+      .join(", ");
+    requestContent = `export const ${name}Request = ${name}.omit({ ${omitKeys} });
+export type ${name}Request = z.infer<typeof ${name}Request>;`;
+  }
+
+  /* Generate Response variant (excludes writeOnly properties) */
+  if (analysis.hasWriteOnly && analysis.writeOnlyKeys.length > 0) {
+    const omitKeys = analysis.writeOnlyKeys
+      .map((key) => `${JSON.stringify(key)}: true`)
+      .join(", ");
+    responseContent = `export const ${name}Response = ${name}.omit({ ${omitKeys} });
+export type ${name}Response = z.infer<typeof ${name}Response>;`;
+  }
+
+  return {
+    hasVariants: true,
+    requestContent,
+    responseContent,
   };
 }
 
@@ -218,19 +275,41 @@ function assembleFileContent(
   importsSection: string,
   schemaCode: string,
   extensibleEnumValues?: unknown[],
+  variants?: SchemaVariantsResult,
 ): string {
+  const variantsContent = buildVariantsContent(variants);
+
   if (extensibleEnumValues) {
     const enumValues = extensibleEnumValues
       .map((e: unknown) => JSON.stringify(e))
       .join(" | ");
     const typeContent = `export type ${name} = ${enumValues} | (string & {});`;
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
-    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
+    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}${variantsContent}`;
   } else {
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
     const typeContent = `export type ${name} = z.infer<typeof ${name}>;`;
-    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
+    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}${variantsContent}`;
   }
+}
+
+/* Helper function to build variants content string */
+function buildVariantsContent(variants?: SchemaVariantsResult): string {
+  if (!variants?.hasVariants) {
+    return "";
+  }
+
+  const parts: string[] = [];
+
+  if (variants.requestContent) {
+    parts.push(variants.requestContent);
+  }
+
+  if (variants.responseContent) {
+    parts.push(variants.responseContent);
+  }
+
+  return parts.length > 0 ? "\n" + parts.join("\n") : "";
 }
 
 /* Helper function to generate comment section from description */

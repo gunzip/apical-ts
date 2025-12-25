@@ -1,6 +1,10 @@
 /* Shared response union generation logic */
 
-import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
+import type {
+  OpenAPIObject,
+  OperationObject,
+  SchemaObject,
+} from "openapi3-ts/oas31";
 
 import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
@@ -37,6 +41,7 @@ export function generateResponseUnion(
   operationId: string,
   typeImports: Set<string>,
   doc?: OpenAPIObject,
+  resolvedSchemas?: Record<string, SchemaObject>,
 ): ResponseUnionResult {
   const unionMembers: ResponseUnionMember[] = [];
   const responseTypeName = `${sanitizeIdentifier(operationId)}Response`;
@@ -74,6 +79,8 @@ export function generateResponseUnion(
               operationId,
               `${statusCode}Response`,
               typeImports,
+              "response",
+              resolvedSchemas,
             );
             unionMembers.push({
               contentType: mapping.contentType,

@@ -6,6 +6,8 @@ import { Command } from "commander";
 import { generate } from "./core-generator/index.js";
 import { ExtraPropsMode } from "./shared/types.js";
 
+export { analyzeReadWriteProperties, SchemaContext } from "./shared/types.js";
+
 const program = new Command();
 
 program

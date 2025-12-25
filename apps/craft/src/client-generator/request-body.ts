@@ -1,4 +1,6 @@
-import type { RequestBodyObject } from "openapi3-ts/oas31";
+import type { RequestBodyObject, SchemaObject } from "openapi3-ts/oas31";
+
+import { isSchemaObject } from "openapi3-ts/oas31";
 
 import type {
   ContentTypeAnalysis,
@@ -8,6 +10,7 @@ import type {
 } from "./models/request-body-models.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { analyzeReadWriteProperties } from "../shared/types.js";
 import {
   DEFAULT_CONTENT_TYPE_HANDLERS,
   renderLegacyRequestBodyHandling,
@@ -52,6 +55,7 @@ export function determineContentTypeStrategy(contentType: string) {
 export function determineRequestBodyStructure(
   requestBody: RequestBodyObject | undefined,
   operationId: string,
+  resolvedSchemas?: Record<string, SchemaObject>,
 ): RequestBodyStructure {
   const hasBody = !!requestBody;
 
@@ -68,7 +72,11 @@ export function determineRequestBodyStructure(
   const isRequired = requestBody.required === true;
   const contentType = getRequestBodyContentType(requestBody);
   const strategy = determineContentTypeStrategy(contentType);
-  const typeInfo = resolveRequestBodyType(requestBody, operationId);
+  const typeInfo = resolveRequestBodyType(
+    requestBody,
+    operationId,
+    resolvedSchemas,
+  );
 
   return {
     contentType,
@@ -147,10 +155,12 @@ export function prioritizeContentTypes(
 
 /**
  * Resolves request body schema and extracts type information
+ * If the referenced schema has readOnly properties, uses the Request variant
  */
 export function resolveRequestBodyType(
   requestBody: RequestBodyObject,
   operationId: string,
+  resolvedSchemas?: Record<string, SchemaObject>,
 ): RequestBodyTypeInfo {
   // Check if request body is required (default is false)
   const isRequired = requestBody.required === true;
@@ -175,6 +185,24 @@ export function resolveRequestBodyType(
     const typeName = originalTypeName
       ? sanitizeIdentifier(originalTypeName)
       : null;
+
+    /* Check if the referenced schema has readOnly properties - if so, use Request variant */
+    if (typeName && resolvedSchemas) {
+      const referencedSchema = resolvedSchemas[originalTypeName || ""];
+      if (referencedSchema && isSchemaObject(referencedSchema)) {
+        const analysis = analyzeReadWriteProperties(referencedSchema);
+        if (analysis.hasReadOnly) {
+          const requestVariant = `${typeName}Request`;
+          return {
+            contentType,
+            isRequired,
+            typeImports: new Set([requestVariant]),
+            typeName: requestVariant,
+          };
+        }
+      }
+    }
+
     return {
       contentType,
       isRequired,

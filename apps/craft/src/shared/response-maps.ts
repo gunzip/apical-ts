@@ -1,6 +1,10 @@
 /* Shared response mapping logic with correct structure */
 
-import { type OpenAPIObject, type OperationObject } from "openapi3-ts/oas31";
+import {
+  type OpenAPIObject,
+  type OperationObject,
+  type SchemaObject,
+} from "openapi3-ts/oas31";
 
 import {
   extractResponseContentTypes,
@@ -50,6 +54,7 @@ export function generateResponseMap(
   typeImports: Set<string>,
   doc?: OpenAPIObject,
   options: ResponseMapOptions = {},
+  resolvedSchemas?: Record<string, SchemaObject>,
 ): ResponseMapResult {
   let contentTypeCount = 0;
   let responseMapType = "{}";
@@ -62,6 +67,7 @@ export function generateResponseMap(
     responseContentTypes,
     operationId,
     typeImports,
+    resolvedSchemas,
   );
 
   // Handle default response
@@ -75,6 +81,7 @@ export function generateResponseMap(
     buildResult.statusToContentTypes,
     buildResult.allContentTypes,
     buildResult.defaultContentType,
+    resolvedSchemas,
   );
 
   contentTypeCount = updatedResult.allContentTypes.size;
@@ -110,6 +117,7 @@ function applyDefaultResponse(
   >,
   allContentTypes: Set<string>,
   defaultContentType: null | string,
+  resolvedSchemas?: Record<string, SchemaObject>,
 ): {
   allContentTypes: Set<string>;
   defaultContentType: null | string;
@@ -146,6 +154,8 @@ function applyDefaultResponse(
           operationId,
           `DefaultResponse`,
           updatedTypeImports,
+          "response",
+          resolvedSchemas,
         );
         updatedAllContentTypes.add(contentType);
         if (!updatedDefaultContentType) {
@@ -208,6 +218,7 @@ function buildStatusToContentTypes(
   responseContentTypes: ResponseContentTypes[],
   operationId: string,
   typeImports: Set<string>,
+  resolvedSchemas?: Record<string, SchemaObject>,
 ): {
   allContentTypes: Set<string>;
   defaultContentType: null | string;
@@ -244,6 +255,8 @@ function buildStatusToContentTypes(
         operationId,
         `${group.statusCode}Response`,
         updatedTypeImports,
+        "response",
+        resolvedSchemas,
       );
 
       statusToContentTypes[group.statusCode].push({
