@@ -31,11 +31,11 @@ automatically creates specialized variants:
 - **Response Variant** (`*Response`): Excludes `writeOnly` properties, used for
   response types
 
-These variants are generated using Zod's `.omit()` method for maximum type
-safety:
+The variants are independently generated schemas that exclude properties at
+schema construction time:
 
 ```ts
-// Generated base schema
+// Generated base schema with all properties
 export const User = z.object({
   id: z.string(), // readOnly
   createdAt: z.string(), // readOnly
@@ -47,15 +47,19 @@ export const User = z.object({
 export type User = z.infer<typeof User>;
 
 // Auto-generated Request variant (excludes readOnly fields)
-export const UserRequest = User.omit({
-  id: true,
-  createdAt: true,
+export const UserRequest = z.object({
+  username: z.string(),
+  email: z.string(),
+  password: z.string(),
 });
 export type UserRequest = z.infer<typeof UserRequest>;
 
 // Auto-generated Response variant (excludes writeOnly fields)
-export const UserResponse = User.omit({
-  password: true,
+export const UserResponse = z.object({
+  id: z.string(),
+  createdAt: z.string(),
+  username: z.string(),
+  email: z.string(),
 });
 export type UserResponse = z.infer<typeof UserResponse>;
 ```
@@ -169,7 +173,13 @@ paths:
 
 ## Nested Objects
 
-ReadOnly and writeOnly properties work correctly with nested objects:
+ReadOnly and writeOnly properties are correctly handled in nested objects. The
+filtering occurs during schema generation itself, not through `.omit()`
+variants.
+
+When a schema context (request, response, or base) is propagated through nested
+objects, readOnly and writeOnly properties are excluded during the nested
+object's schema construction:
 
 ```yaml
 components:
@@ -195,18 +205,32 @@ components:
 Generated code:
 
 ```ts
-// Request variant - excludes createdBy but includes internalNotes
-export const ProductRequest = Product.omit({
-  metadata: {
-    createdBy: true,
-  },
+// Base schema includes all properties
+export const Product = z.object({
+  sku: z.string(),
+  name: z.string(),
+  metadata: z.object({
+    createdBy: z.string(),
+    internalNotes: z.string(),
+  }),
 });
 
-// Response variant - includes createdBy but excludes internalNotes
-export const ProductResponse = Product.omit({
-  metadata: {
-    internalNotes: true,
-  },
+// Request variant - nested metadata excludes readOnly createdBy property
+export const ProductRequest = z.object({
+  sku: z.string(),
+  name: z.string(),
+  metadata: z.object({
+    internalNotes: z.string(),
+  }),
+});
+
+// Response variant - nested metadata excludes writeOnly internalNotes property
+export const ProductResponse = z.object({
+  sku: z.string(),
+  name: z.string(),
+  metadata: z.object({
+    createdBy: z.string(),
+  }),
 });
 ```
 
@@ -232,19 +256,22 @@ const fullSchema = User;
 The variant approach provides several advantages:
 
 1. **Compile-time checks**: TypeScript catches attempts to send readOnly fields
+   in requests
 2. **Runtime validation**: Zod schemas validate the correct fields are present
 3. **Clear semantics**: Type names (`UserRequest`, `UserResponse`) make intent
    explicit
-4. **No bloat**: Only relevant properties are validated
+4. **No bloat**: Only relevant properties are included in nested schemas
 5. **Better errors**: Validation failures only mention relevant fields
+6. **Generation-time filtering**: Nested readOnly/writeOnly properties are
+   filtered during schema construction, not at validation time
 
 ## Mixed Scenarios
 
 Schemas can have any combination of properties:
 
 ```ts
-// Schema with everything
-const UserFull = z.object({
+// Base schema with everything
+export const User = z.object({
   id: z.string(), // readOnly
   username: z.string(),
   email: z.string(),
@@ -253,14 +280,18 @@ const UserFull = z.object({
 });
 
 // Request - has username, email, password, twoFactorSecret; no id
-export const UserRequest = UserFull.omit({
-  id: true,
+export const UserRequest = z.object({
+  username: z.string(),
+  email: z.string(),
+  password: z.string(),
+  twoFactorSecret: z.string(),
 });
 
 // Response - has id, username, email; no password, twoFactorSecret
-export const UserResponse = UserFull.omit({
-  password: true,
-  twoFactorSecret: true,
+export const UserResponse = z.object({
+  id: z.string(),
+  username: z.string(),
+  email: z.string(),
 });
 ```
 

@@ -191,8 +191,8 @@ export function resolveRequestBodyType(
       : null;
 
     /* Check if the referenced schema has readOnly properties - if so, use Request variant */
-    if (typeName && resolvedSchemas) {
-      const referencedSchema = resolvedSchemas[originalTypeName || ""];
+    if (typeName && resolvedSchemas && originalTypeName) {
+      const referencedSchema = resolvedSchemas[originalTypeName];
       if (referencedSchema && isSchemaObject(referencedSchema)) {
         const analysis = analyzeReadWriteProperties(referencedSchema);
         if (analysis.hasReadOnly) {
