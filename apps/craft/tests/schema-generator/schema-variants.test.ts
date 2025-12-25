@@ -37,7 +37,8 @@ describe("generateSchemaVariants", () => {
     expect(result.hasVariants).toBe(true);
     expect(result.requestContent).toBeDefined();
     expect(result.requestContent).toContain("UserRequest");
-    expect(result.requestContent).toContain('.omit({ "id": true })');
+    expect(result.requestContent).toContain('"name"');
+    expect(result.requestContent).not.toContain('"id"');
     expect(result.responseContent).toBeUndefined();
   });
 
@@ -56,7 +57,8 @@ describe("generateSchemaVariants", () => {
     expect(result.requestContent).toBeUndefined();
     expect(result.responseContent).toBeDefined();
     expect(result.responseContent).toContain("UserResponse");
-    expect(result.responseContent).toContain('.omit({ "password": true })');
+    expect(result.responseContent).toContain('"name"');
+    expect(result.responseContent).not.toContain('"password"');
   });
 
   it("should generate both variants for schema with readOnly and writeOnly properties", () => {
@@ -76,10 +78,15 @@ describe("generateSchemaVariants", () => {
     expect(result.requestContent).toBeDefined();
     expect(result.responseContent).toBeDefined();
     expect(result.requestContent).toContain("UserRequest");
-    expect(result.requestContent).toContain('"id": true');
-    expect(result.requestContent).toContain('"createdAt": true');
+    expect(result.requestContent).toContain('"name"');
+    expect(result.requestContent).toContain('"password"');
+    expect(result.requestContent).not.toContain('"id"');
+    expect(result.requestContent).not.toContain('"createdAt"');
     expect(result.responseContent).toContain("UserResponse");
-    expect(result.responseContent).toContain('"password": true');
+    expect(result.responseContent).toContain('"name"');
+    expect(result.responseContent).toContain('"id"');
+    expect(result.responseContent).toContain('"createdAt"');
+    expect(result.responseContent).not.toContain('"password"');
   });
 
   it("should include type inference for variants", () => {
@@ -109,6 +116,7 @@ describe("generateSchemaVariants", () => {
 
     const result = generateSchemaVariants("User", schema);
 
-    expect(result.requestContent).toContain('"created-at": true');
+    expect(result.requestContent).toContain('"name"');
+    expect(result.requestContent).not.toContain('"created-at"');
   });
 });
