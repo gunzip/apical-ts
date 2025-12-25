@@ -35,6 +35,13 @@ const sidebars: SidebarsConfig = {
         "client-generation/using-generated-zod-schemas",
       ],
     },
+    {
+      collapsible: false,
+      collapsed: false,
+      type: "category",
+      label: "Schema Generation",
+      items: ["schema-generation/readonly-writeonly-properties"],
+    },
     "server-routes-wrappers-generation",
     "supported-input-formats",
     "supported-features",
