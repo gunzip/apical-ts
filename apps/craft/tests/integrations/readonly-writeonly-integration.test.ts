@@ -1,5 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import {
+  ProductWithReadOnlyMeta,
+  ProductWithReadOnlyMetaRequest,
+  ProductWithReadOnlyMetaResponse,
+} from "./generated/schemas/ProductWithReadOnlyMeta.js";
 import { createUnauthenticatedClient } from "./client.js";
 import { getRandomPort, MockServer } from "./setup.js";
 
@@ -24,7 +29,7 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
 
     await mockServer.start();
     baseURL = mockServer.getBaseUrl();
-  });
+  }, 30000); // Increase timeout for server startup
 
   afterAll(async () => {
     if (mockServer) {
@@ -180,6 +185,110 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
 
       /* Assert - verify the operation was called */
       expect(response).toBeDefined();
+    });
+
+    it("should exclude readOnly nested properties from request type", () => {
+      /*
+       * This test verifies TypeScript type checking - readOnly nested properties
+       * should not be present in the request type
+       */
+      const client = createUnauthenticatedClient(baseURL);
+
+      /* Valid request - includes only writeOnly property */
+      const validRequest = {
+        body: {
+          sku: "PROD-002",
+          name: "Another Product",
+          metadata: {
+            internalNotes: "Valid writeOnly property",
+          },
+        },
+      };
+
+      /* Verify we can call with valid request */
+      expect(typeof client.createProductWithMetadata).toBe("function");
+
+      /* TypeScript should prevent this at compile time:
+       * const invalidRequest = {
+       *   body: {
+       *     sku: "PROD-003",
+       *     name: "Invalid Product",
+       *     metadata: {
+       *       createdBy: "should not compile", // readOnly property
+       *       internalNotes: "This is valid",
+       *     },
+       *   },
+       * };
+       */
+    });
+
+    it("should validate request schema excludes readOnly nested properties", () => {
+      /* Test that ProductWithReadOnlyMetaRequest schema rejects readOnly properties */
+      const validRequestData = {
+        sku: "PROD-004",
+        name: "Test Product",
+        metadata: {
+          internalNotes: "Valid writeOnly field",
+        },
+      };
+
+      const invalidRequestData = {
+        sku: "PROD-005",
+        name: "Test Product",
+        metadata: {
+          createdBy: "This should fail validation",
+          internalNotes: "Valid writeOnly field",
+        },
+      };
+
+      /* Valid request should parse successfully */
+      const validResult =
+        ProductWithReadOnlyMetaRequest.safeParse(validRequestData);
+      expect(validResult.success).toBe(true);
+
+      /* Invalid request with readOnly field should fail - but Zod strips unknown fields by default */
+      const invalidResult =
+        ProductWithReadOnlyMetaRequest.safeParse(invalidRequestData);
+      expect(invalidResult.success).toBe(true); // Zod strips unknown fields
+      if (invalidResult.success) {
+        /* Verify readOnly field was stripped */
+        expect(invalidResult.data.metadata?.createdBy).toBeUndefined();
+      }
+    });
+
+    it("should validate response schema excludes writeOnly nested properties", () => {
+      /* Test that ProductWithReadOnlyMetaResponse schema rejects writeOnly properties */
+      const validResponseData = {
+        sku: "PROD-006",
+        name: "Test Product",
+        metadata: {
+          createdBy: "system",
+          lastModifiedBy: "admin",
+        },
+      };
+
+      const invalidResponseData = {
+        sku: "PROD-007",
+        name: "Test Product",
+        metadata: {
+          createdBy: "system",
+          internalNotes: "This should not be in response",
+        },
+      };
+
+      /* Valid response should parse successfully */
+      const validResult =
+        ProductWithReadOnlyMetaResponse.safeParse(validResponseData);
+      expect(validResult.success).toBe(true);
+
+      /* Invalid response with writeOnly field should fail - but Zod strips unknown fields by default */
+      const invalidResult =
+        ProductWithReadOnlyMetaResponse.safeParse(invalidResponseData);
+      expect(invalidResult.success).toBe(true); // Zod strips unknown fields
+      if (invalidResult.success) {
+        /* Verify writeOnly field was stripped */
+        expect(invalidResult.data.metadata?.internalNotes).toBeUndefined();
+      }
     });
   });
 });

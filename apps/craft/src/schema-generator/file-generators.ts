@@ -211,7 +211,10 @@ export async function generateSchemaFile(
   const importsSection = generateImportsSection(schemaResult.imports, name);
 
   /* Generate readOnly/writeOnly variants if needed */
-  const variants = generateSchemaVariants(name, schema);
+  const variants = generateSchemaVariants(name, schema, {
+    extraProps,
+    resolvedSchemas,
+  });
 
   const content = assembleFileContent(
     name,
@@ -233,12 +236,14 @@ export async function generateSchemaFile(
 }
 
 /**
- * Generates schema variant content for readOnly/writeOnly properties using .omit()
- * Returns the code to append to the schema file for Request and Response variants
+ * Generates schema variant content for readOnly/writeOnly properties
+ * For top-level properties: uses .omit()
+ * For nested properties: generates full schemas with appropriate context
  */
 export function generateSchemaVariants(
   name: string,
   schema: SchemaObject,
+  options?: { extraProps?: ExtraPropsMode; resolvedSchemas?: ResolvedSchemas },
 ): SchemaVariantsResult {
   const analysis = analyzeReadWriteProperties(schema);
 
@@ -250,21 +255,53 @@ export function generateSchemaVariants(
   let responseContent: string | undefined;
 
   /* Generate Request variant (excludes readOnly properties) */
-  if (analysis.hasReadOnly && analysis.readOnlyKeys.length > 0) {
-    const omitKeys = analysis.readOnlyKeys
-      .map((key) => `${JSON.stringify(key)}: true`)
-      .join(", ");
-    requestContent = `export const ${name}Request = ${name}.omit({ ${omitKeys} });
+  if (analysis.hasReadOnly) {
+    // Use full schema generation if there are nested readOnly properties
+    // Otherwise use .omit() for better performance (top-level only)
+    if (analysis.hasNestedReadOnly || analysis.readOnlyKeys.length === 0) {
+      // Generate full schema with request context for nested properties
+      const requestSchema = zodSchemaToCode(schema, {
+        currentSchemaName: `${name}Request`,
+        extraProps: options?.extraProps,
+        isTopLevel: true,
+        resolvedSchemas: options?.resolvedSchemas,
+        schemaContext: "request",
+      });
+      requestContent = `export const ${name}Request = ${requestSchema.code};
 export type ${name}Request = z.infer<typeof ${name}Request>;`;
+    } else {
+      // Use .omit() for top-level properties only
+      const omitKeys = analysis.readOnlyKeys
+        .map((key) => `${JSON.stringify(key)}: true`)
+        .join(", ");
+      requestContent = `export const ${name}Request = ${name}.omit({ ${omitKeys} });
+export type ${name}Request = z.infer<typeof ${name}Request>;`;
+    }
   }
 
   /* Generate Response variant (excludes writeOnly properties) */
-  if (analysis.hasWriteOnly && analysis.writeOnlyKeys.length > 0) {
-    const omitKeys = analysis.writeOnlyKeys
-      .map((key) => `${JSON.stringify(key)}: true`)
-      .join(", ");
-    responseContent = `export const ${name}Response = ${name}.omit({ ${omitKeys} });
+  if (analysis.hasWriteOnly) {
+    // Use full schema generation if there are nested writeOnly properties
+    // Otherwise use .omit() for better performance (top-level only)
+    if (analysis.hasNestedWriteOnly || analysis.writeOnlyKeys.length === 0) {
+      // Generate full schema with response context for nested properties
+      const responseSchema = zodSchemaToCode(schema, {
+        currentSchemaName: `${name}Response`,
+        extraProps: options?.extraProps,
+        isTopLevel: true,
+        resolvedSchemas: options?.resolvedSchemas,
+        schemaContext: "response",
+      });
+      responseContent = `export const ${name}Response = ${responseSchema.code};
 export type ${name}Response = z.infer<typeof ${name}Response>;`;
+    } else {
+      // Use .omit() for top-level properties only
+      const omitKeys = analysis.writeOnlyKeys
+        .map((key) => `${JSON.stringify(key)}: true`)
+        .join(", ");
+      responseContent = `export const ${name}Response = ${name}.omit({ ${omitKeys} });
+export type ${name}Response = z.infer<typeof ${name}Response>;`;
+    }
   }
 
   return {

@@ -24,6 +24,10 @@ export type ExtraPropsMode = "loose" | "strict" | "strip";
  * Result of analyzing a schema for readOnly/writeOnly properties
  */
 export interface ReadWriteAnalysis {
+  /** True if readOnly properties are found in nested objects */
+  hasNestedReadOnly: boolean;
+  /** True if writeOnly properties are found in nested objects */
+  hasNestedWriteOnly: boolean;
   hasReadOnly: boolean;
   hasWriteOnly: boolean;
   readOnlyKeys: string[];
@@ -40,11 +44,14 @@ export type SchemaContext = "base" | "request" | "response";
 
 /**
  * Analyzes an object schema to detect readOnly and writeOnly properties
+ * Recursively checks nested objects to detect deeply nested readOnly/writeOnly properties
  */
 export function analyzeReadWriteProperties(
   schema: ReferenceObject | SchemaObject,
 ): ReadWriteAnalysis {
   const result: ReadWriteAnalysis = {
+    hasNestedReadOnly: false,
+    hasNestedWriteOnly: false,
     hasReadOnly: false,
     hasWriteOnly: false,
     readOnlyKeys: [],
@@ -60,6 +67,7 @@ export function analyzeReadWriteProperties(
       continue;
     }
 
+    // Check direct readOnly/writeOnly on this property
     if (propSchema.readOnly === true) {
       result.hasReadOnly = true;
       result.readOnlyKeys.push(key);
@@ -68,6 +76,19 @@ export function analyzeReadWriteProperties(
     if (propSchema.writeOnly === true) {
       result.hasWriteOnly = true;
       result.writeOnlyKeys.push(key);
+    }
+
+    // Recursively check nested objects for readOnly/writeOnly properties
+    if (propSchema.type === "object" && propSchema.properties) {
+      const nestedAnalysis = analyzeReadWriteProperties(propSchema);
+      if (nestedAnalysis.hasReadOnly || nestedAnalysis.hasNestedReadOnly) {
+        result.hasReadOnly = true;
+        result.hasNestedReadOnly = true;
+      }
+      if (nestedAnalysis.hasWriteOnly || nestedAnalysis.hasNestedWriteOnly) {
+        result.hasWriteOnly = true;
+        result.hasNestedWriteOnly = true;
+      }
     }
   }
 
