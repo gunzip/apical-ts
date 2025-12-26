@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "fs";
+import { readFile } from "fs/promises";
 import { join } from "path";
 
 /*
@@ -11,17 +11,17 @@ import { join } from "path";
 describe("DeserializerMap Integration Test", () => {
   const generatedDir = "tests/integrations/generated";
 
-  it("should generate GlobalConfig with deserializers property", () => {
+  it("should generate GlobalConfig with deserializers property", async () => {
     const configPath = join(generatedDir, "client/config.ts");
-    const configContent = readFileSync(configPath, "utf-8");
+    const configContent = await readFile(configPath, "utf-8");
 
     expect(configContent).toContain("export interface GlobalConfig");
     expect(configContent).toContain("deserializers?: DeserializerMap;");
   });
 
-  it("should generate operation with parse method that uses only config.deserializers", () => {
+  it("should generate operation with parse method that uses only config.deserializers", async () => {
     const operationPath = join(generatedDir, "client/testAuthBearerHttp.ts");
-    const operationContent = readFileSync(operationPath, "utf-8");
+    const operationContent = await readFile(operationPath, "utf-8");
 
     /* Verify parse method takes no arguments */
     expect(operationContent).toContain("parse: ()");
@@ -38,9 +38,9 @@ describe("DeserializerMap Integration Test", () => {
     );
   });
 
-  it("should generate correct content-type indexed deserializer map types", () => {
+  it("should generate correct content-type indexed deserializer map types", async () => {
     const operationPath = join(generatedDir, "client/testAuthBearerHttp.ts");
-    const operationContent = readFileSync(operationPath, "utf-8");
+    const operationContent = await readFile(operationPath, "utf-8");
 
     /* Find the deserializer map type definition */
     const deserializerMapMatch = operationContent.match(
@@ -67,9 +67,9 @@ describe("DeserializerMap Integration Test", () => {
     }
   });
 
-  it("should generate operation that imports and uses the correct types", () => {
+  it("should generate operation that imports and uses the correct types", async () => {
     const operationPath = join(generatedDir, "client/testAuthBearerHttp.ts");
-    const operationContent = readFileSync(operationPath, "utf-8");
+    const operationContent = await readFile(operationPath, "utf-8");
 
     /* Should import GlobalConfig and parseApiResponseUnknownData */
     expect(operationContent).toContain("import {");
@@ -80,9 +80,9 @@ describe("DeserializerMap Integration Test", () => {
     expect(operationContent).toContain("config: GlobalConfig & {");
   });
 
-  it("should maintain response map structure for backward compatibility", () => {
+  it("should maintain response map structure for backward compatibility", async () => {
     const operationPath = join(generatedDir, "client/testAuthBearerHttp.ts");
-    const operationContent = readFileSync(operationPath, "utf-8");
+    const operationContent = await readFile(operationPath, "utf-8");
 
     /* Response map should still be indexed by status code first */
     expect(operationContent).toContain(

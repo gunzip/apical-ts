@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFile } from "fs/promises";
 import { join } from "path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -59,7 +59,7 @@ describe("File Upload Operations", () => {
         process.cwd(),
         "tests/integrations/fixtures/sample-file.txt",
       );
-      const fileContent = readFileSync(filePath, "utf-8");
+      const fileContent = await readFile(filePath, "utf-8");
       const testFile = testHelpers.createTestFile(
         fileContent,
         "sample-file.txt",
