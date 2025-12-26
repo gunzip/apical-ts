@@ -34,11 +34,19 @@ describe("Multi content type integration", () => {
     });
 
     // Prism should return 200 mock response
-    expect(response.status).toBe("200");
-    // Content type should default to application/json
-    expect(response.response.headers.get("content-type")).toContain(
-      "application/json",
-    );
+    if ("isValid" in response && response.isValid) {
+      expect(response.status).toBe("200");
+      // Content type should default to application/json
+      expect(response.response.headers.get("content-type")).toContain(
+        "application/json",
+      );
+    } else if ("kind" in response) {
+      expect.fail(
+        `Unexpected error response: ${response.kind} ${response.error}`,
+      );
+    } else {
+      expect.fail("Unknown response shape");
+    }
   });
 
   it("should allow overriding both request and response content types", async () => {
@@ -52,8 +60,8 @@ describe("Multi content type integration", () => {
       },
     });
 
-    expect(response.status).toBe("200");
-    {
+    if ("isValid" in response && response.isValid) {
+      expect(response.status).toBe("200");
       const ct = response.response.headers.get("content-type") || "";
       expect(ct).toContain("application/vnd.custom+json");
       // Data should parse as NewModel schema - use parse() method
@@ -66,6 +74,12 @@ describe("Multi content type integration", () => {
         // Fallback to direct data access if parse method not available
         expect(response.data).toHaveProperty("id");
       }
+    } else if ("kind" in response) {
+      expect.fail(
+        `Unexpected error response: ${response.kind} ${response.error}`,
+      );
+    } else {
+      expect.fail("Unknown response shape");
     }
   });
 
@@ -77,13 +91,19 @@ describe("Multi content type integration", () => {
       contentType: { response: "application/vnd.custom+json" },
     });
 
-    expect(response.status).toBe("200");
-    {
+    if ("isValid" in response && response.isValid) {
+      expect(response.status).toBe("200");
       expect(
         (response.response.headers.get("content-type") || "").includes(
           "application/vnd.custom+json",
         ),
       ).toBe(true);
+    } else if ("kind" in response) {
+      expect.fail(
+        `Unexpected error response: ${response.kind} ${response.error}`,
+      );
+    } else {
+      expect.fail("Unknown response shape");
     }
   });
 
@@ -93,12 +113,20 @@ describe("Multi content type integration", () => {
       body: { id: "789", name: "XmlPreferred" },
       contentType: { response: "application/xml" },
     });
-    expect(response.status).toBe("200");
-    const ct = response.response.headers.get("content-type") || "";
-    expect(ct.includes("application/xml")).toBe(true);
-    // Data now is raw text (string) since XML validation is skipped
-    expect(
-      typeof response.data === "string" || typeof response.data === "object",
-    ).toBe(true);
+    if ("isValid" in response && response.isValid) {
+      expect(response.status).toBe("200");
+      const ct = response.response.headers.get("content-type") || "";
+      expect(ct.includes("application/xml")).toBe(true);
+      // Data now is raw text (string) since XML validation is skipped
+      expect(
+        typeof response.data === "string" || typeof response.data === "object",
+      ).toBe(true);
+    } else if ("kind" in response) {
+      expect.fail(
+        `Unexpected error response: ${response.kind} ${response.error}`,
+      );
+    } else {
+      expect.fail("Unknown response shape");
+    }
   });
 });
