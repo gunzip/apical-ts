@@ -47,8 +47,8 @@ describe("Parameters Operations", () => {
       const response = await client.testParameterWithDash(params);
 
       // Assert
-      expect((response as any).status).toBe("200");
-      expect((response as any).response.headers).toBeDefined();
+      expect(response.status).toBe("200");
+      expect(response.response.headers).toBeDefined();
     });
 
     it("should reject missing required path parameter", async () => {
@@ -72,7 +72,7 @@ describe("Parameters Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing required path parameter",
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -110,7 +110,7 @@ describe("Parameters Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing required header parameter",
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -148,7 +148,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParameterWithDashAnUnderscore(params);
 
       // Assert
-      expect((response as any).status).toBe("200");
+      expect(response.status).toBe("200");
     });
 
     it("should handle optional query parameters", async () => {
@@ -169,7 +169,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParameterWithDashAnUnderscore(params);
 
       // Assert
-      expect((response as any).status).toBe("200");
+      expect(response.status).toBe("200");
     });
   });
 
@@ -188,7 +188,7 @@ describe("Parameters Operations", () => {
       const response = await client.testWithTwoParams(params);
 
       // Assert
-      expect((response as any).status).toBe("200");
+      expect(response.status).toBe("200");
     });
 
     it("should reject missing first path parameter", async () => {
@@ -207,7 +207,7 @@ describe("Parameters Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing first path parameter",
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -238,7 +238,7 @@ describe("Parameters Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing second path parameter",
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -269,7 +269,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParametersAtPathLevel(params);
 
       // Assert
-      expect((response as any).status).toBe("200");
+      expect(response.status).toBe("200");
     });
 
     it("should reject missing required path-level parameter", async () => {
@@ -288,7 +288,7 @@ describe("Parameters Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing required path-level parameter",
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -318,7 +318,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParamWithSchemaRef(params);
 
       // Assert
-      expect((response as any).status).toBe("200");
+      expect(response.status).toBe("200");
     });
 
     it("should validate parameter against schema reference", async () => {
@@ -334,8 +334,8 @@ describe("Parameters Operations", () => {
       try {
         const response = await client.testParamWithSchemaRef(params);
         // Test passes if the operation succeeds
-        expect((response as any).status).toBe("200");
-      } catch (error: any) {
+        expect(response.status).toBe("200");
+      } catch (error: unknown) {
         // If validation fails, verify error shape
         expect(error).toBeDefined();
         if (error.status !== undefined) {
@@ -364,7 +364,7 @@ describe("Parameters Operations", () => {
       const response = await client.testHeaderWithSchemaRef(params);
 
       // Assert
-      expect((response as any).status).toBe("200");
+      expect(response.status).toBe("200");
     });
   });
 
@@ -382,7 +382,7 @@ describe("Parameters Operations", () => {
       const response = await client.testHeaderOptional(params);
 
       // Assert
-      expect((response as any).status).toBe("200");
+      expect(response.status).toBe("200");
     });
 
     it("should work without optional header parameter", async () => {
@@ -396,7 +396,7 @@ describe("Parameters Operations", () => {
       const response = await client.testHeaderOptional(params);
 
       // Assert
-      expect((response as any).status).toBe("200");
+      expect(response.status).toBe("200");
     });
   });
 
@@ -414,7 +414,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParameterWithReference(params);
 
       // Assert
-      expect((response as any).status).toBe("201");
+      expect(response.status).toBe("201");
     });
 
     it("should work without optional referenced parameter", async () => {
@@ -428,7 +428,7 @@ describe("Parameters Operations", () => {
       const response = await client.testParameterWithReference(params);
 
       // Assert
-      expect((response as any).status).toBe("201");
+      expect(response.status).toBe("201");
     });
   });
 });

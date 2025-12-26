@@ -37,8 +37,8 @@ describe("Working Integration Test Demo", () => {
         `Expected valid response but got error: ${JSON.stringify(response)}`,
       );
     }
-    expect((response as any).status).toBe("200");
-    expect((response as any).response.headers).toBeDefined();
+    expect(response.status).toBe("200");
+    expect(response.response.headers).toBeDefined();
   });
 
   it("should work with custom token authentication via parameters", async () => {
@@ -58,8 +58,8 @@ describe("Working Integration Test Demo", () => {
         `Expected valid response but got error: ${JSON.stringify(response)}`,
       );
     }
-    expect((response as any).status).toBe("200");
-    expect((response as any).response.headers).toBeDefined();
+    expect(response.status).toBe("200");
+    expect(response.response.headers).toBeDefined();
   });
 
   it("should handle POST with body data", async () => {
@@ -78,7 +78,7 @@ describe("Working Integration Test Demo", () => {
 
     if ("isValid" in response && response.isValid) {
       // If it succeeds, verify response
-      expect((response as any).status).toBe("201");
+      expect(response.status).toBe("201");
     } else if ("kind" in response) {
       // Expected to fail with auth (401) or validation (400) error
       if ("result" in response) {
@@ -106,7 +106,7 @@ describe("Working Integration Test Demo", () => {
     });
 
     if ("isValid" in response && response.isValid) {
-      expect((response as any).status).toBe("200");
+      expect(response.status).toBe("200");
     } else if ("kind" in response) {
       // Expected to fail with auth (401) or validation (400) error
       if ("result" in response) {
@@ -130,8 +130,8 @@ describe("Working Integration Test Demo", () => {
     const response = await client.testBinaryFileDownload({});
 
     if ("isValid" in response && response.isValid) {
-      expect((response as any).status).toBe("200");
-      expect((response as any).response.headers.get("content-type")).toContain(
+      expect(response.status).toBe("200");
+      expect(response.response.headers.get("content-type")).toContain(
         "application/octet-stream",
       );
     } else if ("kind" in response) {
@@ -167,13 +167,13 @@ describe("Working Integration Test Demo", () => {
     expect(response).toHaveProperty("data");
     expect(response).toHaveProperty("response");
 
-    expect(typeof (response as any).status).toBe("string");
-    expect((response as any).response).toBeInstanceOf(Response);
-    expect((response as any).response.headers).toBeInstanceOf(Headers);
+    expect(typeof response.status).toBe("string");
+    expect(response.response).toBeInstanceOf(Response);
+    expect(response.response.headers).toBeInstanceOf(Headers);
 
     // Verify the response has the correct type structure
-    expect((response as any).status).toBe("200");
-    expect((response as any).data).toBeUndefined(); // void response
+    expect(response.status).toBe("200");
+    expect(response.data).toBeUndefined(); // void response
   });
 
   it("should demonstrate error handling", async () => {

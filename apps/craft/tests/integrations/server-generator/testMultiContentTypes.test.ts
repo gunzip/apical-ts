@@ -44,7 +44,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       .set("Content-Type", "application/json");
 
     // Assert
-    expect((response as any).status).toBe(200);
+    expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
       id: "model-123",
@@ -86,7 +86,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       .set("Content-Type", "application/json");
 
     // Assert
-    expect((response as any).status).toBe(200);
+    expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain(
       "application/vnd.custom+json",
     );
@@ -130,7 +130,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       .set("Content-Type", "application/x-www-form-urlencoded");
 
     // Assert
-    expect((response as any).status).toBe(200);
+    expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
       id: "form-123",
@@ -193,7 +193,7 @@ describe("testMultiContentTypes operation integration tests", () => {
 
     // Assert
     expect(validationErrorReceived).toBe(true);
-    expect((response as any).status).toBe(400);
+    expect(response.status).toBe(400);
     expect(response.body.error).toBe("Body validation failed");
   });
 
@@ -245,7 +245,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       .set("Content-Type", "text/plain");
 
     // Assert
-    expect((response as any).status).toBe(200);
+    expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
       id: "unknown-123",

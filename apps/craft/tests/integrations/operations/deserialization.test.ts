@@ -32,10 +32,10 @@ describe("Deserialization Operation", () => {
     const client = createUnauthenticatedClient(baseURL);
 
     const res = await client.testDeserialization({});
-    expect((res as any).status).toBe("200");
+    expect(res.status).toBe("200");
     expect("data" in res).toBe(true);
 
-    const parsed = (res as any).parse({
+    const parsed = res.parse({
       "application/json": (data: any) => ({
         name: String(data.name).toUpperCase(),
         age: Number(data.age),
@@ -53,15 +53,15 @@ describe("Deserialization Operation", () => {
 
     // Force Accept header so Prism emits JSON; we then pretend a custom content type when parsing
     const res = await client.testDeserialization({});
-    expect((res as any).status).toBe("200");
+    expect(res.status).toBe("200");
 
-    const parsed = (res as any).parse({
+    const parsed = res.parse({
       "application/custom+json": (data: any) => data,
     });
 
     // Since response content-type won't match custom+json map key, schema lookup fails
-    if ((parsed as any).kind === "missing-schema") {
-      expect((parsed as any).error).toContain("No schema found");
+    if (parsed.kind === "missing-schema") {
+      expect(parsed.error).toContain("No schema found");
     } else if (!("parsed" in parsed)) {
       expect.fail("Expected missing-schema kind");
     }
@@ -85,13 +85,13 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect((res as any).status).toBe("200");
+    expect(res.status).toBe("200");
 
-    const parsed = (res as any).parse();
+    const parsed = res.parse();
     if ("parsed" in parsed) {
       expect.fail("Expected deserialization-error, got parsed success");
     }
-    expect((parsed as any).kind).toBe("deserialization-error");
+    expect(parsed.kind).toBe("deserialization-error");
   });
 
   it("reports validation error when deserializer returns invalid shape", async () => {
@@ -112,15 +112,15 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect((res as any).status).toBe("200");
+    expect(res.status).toBe("200");
 
     // Return object missing required property 'age'
-    const parsed = (res as any).parse();
+    const parsed = res.parse();
     if ("parsed" in parsed) {
       expect.fail("Expected parse-error");
     }
-    expect((parsed as any).kind).toBe("parse-error");
-    expect((parsed as any).error).toBeDefined();
+    expect(parsed.kind).toBe("parse-error");
+    expect(parsed.error).toBeDefined();
   });
 
   it("parses XML response via custom XML deserializer", async () => {
@@ -146,14 +146,14 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect((res as any).status).toBe("200");
+    expect(res.status).toBe("200");
     // Parse XML string into object expected by schema
-    const parsed = (res as any).parse();
+    const parsed = res.parse();
     expect(parsed.contentType).toBe("application/xml");
     if (parsed.parsed) {
       expect(typeof parsed.parsed.name).toBe("string");
       expect(typeof parsed.parsed.age).toBe("number");
-    } else if ((parsed as any).kind) {
+    } else if (parsed.kind) {
       // If validation failed treat as failure for this scenario
       expect.fail("Expected successful XML deserialization and validation");
     }
@@ -181,8 +181,8 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect((res as any).status).toBe("200");
-    const parsed = (res as any).parse();
+    expect(res.status).toBe("200");
+    const parsed = res.parse();
     expect(parsed.contentType).toBe("application/vnd.custom+json");
     if (parsed.parsed) {
       expect(parsed.parsed).toHaveProperty("id");
@@ -190,7 +190,7 @@ describe("Deserialization Operation", () => {
       const original = String(parsed.parsed.id);
       expect(original).toBe(original.toUpperCase());
       expect(parsed.parsed).toHaveProperty("name");
-    } else if ((parsed as any).kind) {
+    } else if (parsed.kind) {
       expect.fail("Vendor JSON parsing should have succeeded");
     }
   });
@@ -213,8 +213,8 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect((res as any).status).toBe("200");
-    const parsed = (res as any).parse();
+    expect(res.status).toBe("200");
+    const parsed = res.parse();
     if ("parsed" in parsed) {
       expect(parsed.contentType).toBe("application/octet-stream");
       expect(parsed.parsed).toHaveProperty("size");
@@ -225,7 +225,7 @@ describe("Deserialization Operation", () => {
         "parse-error",
         "missing-schema",
         "deserialization-error",
-      ]).toContain((parsed as any).kind);
+      ]).toContain(parsed.kind);
     }
   });
 
@@ -254,8 +254,8 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect((res as any).status).toBe("200");
-    const parsed = (res as any).parse();
+    expect(res.status).toBe("200");
+    const parsed = res.parse();
     expect(parsed.contentType).toBe("application/vnd.custom+json");
     if (parsed.parsed) {
       // Prism may return a static example (e.g. STRING); ensure our uppercasing ran

@@ -33,12 +33,12 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      expect(["200", "202", "403", "404"]).toContain((response as any).status);
+      expect(["200", "202", "403", "404"]).toContain(response.status);
 
-      if ((response as any).status === "200") {
+      if (response.status === "200") {
         // Use parse() method to get structured data
-        if ((response as any).parse) {
-          const parsed = (response as any).parse();
+        if ("parse" in response && typeof response.parse === "function") {
+          const parsed = response.parse();
           if ("parsed" in parsed) {
             const data = parsed.parsed as any;
             expect(data).toBeDefined();
@@ -51,11 +51,11 @@ describe("Response Operations", () => {
           }
         } else {
           // Fallback to direct data access
-          expect((response as any).data).toBeDefined();
-          expect((response as any).data).toHaveProperty("id");
-          expect((response as any).data).toHaveProperty("content");
-          if (((response as any).data as any).content) {
-            expect(((response as any).data as any).content).toHaveProperty("markdown");
+          expect(response.data).toBeDefined();
+          expect(response.data).toHaveProperty("id");
+          expect(response.data).toHaveProperty("content");
+          if ((response.data as any).content) {
+            expect((response.data as any).content).toHaveProperty("markdown");
           }
         }
       }
@@ -69,9 +69,9 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      if ((response as any).status === "202") {
+      if (response.status === "202") {
         // 202 responses typically have no body or minimal body
-        expect((response as any).response.headers).toBeDefined();
+        expect(response.response.headers).toBeDefined();
       }
     });
 
@@ -87,7 +87,7 @@ describe("Response Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing auth scheme",
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -111,9 +111,9 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      if ((response as any).status === "404") {
+      if (response.status === "404") {
         // 404 response has no content according to spec
-        expect((response as any).response.headers).toBeDefined();
+        expect(response.response.headers).toBeDefined();
       }
     });
   });
@@ -127,12 +127,12 @@ describe("Response Operations", () => {
       const response = await client.testResponseHeader({});
 
       // Assert
-      expect(["201", "500"]).toContain((response as any).status);
+      expect(["201", "500"]).toContain(response.status);
 
-      if ((response as any).status === "201") {
+      if (response.status === "201") {
         // Use parse() method to get structured data
-        if ((response as any).parse) {
-          const parsed = (response as any).parse();
+        if ("parse" in response && typeof response.parse === "function") {
+          const parsed = response.parse();
           if ("parsed" in parsed) {
             const data = parsed.parsed as any;
             expect(data).toBeDefined();
@@ -141,16 +141,16 @@ describe("Response Operations", () => {
           }
         } else {
           // Fallback to direct data access
-          expect((response as any).data).toBeDefined();
-          expect((response as any).data).toHaveProperty("id");
-          expect((response as any).data).toHaveProperty("content");
+          expect(response.data).toBeDefined();
+          expect(response.data).toHaveProperty("id");
+          expect(response.data).toHaveProperty("content");
         }
 
         // Check response headers
-        expect((response as any).response.headers).toBeDefined();
+        expect(response.response.headers).toBeDefined();
         // Prism should generate Location and Id headers
-        const locationHeader = (response as any).response.headers.get("Location");
-        const idHeader = (response as any).response.headers.get("Id");
+        const locationHeader = response.response.headers.get("Location");
+        const idHeader = response.response.headers.get("Id");
 
         // Headers might be present depending on Prism's mock behavior
         if (locationHeader) {
@@ -170,9 +170,9 @@ describe("Response Operations", () => {
       const response = await client.testResponseHeader({});
 
       // Assert
-      if ((response as any).status === "500") {
+      if (response.status === "500") {
         // 500 response has no content according to spec
-        expect((response as any).response.headers).toBeDefined();
+        expect(response.response.headers).toBeDefined();
       }
     });
 
@@ -184,10 +184,10 @@ describe("Response Operations", () => {
       const response = await client.testResponseHeader({});
 
       // Assert
-      if ((response as any).status === "201") {
+      if (response.status === "201") {
         // Use parse() method to get structured data
-        if ((response as any).parse) {
-          const parsed = (response as any).parse();
+        if ("parse" in response && typeof response.parse === "function") {
+          const parsed = response.parse();
           if ("parsed" in parsed) {
             const message = parsed.parsed as any;
             expect(message).toHaveProperty("id");
@@ -201,7 +201,7 @@ describe("Response Operations", () => {
           }
         } else {
           // Fallback to direct data access
-          const message = (response as any).data as any;
+          const message = response.data as any;
           expect(message).toHaveProperty("id");
           expect(message).toHaveProperty("content");
           expect(message.content).toHaveProperty("markdown");
@@ -224,8 +224,8 @@ describe("Response Operations", () => {
       const response = await client.testWithEmptyResponse({});
 
       // Assert
-      expect((response as any).status).toBe("200");
-      expect((response as any).response.headers).toBeDefined();
+      expect(response.status).toBe("200");
+      expect(response.response.headers).toBeDefined();
 
       // NotFound response reference should result in minimal/no content
       // The exact behavior depends on the referenced response definition
@@ -239,11 +239,11 @@ describe("Response Operations", () => {
       const response = await client.testWithEmptyResponse({});
 
       // Assert
-      expect((response as any).status).toBe("200");
-      expect((response as any).response.headers).toBeDefined();
+      expect(response.status).toBe("200");
+      expect(response.response.headers).toBeDefined();
 
       // Check common headers are present
-      const contentType = (response as any).response.headers.get("content-type");
+      const contentType = response.response.headers.get("content-type");
       if (contentType) {
         expect(typeof contentType).toBe("string");
       }
@@ -259,15 +259,15 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      if ((response as any).status === "200" || (response as any).status === "403") {
-        const contentType = (response as any).response.headers.get("content-type");
+      if (response.status === "200" || response.status === "403") {
+        const contentType = response.response.headers.get("content-type");
         if (contentType) {
           expect(contentType).toContain("application/json");
         }
 
         // Data should be parsed as JSON object
-        if ((response as any).parse) {
-          const parsed = (response as any).parse();
+        if ("parse" in response && typeof response.parse === "function") {
+          const parsed = response.parse();
           if ("parsed" in parsed) {
             const data = parsed.parsed;
             expect(typeof data).toBe("object");
@@ -275,8 +275,8 @@ describe("Response Operations", () => {
           }
         } else {
           // Fallback to direct data access
-          expect(typeof (response as any).data).toBe("object");
-          expect((response as any).data).not.toBeNull();
+          expect(typeof response.data).toBe("object");
+          expect(response.data).not.toBeNull();
         }
       }
     });
@@ -289,12 +289,12 @@ describe("Response Operations", () => {
       const response = await client.testMultipleSuccess({});
 
       // Assert
-      if ((response as any).status === 202 || (response as any).status === "404") {
+      if (response.status === 202 || response.status === "404") {
         // These responses might not have content
         // The data might be null, undefined, or an empty object
-        expect((response as any).response.headers).toBeDefined();
-        expect((response as any).status).toBeGreaterThan(199);
-        expect(parseInt((response as any).status)).toBeLessThan(300);
+        expect(response.response.headers).toBeDefined();
+        expect(response.status).toBeGreaterThan(199);
+        expect(parseInt(response.status)).toBeLessThan(300);
       }
     });
 
@@ -310,8 +310,8 @@ describe("Response Operations", () => {
       expect(response).toHaveProperty("response");
       expect(response).toHaveProperty("data");
 
-      expect(typeof (response as any).status).toBe("string");
-      expect((response as any).response.headers).toBeInstanceOf(Headers);
+      expect(typeof response.status).toBe("string");
+      expect(response.response.headers).toBeInstanceOf(Headers);
     });
   });
 });

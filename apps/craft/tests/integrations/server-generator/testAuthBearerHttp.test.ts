@@ -41,7 +41,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
     });
 
     // Assert
-    expect((response as any).status).toBe(503);
+    expect(response.status).toBe(503);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
       prop1: { id: "test-id" },
@@ -80,7 +80,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
     });
 
     // Assert
-    expect((response as any).status).toBe(504);
+    expect(response.status).toBe(504);
     expect(response.headers["content-type"]).toContain(
       "application/problem+json",
     );
@@ -149,7 +149,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
 
     // Assert
     expect(validationErrorReceived).toBe(true);
-    expect((response as any).status).toBe(400);
+    expect(response.status).toBe(400);
     expect(response.body.error).toBe("Query validation failed");
   });
 

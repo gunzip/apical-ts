@@ -34,9 +34,9 @@ describe("Multi content type integration", () => {
     });
 
     // Prism should return 200 mock response
-    expect((response as any).status).toBe("200");
+    expect(response.status).toBe("200");
     // Content type should default to application/json
-    expect((response as any).response.headers.get("content-type")).toContain(
+    expect(response.response.headers.get("content-type")).toContain(
       "application/json",
     );
   });
@@ -52,9 +52,9 @@ describe("Multi content type integration", () => {
       },
     });
 
-    expect((response as any).status).toBe("200");
+    expect(response.status).toBe("200");
     {
-      const ct = (response as any).response.headers.get("content-type") || "";
+      const ct = response.response.headers.get("content-type") || "";
       expect(ct).toContain("application/vnd.custom+json");
       // Data should parse as NewModel schema - use parse() method
       if ((response as any).parse) {
@@ -64,7 +64,7 @@ describe("Multi content type integration", () => {
         }
       } else {
         // Fallback to direct data access if parse method not available
-        expect((response as any).data).toHaveProperty("id");
+        expect(response.data).toHaveProperty("id");
       }
     }
   });
@@ -77,10 +77,10 @@ describe("Multi content type integration", () => {
       contentType: { response: "application/vnd.custom+json" },
     });
 
-    expect((response as any).status).toBe("200");
+    expect(response.status).toBe("200");
     {
       expect(
-        ((response as any).response.headers.get("content-type") || "").includes(
+        (response.response.headers.get("content-type") || "").includes(
           "application/vnd.custom+json",
         ),
       ).toBe(true);
@@ -93,12 +93,12 @@ describe("Multi content type integration", () => {
       body: { id: "789", name: "XmlPreferred" },
       contentType: { response: "application/xml" },
     });
-    expect((response as any).status).toBe("200");
-    const ct = (response as any).response.headers.get("content-type") || "";
+    expect(response.status).toBe("200");
+    const ct = response.response.headers.get("content-type") || "";
     expect(ct.includes("application/xml")).toBe(true);
     // Data now is raw text (string) since XML validation is skipped
     expect(
-      typeof (response as any).data === "string" || typeof (response as any).data === "object",
+      typeof response.data === "string" || typeof response.data === "object",
     ).toBe(true);
   });
 });

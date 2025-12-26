@@ -47,7 +47,7 @@ describe("Additional Properties behavior", () => {
       .set("Content-Type", "application/json");
 
     // Assert that request succeeded
-    expect((response as any).status).toBe(200);
+    expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
       id: "model-123",
       name: "Test Model",
@@ -90,7 +90,7 @@ describe("Additional Properties behavior", () => {
       .set("Content-Type", "application/json");
 
     // Assert that request succeeded
-    expect((response as any).status).toBe(200);
+    expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
       id: "model-123",
       name: "Test Model",
