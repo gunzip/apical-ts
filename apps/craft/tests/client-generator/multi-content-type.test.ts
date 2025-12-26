@@ -1,4 +1,4 @@
-import type { OperationObject } from "openapi3-ts/oas31";
+import type { OperationObject, OpenAPIObject } from "openapi3-ts/oas31";
 
 import { describe, expect, it } from "vitest";
 
@@ -57,7 +57,7 @@ describe("Multi-content-type operation function generation", () => {
       info: { title: "Test API", version: "1.0.0" },
       openapi: "3.1.0",
       paths: {},
-    };
+    } as unknown as OpenAPIObject;
 
     const result = generateOperationFunction(
       "/pets/findByStatus",
@@ -183,7 +183,7 @@ describe("Multi-content-type operation function generation", () => {
       info: { title: "Test API", version: "1.0.0" },
       openapi: "3.1.0",
       paths: {},
-    };
+    } as unknown as OpenAPIObject;
 
     const result = generateOperationFunction(
       "/users/{id}",
@@ -225,7 +225,7 @@ describe("Multi-content-type operation function generation", () => {
       info: { title: "Test API", version: "1.0.0" },
       openapi: "3.1.0",
       paths: {},
-    };
+    } as unknown as OpenAPIObject;
 
     const result = generateOperationFunction(
       "/users/{id}",
