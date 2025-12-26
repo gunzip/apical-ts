@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "fs";
+import { readFile } from "fs/promises";
 import { join } from "path";
 
 /*
@@ -10,9 +10,9 @@ import { join } from "path";
 describe("Content Type Discrimination Integration Test", () => {
   const generatedDir = "tests/integrations/generated";
 
-  it("should generate parsed field with data and contentType structure for forced validation", () => {
+  it("should generate parsed field with data and contentType structure for forced validation", async () => {
     const operationPath = join(generatedDir, "client/testMultiContentTypes.ts");
-    const content = readFileSync(operationPath, "utf-8");
+    const content = await readFile(operationPath, "utf-8");
 
     // Verify the createForcedParseResponse helper is used
     expect(content).toContain(
@@ -23,9 +23,9 @@ describe("Content Type Discrimination Integration Test", () => {
     expect(content).toContain("createForcedParseResponse");
   });
 
-  it("should have correct TypeScript type for ApiResponseWithForcedParse", () => {
+  it("should have correct TypeScript type for ApiResponseWithForcedParse", async () => {
     const configPath = join(generatedDir, "client/config.ts");
-    const content = readFileSync(configPath, "utf-8");
+    const content = await readFile(configPath, "utf-8");
 
     // Verify the type definition includes the new structure
     expect(content).toContain("export type ApiResponseWithForcedParse<");
@@ -33,14 +33,14 @@ describe("Content Type Discrimination Integration Test", () => {
     expect(content).toContain("contentType: K;");
   });
 
-  it("should allow content type based discrimination in TypeScript", () => {
+  it("should allow content type based discrimination in TypeScript", async () => {
     // This test validates that the TypeScript types would work correctly
     // We're testing the generated types structure rather than runtime behavior
     const configPath = join(generatedDir, "client/config.ts");
     const operationPath = join(generatedDir, "client/testMultiContentTypes.ts");
 
-    const configContent = readFileSync(configPath, "utf-8");
-    const operationContent = readFileSync(operationPath, "utf-8");
+    const configContent = await readFile(configPath, "utf-8");
+    const operationContent = await readFile(operationPath, "utf-8");
 
     // Verify response map is properly typed for multi-content scenarios
     expect(operationContent).toContain("TestMultiContentTypesResponseMap");

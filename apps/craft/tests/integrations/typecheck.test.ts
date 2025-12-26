@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { access } from "fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -13,7 +13,7 @@ const serverOperationsIndex = join(generatedDir, "server", "index.ts");
 const tsconfigPath = join(__dirname, "tsconfig.typecheck.json");
 
 describe("generated client + server typecheck", () => {
-  it("should compile with tsc (noEmit) without type errors", () => {
+  it("should compile with tsc (noEmit) without type errors", async () => {
     // Ensure latest source changes are reflected in dist (server generator uses dist via CLI)
     const buildResult = spawnSync("pnpm", ["run", "build"], {
       encoding: "utf-8",
@@ -38,8 +38,8 @@ describe("generated client + server typecheck", () => {
     expect(resultGen.status).toBe(0);
 
     // Sanity checks that generation produced expected entrypoints
-    expect(existsSync(operationsIndex)).toBe(true);
-    expect(existsSync(serverOperationsIndex)).toBe(true);
+    await expect(async () => await access(operationsIndex)).not.toThrow();
+    await expect(async () => await access(serverOperationsIndex)).not.toThrow();
 
     const result = spawnSync(
       "pnpm",
