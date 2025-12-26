@@ -52,7 +52,7 @@
     "@types/node": "catalog:",
     "@types/supertest": "^6.0.3",
     "@types/swagger2openapi": "^7.0.4",
-    "@vitest/coverage-v8": "catalog:",
+    "@vitest/coverage-v8": "^4.0.16",
     "embedme": "catalog:",
     "eslint": "catalog:",
     "express": "^5.1.0",
@@ -60,7 +60,7 @@
     "supertest": "^7.1.4",
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "^4.0.16"
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^14.2.0",
