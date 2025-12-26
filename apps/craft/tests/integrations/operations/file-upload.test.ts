@@ -44,8 +44,12 @@ describe("File Upload Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+        expect(response.response.headers).toBeDefined();
+      } else {
+        expect.fail("Expected successful response from testFileUpload");
+      }
     });
 
     it("should upload file from fixtures", async () => {
@@ -69,8 +73,12 @@ describe("File Upload Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+        expect(response.response.headers).toBeDefined();
+      } else {
+        expect.fail("Expected successful response from testFileUpload");
+      }
     });
 
     it("should handle file upload with different MIME types", async () => {
@@ -89,7 +97,11 @@ describe("File Upload Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("200");
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+      } else {
+        expect.fail("Expected successful response from testFileUpload");
+      }
     });
   });
 
@@ -145,7 +157,11 @@ describe("File Upload Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("200");
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+      } else {
+        expect.fail("Expected successful response from testBinaryFileUpload");
+      }
     });
 
     it("should handle large file upload", async () => {
@@ -166,7 +182,11 @@ describe("File Upload Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("200");
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+      } else {
+        expect.fail("Expected successful response from testBinaryFileUpload");
+      }
     });
   });
 
@@ -179,19 +199,23 @@ describe("File Upload Operations", () => {
       const response = await client.testBinaryFileDownload({});
 
       // Assert
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
-      expect(response.response.headers.get("content-type")).toContain(
-        "application/octet-stream",
-      );
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+        expect(response.response.headers).toBeDefined();
+        expect(response.response.headers.get("content-type")).toContain(
+          "application/octet-stream",
+        );
 
-      // Check that we received binary data
-      expect(response.data).toBeDefined();
+        // Check that we received binary data
+        expect(response.data).toBeDefined();
 
-      // If the response is a Blob, check its properties
-      if (response.data instanceof Blob) {
-        expect(response.data.type).toContain("application/octet-stream");
-        expect(response.data.size).toBeGreaterThan(0);
+        // If the response is a Blob, check its properties
+        if (response.data instanceof Blob) {
+          expect(response.data.type).toContain("application/octet-stream");
+          expect(response.data.size).toBeGreaterThan(0);
+        }
+      } else {
+        expect.fail("Expected successful response from testBinaryFileDownload");
       }
     });
 
@@ -203,12 +227,16 @@ describe("File Upload Operations", () => {
       const response = await client.testBinaryFileDownload({});
 
       // Assert
-      expect(response.status).toBe("200");
+      if (response.isValid) {
+        expect(response.status).toBe("200");
 
-      // Verify we can read the data
-      if (response.data instanceof Blob) {
-        const arrayBuffer = await response.data.arrayBuffer();
-        expect(arrayBuffer.byteLength).toBeGreaterThan(0);
+        // Verify we can read the data
+        if (response.data instanceof Blob) {
+          const arrayBuffer = await response.data.arrayBuffer();
+          expect(arrayBuffer.byteLength).toBeGreaterThan(0);
+        }
+      } else {
+        expect.fail("Expected successful response from testBinaryFileDownload");
       }
     });
 
@@ -220,14 +248,18 @@ describe("File Upload Operations", () => {
       const response = await client.testBinaryFileDownload({});
 
       // Assert
-      expect(response.status).toBe("200");
+      if (response.isValid) {
+        expect(response.status).toBe("200");
 
-      // Check that content is binary (not text)
-      if (response.data instanceof Blob) {
-        const text = await response.data.text();
-        // Binary data should contain non-printable characters
-        // or not be valid UTF-8 text
-        expect(text.length).toBeGreaterThan(0);
+        // Check that content is binary (not text)
+        if (response.data instanceof Blob) {
+          const text = await response.data.text();
+          // Binary data should contain non-printable characters
+          // or not be valid UTF-8 text
+          expect(text.length).toBeGreaterThan(0);
+        }
+      } else {
+        expect.fail("Expected successful response from testBinaryFileDownload");
       }
     });
   });

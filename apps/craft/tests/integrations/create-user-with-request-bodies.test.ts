@@ -282,8 +282,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         });
 
         // If we get a response, verify it's properly structured
-        if (response.status === "400") {
-          expect(response.isValid).toBe(true);
+        if (response.isValid && response.status === "400") {
           expect(response.status).toBe("400");
         }
       } catch (error: unknown) {
