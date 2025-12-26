@@ -64,7 +64,9 @@ export function setupTestRoute<THandler extends (...args: any[]) => any>(
           }
         }
       })
-      .catch((err: Error) => res.status(500).json({ error: err.message, stack: err.stack }));
+      .catch((err: Error) =>
+        res.status(500).json({ error: err.message, stack: err.stack }),
+      );
   });
 
   return app;

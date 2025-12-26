@@ -46,7 +46,8 @@ describe("testAuthBearer operation integration tests", () => {
       .set("Authorization", "Bearer test-token");
 
     // Assert: Verify the response
-    if (response.status === 500) console.log("500 Error Body:", JSON.stringify(response.body, null, 2));
+    if (response.status === 500)
+      console.log("500 Error Body:", JSON.stringify(response.body, null, 2));
     expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
