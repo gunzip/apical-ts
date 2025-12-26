@@ -33,8 +33,8 @@ export interface RecursiveSchemaFileOptions {
 export interface SchemaFileResult {
   content: string;
   fileName: string;
-  /** Additional files for schema variants (re-exports) */
-  variantFiles?: { content: string; fileName: string }[];
+  /** Additional schema variant files (complete schema files, not re-exports) */
+  variantFiles?: SchemaFileResult[];
 }
 
 /**
@@ -52,9 +52,8 @@ export interface SchemaGenerationOptions {
  * Result of generating schema variants for readOnly/writeOnly handling
  */
 export interface SchemaVariantsResult {
-  hasVariants: boolean;
-  requestContent?: string;
-  responseContent?: string;
+  hasRequest: boolean;
+  hasResponse: boolean;
 }
 
 /**
@@ -195,7 +194,8 @@ export async function generateSchemaFile(
   description?: string,
   options: SchemaGenerationOptions = {},
 ): Promise<SchemaFileResult> {
-  const { extraProps, recursiveContext, resolvedSchemas } = options;
+  const { extraProps, recursiveContext, resolvedSchemas, schemaContext } =
+    options;
 
   const context = recursiveContext || createRecursiveContext();
 
@@ -205,16 +205,11 @@ export async function generateSchemaFile(
     isTopLevel: true,
     recursiveContext: context,
     resolvedSchemas,
+    schemaContext,
   });
 
   const commentSection = generateCommentSection(description);
   const importsSection = generateImportsSection(schemaResult.imports, name);
-
-  /* Generate readOnly/writeOnly variants if needed */
-  const variants = generateSchemaVariants(name, schema, {
-    extraProps,
-    resolvedSchemas,
-  });
 
   const content = assembleFileContent(
     name,
@@ -222,11 +217,18 @@ export async function generateSchemaFile(
     importsSection,
     schemaResult.code,
     schemaResult.extensibleEnumValues,
-    variants,
   );
 
-  /* Generate variant re-export files for proper import resolution */
-  const variantFiles = generateVariantReexportFiles(name, variants);
+  /* Generate complete variant schema files if this is a base schema (no schemaContext) */
+  let variantFiles: SchemaFileResult[] | undefined;
+  if (!schemaContext) {
+    const variants = generateSchemaVariants(schema);
+    variantFiles = await generateVariantSchemaFiles(name, schema, variants, {
+      extraProps,
+      recursiveContext,
+      resolvedSchemas,
+    });
+  }
 
   return {
     content,
@@ -236,53 +238,17 @@ export async function generateSchemaFile(
 }
 
 /*
- * Generates schema variant content for readOnly/writeOnly properties.
- * Always generates full schemas with appropriate context for consistency and simplicity.
+ * Analyzes schema to determine which variants (Request/Response) should be generated.
+ * Returns metadata flags for variant generation, not the actual schema code.
  */
 export function generateSchemaVariants(
-  name: string,
   schema: SchemaObject,
-  options?: { extraProps?: ExtraPropsMode; resolvedSchemas?: ResolvedSchemas },
 ): SchemaVariantsResult {
   const analysis = analyzeReadWriteProperties(schema);
 
-  if (!analysis.hasReadOnly && !analysis.hasWriteOnly) {
-    return { hasVariants: false };
-  }
-
-  let requestContent: string | undefined;
-  let responseContent: string | undefined;
-
-  /* Generate Request variant (excludes readOnly properties) */
-  if (analysis.hasReadOnly) {
-    const requestSchema = zodSchemaToCode(schema, {
-      currentSchemaName: `${name}Request`,
-      extraProps: options?.extraProps,
-      isTopLevel: true,
-      resolvedSchemas: options?.resolvedSchemas,
-      schemaContext: "request",
-    });
-    requestContent = `export const ${name}Request = ${requestSchema.code};
-export type ${name}Request = z.infer<typeof ${name}Request>;`;
-  }
-
-  /* Generate Response variant (excludes writeOnly properties) */
-  if (analysis.hasWriteOnly) {
-    const responseSchema = zodSchemaToCode(schema, {
-      currentSchemaName: `${name}Response`,
-      extraProps: options?.extraProps,
-      isTopLevel: true,
-      resolvedSchemas: options?.resolvedSchemas,
-      schemaContext: "response",
-    });
-    responseContent = `export const ${name}Response = ${responseSchema.code};
-export type ${name}Response = z.infer<typeof ${name}Response>;`;
-  }
-
   return {
-    hasVariants: true,
-    requestContent,
-    responseContent,
+    hasRequest: analysis.hasReadOnly,
+    hasResponse: analysis.hasWriteOnly,
   };
 }
 
@@ -293,41 +259,19 @@ function assembleFileContent(
   importsSection: string,
   schemaCode: string,
   extensibleEnumValues?: unknown[],
-  variants?: SchemaVariantsResult,
 ): string {
-  const variantsContent = buildVariantsContent(variants);
-
   if (extensibleEnumValues) {
     const enumValues = extensibleEnumValues
       .map((e: unknown) => JSON.stringify(e))
       .join(" | ");
     const typeContent = `export type ${name} = ${enumValues} | (string & {});`;
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
-    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}${variantsContent}`;
+    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
   } else {
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
     const typeContent = `export type ${name} = z.infer<typeof ${name}>;`;
-    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}${variantsContent}`;
+    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
   }
-}
-
-/* Helper function to build variants content string */
-function buildVariantsContent(variants?: SchemaVariantsResult): string {
-  if (!variants?.hasVariants) {
-    return "";
-  }
-
-  const parts: string[] = [];
-
-  if (variants.requestContent) {
-    parts.push(variants.requestContent);
-  }
-
-  if (variants.responseContent) {
-    parts.push(variants.responseContent);
-  }
-
-  return parts.length > 0 ? "\n" + parts.join("\n") : "";
 }
 
 /* Helper function to generate comment section from description */
@@ -388,37 +332,49 @@ function generateImportsSection(
 }
 
 /*
- * Generates re-export files for schema variants.
- * These files allow imports like `import { UserRequest } from "./UserRequest.js"`
- * which re-exports from the base schema file.
- *
- * We export only the value - TypeScript will handle type inference automatically.
- * The type is also exported from the base file, so imports work correctly.
+ * Generates complete schema files for schema variants (Request/Response).
+ * Each variant is a standalone schema file with full Zod definitions.
  */
-function generateVariantReexportFiles(
+async function generateVariantSchemaFiles(
   baseName: string,
-  variants?: SchemaVariantsResult,
-): undefined | { content: string; fileName: string }[] {
-  if (!variants?.hasVariants) {
+  schema: SchemaObject,
+  variants: SchemaVariantsResult,
+  options: SchemaGenerationOptions = {},
+): Promise<SchemaFileResult[] | undefined> {
+  if (!variants.hasRequest && !variants.hasResponse) {
     return undefined;
   }
 
-  const files: { content: string; fileName: string }[] = [];
+  const files: SchemaFileResult[] = [];
 
-  if (variants.requestContent) {
-    const variantName = `${baseName}Request`;
-    files.push({
-      content: `export { ${variantName} } from "./${baseName}.js";\n`,
-      fileName: `${variantName}.ts`,
-    });
+  /* Generate Request variant file (excludes readOnly properties) */
+  if (variants.hasRequest) {
+    const requestName = `${baseName}Request`;
+    const requestFile = await generateSchemaFile(
+      requestName,
+      schema,
+      `Request schema for ${baseName} (excludes read-only properties)`,
+      {
+        ...options,
+        schemaContext: "request",
+      },
+    );
+    files.push(requestFile);
   }
 
-  if (variants.responseContent) {
-    const variantName = `${baseName}Response`;
-    files.push({
-      content: `export { ${variantName} } from "./${baseName}.js";\n`,
-      fileName: `${variantName}.ts`,
-    });
+  /* Generate Response variant file (excludes writeOnly properties) */
+  if (variants.hasResponse) {
+    const responseName = `${baseName}Response`;
+    const responseFile = await generateSchemaFile(
+      responseName,
+      schema,
+      `Response schema for ${baseName} (excludes write-only properties)`,
+      {
+        ...options,
+        schemaContext: "response",
+      },
+    );
+    files.push(responseFile);
   }
 
   return files.length > 0 ? files : undefined;

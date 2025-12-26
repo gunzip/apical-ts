@@ -1,10 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import {
-  ProductWithReadOnlyMeta,
-  ProductWithReadOnlyMetaRequest,
-  ProductWithReadOnlyMetaResponse,
-} from "./generated/schemas/ProductWithReadOnlyMeta.js";
+import { ProductWithReadOnlyMeta } from "./generated/schemas/ProductWithReadOnlyMeta.js";
+import { ProductWithReadOnlyMetaRequest } from "./generated/schemas/ProductWithReadOnlyMetaRequest.js";
+import { ProductWithReadOnlyMetaResponse } from "./generated/schemas/ProductWithReadOnlyMetaResponse.js";
 import { createUnauthenticatedClient } from "./client.js";
 import { getRandomPort, MockServer } from "./setup.js";
 
