@@ -4,6 +4,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      version_bump:
+        description: "Whether to bump the version based on changesets"
+        required: false
+        default: "false"
 
 jobs:
   publish:
@@ -42,9 +47,9 @@ jobs:
         working-directory: apps/craft
         run: pnpm changeset version
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Publish to NPM
-        working-directory: apps/craft
+        # working-directory: apps/craft
         run: pnpm changeset publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
