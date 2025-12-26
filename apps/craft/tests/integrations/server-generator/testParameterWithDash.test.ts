@@ -22,13 +22,13 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(params.value.query["request-id"]).toBe("request-id-123");
 
         // Validate header parameters
-        expect(params.value.headers.headerInlineParam).toBe(
+        expect(params.value.headers.headerinlineparam).toBe(
           "inline-header-value",
         );
         expect(params.value.headers["x-header-param"]).toBe("x-header-value");
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: { message: "All parameters validated successfully" },
         };
@@ -55,7 +55,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
       .set("x-header-param", "x-header-value");
 
     // Assert
-    expect(response.status).toBe(200);
+    expect((response as any).status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body.message).toBe("All parameters validated successfully");
   });
@@ -75,14 +75,14 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(pathError?.code).toBe("too_small");
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: { error: "Path validation failed" },
         };
       }
 
       return {
-        status: 200,
+        status: "200",
         contentType: "application/json",
         data: { message: "Unexpected success" },
       };
@@ -114,7 +114,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
 
     // Assert
     expect(pathValidationFailed).toBe(true);
-    expect(response.status).toBe(400);
+    expect((response as any).status).toBe(400);
   });
 
   it("should return validation error when request-id is too short", async () => {
@@ -132,14 +132,14 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(requestIdError?.code).toBe("too_small");
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: { error: "Query validation failed" },
         };
       }
 
       return {
-        status: 200,
+        status: "200",
         contentType: "application/json",
         data: { message: "Unexpected success" },
       };
@@ -171,7 +171,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
 
     // Assert
     expect(queryValidationFailed).toBe(true);
-    expect(response.status).toBe(400);
+    expect((response as any).status).toBe(400);
   });
 
   it("should return validation error when required headers are missing", async () => {
@@ -185,14 +185,14 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(params.error.issues.length).toBeGreaterThan(0);
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: { error: "Header validation failed" },
         };
       }
 
       return {
-        status: 200,
+        status: "200",
         contentType: "application/json",
         data: { message: "Unexpected success" },
       };
@@ -223,7 +223,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
 
     // Assert
     expect(headerValidationFailed).toBe(true);
-    expect(response.status).toBe(400);
+    expect((response as any).status).toBe(400);
   });
 
   it.skip("should handle parameter name transformation correctly", async () => {
@@ -240,7 +240,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(params.value.headers).toHaveProperty("x-header-param"); // Special headers preserve original name
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: {
             transformedParams: {
@@ -273,7 +273,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
       .set("x-header-param", "x-header-value");
 
     // Assert
-    expect(response.status).toBe(200);
+    expect((response as any).status).toBe(200);
     expect(response.body.transformedParams.query.fooBar).toBe("query-value");
     expect(response.body.transformedParams.query.requestId).toBe(
       "request-id-value",

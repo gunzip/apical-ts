@@ -213,7 +213,7 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect(res.status).toBe("200");
+    expect((res as any).status).toBe("200");
     const parsed = (res as any).parse();
     if ("parsed" in parsed) {
       expect(parsed.contentType).toBe("application/octet-stream");
@@ -254,7 +254,7 @@ describe("Deserialization Operation", () => {
         },
       },
     );
-    expect(res.status).toBe("200");
+    expect((res as any).status).toBe("200");
     const parsed = (res as any).parse();
     expect(parsed.contentType).toBe("application/vnd.custom+json");
     if (parsed.parsed) {

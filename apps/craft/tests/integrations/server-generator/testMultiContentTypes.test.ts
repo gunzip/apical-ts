@@ -18,7 +18,7 @@ describe("testMultiContentTypes operation integration tests", () => {
         });
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: mockData.newModel(),
         };
@@ -44,7 +44,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       .set("Content-Type", "application/json");
 
     // Assert
-    expect(response.status).toBe(200);
+    expect((response as any).status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
       id: "model-123",
@@ -57,7 +57,7 @@ describe("testMultiContentTypes operation integration tests", () => {
     const handler: testMultiContentTypesHandler = async (params) => {
       if ("isValid" in params && params.isValid) {
         return {
-          status: 200,
+          status: "200",
           contentType: "application/vnd.custom+json",
           data: {
             id: "custom-123",
@@ -86,7 +86,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       .set("Content-Type", "application/json");
 
     // Assert
-    expect(response.status).toBe(200);
+    expect((response as any).status).toBe(200);
     expect(response.headers["content-type"]).toContain(
       "application/vnd.custom+json",
     );
@@ -104,7 +104,7 @@ describe("testMultiContentTypes operation integration tests", () => {
         // Form-encoded data might be parsed differently
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json", // Change to JSON for easier testing
           data: {
             id: "form-123",
@@ -130,7 +130,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       .set("Content-Type", "application/x-www-form-urlencoded");
 
     // Assert
-    expect(response.status).toBe(200);
+    expect((response as any).status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
       id: "form-123",
@@ -152,7 +152,7 @@ describe("testMultiContentTypes operation integration tests", () => {
         expect(params.error.issues).toBeDefined();
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: {
             id: "error-123",
@@ -162,7 +162,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       }
 
       return {
-        status: 200,
+        status: "200",
         contentType: "application/json",
         data: mockData.newModel(),
       };
@@ -193,7 +193,7 @@ describe("testMultiContentTypes operation integration tests", () => {
 
     // Assert
     expect(validationErrorReceived).toBe(true);
-    expect(response.status).toBe(400);
+    expect((response as any).status).toBe(400);
     expect(response.body.error).toBe("Body validation failed");
   });
 
@@ -205,7 +205,7 @@ describe("testMultiContentTypes operation integration tests", () => {
         // Body might be undefined for unknown content types, which is acceptable
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: {
             id: "unknown-123",
@@ -219,7 +219,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       ) {
         // If there's a body validation error with unknown content type, that's also acceptable
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: {
             id: "unknown-error-123",
@@ -245,7 +245,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       .set("Content-Type", "text/plain");
 
     // Assert
-    expect(response.status).toBe(200);
+    expect((response as any).status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
       id: "unknown-123",

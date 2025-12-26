@@ -47,14 +47,14 @@ describe("Authentication Operations", () => {
       const response = await client.testAuthBearer(params);
 
       // Assert - Validate response structure (allow top-level validation error branch)
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
+      expect((response as any).status).toBe("200");
+      expect((response as any).response.headers).toBeDefined();
       if ("error" in response) {
         // Validation failed; ensure ZodError shape
-        expect(response.error.issues).toBeDefined();
-        expect(response.error.issues.length).toBeGreaterThan(0);
+        expect((response as any).error.issues).toBeDefined();
+        expect((response as any).error.issues.length).toBeGreaterThan(0);
       } else {
-        expect(response.data).toBeDefined();
+        expect((response as any).data).toBeDefined();
       }
     });
 
@@ -76,7 +76,7 @@ describe("Authentication Operations", () => {
       try {
         await client.testAuthBearer(params);
         expect.fail("Expected operation to throw error due to invalid token");
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -112,7 +112,7 @@ describe("Authentication Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing required parameter",
         );
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -147,8 +147,8 @@ describe("Authentication Operations", () => {
       const response = await client.testAuthBearerHttp(params);
 
       // Assert
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
+      expect((response as any).status).toBe("200");
+      expect((response as any).response.headers).toBeDefined();
     });
 
     it("should handle multiple success responses (503)", async () => {
@@ -169,9 +169,9 @@ describe("Authentication Operations", () => {
       const response = await client.testAuthBearerHttp(params);
 
       // Assert - Prism might return different status codes for different scenarios
-      expect(["200", "503", "504"]).toContain(response.status);
-      if (response.status === "503" && "data" in response) {
-        expect(response.data).toHaveProperty("prop1");
+      expect(["200", "503", "504"]).toContain((response as any).status);
+      if ((response as any).status === "503" && "data" in response) {
+        expect((response as any).data).toHaveProperty("prop1");
       }
     });
 
@@ -195,7 +195,7 @@ describe("Authentication Operations", () => {
         expect.fail(
           "Expected operation to throw error due to unauthorized request",
         );
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -231,8 +231,8 @@ describe("Authentication Operations", () => {
       const response = await client.testSimpleToken(params);
 
       // Assert
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
+      expect((response as any).status).toBe("200");
+      expect((response as any).response.headers).toBeDefined();
     });
 
     it("should return 403 for missing simple token", async () => {
@@ -255,7 +255,7 @@ describe("Authentication Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing simple token",
         );
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -285,8 +285,8 @@ describe("Authentication Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
+      expect((response as any).status).toBe("200");
+      expect((response as any).response.headers).toBeDefined();
     });
 
     it("should return 403 for missing custom token", async () => {
@@ -303,7 +303,7 @@ describe("Authentication Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing custom token",
         );
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {

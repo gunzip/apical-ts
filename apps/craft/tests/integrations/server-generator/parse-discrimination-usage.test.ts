@@ -9,7 +9,7 @@ describe("parse() discriminated union usage", () => {
     // Create a helper that accepts the response and exercises narrowing.
     function use<
       R extends ApiResponseWithParse<
-        200,
+        "200",
         typeof TestMultiContentTypesResponseMap
       >,
     >(res: R) {

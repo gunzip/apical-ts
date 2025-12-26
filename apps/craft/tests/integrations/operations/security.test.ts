@@ -40,8 +40,8 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
+      expect((response as any).status).toBe("200");
+      expect((response as any).response.headers).toBeDefined();
     });
 
     it("should reject request without proper bearer token", async () => {
@@ -58,7 +58,7 @@ describe("Security Operations", () => {
         expect.fail(
           "Expected operation to throw error due to wrong auth scheme",
         );
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -88,7 +88,7 @@ describe("Security Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing authentication",
         );
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -114,8 +114,8 @@ describe("Security Operations", () => {
       const response = await client.testOverriddenSecurityNoAuth({});
 
       // Assert
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
+      expect((response as any).status).toBe("200");
+      expect((response as any).response.headers).toBeDefined();
     });
 
     it("should work with authentication present but not required", async () => {
@@ -126,7 +126,7 @@ describe("Security Operations", () => {
       const response = await client.testOverriddenSecurityNoAuth({});
 
       // Assert
-      expect(response.status).toBe("200");
+      expect((response as any).status).toBe("200");
     });
 
     it("should work with any auth scheme since none is required", async () => {
@@ -137,7 +137,7 @@ describe("Security Operations", () => {
       const response = await client.testOverriddenSecurityNoAuth({});
 
       // Assert
-      expect(response.status).toBe("200");
+      expect((response as any).status).toBe("200");
     });
   });
 
@@ -154,7 +154,7 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("200");
+      expect((response as any).status).toBe("200");
     });
 
     it("should reject global security with wrong scheme", async () => {
@@ -171,7 +171,7 @@ describe("Security Operations", () => {
         expect.fail(
           "Expected operation to throw error due to wrong auth scheme",
         );
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -213,8 +213,8 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(bearerResponse.status).toBe("200");
-      expect(customResponse.status).toBe("200");
+      expect((bearerResponse as any).status).toBe("200");
+      expect((customResponse as any).status).toBe("200");
     });
   });
 
@@ -233,7 +233,7 @@ describe("Security Operations", () => {
         expect.fail(
           "Expected operation to throw error due to wrong token format",
         );
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -273,7 +273,7 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(simpleResponse.status).toBe("200");
+      expect((simpleResponse as any).status).toBe("200");
 
       // Act & Assert - bearerToken should fail for simpleToken operation
       try {
@@ -290,7 +290,7 @@ describe("Security Operations", () => {
         expect.fail(
           "Expected operation to throw error due to wrong token type",
         );
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
         if (error.status !== undefined) {
@@ -320,7 +320,7 @@ describe("Security Operations", () => {
           },
         });
         expect.fail("Expected request to throw an error");
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate comprehensive error shape
         if (error.status !== undefined) {
@@ -348,7 +348,7 @@ describe("Security Operations", () => {
           },
         });
         expect.fail("Expected request to throw an error");
-      } catch (error) {
+      } catch (error: any) {
         expect(error).toBeDefined();
         // Validate comprehensive error shape
         if (error.status !== undefined) {
@@ -380,9 +380,9 @@ describe("Security Operations", () => {
 
       // Assert - Should return error result instead of throwing
       expect(result).toBeDefined();
-      expect(result.isValid).toBe(false);
-      expect(result.kind).toBe("unexpected-error");
-      expect(result.error).toBeDefined();
+      expect((result as any).isValid).toBe(false);
+      expect((result as any).kind).toBe("unexpected-error");
+      expect((result as any).error).toBeDefined();
     });
   });
 });

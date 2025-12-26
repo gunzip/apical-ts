@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, describe, it, expect } from "vitest";
 
-import { getRandomPort, MockServer } from "../setup";
-import { createAuthenticatedClient } from "../client";
+import { getRandomPort, MockServer } from "../setup.js";
+import { createAuthenticatedClient } from "../client.js";
 
 describe("octet-stream binary upload integration", () => {
   let mockServer: MockServer;
@@ -42,7 +42,7 @@ describe("octet-stream binary upload integration", () => {
 
     // Assert: operation should either succeed with 200, or return an error-like object
     if ("isValid" in response && response.isValid) {
-      expect(response.status).toBe("200");
+      expect((response as any).status).toBe("200");
     } else if ("kind" in response) {
       // Unexpected-response error object - ensure it is shaped as expected
       expect(response.kind).toBe("unexpected-response");

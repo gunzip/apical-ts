@@ -54,17 +54,17 @@ export function setupTestRoute<THandler extends (...args: any[]) => any>(
           // Handle cases where contentType or data might be undefined (e.g., 404 responses)
           if (result.contentType && result.data !== undefined) {
             res
-              .status(result.status)
+              .status(Number(result.status))
               .type(result.contentType)
               .send(result.data);
           } else if (result.contentType) {
-            res.status(result.status).type(result.contentType).send();
+            res.status(Number(result.status)).type(result.contentType).send();
           } else {
-            res.status(result.status).send();
+            res.status(Number(result.status)).send();
           }
         }
       })
-      .catch((err: Error) => res.status(500).json({ error: err.message }));
+      .catch((err: Error) => res.status(500).json({ error: err.message, stack: err.stack }));
   });
 
   return app;

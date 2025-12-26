@@ -97,7 +97,7 @@ describe("Request Body Analysis Functions", () => {
 
   describe("getRequestBodyContentType", () => {
     it("should return fallback when no content", () => {
-      const requestBody: RequestBodyObject = {};
+      const requestBody: any = {};
 
       const result = getRequestBodyContentType(requestBody);
 

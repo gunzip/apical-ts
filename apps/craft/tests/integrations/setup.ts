@@ -170,7 +170,7 @@ export async function waitForPort(
 
       // If we get any response (even an error), the port is open
       return true;
-    } catch (error) {
+    } catch (error: any) {
       // Port not ready yet, wait a bit
       await sleep(100);
     }

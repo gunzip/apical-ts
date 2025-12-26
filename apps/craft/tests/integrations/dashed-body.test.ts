@@ -45,9 +45,9 @@ describe("Dashed body properties integration", () => {
 
     // The mock server (Prism) will echo a 200 only if spec matches.
     if ("isValid" in response && response.isValid) {
-      expect(response.status).toBe("200");
+      expect((response as any).status).toBe("200");
       // Manually parse/validate (lazy) since forceValidation false by default
-      const parsed = await response.parse();
+      const parsed = await (response as any).parse();
       if ("parsed" in parsed) {
         expect(parsed.parsed["id-field"]).toBe(payload["id-field"]);
         expect(parsed.parsed["nested-dash"]?.["child-prop"]).toBe(

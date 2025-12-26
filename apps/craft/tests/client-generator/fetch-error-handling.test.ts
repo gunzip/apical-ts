@@ -28,7 +28,7 @@ describe("Fetch Error Handling", () => {
     const result = generateOperationFunction(
       pathKey,
       method,
-      operation,
+      operation as any,
       [],
       doc,
     );
@@ -103,7 +103,7 @@ describe("Fetch Error Handling", () => {
     const result = generateOperationFunction(
       pathKey,
       method,
-      operation,
+      operation as any,
       [],
       doc,
     );
@@ -142,7 +142,7 @@ describe("Fetch Error Handling", () => {
     const result = generateOperationFunction(
       pathKey,
       method,
-      operation,
+      operation as any,
       [],
       doc,
     );

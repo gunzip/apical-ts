@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createUnauthenticatedClient } from "./client.js";
 import { getRandomPort, MockServer } from "./setup.js";
-import { Profile } from "./generated/schemas/Profile";
+import { Profile } from "./generated/schemas/Profile.js";
 
 describe("CreateUserWithRequestBodies Operation Tests", () => {
   let mockServer: MockServer;
@@ -72,7 +72,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
 
         // The operation should execute (may succeed or fail due to mock server)
         expect(response).toBeDefined();
-      } catch (error) {
+      } catch (error: any) {
         // Expected - the operation exists and validates the input
         expect(error).toBeDefined();
       }
@@ -102,7 +102,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         });
 
         expect(response).toBeDefined();
-      } catch (error) {
+      } catch (error: any) {
         // Expected - operation should handle full profile
         expect(error).toBeDefined();
       }
@@ -202,7 +202,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         });
 
         expect(response).toBeDefined();
-      } catch (error) {
+      } catch (error: any) {
         // Expected - operation should work with default content type
         expect(error).toBeDefined();
       }
@@ -227,7 +227,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         });
 
         expect(response).toBeDefined();
-      } catch (error) {
+      } catch (error: any) {
         // Expected - operation should work with explicit content type
         expect(error).toBeDefined();
       }
@@ -257,7 +257,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         expect(response).toHaveProperty("status");
         expect(response).toHaveProperty("data");
         expect(response).toHaveProperty("response");
-      } catch (error) {
+      } catch (error: any) {
         // Expected - mock server may not return 201
         expect(error).toBeDefined();
       }
@@ -282,11 +282,11 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         });
 
         // If we get a response, verify it's properly structured
-        if (response.status === "400") {
+        if ((response as any).status === "400") {
           expect(response.isValid).toBe(true);
-          expect(response.status).toBe("400");
+          expect((response as any).status).toBe("400");
         }
-      } catch (error) {
+      } catch (error: any) {
         // Expected - operation may fail
         expect(error).toBeDefined();
       }
@@ -339,7 +339,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         });
 
         expect(response).toBeDefined();
-      } catch (error) {
+      } catch (error: any) {
         // Expected - operation should handle missing optional fields
         expect(error).toBeDefined();
       }
@@ -361,7 +361,7 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
         await client.createUserWithRequestBodies({
           body: profile,
         });
-      } catch (error) {
+      } catch (error: any) {
         // Expected - network errors should be handled
         expect(error).toBeDefined();
       }
