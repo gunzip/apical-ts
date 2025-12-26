@@ -192,17 +192,6 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
        */
       const client = createUnauthenticatedClient(baseURL);
 
-      /* Valid request - includes only writeOnly property */
-      const validRequest = {
-        body: {
-          sku: "PROD-002",
-          name: "Another Product",
-          metadata: {
-            internalNotes: "Valid writeOnly property",
-          },
-        },
-      };
-
       /* Verify we can call with valid request */
       expect(typeof client.createProductWithMetadata).toBe("function");
 
@@ -250,6 +239,7 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
       expect(invalidResult.success).toBe(true); // Zod strips unknown fields
       if (invalidResult.success) {
         /* Verify readOnly field was stripped */
+        // @ts-expect-error
         expect(invalidResult.data.metadata?.createdBy).toBeUndefined();
       }
     });
@@ -285,6 +275,7 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
       expect(invalidResult.success).toBe(true); // Zod strips unknown fields
       if (invalidResult.success) {
         /* Verify writeOnly field was stripped */
+        // @ts-expect-error
         expect(invalidResult.data.metadata?.internalNotes).toBeUndefined();
       }
     });
