@@ -4,6 +4,8 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { isSchemaObject } from "openapi3-ts/oas31";
 
+import { memoizeObject } from "./memoize.js";
+
 /**
  * Represents a content type mapping for requests/responses
  */
@@ -46,7 +48,7 @@ export type SchemaContext = "base" | "request" | "response";
  * Analyzes an object schema to detect readOnly and writeOnly properties
  * Recursively checks nested objects to detect deeply nested readOnly/writeOnly properties
  */
-export function analyzeReadWriteProperties(
+function analyzeReadWritePropertiesImpl(
   schema: ReferenceObject | SchemaObject,
 ): ReadWriteAnalysis {
   const result: ReadWriteAnalysis = {
@@ -80,7 +82,7 @@ export function analyzeReadWriteProperties(
 
     // Recursively check nested objects for readOnly/writeOnly properties
     if (propSchema.type === "object" && propSchema.properties) {
-      const nestedAnalysis = analyzeReadWriteProperties(propSchema);
+      const nestedAnalysis = analyzeReadWritePropertiesImpl(propSchema);
       if (nestedAnalysis.hasReadOnly || nestedAnalysis.hasNestedReadOnly) {
         result.hasReadOnly = true;
         result.hasNestedReadOnly = true;
@@ -94,6 +96,14 @@ export function analyzeReadWriteProperties(
 
   return result;
 }
+
+/**
+ * Memoized version of analyzeReadWriteProperties for performance optimization.
+ * Uses WeakMap for caching to avoid redundant recursive traversals.
+ */
+export const analyzeReadWriteProperties = memoizeObject(
+  analyzeReadWritePropertiesImpl,
+);
 
 /**
  * Checks if a property should be included based on schema context

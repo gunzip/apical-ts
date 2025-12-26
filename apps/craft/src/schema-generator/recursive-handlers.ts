@@ -2,6 +2,7 @@ import type { SchemaObject } from "openapi3-ts/oas31";
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
+import { memoizeObject } from "../shared/memoize.js";
 import { sanitizeIdentifier } from "./utils.js";
 
 /**
@@ -110,7 +111,7 @@ export function createRecursiveContext(): RecursiveContext {
 /**
  * Analyzes a full schema object to find all references it contains
  */
-export function findReferencesInSchema(schema: SchemaObject): string[] {
+function findReferencesInSchemaImpl(schema: SchemaObject): string[] {
   const references: string[] = [];
 
   function extractRefs(obj: unknown): void {
@@ -134,3 +135,9 @@ export function findReferencesInSchema(schema: SchemaObject): string[] {
   extractRefs(schema);
   return references;
 }
+
+/**
+ * Memoized version of findReferencesInSchema for performance optimization.
+ * Uses WeakMap for caching to avoid redundant deep traversals.
+ */
+export const findReferencesInSchema = memoizeObject(findReferencesInSchemaImpl);

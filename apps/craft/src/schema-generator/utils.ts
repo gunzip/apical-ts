@@ -1,5 +1,6 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
 
+import { memoizeString } from "../shared/memoize.js";
 import { isReservedKeyword } from "../shared/reserved-keywords.js";
 
 /**
@@ -99,7 +100,7 @@ export function mergeImports(
  * Converts kebab-case, snake_case, and other invalid characters to camelCase
  * Throws an error if the input cannot be sanitized to a valid identifier
  */
-export function sanitizeIdentifier(id: string): string {
+function sanitizeIdentifierImpl(id: string): string {
   // Handle empty strings
   if (!id) {
     throw new Error("Cannot sanitize empty string to identifier");
@@ -154,3 +155,9 @@ export function sanitizeIdentifier(id: string): string {
 
   return sanitized;
 }
+
+/**
+ * Memoized version of sanitizeIdentifier for performance optimization.
+ * Caches up to 1000 results to avoid redundant string manipulations.
+ */
+export const sanitizeIdentifier = memoizeString(sanitizeIdentifierImpl, 1000);

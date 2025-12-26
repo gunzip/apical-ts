@@ -115,12 +115,19 @@ export function renameSanitizationConflictingSchemas(
   if (!openApiDoc.components || !openApiDoc.components.schemas) return 0;
   const schemas = openApiDoc.components.schemas;
 
+  // Pre-compute sanitized names for all schemas to leverage memoization
+  const schemaNames = Object.keys(schemas);
+  const sanitizedCache = new Map<string, string>();
+  for (const originalName of schemaNames) {
+    sanitizedCache.set(originalName, sanitizeIdentifier(originalName));
+  }
+
   // Map from sanitized names (lowercase) to original schema names that would collide
   const sanitizedToOriginals = new Map<string, string[]>();
 
   // First pass: group original names by their sanitized equivalents (case-insensitive)
-  for (const originalName of Object.keys(schemas)) {
-    const sanitized = sanitizeIdentifier(originalName);
+  for (const originalName of schemaNames) {
+    const sanitized = sanitizedCache.get(originalName)!;
     const sanitizedLower = sanitized.toLowerCase();
 
     if (!sanitizedToOriginals.has(sanitizedLower)) {
@@ -141,6 +148,11 @@ export function renameSanitizationConflictingSchemas(
 
   const renameMap = new Map<string, string>();
 
+  // Build a set of lowercase sanitized existing schema names for faster lookup
+  const existingSanitizedLower = new Set(
+    schemaNames.map((name) => sanitizedCache.get(name)!.toLowerCase()),
+  );
+
   // For each collision group, rename all but the first schema
   for (const [, originals] of collisionGroups) {
     // Sort originals for deterministic behavior - keep the lexicographically first one unchanged
@@ -149,7 +161,7 @@ export function renameSanitizationConflictingSchemas(
     // Leave the first one unchanged, rename the rest
     for (let i = 1; i < sortedOriginals.length; i++) {
       const originalName = sortedOriginals[i];
-      const baseSanitized = sanitizeIdentifier(originalName);
+      const baseSanitized = sanitizedCache.get(originalName)!;
 
       // Find a unique name by appending numeric suffix
       let candidate = `${baseSanitized}${i + 1}`;
@@ -163,11 +175,8 @@ export function renameSanitizationConflictingSchemas(
         Array.from(renameMap.values()).some(
           (existing) => existing.toLowerCase() === candidate.toLowerCase(),
         ) ||
-        Object.keys(schemas).some(
-          (existing) =>
-            sanitizeIdentifier(existing).toLowerCase() ===
-              candidate.toLowerCase() && !renameMap.has(existing),
-        )
+        (existingSanitizedLower.has(candidate.toLowerCase()) &&
+          !renameMap.has(candidate))
       ) {
         counter++;
         candidate = `${baseSanitized}${counter}`;
