@@ -1,6 +1,9 @@
 name: Publish to NPM Registry
 
 on:
+  push:
+    branches:
+      - main
   release:
     types: [published]
   workflow_dispatch:
@@ -44,7 +47,6 @@ jobs:
 
       - name: Bump version
         if: github.event.inputs.version_bump
-        working-directory: apps/craft
         run: pnpm changeset version
 
       - name: Update npm
