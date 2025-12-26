@@ -1,7 +1,7 @@
 import { SchemaObject } from "openapi3-ts/oas31";
 import { describe, expect, it } from "vitest";
 
-import { zodSchemaToCode } from "../src/schema-generator";
+import { zodSchemaToCode } from "../src/schema-generator/index.js";
 
 // Helper to eval generated code
 function evalZod(code: string) {

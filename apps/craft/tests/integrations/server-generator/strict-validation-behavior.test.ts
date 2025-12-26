@@ -17,7 +17,7 @@ describe("Additional Properties behavior", () => {
           // Extra properties are allowed but may not be preserved in the parsed result
         });
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: mockData.newModel(),
         };
@@ -62,7 +62,7 @@ describe("Additional Properties behavior", () => {
           name: "Test Object",
         });
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: mockData.newModel(),
         };

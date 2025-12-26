@@ -55,7 +55,7 @@ describe("Request Bodies Integration Tests", () => {
 
         // If we get here, the operation executed (may succeed or fail due to auth)
         expect(response).toBeDefined();
-      } catch (error) {
+      } catch (error: unknown) {
         // Expected - the operation exists but may fail due to test setup
         expect(error).toBeDefined();
       }
@@ -82,7 +82,7 @@ describe("Request Bodies Integration Tests", () => {
 
         // If we get here, the operation executed successfully
         expect(response).toBeDefined();
-      } catch (error) {
+      } catch (error: unknown) {
         // Expected - the operation exists but may fail due to test setup
         expect(error).toBeDefined();
       }
@@ -115,7 +115,7 @@ describe("Request Bodies Integration Tests", () => {
 
         // If we get here, the operation executed successfully
         expect(response).toBeDefined();
-      } catch (error) {
+      } catch (error: unknown) {
         // Expected - the operation exists but may fail due to test setup
         expect(error).toBeDefined();
       }
@@ -143,7 +143,7 @@ describe("Request Bodies Integration Tests", () => {
 
         // If we get here, the operation executed successfully
         expect(response).toBeDefined();
-      } catch (error) {
+      } catch (error: unknown) {
         // Expected - the operation exists but may fail due to test setup
         expect(error).toBeDefined();
       }
@@ -193,7 +193,7 @@ describe("Request Bodies Integration Tests", () => {
             version: 1,
           },
         });
-      } catch (error) {
+      } catch (error: unknown) {
         // Expected - network errors should be handled gracefully
         expect(error).toBeDefined();
       }
@@ -211,7 +211,7 @@ describe("Request Bodies Integration Tests", () => {
             name: "John",
           } as any,
         });
-      } catch (error) {
+      } catch (error: unknown) {
         // Expected - invalid request body should be rejected
         expect(error).toBeDefined();
       }

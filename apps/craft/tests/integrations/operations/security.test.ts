@@ -40,8 +40,12 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+        expect(response.response.headers).toBeDefined();
+      } else {
+        expect.fail("Expected successful response from testOverriddenSecurity");
+      }
     });
 
     it("should reject request without proper bearer token", async () => {
@@ -58,18 +62,18 @@ describe("Security Operations", () => {
         expect.fail(
           "Expected operation to throw error due to wrong auth scheme",
         );
-      } catch (error) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
-        // Validate error shape - different types of errors may have different structures
-        if (error.status !== undefined) {
-          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
-          expect(parseInt(error.status)).toBeLessThan(500);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
+        if (typeof error === "object" && error !== null && "status" in error) {
+          const err = error as any;
+          expect(parseInt(err.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(err.status)).toBeLessThan(500);
+          expect(err.data).toBeDefined();
+          expect(err.response).toBeInstanceOf(Response);
         } else {
-          // For network errors or other error types, validate basic error properties
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+          const err = error as any;
+          expect(err.message).toBeDefined();
+          expect(typeof err.message).toBe("string");
         }
       }
     });
@@ -88,18 +92,19 @@ describe("Security Operations", () => {
         expect.fail(
           "Expected operation to throw error due to missing authentication",
         );
-      } catch (error) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
         // Validate error shape - different types of errors may have different structures
-        if (error.status !== undefined) {
-          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
-          expect(parseInt(error.status)).toBeLessThan(500);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
+        if (typeof error === "object" && error !== null && "status" in error) {
+          const err = error as any;
+          expect(parseInt(err.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(err.status)).toBeLessThan(500);
+          expect(err.data).toBeDefined();
+          expect(err.response).toBeInstanceOf(Response);
         } else {
-          // For network errors or other error types, validate basic error properties
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+          const err = error as any;
+          expect(err.message).toBeDefined();
+          expect(typeof err.message).toBe("string");
         }
       }
     });
@@ -114,8 +119,14 @@ describe("Security Operations", () => {
       const response = await client.testOverriddenSecurityNoAuth({});
 
       // Assert
-      expect(response.status).toBe("200");
-      expect(response.response.headers).toBeDefined();
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+        expect(response.response.headers).toBeDefined();
+      } else {
+        expect.fail(
+          "Expected successful response from testOverriddenSecurityNoAuth",
+        );
+      }
     });
 
     it("should work with authentication present but not required", async () => {
@@ -126,7 +137,13 @@ describe("Security Operations", () => {
       const response = await client.testOverriddenSecurityNoAuth({});
 
       // Assert
-      expect(response.status).toBe("200");
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+      } else {
+        expect.fail(
+          "Expected successful response from testOverriddenSecurityNoAuth",
+        );
+      }
     });
 
     it("should work with any auth scheme since none is required", async () => {
@@ -137,7 +154,11 @@ describe("Security Operations", () => {
       const response = await client.testOverriddenSecurityNoAuth({});
 
       // Assert
-      expect(response.status).toBe("200");
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+      } else {
+        expect.fail("Expected successful response from testCustomTokenHeader");
+      }
     });
   });
 
@@ -154,7 +175,11 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("200");
+      if (response.isValid) {
+        expect(response.status).toBe("200");
+      } else {
+        expect.fail("Expected successful response from testCustomTokenHeader");
+      }
     });
 
     it("should reject global security with wrong scheme", async () => {
@@ -171,18 +196,18 @@ describe("Security Operations", () => {
         expect.fail(
           "Expected operation to throw error due to wrong auth scheme",
         );
-      } catch (error) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
-        // Validate error shape - different types of errors may have different structures
-        if (error.status !== undefined) {
-          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
-          expect(parseInt(error.status)).toBeLessThan(500);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
+        if (typeof error === "object" && error !== null && "status" in error) {
+          const err = error as any;
+          expect(parseInt(err.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(err.status)).toBeLessThan(500);
+          expect(err.data).toBeDefined();
+          expect(err.response).toBeInstanceOf(Response);
         } else {
-          // For network errors or other error types, validate basic error properties
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+          const err = error as any;
+          expect(err.message).toBeDefined();
+          expect(typeof err.message).toBe("string");
         }
       }
     });
@@ -213,8 +238,16 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(bearerResponse.status).toBe("200");
-      expect(customResponse.status).toBe("200");
+      if (bearerResponse.isValid) {
+        expect(bearerResponse.status).toBe("200");
+      } else {
+        expect.fail("Expected successful response from bearerResponse");
+      }
+      if (customResponse.isValid) {
+        expect(customResponse.status).toBe("200");
+      } else {
+        expect.fail("Expected successful response from customResponse");
+      }
     });
   });
 
@@ -233,18 +266,18 @@ describe("Security Operations", () => {
         expect.fail(
           "Expected operation to throw error due to wrong token format",
         );
-      } catch (error) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
-        // Validate error shape - different types of errors may have different structures
-        if (error.status !== undefined) {
-          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
-          expect(parseInt(error.status)).toBeLessThan(500);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
+        if (typeof error === "object" && error !== null && "status" in error) {
+          const err = error as any;
+          expect(parseInt(err.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(err.status)).toBeLessThan(500);
+          expect(err.data).toBeDefined();
+          expect(err.response).toBeInstanceOf(Response);
         } else {
-          // For network errors or other error types, validate basic error properties
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+          const err = error as any;
+          expect(err.message).toBeDefined();
+          expect(typeof err.message).toBe("string");
         }
       }
     });
@@ -273,7 +306,11 @@ describe("Security Operations", () => {
       });
 
       // Assert
-      expect(simpleResponse.status).toBe("200");
+      if (simpleResponse.isValid) {
+        expect(simpleResponse.status).toBe("200");
+      } else {
+        expect.fail("Expected successful response from simpleResponse");
+      }
 
       // Act & Assert - bearerToken should fail for simpleToken operation
       try {
@@ -290,18 +327,18 @@ describe("Security Operations", () => {
         expect.fail(
           "Expected operation to throw error due to wrong token type",
         );
-      } catch (error) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
-        // Validate error shape - different types of errors may have different structures
-        if (error.status !== undefined) {
-          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
-          expect(parseInt(error.status)).toBeLessThan(500);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
+        if (typeof error === "object" && error !== null && "status" in error) {
+          const err = error as any;
+          expect(parseInt(err.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(err.status)).toBeLessThan(500);
+          expect(err.data).toBeDefined();
+          expect(err.response).toBeInstanceOf(Response);
         } else {
-          // For network errors or other error types, validate basic error properties
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+          const err = error as any;
+          expect(err.message).toBeDefined();
+          expect(typeof err.message).toBe("string");
         }
       }
     });
@@ -320,18 +357,19 @@ describe("Security Operations", () => {
           },
         });
         expect.fail("Expected request to throw an error");
-      } catch (error) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
         // Validate comprehensive error shape
-        if (error.status !== undefined) {
-          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
-          expect(parseInt(error.status)).toBeLessThan(500);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
+        if (typeof error === "object" && error !== null && "status" in error) {
+          const err = error as any;
+          expect(parseInt(err.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(err.status)).toBeLessThan(500);
+          expect(err.data).toBeDefined();
+          expect(err.response).toBeInstanceOf(Response);
         } else {
-          // For other error types, validate basic error properties
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+          const err = error as any;
+          expect(err.message).toBeDefined();
+          expect(typeof err.message).toBe("string");
         }
       }
     });
@@ -348,18 +386,19 @@ describe("Security Operations", () => {
           },
         });
         expect.fail("Expected request to throw an error");
-      } catch (error) {
+      } catch (error: unknown) {
         expect(error).toBeDefined();
         // Validate comprehensive error shape
-        if (error.status !== undefined) {
-          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
-          expect(parseInt(error.status)).toBeLessThan(500);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
+        if (typeof error === "object" && error !== null && "status" in error) {
+          const err = error as any;
+          expect(parseInt(err.status)).toBeGreaterThanOrEqual(400);
+          expect(parseInt(err.status)).toBeLessThan(500);
+          expect(err.data).toBeDefined();
+          expect(err.response).toBeInstanceOf(Response);
         } else {
-          // For other error types, validate basic error properties
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+          const err = error as any;
+          expect(err.message).toBeDefined();
+          expect(typeof err.message).toBe("string");
         }
       }
     });
@@ -381,8 +420,13 @@ describe("Security Operations", () => {
       // Assert - Should return error result instead of throwing
       expect(result).toBeDefined();
       expect(result.isValid).toBe(false);
-      expect(result.kind).toBe("unexpected-error");
-      expect(result.error).toBeDefined();
+      if (!result.isValid) {
+        const r = result as any;
+        expect(r.kind).toBe("unexpected-error");
+        expect(r.error).toBeDefined();
+      } else {
+        expect.fail("Expected unexpected-error result from invalidClient call");
+      }
     });
   });
 });

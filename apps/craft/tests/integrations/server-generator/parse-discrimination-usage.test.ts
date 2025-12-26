@@ -9,30 +9,31 @@ describe("parse() discriminated union usage", () => {
     // Create a helper that accepts the response and exercises narrowing.
     function use<
       R extends ApiResponseWithParse<
-        200,
+        "200",
         typeof TestMultiContentTypesResponseMap
       >,
     >(res: R) {
-      const result = res.parse();
-      // Filter out non-success parse variants first
-      if (!isParsed(result)) return;
-      if (result.contentType === "application/xml") {
-        // @ts-expect-no-error
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        result.parsed.id;
-      }
-      if (result.contentType === "application/json") {
-        // @ts-expect-no-error
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        result.parsed.id;
+      // We only need to exercise the type-level narrowing. Create a typed helper
+      // that accepts the parse() result type and tests narrowed access without
+      // invoking parse() at runtime.
+      type ParseResult = ReturnType<R["parse"]>;
+      function inspect(result: ParseResult) {
+        if (!isParsed(result)) return;
+        if (result.contentType === "application/xml") {
+          // @ts-expect-no-error
+          result.parsed.id;
+        }
+        if (result.contentType === "application/json") {
+          // @ts-expect-no-error
+          result.parsed.id;
+        }
+        if (isParsed(result)) {
+          result.parsed;
+        }
       }
 
-      // Direct type guard on a generic narrowing
-      if (isParsed(result)) {
-        // parsed is present, can access common properties safely
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        result.parsed;
-      }
+      // Use the typed inspector — no runtime parse() call required for compile check
+      expect(typeof inspect).toBe("function");
     }
 
     // We can't easily construct a real runtime object here without fetch, but the generic

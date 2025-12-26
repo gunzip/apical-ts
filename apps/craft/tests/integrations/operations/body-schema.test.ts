@@ -37,8 +37,12 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("201");
-      expect(response.response.headers).toBeDefined();
+      if (response.isValid && response.status === "201") {
+        expect(response.status).toBe("201");
+        expect(response.response.headers).toBeDefined();
+      } else {
+        expect.fail("Expected successful response with status 201");
+      }
     });
 
     it("should validate required fields in inline schema", async () => {
@@ -49,23 +53,21 @@ describe("Body and Schema Operations", () => {
         age: 25,
       };
 
-      // Act & Assert
-      try {
-        const response = await client.testInlineBodySchema({
-          body: requestBody,
-        } as any);
-        // Prism might still accept invalid data, so check response
+      // Act
+      const response = await client.testInlineBodySchema({
+        body: requestBody,
+      } as any);
+
+      // Assert - Prism might still accept invalid data, or return error response
+      if (response.isValid) {
         expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
-      } catch (error) {
-        // If validation fails, it should be a 400 error with proper structure
-        expect(error).toBeDefined();
-        if (error.status !== undefined) {
-          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
-        } else {
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+      } else if (!response.isValid) {
+        /* If validation fails, it should be a 400 error with proper structure */
+        expect(response.error).toBeDefined();
+        if (response.kind === "unexpected-response") {
+          expect(parseInt(response.result.status)).toBeGreaterThanOrEqual(400);
+          expect(response.result.data).toBeDefined();
+          expect(response.result.response).toBeInstanceOf(Response);
         }
       }
     });
@@ -85,7 +87,11 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("201");
+      if (response.isValid && response.status === "201") {
+        expect(response.status).toBe("201");
+      } else {
+        expect.fail("Expected successful response with status 201");
+      }
     });
 
     it("should handle different data types in inline schema", async () => {
@@ -102,7 +108,11 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("201");
+      if (response.isValid && response.status === "201") {
+        expect(response.status).toBe("201");
+      } else {
+        expect.fail("Expected successful response with status 201");
+      }
     });
   });
 
@@ -118,8 +128,12 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("201");
-      expect(response.response.headers).toBeDefined();
+      if (response.isValid && response.status === "201") {
+        expect(response.status).toBe("201");
+        expect(response.response.headers).toBeDefined();
+      } else {
+        expect.fail("Expected successful response with status 201");
+      }
     });
 
     it("should validate referenced schema properties", async () => {
@@ -136,7 +150,11 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("201");
+      if (response.isValid && response.status === "201") {
+        expect(response.status).toBe("201");
+      } else {
+        expect.fail("Expected successful response with status 201");
+      }
     });
 
     it("should reject invalid referenced schema", async () => {
@@ -148,22 +166,20 @@ describe("Body and Schema Operations", () => {
       };
 
       // Act & Assert
-      try {
-        const response = await client.testParameterWithBodyReference({
-          body: requestBody,
-        } as any);
-        // Prism might still accept invalid data
+      const response = await client.testParameterWithBodyReference({
+        body: requestBody,
+      } as any);
+
+      // Assert - Prism might still accept invalid data
+      if (response.isValid) {
         expect(parseInt(response.status)).toBeGreaterThanOrEqual(200);
-      } catch (error) {
-        // Error shape validation
-        expect(error).toBeDefined();
-        if (error.status !== undefined) {
-          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
-        } else {
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+      } else if (!response.isValid) {
+        /* Error shape validation */
+        expect(response.error).toBeDefined();
+        if (response.kind === "unexpected-response") {
+          expect(parseInt(response.result.status)).toBeGreaterThanOrEqual(400);
+          expect(response.result.data).toBeDefined();
+          expect(response.result.response).toBeInstanceOf(Response);
         }
       }
     });
@@ -176,7 +192,11 @@ describe("Body and Schema Operations", () => {
       const response = await client.testParameterWithBodyReference({});
 
       // Assert
-      expect(["201", "400"]).toContain(response.status);
+      if (response.isValid) {
+        expect(["201", "400"]).toContain(response.status);
+      } else {
+        expect.fail("Expected valid response");
+      }
     });
   });
 
@@ -192,8 +212,12 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("201");
-      expect(response.response.headers).toBeDefined();
+      if (response.isValid && response.status === "201") {
+        expect(response.status).toBe("201");
+        expect(response.response.headers).toBeDefined();
+      } else {
+        expect.fail("Expected successful response with status 201");
+      }
     });
 
     it("should differentiate PUT from POST behavior", async () => {
@@ -210,10 +234,19 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert - Both should succeed but are different operations
-      expect(putResponse.status).toBe("201");
-      expect(postResponse.status).toBe("201");
-      expect(putResponse.response.headers).toBeDefined();
-      expect(postResponse.response.headers).toBeDefined();
+      if (
+        putResponse.isValid &&
+        postResponse.isValid &&
+        putResponse.status === "201" &&
+        postResponse.status === "201"
+      ) {
+        expect(putResponse.status).toBe("201");
+        expect(postResponse.status).toBe("201");
+        expect(putResponse.response.headers).toBeDefined();
+        expect(postResponse.response.headers).toBeDefined();
+      } else {
+        expect.fail("Expected both responses to succeed with status 201");
+      }
     });
 
     it("should handle idempotency of PUT requests", async () => {
@@ -233,8 +266,17 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert - Both should succeed (PUT should be idempotent)
-      expect(firstResponse.status).toBe("201");
-      expect(secondResponse.status).toBe("201");
+      if (
+        firstResponse.isValid &&
+        secondResponse.isValid &&
+        firstResponse.status === "201" &&
+        secondResponse.status === "201"
+      ) {
+        expect(firstResponse.status).toBe("201");
+        expect(secondResponse.status).toBe("201");
+      } else {
+        expect.fail("Expected both responses to succeed with status 201");
+      }
     });
   });
 
@@ -250,9 +292,13 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("201");
-      // The request should have been sent with application/json content type
-      expect(response.response.headers).toBeDefined();
+      if (response.isValid && response.status === "201") {
+        expect(response.status).toBe("201");
+        /* The request should have been sent with application/json content type */
+        expect(response.response.headers).toBeDefined();
+      } else {
+        expect.fail("Expected successful response with status 201");
+      }
     });
 
     it("should serialize complex objects correctly", async () => {
@@ -277,7 +323,11 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("201");
+      if (response.isValid && response.status === "201") {
+        expect(response.status).toBe("201");
+      } else {
+        expect.fail("Expected successful response with status 201");
+      }
     });
 
     it("should handle special characters in body", async () => {
@@ -294,7 +344,11 @@ describe("Body and Schema Operations", () => {
       });
 
       // Assert
-      expect(response.status).toBe("201");
+      if (response.isValid && response.status === "201") {
+        expect(response.status).toBe("201");
+      } else {
+        expect.fail("Expected successful response with status 201");
+      }
     });
   });
 
@@ -307,23 +361,21 @@ describe("Body and Schema Operations", () => {
         name: "Test Name",
       };
 
-      // Act & Assert
-      try {
-        const response = await client.testInlineBodySchema({
-          body: bodyWithNull,
-        });
-        // Behavior depends on schema validation - might accept or reject
+      // Act
+      const response = await client.testInlineBodySchema({
+        body: bodyWithNull as any,
+      });
+
+      // Assert - Behavior depends on schema validation - might accept or reject
+      if (response.isValid) {
         expect(["201", "400", "422"]).toContain(response.status);
-      } catch (error) {
-        // Error shape validation for validation errors
-        expect(error).toBeDefined();
-        if (error.status !== undefined) {
-          expect(["400", "422"]).toContain(error.status); // Validation errors
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
-        } else {
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+      } else if (!response.isValid) {
+        /* Error shape validation for validation errors */
+        expect(response.error).toBeDefined();
+        if (response.kind === "unexpected-response") {
+          expect(["400", "422"]).toContain(response.result.status);
+          expect(response.result.data).toBeDefined();
+          expect(response.result.response).toBeInstanceOf(Response);
         }
       }
     });
@@ -336,22 +388,21 @@ describe("Body and Schema Operations", () => {
         name: "Test Name",
       };
 
-      // Act & Assert
-      try {
-        const response = await client.testInlineBodySchema({
-          body: bodyWithUndefined,
-        });
+      // Act
+      const response = await client.testInlineBodySchema({
+        body: bodyWithUndefined,
+      });
+
+      // Assert
+      if (response.isValid) {
         expect(["201", "400", "422"]).toContain(response.status);
-      } catch (error) {
-        // Error shape validation for validation errors
-        expect(error).toBeDefined();
-        if (error.status !== undefined) {
-          expect(["400", "422"]).toContain(error.status);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
-        } else {
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+      } else if (!response.isValid) {
+        /* Error shape validation for validation errors */
+        expect(response.error).toBeDefined();
+        if (response.kind === "unexpected-response") {
+          expect(["400", "422"]).toContain(response.result.status);
+          expect(response.result.data).toBeDefined();
+          expect(response.result.response).toBeInstanceOf(Response);
         }
       }
     });
@@ -360,22 +411,21 @@ describe("Body and Schema Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "customToken");
 
-      // Act & Assert
-      try {
-        const response = await client.testInlineBodySchema({
-          body: {},
-        } as any);
+      // Act
+      const response = await client.testInlineBodySchema({
+        body: {},
+      } as any);
+
+      // Assert
+      if (response.isValid) {
         expect(["201", "400"]).toContain(response.status);
-      } catch (error) {
-        // Error shape validation
-        expect(error).toBeDefined();
-        if (error.status !== undefined) {
-          expect(parseInt(error.status)).toBeGreaterThanOrEqual(400);
-          expect(error.data).toBeDefined();
-          expect(error.response).toBeInstanceOf(Response);
-        } else {
-          expect(error.message).toBeDefined();
-          expect(typeof error.message).toBe("string");
+      } else if (!response.isValid) {
+        /* Error shape validation */
+        expect(response.error).toBeDefined();
+        if (response.kind === "unexpected-response") {
+          expect(parseInt(response.result.status)).toBeGreaterThanOrEqual(400);
+          expect(response.result.data).toBeDefined();
+          expect(response.result.response).toBeInstanceOf(Response);
         }
       }
     });

@@ -2,7 +2,7 @@ import type { SchemaObject } from "openapi3-ts/oas31";
 
 import { describe, expect, it } from "vitest";
 
-import { zodSchemaToCode } from "../src/schema-generator";
+import { zodSchemaToCode } from "../src/schema-generator/index.js";
 
 describe("Date format handling", () => {
   it("should generate z.iso.date() for format: date", () => {

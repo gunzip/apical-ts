@@ -27,6 +27,9 @@
     "typecheck:tests": {
       "dependsOn": ["^typecheck:tests"]
     },
+    "typecheck:generated": {
+      "dependsOn": ["^typecheck:generated"]
+    },
     "test": {
       "dependsOn": ["^test"]
     },

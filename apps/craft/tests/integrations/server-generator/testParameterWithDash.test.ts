@@ -22,13 +22,13 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(params.value.query["request-id"]).toBe("request-id-123");
 
         // Validate header parameters
-        expect(params.value.headers.headerInlineParam).toBe(
+        expect(params.value.headers.headerinlineparam).toBe(
           "inline-header-value",
         );
         expect(params.value.headers["x-header-param"]).toBe("x-header-value");
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: { message: "All parameters validated successfully" },
         };
@@ -75,14 +75,14 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(pathError?.code).toBe("too_small");
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: { error: "Path validation failed" },
         };
       }
 
       return {
-        status: 200,
+        status: "200",
         contentType: "application/json",
         data: { message: "Unexpected success" },
       };
@@ -132,14 +132,14 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(requestIdError?.code).toBe("too_small");
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: { error: "Query validation failed" },
         };
       }
 
       return {
-        status: 200,
+        status: "200",
         contentType: "application/json",
         data: { message: "Unexpected success" },
       };
@@ -185,14 +185,14 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(params.error.issues.length).toBeGreaterThan(0);
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: { error: "Header validation failed" },
         };
       }
 
       return {
-        status: 200,
+        status: "200",
         contentType: "application/json",
         data: { message: "Unexpected success" },
       };
@@ -240,7 +240,7 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(params.value.headers).toHaveProperty("x-header-param"); // Special headers preserve original name
 
         return {
-          status: 200,
+          status: "200",
           contentType: "application/json",
           data: {
             transformedParams: {

@@ -2,7 +2,10 @@ import type { SchemaObject } from "openapi3-ts/oas31";
 import { describe, expect, it } from "vitest";
 
 import { handleObjectType } from "../../src/schema-generator/object-types.js";
-import { zodSchemaToCode } from "../../src/schema-generator/schema-converter.js";
+import {
+  zodSchemaToCode,
+  type ZodSchemaResult,
+} from "../../src/schema-generator/schema-converter.js";
 
 describe("object-types with schemaContext", () => {
   describe("handleObjectType with readOnly/writeOnly filtering", () => {
@@ -16,7 +19,7 @@ describe("object-types with schemaContext", () => {
         },
       };
 
-      const result = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
       handleObjectType(schema, result, zodSchemaToCode, {
         schemaContext: "base",
       });
@@ -36,7 +39,7 @@ describe("object-types with schemaContext", () => {
         },
       };
 
-      const result = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
       handleObjectType(schema, result, zodSchemaToCode, {
         schemaContext: "request",
       });
@@ -56,7 +59,7 @@ describe("object-types with schemaContext", () => {
         },
       };
 
-      const result = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
       handleObjectType(schema, result, zodSchemaToCode, {
         schemaContext: "response",
       });
@@ -75,7 +78,7 @@ describe("object-types with schemaContext", () => {
         },
       };
 
-      const result = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toContain('"id"');
@@ -92,7 +95,7 @@ describe("object-types with schemaContext", () => {
         required: ["id", "name"],
       };
 
-      const result = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
       handleObjectType(schema, result, zodSchemaToCode, {
         schemaContext: "request",
       });
@@ -111,7 +114,7 @@ describe("object-types with schemaContext", () => {
         },
       };
 
-      const result = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
       handleObjectType(schema, result, zodSchemaToCode, {
         schemaContext: "request",
       });

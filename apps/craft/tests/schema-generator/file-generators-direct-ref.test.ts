@@ -35,7 +35,7 @@ describe("file-generators - direct $ref recursive properties", () => {
       originalSchemaName: "TreeNode",
       recursiveContext,
       schema: treeNodeSchema,
-      strictValidation: false,
+      extraProps: "strip",
     });
 
     /* Verify the generated content contains getter syntax for recursive properties */
@@ -82,7 +82,7 @@ describe("file-generators - direct $ref recursive properties", () => {
       originalSchemaName: "Category",
       recursiveContext,
       schema: categorySchema,
-      strictValidation: false,
+      extraProps: "strip",
     });
 
     /* Verify the generated content contains getter syntax for recursive properties */
@@ -124,7 +124,7 @@ describe("file-generators - direct $ref recursive properties", () => {
       originalSchemaName: "User",
       recursiveContext,
       schema: userSchema,
-      strictValidation: false,
+      extraProps: "strip",
     });
 
     /* Verify only self-references use getter syntax */
@@ -161,7 +161,7 @@ describe("file-generators - direct $ref recursive properties", () => {
       originalSchemaName: "Node",
       recursiveContext,
       schema: nodeSchema,
-      strictValidation: false,
+      extraProps: "strip",
     });
 
     /* Verify optional recursive property has .optional() */

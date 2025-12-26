@@ -14,7 +14,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
         expect(params.value.query.qr).toBe("test-503");
 
         return {
-          status: 503,
+          status: "503",
           contentType: "application/json",
           data: {
             prop1: { id: "test-id" },
@@ -56,7 +56,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
         expect(params.value.query.qr).toBe("test-504");
 
         return {
-          status: 504,
+          status: "504",
           contentType: "application/problem+json",
           data: mockData.problemDetails(),
         };
@@ -108,7 +108,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
 
         // Return a valid response type (503 in this case)
         return {
-          status: 503,
+          status: "503",
           contentType: "application/json",
           data: {
             prop1: { id: "error-id" },
@@ -119,7 +119,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
 
       // Should not reach here in this test
       return {
-        status: 503,
+        status: "503",
         contentType: "application/json",
         data: {
           prop1: { id: "unexpected" },
@@ -161,7 +161,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
 
         if (contentType === "json") {
           return {
-            status: 503,
+            status: "503",
             contentType: "application/json",
             data: {
               prop1: { id: "json-test" },
@@ -170,7 +170,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
           };
         } else if (contentType === "problem") {
           return {
-            status: 504,
+            status: "504",
             contentType: "application/problem+json",
             data: {
               type: "https://example.com/test",

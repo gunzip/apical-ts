@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, describe, it, expect } from "vitest";
 
-import { getRandomPort, MockServer } from "../setup";
-import { createAuthenticatedClient } from "../client";
+import { getRandomPort, MockServer } from "../setup.js";
+import { createAuthenticatedClient } from "../client.js";
 
 describe("octet-stream binary upload integration", () => {
   let mockServer: MockServer;

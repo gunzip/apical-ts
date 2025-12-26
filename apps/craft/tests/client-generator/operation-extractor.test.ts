@@ -374,7 +374,7 @@ describe("client-generator operation-extractor", () => {
         },
       };
 
-      const result = extractRequestContentTypes(requestBody);
+      const result = extractRequestContentTypes(requestBody as any);
 
       expect(result.isRequired).toBe(true);
       expect(result.contentTypes).toHaveLength(3);
@@ -398,7 +398,7 @@ describe("client-generator operation-extractor", () => {
         },
       };
 
-      const result = extractRequestContentTypes(requestBody);
+      const result = extractRequestContentTypes(requestBody as any);
 
       expect(result.isRequired).toBe(false);
       expect(result.contentTypes).toHaveLength(1);
@@ -410,7 +410,7 @@ describe("client-generator operation-extractor", () => {
         content: {},
       };
 
-      const result = extractRequestContentTypes(requestBody);
+      const result = extractRequestContentTypes(requestBody as any);
 
       expect(result.isRequired).toBe(true);
       expect(result.contentTypes).toHaveLength(0);
