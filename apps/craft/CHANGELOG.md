@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.8.0
+
+### Minor Changes
+
+- 6bfdd81: Add support for readOnly and writeOnly qualifiers
+
 ## 0.7.3
 
 ### Patch Changes
