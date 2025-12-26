@@ -3,10 +3,10 @@ import type {
   OperationObject,
   ParameterObject,
   ReferenceObject,
-  RequestBodyObject,
 } from "openapi3-ts/oas31";
 
 import assert from "assert";
+import { isReferenceObject } from "openapi3-ts/oas31";
 
 import type { OperationMetadata } from "./templates/operation-templates.js";
 
@@ -300,9 +300,17 @@ function collectBodyAndContentTypes(
   let bodyTypeInfo: ReturnType<typeof resolveRequestBodyType> | undefined;
   let requestContentType: string | undefined;
 
-  if (hasBody) {
-    const requestBody = operation.requestBody as RequestBodyObject;
-    bodyTypeInfo = resolveRequestBodyType(requestBody, functionName);
+  if (
+    hasBody &&
+    operation.requestBody &&
+    !isReferenceObject(operation.requestBody)
+  ) {
+    const requestBody = operation.requestBody;
+    bodyTypeInfo = resolveRequestBodyType(
+      requestBody,
+      functionName,
+      doc.components?.schemas,
+    );
     requestContentType = bodyTypeInfo.contentType;
     bodyTypeInfo.typeImports.forEach((imp) => {
       importManager.addSchemaImport(imp);
@@ -318,10 +326,15 @@ function collectBodyAndContentTypes(
   });
 
   let requestContentTypes: string[] = [];
-  if (hasBody && (operation.requestBody as RequestBodyObject)?.content) {
-    requestContentTypes = Object.keys(
-      (operation.requestBody as RequestBodyObject).content,
-    );
+  if (
+    hasBody &&
+    operation.requestBody &&
+    !isReferenceObject(operation.requestBody)
+  ) {
+    const requestBody = operation.requestBody;
+    if (requestBody.content) {
+      requestContentTypes = Object.keys(requestBody.content);
+    }
   }
 
   // Request map only meaningful when there is a body and at least one content-type mapping generated.

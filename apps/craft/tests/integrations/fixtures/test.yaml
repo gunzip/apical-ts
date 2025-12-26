@@ -695,6 +695,108 @@ paths:
                   "expires_at",
                 ]
 
+  # Test paths for readOnly/writeOnly properties
+  /users/readonly:
+    post:
+      operationId: createUserReadOnly
+      summary: Create user with readOnly properties
+      description: Tests that readOnly properties are excluded from request body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserWithReadOnly"
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithReadOnly"
+    get:
+      operationId: getUserReadOnly
+      summary: Get user with readOnly properties
+      responses:
+        "200":
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithReadOnly"
+
+  /users/writeonly:
+    post:
+      operationId: createUserWriteOnly
+      summary: Create user with writeOnly properties
+      description: Tests that writeOnly properties are excluded from response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserWithWriteOnly"
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithWriteOnly"
+
+  /users/both:
+    post:
+      operationId: createUserBoth
+      summary: Create user with both readOnly and writeOnly properties
+      description: Tests combined readOnly/writeOnly handling
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserWithBothReadAndWrite"
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithBothReadAndWrite"
+    put:
+      operationId: updateUserBoth
+      summary: Update user with both readOnly and writeOnly properties
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserWithBothReadAndWrite"
+      responses:
+        "200":
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithBothReadAndWrite"
+
+  /products/metadata:
+    post:
+      operationId: createProductWithMetadata
+      summary: Create product with nested readOnly/writeOnly metadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductWithReadOnlyMeta"
+      responses:
+        "201":
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductWithReadOnlyMeta"
+
 # -------------
 # Components
 # -------------
@@ -1391,6 +1493,96 @@ components:
     EmptyObjectWithAdditionalPropertiesTrue:
       type: object
       additionalProperties: true
+
+    # Test schemas for readOnly/writeOnly properties
+    UserWithReadOnly:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        username:
+          type: string
+        email:
+          type: string
+      required:
+        - id
+        - username
+
+    UserWithWriteOnly:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+        passwordConfirm:
+          type: string
+          writeOnly: true
+      required:
+        - username
+        - password
+
+    UserWithBothReadAndWrite:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+        secretToken:
+          type: string
+          writeOnly: true
+      required:
+        - id
+        - username
+
+    # Schema with nested object containing readOnly/writeOnly
+    ProductWithReadOnlyMeta:
+      type: object
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        metadata:
+          type: object
+          properties:
+            createdBy:
+              type: string
+              readOnly: true
+            lastModifiedBy:
+              type: string
+              readOnly: true
+            internalNotes:
+              type: string
+              writeOnly: true
+      required:
+        - sku
+        - name
 
   # -------------
   # Parameters

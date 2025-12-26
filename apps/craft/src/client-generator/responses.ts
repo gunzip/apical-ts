@@ -59,6 +59,7 @@ export function generateContentTypeMaps(
     operation,
     operationId,
     typeImports,
+    doc,
   );
   const response = buildResponseContentTypeMap(
     operation,
@@ -126,9 +127,16 @@ function buildRequestContentTypeMap(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
+  doc?: OpenAPIObject,
 ) {
-  /* Use shared request body mapping logic */
-  const result = generateRequestBodyMap(operation, operationId, typeImports);
+  /* Use shared request body mapping logic with resolved schemas for variant resolution */
+  const resolvedSchemas = doc?.components?.schemas;
+  const result = generateRequestBodyMap(
+    operation,
+    operationId,
+    typeImports,
+    resolvedSchemas,
+  );
 
   /* Merge type imports */
   result.typeImports.forEach((imp) => typeImports.add(imp));
@@ -153,8 +161,16 @@ function buildResponseContentTypeMap(
   typeImports: Set<string>,
   doc?: OpenAPIObject,
 ) {
-  /* Use shared response mapping logic with correct structure */
-  const result = generateResponseMap(operation, operationId, typeImports, doc);
+  /* Use shared response mapping logic with resolved schemas for variant resolution */
+  const resolvedSchemas = doc?.components?.schemas;
+  const result = generateResponseMap(
+    operation,
+    operationId,
+    typeImports,
+    doc,
+    {},
+    resolvedSchemas,
+  );
 
   /* Merge type imports */
   result.typeImports.forEach((imp) => typeImports.add(imp));

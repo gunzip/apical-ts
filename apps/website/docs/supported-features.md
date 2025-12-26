@@ -57,6 +57,8 @@ experience.
   OpenAPI 3.1.0 before code generation
 - 🔁 **Circular reference support**: Handles recursive schemas and circular
   references in OpenAPI specifications
+- 🔐 **ReadOnly and WriteOnly properties**: Automatic schema variant generation
+  for request and response bodies, with full type safety
 - ✅ **Comprehensive test suite**: Project includes Vitest-based tests for all
   major features
 
@@ -89,6 +91,9 @@ experience.
 - Validation error details with field-level information
 - Configurable additional properties handling (strip/loose/strict modes)
 - Respect for explicit OpenAPI `additionalProperties` settings
+- **ReadOnly and WriteOnly property handling**: Automatic variant generation for
+  schemas with `readOnly` and `writeOnly` properties, ensuring type-safe request
+  and response validation
 
 ### File Handling
 

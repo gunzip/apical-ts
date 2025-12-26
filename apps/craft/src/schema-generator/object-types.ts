@@ -1,8 +1,9 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
-import type { ExtraPropsMode } from "../shared/types.js";
+import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
 import type { ResolvedSchemas } from "./schema-converter.js";
 
+import { shouldIncludeProperty } from "../shared/types.js";
 import { generateObjectCode } from "./object-properties.js";
 import { addDefaultValue } from "./utils.js";
 
@@ -14,6 +15,7 @@ interface ObjectTypeOptions {
   extraProps?: ExtraPropsMode;
   recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
+  schemaContext?: SchemaContext;
 }
 
 type ZodSchemaCodeOptions = ObjectTypeOptions & {
@@ -40,18 +42,29 @@ export function handleObjectType(
   ) => ZodSchemaResult,
   options: ObjectTypeOptions = {},
 ): ZodSchemaResult {
-  const { currentSchemaName, extraProps, recursiveContext, resolvedSchemas } =
-    options;
+  const {
+    currentSchemaName,
+    extraProps,
+    recursiveContext,
+    resolvedSchemas,
+    schemaContext = "base",
+  } = options;
   const shape: string[] = [];
   const requiredFields = schema.required || [];
 
   if (schema.properties) {
     for (const [key, propSchema] of Object.entries(schema.properties)) {
+      /* Filter properties based on schema context (readOnly/writeOnly) */
+      if (!shouldIncludeProperty(propSchema, schemaContext)) {
+        continue;
+      }
+
       const propResult = zodSchemaToCode(propSchema, {
         currentSchemaName,
         imports: result.imports,
         recursiveContext,
         resolvedSchemas,
+        schemaContext,
       });
       result.imports = new Set([...propResult.imports, ...result.imports]);
 

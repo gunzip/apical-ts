@@ -180,7 +180,15 @@ function createComponentSchemaPromise(
 
     const schemaFile = await generationPromise;
     const filePath = path.join(context.schemasDir, schemaFile.fileName);
-    return await fs.writeFile(filePath, schemaFile.content);
+    await fs.writeFile(filePath, schemaFile.content);
+
+    /* Write variant re-export files if present */
+    if (schemaFile.variantFiles) {
+      for (const variantFile of schemaFile.variantFiles) {
+        const variantPath = path.join(context.schemasDir, variantFile.fileName);
+        await fs.writeFile(variantPath, variantFile.content);
+      }
+    }
   });
 }
 

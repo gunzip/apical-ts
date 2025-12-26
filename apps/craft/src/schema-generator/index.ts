@@ -9,7 +9,9 @@ export {
   generateRequestSchemaFile,
   generateResponseSchemaFile,
   generateSchemaFile,
+  generateSchemaVariants,
   type SchemaFileResult,
+  type SchemaVariantsResult,
 } from "./file-generators.js";
 
 export { handleObjectType } from "./object-types.js";

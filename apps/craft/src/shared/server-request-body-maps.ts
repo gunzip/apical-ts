@@ -1,6 +1,10 @@
 /* Server-specific request body mapping logic */
 
-import type { OperationObject, RequestBodyObject } from "openapi3-ts/oas31";
+import type {
+  OperationObject,
+  RequestBodyObject,
+  SchemaObject,
+} from "openapi3-ts/oas31";
 
 import type { ContentTypeMapping } from "./types.js";
 
@@ -33,6 +37,7 @@ export function generateServerRequestBodyMap(
   operation: OperationObject,
   operationId: string,
   typeImports: Set<string>,
+  resolvedSchemas?: Record<string, SchemaObject>,
 ): ServerRequestBodyMapResult {
   let defaultContentType: null | string = null;
   let contentTypeCount = 0;
@@ -68,6 +73,8 @@ export function generateServerRequestBodyMap(
       operationId,
       "Request",
       typeImports,
+      "request",
+      resolvedSchemas,
     );
     return `  "${mapping.contentType}": ${typeName};`;
   });
