@@ -120,6 +120,49 @@ export type ${responseMapName} = typeof ${responseMapName};`;
 }
 
 /**
+ * Generates route metadata module for an operation
+ */
+export function generateRouteMetadata(
+  pathKey: string,
+  method: string,
+  operation: OperationObject,
+  pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
+  doc: OpenAPIObject,
+): GeneratedRouteMetadata {
+  const metadata = extractCompleteRouteMetadata(
+    pathKey,
+    method,
+    operation,
+    pathLevelParameters,
+    doc,
+  );
+
+  const importManager = new ImportManager();
+
+  /* Build request map (always, even if empty) */
+  const requestMapCode = buildRequestMap(metadata, importManager);
+
+  /* Build response map */
+  const responseMapCode = buildResponseMap(metadata, importManager, doc);
+
+  /* Render the complete route metadata */
+  const routeCode = renderRouteMetadata({
+    method: method.toLowerCase(),
+    operationId: metadata.operationId,
+    pathKey,
+    requestMapCode,
+    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
+    responseMapCode,
+    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+  });
+
+  return {
+    importManager,
+    routeCode,
+  };
+}
+
+/**
  * Extracts metadata needed for route generation (wrapper that adds server-specific data)
  */
 function extractCompleteRouteMetadata(
@@ -163,48 +206,5 @@ function extractCompleteRouteMetadata(
     },
     operation,
     operationId,
-  };
-}
-
-/**
- * Generates route metadata module for an operation
- */
-export function generateRouteMetadata(
-  pathKey: string,
-  method: string,
-  operation: OperationObject,
-  pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
-  doc: OpenAPIObject,
-): GeneratedRouteMetadata {
-  const metadata = extractCompleteRouteMetadata(
-    pathKey,
-    method,
-    operation,
-    pathLevelParameters,
-    doc,
-  );
-
-  const importManager = new ImportManager();
-
-  /* Build request map (always, even if empty) */
-  const requestMapCode = buildRequestMap(metadata, importManager);
-
-  /* Build response map */
-  const responseMapCode = buildResponseMap(metadata, importManager, doc);
-
-  /* Render the complete route metadata */
-  const routeCode = renderRouteMetadata({
-    method: method.toLowerCase(),
-    operationId: metadata.operationId,
-    pathKey,
-    requestMapCode,
-    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
-    responseMapCode,
-    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
-  });
-
-  return {
-    importManager,
-    routeCode,
   };
 }

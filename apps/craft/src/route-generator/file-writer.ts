@@ -1,8 +1,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-import type { OperationMetadata } from "../shared/operation-extractor.js";
 import type { ImportManager } from "../core-generator/import-types.js";
+import type { OperationMetadata } from "../shared/operation-extractor.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { categorizeImportsFromManager } from "../shared/parameter-utils.js";

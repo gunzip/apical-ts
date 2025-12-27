@@ -7,8 +7,8 @@ import type {
 
 import type { ContentTypeMaps } from "../shared/content-type-maps.js";
 
-import { generateContentTypeMaps } from "../shared/content-type-maps.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { generateContentTypeMaps } from "../shared/content-type-maps.js";
 
 /**
  * Route operation metadata for template generation

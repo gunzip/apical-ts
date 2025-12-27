@@ -8,9 +8,7 @@ import type {
 import { resolveResponse } from "./utils.js";
 
 /* Re-export shared operation metadata types and functions */
-export type {
-  OperationMetadata,
-} from "../shared/operation-extractor.js";
+export type { OperationMetadata } from "../shared/operation-extractor.js";
 export { extractAllOperations } from "../shared/operation-extractor.js";
 
 /**
