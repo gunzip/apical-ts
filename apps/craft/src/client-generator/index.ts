@@ -83,7 +83,7 @@ async function processOperations(
 }
 
 /* Re-export key types and functions for external use */
-export type { OperationMetadata } from "./operation-extractor.js";
+export type { OperationMetadata } from "../shared/operation-extractor.js";
 export {
   extractAllOperations,
   extractServerUrls,
