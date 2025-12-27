@@ -37,12 +37,12 @@ export function renderServerOperationWrapper(
   const responseTypeImport = responseMapTypeName
     ? `import type { ${sanitizedId}Response } from "../routes/${sanitizedId}.js";`
     : "";
-  /* Import runtime values and types together to avoid duplication */
+  /* Import runtime request/response map values; use typeof for types */
   const requestMapImport = requestMapTypeName
-    ? `import { ${requestMapTypeName}, type ${requestMapTypeName} as ${requestMapTypeName}Type } from "../routes/${sanitizedId}.js";`
+    ? `import { ${requestMapTypeName} } from "../routes/${sanitizedId}.js";`
     : "";
   const responseMapImport = responseMapTypeName
-    ? `import { ${responseMapTypeName}, type ${responseMapTypeName} as ${responseMapTypeName}Type } from "../routes/${sanitizedId}.js";`
+    ? `import { ${responseMapTypeName} } from "../routes/${sanitizedId}.js";`
     : "";
 
   const validationLogic = renderValidationLogic(
