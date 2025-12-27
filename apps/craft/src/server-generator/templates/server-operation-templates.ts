@@ -1,11 +1,9 @@
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
-import type { ParameterGroups } from "../../client-generator/models/parameter-models.js";
 import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
 
 import { ImportManager } from "../../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
-import { generateParameterSchemas } from "../../shared/parameter-schemas.js";
 import { generateResponseMap } from "../../shared/response-maps.js";
 import { generateResponseUnion } from "../../shared/response-union-generator.js";
 
@@ -19,18 +17,15 @@ export interface ServerOperationTemplateParams {
   /** HTTP method in lowercase (e.g., "get", "post") */
   method: string;
   operationId: string;
-  parameterGroups: ParameterGroups;
   /** Original OpenAPI path including path parameters (e.g., "/pets/{petId}") */
   pathKey: string;
-  requestMapCode: string;
   requestMapTypeName?: string;
-  responseMapCode: string;
   responseMapTypeName?: string;
   summary?: string;
 }
 
 /**
- * Builds server request map for operations with multiple content types
+ * Builds server request map for operations with request bodies
  */
 export function buildServerRequestMap(
   metadata: ServerOperationMetadata,
@@ -49,7 +44,7 @@ export function buildServerRequestMap(
   /* Convert the client generator format (with semicolons) to object literal format (with commas) */
   const fixedMapType = serverRequestBodyMap.requestMapType.replace(/;/g, ",");
 
-  return `export const ${mapName} = ${fixedMapType};
+  return `export const ${mapName} = ${fixedMapType} as const;
 export type ${mapName} = typeof ${mapName};`;
 }
 
@@ -118,20 +113,24 @@ export function renderServerOperationWrapper(
     method,
     operationId,
     pathKey,
-    requestMapCode,
     requestMapTypeName,
-    responseMapCode,
     responseMapTypeName,
   } = params;
 
   const sanitizedId = sanitizeIdentifier(operationId);
 
-  /* Generate inline parameter schemas with server-specific transformations */
-  const parameterSchemas = generateInlineParameterSchemas(
-    operationId,
-    params.parameterGroups,
-    importManager,
-  );
+  /* Import request/response maps and response type from route metadata */
+  const responseTypeImport = responseMapTypeName
+    ? `import type { ${sanitizedId}Response } from "../routes/${sanitizedId}.js";`
+    : "";
+  /* Import runtime values and types together to avoid duplication */
+  const requestMapImport = requestMapTypeName
+    ? `import { ${requestMapTypeName}, type ${requestMapTypeName} as ${requestMapTypeName}Type } from "../routes/${sanitizedId}.js";`
+    : "";
+  const responseMapImport = responseMapTypeName
+    ? `import { ${responseMapTypeName}, type ${responseMapTypeName} as ${responseMapTypeName}Type } from "../routes/${sanitizedId}.js";`
+    : "";
+
   const validationLogic = renderValidationLogic(
     operationId,
     requestMapTypeName,
@@ -141,7 +140,7 @@ export function renderServerOperationWrapper(
   /* Build handler and parsed params types */
   const responseType = `${sanitizedId}Response`;
   const bodyType = requestMapTypeName
-    ? `z.infer<(typeof ${requestMapTypeName})["application/json"]>`
+    ? `z.infer<(typeof ${requestMapTypeName})[keyof typeof ${requestMapTypeName}]>`
     : hasBody
       ? "unknown"
       : "undefined";
@@ -152,10 +151,11 @@ export function renderServerOperationWrapper(
   | { kind: "headers-error"; error: z.ZodError; isValid: false }
   | { kind: "body-error"; error: z.ZodError; isValid: false };`;
 
+  /* Define server-specific parsed params type with server transformations applied */
   const parsedParamsType = `type ${sanitizedId}ParsedParams = {
-  query: z.infer<typeof ${sanitizedId}QuerySchema>;
-  path: z.infer<typeof ${sanitizedId}PathSchema>;
-  headers: z.infer<typeof ${sanitizedId}HeadersSchema>;
+  query: z.infer<typeof ${sanitizedId}RouteMetadata.params.query>;
+  path: z.infer<typeof ${sanitizedId}RouteMetadata.params.path>;
+  headers: z.infer<typeof ${sanitizedId}RouteMetadata.params.headers>;
   body?: ${bodyType};
 };`;
 
@@ -177,27 +177,21 @@ ${validationLogic}
   };
 }`;
 
-  /* Include responseMap in the route function return */
-  const responseMapFieldValue = responseMapTypeName
-    ? `${sanitizedId}ResponseMap`
-    : "{}";
+  /* Import route metadata from routes directory and spread with wrapper */
   const routeFunction = `export function route() {
   return {
-    path: "${pathKey}",
-    method: "${method}",
+    ...${sanitizedId}RouteMetadata,
     wrapper: ${functionName},
-    operationId: "${sanitizedId}",
-    requestMap: ${requestMapTypeName || "{}"},
-    responseMap: ${responseMapFieldValue},
   } as const;
 }`;
 
   /* Combine all parts */
   const parts = [
     `import * as z from "zod";`,
-    parameterSchemas,
-    requestMapCode,
-    responseMapCode,
+    `import { serverRoute as ${sanitizedId}RouteMetadata } from "../routes/${sanitizedId}.js";`,
+    responseTypeImport,
+    requestMapImport,
+    responseMapImport,
     validationErrorType,
     parsedParamsType,
     handlerType,
@@ -206,28 +200,6 @@ ${validationLogic}
   ].filter(Boolean);
 
   return parts.join("\n\n");
-}
-
-/**
- * Generates inline parameter schemas with server-specific transformations
- */
-function generateInlineParameterSchemas(
-  operationId: string,
-  parameterGroups: ParameterGroups,
-  importManager: ImportManager,
-): string {
-  const result = generateParameterSchemas(operationId, parameterGroups, {
-    /* Server requires coercion and lowercase headers */
-    coercePrimitives: true,
-    lowercaseHeaderKeys: true,
-  });
-
-  /* Add any type imports from schema generation to ImportManager */
-  for (const typeImport of result.typeImports) {
-    importManager.addSchemaImport(typeImport);
-  }
-
-  return result.schemaCode;
 }
 
 /**
@@ -240,31 +212,33 @@ function renderValidationLogic(
 ): string {
   const sanitizedId = sanitizeIdentifier(operationId);
   const bodyType = requestMapTypeName
-    ? `z.infer<(typeof ${requestMapTypeName})["application/json"]>`
+    ? `z.infer<(typeof ${requestMapTypeName})[keyof typeof ${requestMapTypeName}]>`
     : "undefined";
-  const shared = `  const queryParse = ${sanitizedId}QuerySchema.safeParse(req.query);
+  const shared = `  const queryParse = ${sanitizedId}RouteMetadata.params.query.safeParse(req.query);
   if (!queryParse.success) return handler({ kind: "query-error", error: queryParse.error, isValid: false });
 
-  const pathParse = ${sanitizedId}PathSchema.safeParse(req.path);
+  const pathParse = ${sanitizedId}RouteMetadata.params.path.safeParse(req.path);
   if (!pathParse.success) return handler({ kind: "path-error", error: pathParse.error, isValid: false });
 
-  const headersParse = ${sanitizedId}HeadersSchema.safeParse(req.headers);
+  const headersParse = ${sanitizedId}RouteMetadata.params.headers.safeParse(req.headers);
   if (!headersParse.success) return handler({ kind: "headers-error", error: headersParse.error, isValid: false });`;
 
   const bodyLogic = requestMapTypeName
     ? `
   let parsedBody: ${bodyType} | undefined = undefined;
-  if (req.body !== undefined && req.contentType) {
+  if (req.body !== undefined) {
+    /* Content type must be provided for request body validation */
+    if (!req.contentType) {
+      return handler({ kind: "body-error", error: new z.ZodError([{ code: "custom", message: "Content-Type header is required", path: [] }]), isValid: false });
+    }
     const schema = ${requestMapTypeName}[req.contentType];
     if (schema) {
       const bodyParse = schema.safeParse(req.body);
       if (!bodyParse.success) return handler({ kind: "body-error", error: bodyParse.error, isValid: false });
       parsedBody = bodyParse.data as ${bodyType};
     } else {
-      /* Unknown content-type fallback: accept any */
-      const bodyParse = z.any().safeParse(req.body);
-      if (!bodyParse.success) return handler({ kind: "body-error", error: bodyParse.error, isValid: false });
-      parsedBody = bodyParse.data as ${bodyType};
+      /* Unknown content-type: reject */
+      return handler({ kind: "body-error", error: new z.ZodError([{ code: "custom", message: \`Unsupported Content-Type: \${req.contentType}\`, path: [] }]), isValid: false });
     }
   }`
     : hasBody

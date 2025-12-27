@@ -46,7 +46,7 @@ describe("core-generator response reference resolution", () => {
   });
 
   it("should have generated server imports for $ref response schemas", async () => {
-    // Check that server files import the generated response schemas
+    // Check that server files import response types from routes
     const serverDir = path.join(
       process.cwd(),
       "tests/integrations/generated/server",
@@ -55,8 +55,9 @@ describe("core-generator response reference resolution", () => {
     const testFile = path.join(serverDir, "testResponseRefWithInlineSchema.ts");
     const testContent = await fs.readFile(testFile, "utf-8");
 
+    // Server now imports response types from routes, not directly from schemas
     expect(testContent).toContain(
-      'import { TestResponseRefWithInlineSchema200Response } from "../schemas/TestResponseRefWithInlineSchema200Response.js"',
+      'import type { testResponseRefWithInlineSchemaResponse } from "../routes/testResponseRefWithInlineSchema.js"',
     );
   });
 });

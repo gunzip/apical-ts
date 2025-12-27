@@ -82,7 +82,9 @@ export function extractServerOperationMetadata(
     typeImports,
   );
 
-  const shouldGenerateRequestMap = contentTypeMaps.requestContentTypeCount > 1;
+  /* Always generate request map if there's a body, not just for multiple content types */
+  const shouldGenerateRequestMap =
+    hasBody && contentTypeMaps.requestContentTypeCount > 0;
   /* Always generate response maps for server like client does */
   const shouldGenerateResponseMap = true;
 
@@ -133,15 +135,7 @@ export function generateServerOperationWrapper(
 
   const importManager = new ImportManager();
 
-  /* Build request map if needed */
-  const requestMapCode = metadata.bodyInfo.shouldGenerateRequestMap
-    ? buildServerRequestMap(metadata, importManager)
-    : "";
-
-  /* Build response map */
-  const responseMapCode = buildServerResponseMap(metadata, importManager, doc);
-
-  /* Render the complete wrapper function */
+  /* Render the complete wrapper function - no need to generate maps, import from routes */
   const wrapperCode = renderServerOperationWrapper(
     {
       functionName: metadata.functionName,
@@ -150,9 +144,7 @@ export function generateServerOperationWrapper(
       operationId: metadata.operationId,
       parameterGroups: metadata.parameterGroups,
       pathKey,
-      requestMapCode,
       requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
-      responseMapCode,
       responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
       summary: metadata.summary,
     },

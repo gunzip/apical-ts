@@ -98,13 +98,11 @@ describe("server-generator - problem statement validation", () => {
     expect(result.wrapperCode).toContain("petFindByStatusParsedParams");
     expect(result.wrapperCode).toContain("petFindByStatusHandler");
 
-    /* Verify response type discriminated by status and contentType */
-    expect(result.wrapperCode).toMatch(
-      /status: "200".*contentType: "application\/json"/,
+    /* Verify response type is imported from routes */
+    expect(result.wrapperCode).toContain(
+      'import type { petFindByStatusResponse } from "../routes/petFindByStatus.js"',
     );
-    expect(result.wrapperCode).toMatch(
-      /status: "404".*contentType: "text\/plain"/,
-    );
+    expect(result.wrapperCode).toContain("petFindByStatusResponse");
 
     /* Verify handler type includes both success and error cases */
     expect(result.wrapperCode).toMatch(
@@ -155,20 +153,19 @@ describe("server-generator - problem statement validation", () => {
       doc as any,
     );
 
-    /* Should reference parameter schemas (now imported) */
-    expect(result.wrapperCode).toContain("noParamsQuerySchema");
-    expect(result.wrapperCode).toContain("noParamsPathSchema");
-    expect(result.wrapperCode).toContain("noParamsHeadersSchema");
+    /* Should reference server parameter schemas from serverRoute.params */
+    expect(result.wrapperCode).toContain("noParamsRouteMetadata");
+    expect(result.wrapperCode).toContain("noParamsRouteMetadata.params");
 
     /* Should still perform validation even with empty schemas */
     expect(result.wrapperCode).toContain(
-      "queryParse = noParamsQuerySchema.safeParse(req.query)",
+      "queryParse = noParamsRouteMetadata.params.query.safeParse(req.query)",
     );
     expect(result.wrapperCode).toContain(
-      "pathParse = noParamsPathSchema.safeParse(req.path)",
+      "pathParse = noParamsRouteMetadata.params.path.safeParse(req.path)",
     );
     expect(result.wrapperCode).toContain(
-      "headersParse = noParamsHeadersSchema.safeParse(req.headers)",
+      "headersParse = noParamsRouteMetadata.params.headers.safeParse(req.headers)",
     );
   });
 });

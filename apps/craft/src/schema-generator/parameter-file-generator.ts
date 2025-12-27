@@ -38,6 +38,23 @@ export async function generateParameterSchemaFile(
     options,
   );
 
+  /* Generate server-specific schemas with coercion and lowercase headers */
+  const serverResult = generateParameterSchemas(
+    operationId,
+    parameterMetadata.parameterGroups,
+    {
+      coercePrimitives: true,
+      lowercaseHeaderKeys: true,
+    },
+  );
+
+  const serverSchemaPrefix = "Server";
+  const serverSchemaNames = {
+    querySchema: `${sanitizedId}${serverSchemaPrefix}QuerySchema`,
+    pathSchema: `${sanitizedId}${serverSchemaPrefix}PathSchema`,
+    headersSchema: `${sanitizedId}${serverSchemaPrefix}HeadersSchema`,
+  };
+
   /* Build the file content */
   const imports: string[] = [];
 
@@ -54,21 +71,74 @@ export async function generateParameterSchemaFile(
     }
   }
 
+  /* Generate ParsedParams runtime object and type */
+  const parsedParamsName = `${sanitizedId}ParsedParams`;
+  const parsedParamsObject = `export const ${parsedParamsName} = {
+  query: ${result.schemaNames.querySchema},
+  path: ${result.schemaNames.pathSchema},
+  headers: ${result.schemaNames.headersSchema},
+} as const;`;
+
+  const parsedParamsType = `export type ${parsedParamsName}Type = {
+  query: z.infer<typeof ${result.schemaNames.querySchema}>;
+  path: z.infer<typeof ${result.schemaNames.pathSchema}>;
+  headers: z.infer<typeof ${result.schemaNames.headersSchema}>;
+};`;
+
+  /* Generate server-specific ParsedParams */
+  const serverParsedParamsObject = `export const ${sanitizedId}${serverSchemaPrefix}ParsedParams = {
+  query: ${serverSchemaNames.querySchema},
+  path: ${serverSchemaNames.pathSchema},
+  headers: ${serverSchemaNames.headersSchema},
+} as const;`;
+
+  /* Rename server schema definitions to use Server prefix */
+  const serverSchemaCode = serverResult.schemaCode
+    .replace(
+      new RegExp(`const ${result.schemaNames.querySchema} =`, "g"),
+      `const ${serverSchemaNames.querySchema} =`,
+    )
+    .replace(
+      new RegExp(`const ${result.schemaNames.pathSchema} =`, "g"),
+      `const ${serverSchemaNames.pathSchema} =`,
+    )
+    .replace(
+      new RegExp(`const ${result.schemaNames.headersSchema} =`, "g"),
+      `const ${serverSchemaNames.headersSchema} =`,
+    );
+
   const content = [
     ...imports,
     "",
     "/* Parameter schemas for type-safe inputs */",
     result.schemaCode,
     "",
+    "/* Server parameter schemas with coercion and lowercase headers */",
+    serverSchemaCode,
+    "",
     "/* Export schemas for external use */",
     `export { ${result.schemaNames.querySchema} };`,
     `export { ${result.schemaNames.pathSchema} };`,
     `export { ${result.schemaNames.headersSchema} };`,
     "",
+    "/* Export server schemas */",
+    `export { ${serverSchemaNames.querySchema} };`,
+    `export { ${serverSchemaNames.pathSchema} };`,
+    `export { ${serverSchemaNames.headersSchema} };`,
+    "",
     "/* Export types for external use */",
     `export type ${result.schemaNames.querySchema} = z.infer<typeof ${result.schemaNames.querySchema}>;`,
     `export type ${result.schemaNames.pathSchema} = z.infer<typeof ${result.schemaNames.pathSchema}>;`,
     `export type ${result.schemaNames.headersSchema} = z.infer<typeof ${result.schemaNames.headersSchema}>;`,
+    "",
+    "/* Combined parsed parameters object */",
+    parsedParamsObject,
+    "",
+    "/* Combined parsed parameters type */",
+    parsedParamsType,
+    "",
+    "/* Combined server parsed parameters object */",
+    serverParsedParamsObject,
     "",
   ].join("\n");
 
