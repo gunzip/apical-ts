@@ -52,7 +52,7 @@ async function processServerOperations(
     pathLevelParameters,
   } of operations) {
     const promise = limit(async () => {
-      const { importManager, wrapperCode } = generateServerOperationWrapper(
+      const { wrapperCode } = generateServerOperationWrapper(
         pathKey,
         method,
         operation,
@@ -63,7 +63,6 @@ async function processServerOperations(
       await writeServerOperationFile(
         operationId,
         wrapperCode,
-        importManager,
         serverOperationsDir,
       );
     });

@@ -11,14 +11,12 @@ import { extractOperationMetadata } from "../client-generator/operation-function
 import { extractParameterGroups } from "../client-generator/parameters.js";
 import { resolveRequestBodyType } from "../client-generator/request-body.js";
 import { generateContentTypeMaps } from "../client-generator/responses.js";
-import { ImportManager } from "../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateServerRequestBodyMap } from "../shared/server-request-body-maps.js";
 import { renderServerOperationWrapper } from "./templates/server-operation-templates.js";
 
-/* Result of generating a server wrapper function with imports */
+/* Result of generating a server wrapper function */
 export interface GeneratedServerWrapper {
-  importManager: ImportManager;
   wrapperCode: string;
 }
 
@@ -129,8 +127,6 @@ export function generateServerOperationWrapper(
     doc,
   );
 
-  const importManager = new ImportManager();
-
   /* Render the complete wrapper function - no need to generate maps, import from routes */
   const wrapperCode = renderServerOperationWrapper({
     functionName: metadata.functionName,
@@ -144,7 +140,6 @@ export function generateServerOperationWrapper(
   });
 
   return {
-    importManager,
     wrapperCode,
   };
 }
