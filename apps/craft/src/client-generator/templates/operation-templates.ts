@@ -185,6 +185,58 @@ export function buildTypeAliases(config: TypeAliasesConfig): string {
   return typeAliases;
 }
 
+/**
+ * Builds type aliases by importing from route files instead of regenerating them.
+ * This is the new approach that consumes route metadata.
+ */
+export function buildTypeAliasesFromRoute(config: {
+  importManager: ImportManager;
+  operationId: string;
+  requestMapTypeName: string;
+  responseMapTypeName: string;
+  shouldGenerateRequestMap: boolean;
+  shouldGenerateResponseMap: boolean;
+}): string {
+  const sanitizedId = sanitizeIdentifier(config.operationId);
+
+  /* Convert PascalCase type names to camelCase for route exports */
+  const requestMapName = sanitizedId + "RequestMap";
+  const responseMapName = sanitizedId + "ResponseMap";
+
+  /* Import route metadata (requestMap, responseMap, response union type) */
+  config.importManager.addRouteImport(
+    sanitizedId,
+    requestMapName,
+    responseMapName,
+  );
+
+  /* Create type aliases that map PascalCase names to camelCase imports */
+  let typeAliases = "";
+  
+  /* Re-export the runtime values with PascalCase names for backward compatibility */
+  if (config.shouldGenerateRequestMap) {
+    typeAliases += `export const ${config.requestMapTypeName} = ${requestMapName};\n`;
+    typeAliases += `type ${config.requestMapTypeName} = typeof ${requestMapName};\n`;
+  }
+  
+  if (config.shouldGenerateResponseMap) {
+    typeAliases += `export const ${config.responseMapTypeName} = ${responseMapName};\n`;
+    typeAliases += `type ${config.responseMapTypeName} = typeof ${responseMapName};\n\n`;
+  }
+
+  /* Generate the DeserializerMap type based on the imported ResponseMap */
+  if (config.shouldGenerateResponseMap) {
+    const perOpDeserializerMap = `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = Partial<Record<{
+  [Status in keyof ${config.responseMapTypeName}]: keyof ${config.responseMapTypeName}[Status]
+}[keyof ${config.responseMapTypeName}], import('./config.js').Deserializer>>;\n\n`;
+    typeAliases += perOpDeserializerMap;
+  } else {
+    typeAliases += `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = import('./config.js').DeserializerMap;\n\n`;
+  }
+
+  return typeAliases;
+}
+
 export function renderOperationFunction(
   config: OperationFunctionRenderConfig,
 ): string {

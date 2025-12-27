@@ -12,6 +12,7 @@ import type { OperationMetadata } from "./templates/operation-templates.js";
 
 import { ImportManager } from "../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { generateContentTypeMaps } from "../shared/content-type-maps.js";
 import { generateFunctionBody } from "./code-generation.js";
 import { extractParameterGroups } from "./parameters.js";
 import {
@@ -19,10 +20,7 @@ import {
   buildParameterInterface,
 } from "./parameters.js";
 import { resolveRequestBodyType } from "./request-body.js";
-import {
-  generateContentTypeMaps,
-  generateResponseHandlers,
-} from "./responses.js";
+import { generateResponseHandlers } from "./responses.js";
 import {
   extractAuthHeaders,
   getOperationSecuritySchemes,
@@ -31,7 +29,7 @@ import {
 import {
   buildGenericParams,
   buildParameterDeclaration,
-  buildTypeAliases,
+  buildTypeAliasesFromRoute,
   renderOperationFunction,
 } from "./templates/operation-templates.js";
 import { renderDefaultResponseHandler } from "./templates/response-templates.js";
@@ -99,13 +97,38 @@ export function extractOperationMetadata(
     operation.operationId,
   );
 
+  /* Import parameter schemas when operation has an operationId */
+  if (operation.operationId) {
+    const sanitizedId = sanitizeIdentifier(operation.operationId);
+    
+    /* Import query schema if has query parameters */
+    if (parameterGroups.queryParams.length > 0) {
+      importManager.addParameterSchema(sanitizedId, "Query");
+    }
+    
+    /* Import path schema if has path parameters */
+    if (parameterGroups.pathParams.length > 0) {
+      importManager.addParameterSchema(sanitizedId, "Path");
+    }
+    
+    /* Import headers schema if has header parameters or security headers */
+    if (parameterGroups.headerParams.length > 0 || (operationSecurityHeaders && operationSecurityHeaders.length > 0)) {
+      importManager.addParameterSchema(sanitizedId, "Headers");
+    }
+  }
+
   /* Responses & union return type */
   /* Build response handlers + discriminated union return type (ApiResponse<code, data>) */
+  /* Pass camelCase runtime value name for response map access */
+  const responseMapRuntimeName = bodyInfo.shouldExportResponseMap
+    ? sanitizeIdentifier(operation.operationId) + "ResponseMap"
+    : undefined;
+  
   const responseHandlers = generateResponseHandlers(
     operation,
     responseTypeImports,
     bodyInfo.shouldExportResponseMap,
-    bodyInfo.shouldExportResponseMap ? bodyInfo.responseMapTypeName : undefined,
+    responseMapRuntimeName,
     doc,
   );
 
@@ -208,14 +231,10 @@ export function generateOperationFunction(
   });
 
   /* Emit request/response map type aliases (only when non-empty / applicable) */
-  const typeAliases = buildTypeAliases({
-    contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+  const typeAliases = buildTypeAliasesFromRoute({
     importManager: metadata.importManager,
-    /* Parameter schema generation */
     operationId: operation.operationId,
-    parameterGroups: metadata.parameterGroups,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
-    responseMapName: metadata.responseHandlers.responseMapName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,

@@ -84,13 +84,22 @@ describe("DeserializerMap Integration Test", () => {
     const operationPath = join(generatedDir, "client/testAuthBearerHttp.ts");
     const operationContent = await readFile(operationPath, "utf-8");
 
-    /* Response map should still be indexed by status code first */
+    /* Response map should be re-exported from client */
     expect(operationContent).toContain(
       "export const TestAuthBearerHttpResponseMap",
     );
-    expect(operationContent).toContain('"503": {');
-    expect(operationContent).toContain('"504": {');
-    expect(operationContent).toContain('"application/json"');
-    expect(operationContent).toContain('"application/problem+json"');
+    
+    /* Check that route is imported */
+    expect(operationContent).toContain(
+      'from "../routes/testAuthBearerHttp.js"',
+    );
+    
+    /* Response map structure should be in route file */
+    const routePath = join(generatedDir, "routes/testAuthBearerHttp.ts");
+    const routeContent = await readFile(routePath, "utf-8");
+    expect(routeContent).toContain('"503": {');
+    expect(routeContent).toContain('"504": {');
+    expect(routeContent).toContain('"application/json"');
+    expect(routeContent).toContain('"application/problem+json"');
   });
 });

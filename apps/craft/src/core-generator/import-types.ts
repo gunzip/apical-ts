@@ -6,9 +6,11 @@ export interface ImportInfo {
   readonly filePath?: string; // For explicit file paths
   readonly isSchema?: boolean; // Whether it's a schema (e.g., QuerySchema) vs type (e.g., Query)
   readonly name: string;
-  readonly operationId?: string; // For parameter imports
+  readonly operationId?: string; // For parameter imports or route imports
   readonly parameterType?: ParameterType; // For parameter imports
-  readonly type: "config" | "parameter" | "schema" | "zod";
+  readonly requestMapName?: string; // For route imports
+  readonly responseMapName?: string; // For route imports
+  readonly type: "config" | "parameter" | "route" | "schema" | "zod";
 }
 
 export interface ParameterImportGroup {
@@ -92,6 +94,45 @@ export class ImportManager {
     }
   }
 
+  /**
+   * Adds import from route file (requestMap, responseMap, and potentially response union type)
+   */
+  addRouteImport(
+    operationId: string,
+    requestMapName: string,
+    responseMapName: string,
+  ): void {
+    // Import request map (both type and value with same name, distinguished by TypeScript automatically)
+    const requestMapImportInfo: ImportInfo = {
+      filePath: `../routes/${operationId}.js`,
+      name: requestMapName,
+      operationId,
+      requestMapName,
+      type: "route",
+    };
+    const requestMapKey = this.generateKey(requestMapImportInfo);
+
+    if (!this.importKeys.has(requestMapKey)) {
+      this.importKeys.add(requestMapKey);
+      this.imports.push(requestMapImportInfo);
+    }
+
+    // Import response map (both type and value with same name)
+    const responseMapImportInfo: ImportInfo = {
+      filePath: `../routes/${operationId}.js`,
+      name: responseMapName,
+      operationId,
+      responseMapName,
+      type: "route",
+    };
+    const responseMapKey = this.generateKey(responseMapImportInfo);
+
+    if (!this.importKeys.has(responseMapKey)) {
+      this.importKeys.add(responseMapKey);
+      this.imports.push(responseMapImportInfo);
+    }
+  }
+
   addSchemaImport(schemaName: string): void {
     const importInfo: ImportInfo = {
       filePath: `../schemas/${schemaName}.js`,
@@ -159,6 +200,10 @@ export class ImportManager {
     return this.imports.filter((imp) => imp.type === "schema");
   }
 
+  getRouteImports(): ImportInfo[] {
+    return this.imports.filter((imp) => imp.type === "route");
+  }
+
   hasZodImport(): boolean {
     return this.imports.some((imp) => imp.type === "zod");
   }
@@ -171,6 +216,8 @@ export class ImportManager {
       importInfo.operationId,
       importInfo.parameterType,
       importInfo.isSchema?.toString(),
+      importInfo.requestMapName,
+      importInfo.responseMapName,
     ];
     return parts.filter(Boolean).join("|");
   }
