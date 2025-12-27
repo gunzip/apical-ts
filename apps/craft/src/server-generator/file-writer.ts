@@ -2,13 +2,8 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import type { OperationMetadata } from "../client-generator/operation-extractor.js";
-import type { ImportManager } from "../core-generator/import-types.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import {
-  categorizeImportsFromManager,
-  filterServerParameterImportsFromManager,
-} from "../shared/parameter-utils.js";
 
 /**
  * Creates server operations directory structure
@@ -80,42 +75,8 @@ ${routesObject}
 export async function writeServerOperationFile(
   operationId: string,
   wrapperCode: string,
-  importManager: ImportManager,
   serverOperationsDir: string,
 ): Promise<void> {
-  /* Use structured approach to categorize imports */
-  const categorized = categorizeImportsFromManager(importManager);
-
-  /* Filter out parameter schema imports that should be skipped for server generation */
-  const allowedParameterImports =
-    filterServerParameterImportsFromManager(importManager);
-
-  /* Build schema imports from regular imports and allowed parameter imports */
-  const schemaImports: string[] = [];
-
-  // Add regular schema imports
-  categorized.regularImports.forEach((imp) => {
-    schemaImports.push(`import { ${imp} } from "../schemas/${imp}.js";`);
-  });
-
-  // Add allowed parameter imports (non-schema parameters)
-  allowedParameterImports.forEach((paramImport) => {
-    schemaImports.push(
-      `import { ${paramImport.importName} } from "../schemas/${paramImport.importName}.js";`,
-    );
-  });
-
-  /* Build imports section */
-  const imports: string[] = [];
-  if (schemaImports.length > 0) {
-    imports.push(...schemaImports);
-  }
-
-  const fullCode =
-    imports.length > 0
-      ? `${imports.join("\n")}\n\n${wrapperCode}`
-      : wrapperCode;
-
   const filePath = path.join(serverOperationsDir, `${operationId}.ts`);
-  await fs.writeFile(filePath, fullCode);
+  await fs.writeFile(filePath, wrapperCode);
 }

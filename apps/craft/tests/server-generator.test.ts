@@ -43,12 +43,14 @@ describe("server-generator operation wrapper", () => {
     );
 
     expect(result.wrapperCode).toContain("testSimpleQueryWrapper");
-    expect(result.wrapperCode).toContain("testSimpleQueryQuerySchema");
-    // Parameter schemas are now imported, not inline, so we test for usage, not definition
+    expect(result.wrapperCode).toContain("testSimpleQueryRouteMetadata");
+    // Parameter schemas are now accessed from serverRoute.params
     expect(result.wrapperCode).toContain(
-      "testSimpleQueryQuerySchema.safeParse",
+      "testSimpleQueryRouteMetadata.params.query.safeParse",
     );
-    expect(result.wrapperCode).toContain("testSimpleQueryPathSchema.safeParse");
+    expect(result.wrapperCode).toContain(
+      "testSimpleQueryRouteMetadata.params.path.safeParse",
+    );
     expect(result.wrapperCode).toContain('kind: "query-error"');
     expect(result.wrapperCode).toContain('kind: "path-error"');
     expect(result.wrapperCode).toContain('kind: "headers-error"');
@@ -118,12 +120,12 @@ describe("server-generator operation wrapper", () => {
       doc as any,
     );
 
-    /* Schema validation now happens via imported schemas, not inline */
+    /* Schema validation now uses server-specific schemas from serverRoute.params */
     expect(result.wrapperCode).toContain(
-      "testStrictValidationQuerySchema.safeParse",
+      "testStrictValidationRouteMetadata.params.query.safeParse",
     );
     expect(result.wrapperCode).toContain(
-      "testStrictValidationPathSchema.safeParse",
+      "testStrictValidationRouteMetadata.params.path.safeParse",
     );
     expect(result.wrapperCode).not.toContain("z.strictObject(");
   });
@@ -173,11 +175,11 @@ describe("server-generator operation wrapper", () => {
       doc as any,
     );
 
-    /* Verify that request body validation uses regular schemas (no more strict variants) */
+    /* Verify that request body validation uses schemas from request map imported from routes */
     expect(result.wrapperCode).toContain("schema.safeParse(req.body)");
-    expect(result.wrapperCode).toContain("TestStrictBodyValidationRequest");
-    expect(result.wrapperCode).not.toContain(
-      "TestStrictBodyValidationRequestStrict",
+    expect(result.wrapperCode).toContain("testStrictBodyValidationRequestMap");
+    expect(result.wrapperCode).toContain(
+      'from "../routes/testStrictBodyValidation.js"',
     );
     expect(result.wrapperCode).toContain("testStrictBodyValidationWrapper");
     expect(result.wrapperCode).toContain("body-error");
@@ -212,9 +214,11 @@ describe("server-generator operation wrapper", () => {
       doc as any,
     );
 
-    expect(result.wrapperCode).toContain("testWithPathPathSchema");
-    // Path parameter schemas are now imported, not inline, so we test for usage
-    expect(result.wrapperCode).toContain("testWithPathPathSchema.safeParse");
+    expect(result.wrapperCode).toContain("testWithPathRouteMetadata");
+    // Path parameter schemas are now accessed from serverRoute.params
+    expect(result.wrapperCode).toContain(
+      "testWithPathRouteMetadata.params.path.safeParse",
+    );
     expect(result.wrapperCode).toContain("pathParse.data");
   });
 
@@ -292,14 +296,12 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("testAuthBearerWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
-    expect(result.wrapperCode).toContain('path: "/auth/{userId}"');
-    expect(result.wrapperCode).toContain('method: "get"');
-    expect(result.wrapperCode).toContain("wrapper: testAuthBearerWrapper");
-    expect(result.wrapperCode).toContain('operationId: "testAuthBearer"');
-    expect(result.wrapperCode).toContain("requestMap: {}");
+    /* Route metadata is imported and spread */
     expect(result.wrapperCode).toContain(
-      "responseMap: testAuthBearerResponseMap",
+      "import { serverRoute as testAuthBearerRouteMetadata }",
     );
+    expect(result.wrapperCode).toContain("...testAuthBearerRouteMetadata");
+    expect(result.wrapperCode).toContain("wrapper: testAuthBearerWrapper");
   });
 
   it("should generate route function for different HTTP methods", () => {
@@ -338,12 +340,12 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("createPetWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
-    expect(result.wrapperCode).toContain('path: "/pets"');
-    expect(result.wrapperCode).toContain('method: "post"');
+    /* Route metadata is imported and spread */
+    expect(result.wrapperCode).toContain(
+      "import { serverRoute as createPetRouteMetadata }",
+    );
+    expect(result.wrapperCode).toContain("...createPetRouteMetadata");
     expect(result.wrapperCode).toContain("wrapper: createPetWrapper");
-    expect(result.wrapperCode).toContain('operationId: "createPet"');
-    expect(result.wrapperCode).toContain("requestMap: {}");
-    expect(result.wrapperCode).toContain("responseMap: createPetResponseMap");
   });
 
   it("should preserve complex path parameters in route function", () => {
@@ -383,16 +385,12 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("updatePetStatusWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
+    /* Route metadata is imported and spread */
     expect(result.wrapperCode).toContain(
-      'path: "/pets/{petId}/status/{statusId}"',
+      "import { serverRoute as updatePetStatusRouteMetadata }",
     );
-    expect(result.wrapperCode).toContain('method: "patch"');
+    expect(result.wrapperCode).toContain("...updatePetStatusRouteMetadata");
     expect(result.wrapperCode).toContain("wrapper: updatePetStatusWrapper");
-    expect(result.wrapperCode).toContain('operationId: "updatePetStatus"');
-    expect(result.wrapperCode).toContain("requestMap: {}");
-    expect(result.wrapperCode).toContain(
-      "responseMap: updatePetStatusResponseMap",
-    );
   });
 
   it("should include operationId and wrapper fields in route function", () => {
@@ -434,14 +432,12 @@ describe("server-generator operation wrapper", () => {
     /* Check that route function includes all required fields */
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
-    expect(result.wrapperCode).toContain('path: "/test-auth-bearer-http"');
-    expect(result.wrapperCode).toContain('method: "get"');
-    expect(result.wrapperCode).toContain("wrapper: testAuthBearerHttpWrapper");
-    expect(result.wrapperCode).toContain('operationId: "testAuthBearerHttp"');
-    expect(result.wrapperCode).toContain("requestMap: {}");
+    /* Route metadata is imported and spread */
     expect(result.wrapperCode).toContain(
-      "responseMap: testAuthBearerHttpResponseMap",
+      "import { serverRoute as testAuthBearerHttpRouteMetadata }",
     );
+    expect(result.wrapperCode).toContain("...testAuthBearerHttpRouteMetadata");
+    expect(result.wrapperCode).toContain("wrapper: testAuthBearerHttpWrapper");
 
     /* Verify wrapper function is also generated */
     expect(result.wrapperCode).toContain("testAuthBearerHttpWrapper");
@@ -470,7 +466,11 @@ describe("server-generator operation wrapper", () => {
 
     /* Should use provided operationId in route function */
     expect(result.wrapperCode).toContain("export function route() {");
-    expect(result.wrapperCode).toContain('operationId: "getUsersId"');
+    /* Route metadata is imported from serverRoute and spread */
+    expect(result.wrapperCode).toContain(
+      "import { serverRoute as getUsersIdRouteMetadata }",
+    );
+    expect(result.wrapperCode).toContain("...getUsersIdRouteMetadata");
     expect(result.wrapperCode).toContain("wrapper: getUsersIdWrapper");
 
     /* Verify wrapper function is generated with the correct name */

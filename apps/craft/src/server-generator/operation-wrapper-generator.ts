@@ -11,18 +11,12 @@ import { extractOperationMetadata } from "../client-generator/operation-function
 import { extractParameterGroups } from "../client-generator/parameters.js";
 import { resolveRequestBodyType } from "../client-generator/request-body.js";
 import { generateContentTypeMaps } from "../client-generator/responses.js";
-import { ImportManager } from "../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateServerRequestBodyMap } from "../shared/server-request-body-maps.js";
-import {
-  buildServerRequestMap,
-  buildServerResponseMap,
-  renderServerOperationWrapper,
-} from "./templates/server-operation-templates.js";
+import { renderServerOperationWrapper } from "./templates/server-operation-templates.js";
 
-/* Result of generating a server wrapper function with imports */
+/* Result of generating a server wrapper function */
 export interface GeneratedServerWrapper {
-  importManager: ImportManager;
   wrapperCode: string;
 }
 
@@ -82,7 +76,9 @@ export function extractServerOperationMetadata(
     typeImports,
   );
 
-  const shouldGenerateRequestMap = contentTypeMaps.requestContentTypeCount > 1;
+  /* Always generate request map if there's a body, not just for multiple content types */
+  const shouldGenerateRequestMap =
+    hasBody && contentTypeMaps.requestContentTypeCount > 0;
   /* Always generate response maps for server like client does */
   const shouldGenerateResponseMap = true;
 
@@ -131,36 +127,19 @@ export function generateServerOperationWrapper(
     doc,
   );
 
-  const importManager = new ImportManager();
-
-  /* Build request map if needed */
-  const requestMapCode = metadata.bodyInfo.shouldGenerateRequestMap
-    ? buildServerRequestMap(metadata, importManager)
-    : "";
-
-  /* Build response map */
-  const responseMapCode = buildServerResponseMap(metadata, importManager, doc);
-
-  /* Render the complete wrapper function */
-  const wrapperCode = renderServerOperationWrapper(
-    {
-      functionName: metadata.functionName,
-      hasBody: metadata.bodyInfo.hasBody,
-      method: method.toLowerCase(),
-      operationId: metadata.operationId,
-      parameterGroups: metadata.parameterGroups,
-      pathKey,
-      requestMapCode,
-      requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
-      responseMapCode,
-      responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
-      summary: metadata.summary,
-    },
-    importManager,
-  );
+  /* Render the complete wrapper function - no need to generate maps, import from routes */
+  const wrapperCode = renderServerOperationWrapper({
+    functionName: metadata.functionName,
+    hasBody: metadata.bodyInfo.hasBody,
+    method: method.toLowerCase(),
+    operationId: metadata.operationId,
+    pathKey,
+    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
+    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+    summary: metadata.summary,
+  });
 
   return {
-    importManager,
     wrapperCode,
   };
 }

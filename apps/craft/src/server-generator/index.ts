@@ -23,14 +23,12 @@ export async function generateServerOperations(
 ): Promise<void> {
   const serverOperationsDir = await createServerOperationsDirectory(outputDir);
 
-  // Process all operations and write server wrapper files
   const operations = await processServerOperations(
     doc,
     serverOperationsDir,
     concurrency,
   );
 
-  // Write index file that exports all server wrappers
   await writeServerIndexFile(operations, serverOperationsDir);
 }
 
@@ -54,7 +52,7 @@ async function processServerOperations(
     pathLevelParameters,
   } of operations) {
     const promise = limit(async () => {
-      const { importManager, wrapperCode } = generateServerOperationWrapper(
+      const { wrapperCode } = generateServerOperationWrapper(
         pathKey,
         method,
         operation,
@@ -65,7 +63,6 @@ async function processServerOperations(
       await writeServerOperationFile(
         operationId,
         wrapperCode,
-        importManager,
         serverOperationsDir,
       );
     });
@@ -79,7 +76,4 @@ async function processServerOperations(
 /* Re-export key types for external use */
 export type { OperationMetadata } from "../client-generator/operation-extractor.js";
 export { extractAllOperations } from "../client-generator/operation-extractor.js";
-export {
-  extractServerOperationMetadata,
-  generateServerOperationWrapper,
-} from "./operation-wrapper-generator.js";
+export { generateServerOperationWrapper } from "./operation-wrapper-generator.js";
