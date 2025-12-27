@@ -6,6 +6,7 @@ import { promises as fs } from "fs";
 
 import { generateOperations } from "../client-generator/index.js";
 import { applyGeneratedOperationIds } from "../operation-id-generator/index.js";
+import { generateRoutes } from "../route-generator/index.js";
 import { generateServerOperations } from "../server-generator/index.js";
 import { ExtraPropsMode } from "../shared/types.js";
 import { convertToOpenAPI31 } from "./converter.js";
@@ -107,7 +108,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
 }
 
 /**
- * Generates all operations (client and/or server)
+ * Generates all operations (routes, client and/or server)
  */
 async function generateAllOperations(
   openApiDoc: OpenAPIObject,
@@ -118,6 +119,16 @@ async function generateAllOperations(
   profiler?: Profiler,
 ): Promise<void> {
   const operationPromises: Promise<void>[] = [];
+
+  /* Generate routes if either client or server is enabled */
+  if (generateClient || generateServer) {
+    profiler?.start("routes");
+    operationPromises.push(
+      generateRoutes(openApiDoc, output, concurrency).finally(() => {
+        profiler?.end("routes");
+      }),
+    );
+  }
 
   if (generateClient) {
     profiler?.start("client-operations");

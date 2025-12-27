@@ -50,9 +50,9 @@ export async function generateParameterSchemaFile(
 
   const serverSchemaPrefix = "Server";
   const serverSchemaNames = {
-    querySchema: `${sanitizedId}${serverSchemaPrefix}QuerySchema`,
-    pathSchema: `${sanitizedId}${serverSchemaPrefix}PathSchema`,
     headersSchema: `${sanitizedId}${serverSchemaPrefix}HeadersSchema`,
+    pathSchema: `${sanitizedId}${serverSchemaPrefix}PathSchema`,
+    querySchema: `${sanitizedId}${serverSchemaPrefix}QuerySchema`,
   };
 
   /* Build the file content */

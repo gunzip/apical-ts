@@ -1,6 +1,3 @@
-import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
-
-import { ImportManager } from "../../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
 
 /**
@@ -23,7 +20,6 @@ export interface RouteMetadataTemplateParams {
  */
 export function renderRouteMetadata(
   params: RouteMetadataTemplateParams,
-  importManager: ImportManager,
 ): string {
   const {
     method,

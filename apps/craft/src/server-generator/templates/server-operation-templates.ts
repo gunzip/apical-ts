@@ -1,11 +1,4 @@
-import type { OpenAPIObject } from "openapi3-ts/oas31";
-
-import type { ServerOperationMetadata } from "../operation-wrapper-generator.js";
-
-import { ImportManager } from "../../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
-import { generateResponseMap } from "../../shared/response-maps.js";
-import { generateResponseUnion } from "../../shared/response-union-generator.js";
 
 /**
  * Template parameters for server operation wrapper generation
@@ -25,94 +18,15 @@ export interface ServerOperationTemplateParams {
 }
 
 /**
- * Builds server request map for operations with request bodies
- */
-export function buildServerRequestMap(
-  metadata: ServerOperationMetadata,
-  importManager: ImportManager,
-): string {
-  if (!metadata.bodyInfo.shouldGenerateRequestMap) return "";
-
-  const { serverRequestBodyMap } = metadata.bodyInfo;
-  const mapName = metadata.bodyInfo.requestMapTypeName;
-
-  /* Add imports for request schemas */
-  for (const typeImport of serverRequestBodyMap.typeImports) {
-    importManager.addSchemaImport(typeImport);
-  }
-
-  /* Convert the client generator format (with semicolons) to object literal format (with commas) */
-  const fixedMapType = serverRequestBodyMap.requestMapType.replace(/;/g, ",");
-
-  return `export const ${mapName} = ${fixedMapType} as const;
-export type ${mapName} = typeof ${mapName};`;
-}
-
-/**
- * Builds server response map for operations
- */
-export function buildServerResponseMap(
-  metadata: ServerOperationMetadata,
-  importManager: ImportManager,
-  doc: OpenAPIObject,
-): string {
-  /* Create a temporary Set to collect type imports */
-  const typeImports = new Set<string>();
-
-  /* Generate response union type using existing logic */
-  const unionResult = generateResponseUnion(
-    metadata.operation,
-    metadata.operationId,
-    typeImports,
-    doc, // Pass document for response reference resolution
-  );
-
-  /* Generate response map using shared logic */
-  const responseMapResult = generateResponseMap(
-    metadata.operation,
-    metadata.operationId,
-    typeImports,
-    doc, // Pass document for response reference resolution
-    {}, // Use standard schemas for server responses
-  );
-
-  /* Add type imports to ImportManager */
-  for (const typeImport of typeImports) {
-    importManager.addSchemaImport(typeImport);
-  }
-  for (const typeImport of responseMapResult.typeImports) {
-    importManager.addSchemaImport(typeImport);
-  }
-
-  /* Generate response map constant and type like client generator */
-  const responseMapName = `${sanitizeIdentifier(metadata.operationId)}ResponseMap`;
-
-  let responseMapCode = "";
-  if (responseMapResult.shouldGenerateResponseMap) {
-    responseMapCode = `export const ${responseMapName} = ${responseMapResult.responseMapType} as const;
-export type ${responseMapName} = typeof ${responseMapName};`;
-  } else {
-    responseMapCode = `export const ${responseMapName} = {} as const;
-export type ${responseMapName} = typeof ${responseMapName};`;
-  }
-
-  /* Combine both the union type and the response map */
-  return `${responseMapCode}\n\n${unionResult.unionTypeDefinition}`;
-}
-
-/**
  * Renders the complete server operation wrapper function
  */
 export function renderServerOperationWrapper(
   params: ServerOperationTemplateParams,
-  importManager: ImportManager,
 ): string {
   const {
     functionName,
     hasBody,
-    method,
     operationId,
-    pathKey,
     requestMapTypeName,
     responseMapTypeName,
   } = params;
