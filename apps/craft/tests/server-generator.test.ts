@@ -44,12 +44,12 @@ describe("server-generator operation wrapper", () => {
 
     expect(result.wrapperCode).toContain("testSimpleQueryWrapper");
     expect(result.wrapperCode).toContain("testSimpleQueryRouteMetadata");
-    // Parameter schemas are now accessed from serverRoute.params
+    // Parameter schemas are now accessed from serverRoute.params.shape
     expect(result.wrapperCode).toContain(
-      "testSimpleQueryRouteMetadata.params.query.safeParse",
+      "testSimpleQueryRouteMetadata.params.shape.query.safeParse",
     );
     expect(result.wrapperCode).toContain(
-      "testSimpleQueryRouteMetadata.params.path.safeParse",
+      "testSimpleQueryRouteMetadata.params.shape.path.safeParse",
     );
     expect(result.wrapperCode).toContain('kind: "query-error"');
     expect(result.wrapperCode).toContain('kind: "path-error"');
@@ -120,12 +120,12 @@ describe("server-generator operation wrapper", () => {
       doc as any,
     );
 
-    /* Schema validation now uses server-specific schemas from serverRoute.params */
+    /* Schema validation now uses server-specific schemas from serverRoute.params.shape */
     expect(result.wrapperCode).toContain(
-      "testStrictValidationRouteMetadata.params.query.safeParse",
+      "testStrictValidationRouteMetadata.params.shape.query.safeParse",
     );
     expect(result.wrapperCode).toContain(
-      "testStrictValidationRouteMetadata.params.path.safeParse",
+      "testStrictValidationRouteMetadata.params.shape.path.safeParse",
     );
     expect(result.wrapperCode).not.toContain("z.strictObject(");
   });
@@ -215,9 +215,9 @@ describe("server-generator operation wrapper", () => {
     );
 
     expect(result.wrapperCode).toContain("testWithPathRouteMetadata");
-    // Path parameter schemas are now accessed from serverRoute.params
+    // Path parameter schemas are now accessed from serverRoute.params.shape
     expect(result.wrapperCode).toContain(
-      "testWithPathRouteMetadata.params.path.safeParse",
+      "testWithPathRouteMetadata.params.shape.path.safeParse",
     );
     expect(result.wrapperCode).toContain("pathParse.data");
   });

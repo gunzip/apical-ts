@@ -81,36 +81,32 @@ export async function generateParameterSchemaFile(
     (p: { required?: boolean }) => p.required !== true,
   );
 
-  /* Generate ParsedParams runtime object and type */
+  /* Generate ParsedParams as Zod schema with proper optionality */
   const parsedParamsName = `${sanitizedId}ParsedParams`;
-  const parsedParamsObject = `export const ${parsedParamsName} = {
-  query: ${result.schemaNames.querySchema},
+  const queryOptionalCode = isQueryOptional ? ".optional()" : "";
+  const headersOptionalCode = isHeadersOptional ? ".optional()" : "";
+
+  const parsedParamsObject = `export const ${parsedParamsName} = z.object({
+  query: ${result.schemaNames.querySchema}${queryOptionalCode},
   path: ${result.schemaNames.pathSchema},
-  headers: ${result.schemaNames.headersSchema},
-} as const;`;
+  headers: ${result.schemaNames.headersSchema}${headersOptionalCode},
+});`;
 
-  const queryOptionalMarker = isQueryOptional ? "?" : "";
-  const headersOptionalMarker = isHeadersOptional ? "?" : "";
+  const parsedParamsType = `export type ${parsedParamsName}Type = z.infer<typeof ${parsedParamsName}>;`;
 
-  const parsedParamsType = `export type ${parsedParamsName}Type = {
-  query${queryOptionalMarker}: z.infer<typeof ${result.schemaNames.querySchema}>;
-  path: z.infer<typeof ${result.schemaNames.pathSchema}>;
-  headers${headersOptionalMarker}: z.infer<typeof ${result.schemaNames.headersSchema}>;
-};`;
-
-  /* Generate server-specific ParsedParams */
-  const serverParsedParamsObject = `export const ${sanitizedId}${serverSchemaPrefix}ParsedParams = {
-  query: ${serverSchemaNames.querySchema},
+  /* Generate server-specific ParsedParams as Zod schema with proper optionality */
+  const serverParsedParamsName = `${sanitizedId}${serverSchemaPrefix}ParsedParams`;
+  const serverParsedParamsObject = `export const ${serverParsedParamsName} = z.object({
+  query: ${serverSchemaNames.querySchema}${queryOptionalCode},
   path: ${serverSchemaNames.pathSchema},
-  headers: ${serverSchemaNames.headersSchema},
-} as const;`;
+  headers: ${serverSchemaNames.headersSchema}${headersOptionalCode},
+});`;
 
-  /* Generate server ParsedParams type with same optionality as client */
-  const serverParsedParamsType = `export type ${sanitizedId}${serverSchemaPrefix}ParsedParamsType = {
-  query${queryOptionalMarker}: z.infer<typeof ${serverSchemaNames.querySchema}>;
-  path: z.infer<typeof ${serverSchemaNames.pathSchema}>;
-  headers${headersOptionalMarker}: z.infer<typeof ${serverSchemaNames.headersSchema}>;
-};`;
+  const serverParsedParamsType = `export type ${sanitizedId}${serverSchemaPrefix}ParsedParamsType = z.infer<typeof ${serverParsedParamsName}>;`;
+
+  /* For backward compatibility, these are the same as the objects above */
+  const parsedParamsSchema = parsedParamsObject;
+  const serverParsedParamsSchema = serverParsedParamsObject;
 
   /* Rename server schema definitions to use Server prefix */
   const serverSchemaCode = serverResult.schemaCode

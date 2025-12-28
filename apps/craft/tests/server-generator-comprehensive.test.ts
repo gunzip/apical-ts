@@ -64,12 +64,9 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain("petFindByStatusHandler");
     expect(result.wrapperCode).toContain("petFindByStatusRouteMetadata");
     expect(result.wrapperCode).toContain("petFindByStatusRouteMetadata.params");
-    // Parameter schemas are now accessed from serverRoute.params
+    // Parameter schemas are now accessed from serverRoute.params.shape
     expect(result.wrapperCode).toContain(
-      "petFindByStatusRouteMetadata.params.query.safeParse",
-    );
-    expect(result.wrapperCode).toContain(
-      "petFindByStatusRouteMetadata.params.path.safeParse",
+      "petFindByStatusRouteMetadata.params.shape.query.safeParse",
     );
 
     /* Verify validation error types */

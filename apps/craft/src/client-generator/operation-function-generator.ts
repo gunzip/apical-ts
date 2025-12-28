@@ -14,10 +14,11 @@ import { ImportManager } from "../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateContentTypeMaps } from "../shared/content-type-maps.js";
 import { generateFunctionBody } from "./code-generation.js";
-import { extractParameterGroups } from "./parameters.js";
 import {
   buildDestructuredParameters,
   buildParameterInterface,
+  determineParameterStructure,
+  extractParameterGroups,
 } from "./parameters.js";
 import { resolveRequestBodyType } from "./request-body.js";
 import { generateResponseHandlers } from "./responses.js";
@@ -97,6 +98,18 @@ export function extractOperationMetadata(
     operation.operationId,
   );
 
+  /* Calculate parameter structure for optionality rules */
+  const parameterStructure = determineParameterStructure(
+    parameterGroups,
+    hasBody,
+    bodyInfo.bodyTypeInfo,
+    operationSecurityHeaders,
+    bodyInfo.shouldGenerateRequestMap,
+    bodyInfo.shouldGenerateResponseMap,
+    bodyInfo.requestMapTypeName,
+    bodyInfo.responseMapTypeName,
+  );
+
   /* Parameter schemas removed: parameters are available through clientRoute.params from routes */
 
   /* Responses & union return type */
@@ -159,6 +172,7 @@ export function extractOperationMetadata(
     operationSecurityHeaders,
     overridesSecurity,
     parameterGroups,
+    parameterStructure,
     parameterStructures,
     responseHandlers,
     summary,
@@ -234,10 +248,7 @@ export function generateOperationFunction(
     importManager: metadata.importManager,
     isBodyOptional:
       !metadata.hasBody || !metadata.bodyInfo.bodyTypeInfo?.isRequired,
-    isHeadersOptional:
-      metadata.parameterGroups.headerParams.length === 0 &&
-      (!metadata.operationSecurityHeaders ||
-        metadata.operationSecurityHeaders.length === 0),
+    isHeadersOptional: metadata.parameterStructure.processed.isHeadersOptional,
     operationId: operation.operationId,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,

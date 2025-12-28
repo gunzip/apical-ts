@@ -159,13 +159,13 @@ describe("server-generator - problem statement validation", () => {
 
     /* Should still perform validation even with empty schemas */
     expect(result.wrapperCode).toContain(
-      "queryParse = noParamsRouteMetadata.params.query.safeParse(req.query)",
+      "queryParse = noParamsRouteMetadata.params.shape.query.safeParse(req.query)",
     );
     expect(result.wrapperCode).toContain(
-      "pathParse = noParamsRouteMetadata.params.path.safeParse(req.path)",
+      "pathParse = noParamsRouteMetadata.params.shape.path.safeParse(req.path)",
     );
     expect(result.wrapperCode).toContain(
-      "headersParse = noParamsRouteMetadata.params.headers.safeParse(req.headers)",
+      "headersParse = noParamsRouteMetadata.params.shape.headers.safeParse(req.headers)",
     );
   });
 });

@@ -67,9 +67,9 @@ export function renderServerOperationWrapper(
 
   /* Extract params type from serverRoute.params */
   const parsedParamsType = `type ${sanitizedId}ParsedParams = {
-  query?: z.infer<typeof ${sanitizedId}RouteMetadata.params.query>;
-  path: z.infer<typeof ${sanitizedId}RouteMetadata.params.path>;
-  headers?: z.infer<typeof ${sanitizedId}RouteMetadata.params.headers>;
+  query?: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.query>;
+  path: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.path>;
+  headers?: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.headers>;
   body?: ${bodyType};
 };`;
 
@@ -128,13 +128,13 @@ function renderValidationLogic(
   const bodyType = requestMapTypeName
     ? `z.infer<(typeof ${requestMapTypeName})[keyof typeof ${requestMapTypeName}]>`
     : "undefined";
-  const shared = `  const queryParse = ${sanitizedId}RouteMetadata.params.query.safeParse(req.query);
+  const shared = `  const queryParse = ${sanitizedId}RouteMetadata.params.shape.query.safeParse(req.query);
   if (!queryParse.success) return handler({ kind: "query-error", error: queryParse.error, isValid: false });
 
-  const pathParse = ${sanitizedId}RouteMetadata.params.path.safeParse(req.path);
+  const pathParse = ${sanitizedId}RouteMetadata.params.shape.path.safeParse(req.path);
   if (!pathParse.success) return handler({ kind: "path-error", error: pathParse.error, isValid: false });
 
-  const headersParse = ${sanitizedId}RouteMetadata.params.headers.safeParse(req.headers);
+  const headersParse = ${sanitizedId}RouteMetadata.params.shape.headers.safeParse(req.headers);
   if (!headersParse.success) return handler({ kind: "headers-error", error: headersParse.error, isValid: false });`;
 
   const bodyLogic = requestMapTypeName

@@ -1,5 +1,8 @@
 import type { ImportManager } from "../../core-generator/import-types.js";
-import type { extractParameterGroups } from "../parameters.js";
+import type {
+  determineParameterStructure,
+  extractParameterGroups,
+} from "../parameters.js";
 import type { resolveRequestBodyType } from "../request-body.js";
 import type {
   generateContentTypeMaps,
@@ -58,6 +61,7 @@ export interface OperationMetadata {
   operationSecurityHeaders: ReturnType<typeof getOperationSecuritySchemes>;
   overridesSecurity: boolean;
   parameterGroups: ReturnType<typeof extractParameterGroups>;
+  parameterStructure: ReturnType<typeof determineParameterStructure>;
   parameterStructures: {
     destructuredParams: string;
     paramsInterface: string;
@@ -231,15 +235,15 @@ export function buildTypeAliasesFromRoute(config: {
   /* Extract params type from clientRoute using typeof */
   const clientRouteName = `${sanitizedId}ClientRoute`;
   if (hasAnyParams) {
-    /* Build type parts - headers are always optional if present (security headers come from config) */
+    /* Build type parts - headers optional based on spec requirements and security config */
     const queryPart = config.hasQueryParams
-      ? `query?: z.infer<typeof ${clientRouteName}.params.query>`
+      ? `query?: z.infer<typeof ${clientRouteName}.params.shape.query>`
       : "";
     const pathPart = config.hasPathParams
-      ? `path: z.infer<typeof ${clientRouteName}.params.path>`
+      ? `path: z.infer<typeof ${clientRouteName}.params.shape.path>`
       : "";
     const headersPart = config.hasHeaderParams
-      ? `headers?: z.infer<typeof ${clientRouteName}.params.headers>`
+      ? `headers${config.isHeadersOptional ? "?" : ""}: z.infer<typeof ${clientRouteName}.params.shape.headers>`
       : "";
     const parts = [queryPart, pathPart, headersPart].filter(Boolean);
     if (parts.length > 0) {
