@@ -28,6 +28,7 @@ export async function generateParameterSchemaFile(
     lowercaseHeaderKeys?: boolean;
   } = {},
 ): Promise<ParameterSchemaFileResult> {
+  /* Extract security headers from metadata */
   const sanitizedId = sanitizeIdentifier(operationId);
   const fileName = `${sanitizedId}Parameters.ts`;
 
@@ -77,6 +78,11 @@ export async function generateParameterSchemaFile(
   const isQueryOptional = queryParams.every(
     (p: { required?: boolean }) => p.required !== true,
   );
+  /*
+   * Headers are optional only if all explicit header params are optional.
+   * Security headers are NOT included in the schema - they're added by the client config.
+   * So we only consider explicit header parameters when determining optionality.
+   */
   const isHeadersOptional = headerParams.every(
     (p: { required?: boolean }) => p.required !== true,
   );
@@ -103,10 +109,6 @@ export async function generateParameterSchemaFile(
 });`;
 
   const serverParsedParamsType = `export type ${sanitizedId}${serverSchemaPrefix}ParsedParamsType = z.infer<typeof ${serverParsedParamsName}>;`;
-
-  /* For backward compatibility, these are the same as the objects above */
-  const parsedParamsSchema = parsedParamsObject;
-  const serverParsedParamsSchema = serverParsedParamsObject;
 
   /* Rename server schema definitions to use Server prefix */
   const serverSchemaCode = serverResult.schemaCode

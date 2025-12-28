@@ -14,12 +14,7 @@ import { ImportManager } from "../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateContentTypeMaps } from "../shared/content-type-maps.js";
 import { generateFunctionBody } from "./code-generation.js";
-import {
-  buildDestructuredParameters,
-  buildParameterInterface,
-  determineParameterStructure,
-  extractParameterGroups,
-} from "./parameters.js";
+import { extractParameterGroups } from "./parameters.js";
 import { resolveRequestBodyType } from "./request-body.js";
 import { generateResponseHandlers } from "./responses.js";
 import {
@@ -98,16 +93,13 @@ export function extractOperationMetadata(
     operation.operationId,
   );
 
-  /* Calculate parameter structure for optionality rules */
-  const parameterStructure = determineParameterStructure(
-    parameterGroups,
-    hasBody,
-    bodyInfo.bodyTypeInfo,
-    operationSecurityHeaders,
-    bodyInfo.shouldGenerateRequestMap,
-    bodyInfo.shouldGenerateResponseMap,
-    bodyInfo.requestMapTypeName,
-    bodyInfo.responseMapTypeName,
+  /*
+   * Calculate if headers are optional for TypeScript types
+   * Headers are optional only if all explicit header params are optional
+   * Security headers are NOT included in the schema - they're added by client config
+   */
+  const isHeadersOptional = parameterGroups.headerParams.every(
+    (p) => p.required !== true,
   );
 
   /* Parameter schemas removed: parameters are available through clientRoute.params from routes */
@@ -168,11 +160,11 @@ export function extractOperationMetadata(
     functionName,
     hasBody,
     importManager,
+    isHeadersOptional,
     operationName,
     operationSecurityHeaders,
     overridesSecurity,
     parameterGroups,
-    parameterStructure,
     parameterStructures,
     responseHandlers,
     summary,
@@ -248,7 +240,7 @@ export function generateOperationFunction(
     importManager: metadata.importManager,
     isBodyOptional:
       !metadata.hasBody || !metadata.bodyInfo.bodyTypeInfo?.isRequired,
-    isHeadersOptional: metadata.parameterStructure.processed.isHeadersOptional,
+    isHeadersOptional: metadata.isHeadersOptional,
     operationId: operation.operationId,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
@@ -282,7 +274,7 @@ export function generateOperationFunction(
 /**
  * buildParameterStructures
  * Returns both: (1) destructured parameter object used in the function signature, (2) its interface type.
- * Injects generic request/response map references if those maps exist.
+ * The interface type name is derived from the operation ID and matches the type alias generated in routes.
  */
 function buildParameterStructures(
   parameterGroups: ReturnType<typeof extractParameterGroups>,
@@ -295,24 +287,37 @@ function buildParameterStructures(
   responseMapTypeName: string,
   operationId: string,
 ) {
-  const destructuredParams = buildDestructuredParameters(
-    parameterGroups,
-    hasBody,
-    bodyTypeInfo,
-    operationSecurityHeaders,
-    shouldGenerateRequestMap,
-    shouldGenerateResponseMap,
-  );
+  /* Check if we have any parameters at all */
+  const hasAnyParams =
+    parameterGroups.pathParams.length > 0 ||
+    parameterGroups.queryParams.length > 0 ||
+    parameterGroups.headerParams.length > 0 ||
+    operationSecurityHeaders.length > 0 ||
+    hasBody ||
+    shouldGenerateRequestMap ||
+    shouldGenerateResponseMap;
 
-  const paramsInterface = buildParameterInterface(
-    parameterGroups,
-    hasBody,
-    bodyTypeInfo,
-    operationSecurityHeaders,
-    shouldGenerateRequestMap ? requestMapTypeName : undefined,
-    shouldGenerateResponseMap ? responseMapTypeName : undefined,
-    operationId,
-  );
+  /* Destructured params is just "params" if we have anything, otherwise "{}" */
+  const destructuredParams = hasAnyParams ? "params" : "{}";
+
+  /* Interface type name matches the type alias generated from routes */
+  const operationName =
+    operationId.charAt(0).toUpperCase() + operationId.slice(1);
+
+  let paramsInterface = `${operationName}Params`;
+
+  /* Add generic parameters if needed */
+  if (shouldGenerateRequestMap || shouldGenerateResponseMap) {
+    const genericParts: string[] = [];
+    if (shouldGenerateRequestMap) genericParts.push("TRequestContentType");
+    if (shouldGenerateResponseMap) genericParts.push("TResponseContentType");
+    paramsInterface = `${operationName}Params<${genericParts.join(", ")}>`;
+  }
+
+  /* If no params at all, use empty object literal type */
+  if (!hasAnyParams) {
+    paramsInterface = "{}";
+  }
 
   return { destructuredParams, paramsInterface };
 }

@@ -1,10 +1,6 @@
 import type { ContentTypeMaps } from "./responses.js";
 
-import {
-  generateHeaderParamHandling,
-  generateQueryParamHandling,
-  type ParameterGroups,
-} from "./parameters.js";
+import { type ParameterGroups } from "./parameters.js";
 import { type SecurityHeader } from "./security.js";
 import {
   determineFunctionBodyStructure,
@@ -12,6 +8,7 @@ import {
   renderFunctionBody,
   renderHeadersObject,
 } from "./templates/function-body-templates.js";
+import { renderParameterHandling } from "./templates/parameter-templates.js";
 import { renderContentTypeSwitch } from "./templates/request-body-templates.js";
 import { renderSecurityHeaderHandling } from "./templates/security-templates.js";
 import { generatePathInterpolation } from "./utils.js";
@@ -60,8 +57,8 @@ export function generateFunctionBody({
   const { headerParams, pathParams, queryParams } = parameterGroups;
 
   const finalPath = generatePathInterpolation(pathKey, pathParams);
-  const queryParamLines = generateQueryParamHandling(queryParams);
-  const headerParamLines = generateHeaderParamHandling(headerParams);
+  const queryParamLines = renderParameterHandling("query", queryParams);
+  const headerParamLines = renderParameterHandling("header", headerParams);
   const securityHeaderLines =
     operationSecurityHeaders && operationSecurityHeaders.length > 0
       ? renderSecurityHeaderHandling(operationSecurityHeaders)

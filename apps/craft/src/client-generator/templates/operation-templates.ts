@@ -1,8 +1,5 @@
 import type { ImportManager } from "../../core-generator/import-types.js";
-import type {
-  determineParameterStructure,
-  extractParameterGroups,
-} from "../parameters.js";
+import type { extractParameterGroups } from "../parameters.js";
 import type { resolveRequestBodyType } from "../request-body.js";
 import type {
   generateContentTypeMaps,
@@ -57,11 +54,11 @@ export interface OperationMetadata {
   functionName: string;
   hasBody: boolean;
   importManager: ImportManager;
+  isHeadersOptional: boolean;
   operationName: string;
   operationSecurityHeaders: ReturnType<typeof getOperationSecuritySchemes>;
   overridesSecurity: boolean;
   parameterGroups: ReturnType<typeof extractParameterGroups>;
-  parameterStructure: ReturnType<typeof determineParameterStructure>;
   parameterStructures: {
     destructuredParams: string;
     paramsInterface: string;

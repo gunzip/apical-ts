@@ -323,11 +323,9 @@ describe("extractOperationMetadata", () => {
       basicDoc,
     );
 
-    /* Should generate type alias even for empty parameters (after refactoring) */
+    /* With no parameters, the interface should be an empty object literal type */
     expect(metadata.parameterStructures.destructuredParams).toBe("{}");
-    expect(metadata.parameterStructures.paramsInterface).toContain(
-      "SimpleOperationParams",
-    );
+    expect(metadata.parameterStructures.paramsInterface).toBe("{}");
     expect(metadata.hasBody).toBe(false);
     expect(metadata.bodyInfo.bodyTypeInfo).toBeUndefined();
   });
