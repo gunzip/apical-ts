@@ -49,14 +49,10 @@ describe("server-generator - problem statement validation", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/pets/{petId}",
       "get",
       operation as any,
-      [],
-      doc as any,
     );
 
     /* Verify core wrapper function signature */
@@ -116,14 +112,10 @@ describe("server-generator - problem statement validation", () => {
       responses: { 200: { description: "OK" } },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/test",
       "get",
       operation as any,
-      [],
-      doc as any,
     );
 
     /* Verify curried pattern: operationWrapper(handler)(req) */
@@ -143,14 +135,10 @@ describe("server-generator - problem statement validation", () => {
       responses: { 200: { description: "OK" } },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/test",
       "get",
       operation as any,
-      [],
-      doc as any,
     );
 
     /* Should reference server parameter schemas from serverRoute.params */

@@ -44,20 +44,12 @@ async function processServerOperations(
   const limit = pLimit(concurrency);
   const operationPromises: Promise<void>[] = [];
 
-  for (const {
-    method,
-    operation,
-    operationId,
-    pathKey,
-    pathLevelParameters,
-  } of operations) {
+  for (const { method, operation, operationId, pathKey } of operations) {
     const promise = limit(async () => {
       const { wrapperCode } = generateServerOperationWrapper(
         pathKey,
         method,
         operation,
-        pathLevelParameters,
-        doc,
       );
 
       await writeServerOperationFile(

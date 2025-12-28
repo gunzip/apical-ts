@@ -49,14 +49,10 @@ describe("server-generator comprehensive validation", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/pets/{petId}",
       "get",
       operation as any,
-      [],
-      doc as any,
     );
 
     /* Verify it contains the key elements from the problem statement */
@@ -112,14 +108,10 @@ describe("server-generator comprehensive validation", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/test/{id}",
       "get",
       operation as any,
-      [],
-      doc as any,
     );
 
     /* Should include validation error discriminated union */

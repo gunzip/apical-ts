@@ -1,18 +1,8 @@
-import type {
-  OpenAPIObject,
-  OperationObject,
-  ParameterObject,
-  ReferenceObject,
-} from "openapi3-ts/oas31";
+import type { OperationObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 
-import { extractOperationMetadata } from "../client-generator/operation-function-generator.js";
-import { extractParameterGroups } from "../client-generator/parameters.js";
-import { resolveRequestBodyType } from "../client-generator/request-body.js";
-import { generateContentTypeMaps } from "../client-generator/responses.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { generateServerRequestBodyMap } from "../shared/server-request-body-maps.js";
 import { renderServerOperationWrapper } from "./templates/server-operation-templates.js";
 
 /* Result of generating a server wrapper function */
@@ -20,126 +10,72 @@ export interface GeneratedServerWrapper {
   wrapperCode: string;
 }
 
-/**
- * Server operation metadata for template generation
+/*
+ * Lightweight metadata for server wrapper generation.
+ * All type/schema generation is now handled by the route-generator;
+ * this module only needs minimal info to render the wrapper function.
  */
-export interface ServerOperationMetadata {
-  bodyInfo: {
-    bodyTypeInfo?: ReturnType<typeof resolveRequestBodyType>;
-    contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
-    hasBody: boolean;
-    requestMapTypeName?: string;
-    responseMapTypeName?: string;
-    serverRequestBodyMap: ReturnType<typeof generateServerRequestBodyMap>;
-    shouldGenerateRequestMap: boolean;
-    shouldGenerateResponseMap: boolean;
-  };
+interface ServerWrapperMetadata {
   functionName: string;
-  operation: OperationObject;
+  hasBody: boolean;
+  method: string;
   operationId: string;
-  parameterGroups: ReturnType<typeof extractParameterGroups>;
-  summary?: string;
+  pathKey: string;
+  requestMapTypeName: string | undefined;
+  responseMapTypeName: string;
+  summary: string | undefined;
 }
 
-/**
- * Extracts metadata needed for server operation wrapper generation
- */
-export function extractServerOperationMetadata(
-  pathKey: string,
-  method: string,
-  operation: OperationObject,
-  pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
-  doc: OpenAPIObject,
-): ServerOperationMetadata {
-  assert(operation.operationId, "Operation ID is required");
-  const operationId = operation.operationId;
-  const functionName = `${sanitizeIdentifier(operationId)}Wrapper`;
-  /* Reuse client extraction logic to avoid duplication */
-  const clientMeta = extractOperationMetadata(
-    pathKey,
-    method,
-    operation,
-    pathLevelParameters,
-    doc,
-  );
-
-  /* Server wrappers should always generate response maps like the client does */
-  const contentTypeMaps = clientMeta.bodyInfo.contentTypeMaps;
-  const hasBody = clientMeta.hasBody;
-  const bodyTypeInfo = clientMeta.bodyInfo.bodyTypeInfo;
-
-  /* Generate server request body map */
-  const typeImports = new Set<string>();
-  const serverRequestBodyMap = generateServerRequestBodyMap(
-    operation,
-    operationId,
-    typeImports,
-  );
-
-  /* Always generate request map if there's a body, not just for multiple content types */
-  const shouldGenerateRequestMap =
-    hasBody && contentTypeMaps.requestContentTypeCount > 0;
-  /* Always generate response maps for server like client does */
-  const shouldGenerateResponseMap = true;
-
-  const requestMapTypeName = shouldGenerateRequestMap
-    ? `${sanitizeIdentifier(operationId)}RequestMap`
-    : undefined;
-  /* Always define response map type name */
-  const responseMapTypeName = `${sanitizeIdentifier(operationId)}ResponseMap`;
-
-  const parameterGroups = clientMeta.parameterGroups;
-
-  return {
-    bodyInfo: {
-      bodyTypeInfo,
-      contentTypeMaps,
-      hasBody,
-      requestMapTypeName,
-      responseMapTypeName,
-      serverRequestBodyMap,
-      shouldGenerateRequestMap,
-      shouldGenerateResponseMap,
-    },
-    functionName,
-    operation,
-    operationId,
-    parameterGroups,
-    summary: operation.summary?.trim(),
-  };
-}
-
-/**
- * Generates server operation wrapper function with validation logic
+/*
+ * Generates server operation wrapper function.
+ * The wrapper imports all types and schemas from the corresponding route module.
  */
 export function generateServerOperationWrapper(
   pathKey: string,
   method: string,
   operation: OperationObject,
-  pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
-  doc: OpenAPIObject,
 ): GeneratedServerWrapper {
-  const metadata = extractServerOperationMetadata(
-    pathKey,
-    method,
-    operation,
-    pathLevelParameters,
-    doc,
-  );
+  const metadata = extractServerWrapperMetadata(pathKey, method, operation);
 
-  /* Render the complete wrapper function - no need to generate maps, import from routes */
   const wrapperCode = renderServerOperationWrapper({
     functionName: metadata.functionName,
-    hasBody: metadata.bodyInfo.hasBody,
-    method: method.toLowerCase(),
+    hasBody: metadata.hasBody,
+    method: metadata.method,
     operationId: metadata.operationId,
-    pathKey,
-    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
-    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+    pathKey: metadata.pathKey,
+    requestMapTypeName: metadata.requestMapTypeName,
+    responseMapTypeName: metadata.responseMapTypeName,
     summary: metadata.summary,
   });
 
   return {
     wrapperCode,
+  };
+}
+
+/*
+ * Extracts minimal metadata needed for server wrapper generation.
+ * All schema/type generation happens in route-generator.
+ */
+function extractServerWrapperMetadata(
+  pathKey: string,
+  method: string,
+  operation: OperationObject,
+): ServerWrapperMetadata {
+  assert(operation.operationId, "Operation ID is required");
+  const operationId = operation.operationId;
+  const sanitizedId = sanitizeIdentifier(operationId);
+  const hasBody = !!operation.requestBody;
+
+  return {
+    functionName: `${sanitizedId}Wrapper`,
+    hasBody,
+    method: method.toLowerCase(),
+    operationId,
+    pathKey,
+    /* Request map is always generated in routes (even if empty) */
+    requestMapTypeName: hasBody ? `${sanitizedId}RequestMap` : undefined,
+    responseMapTypeName: `${sanitizedId}ResponseMap`,
+    summary: operation.summary?.trim(),
   };
 }
