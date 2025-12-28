@@ -103,7 +103,6 @@ export type { OperationMetadata as OperationFunctionMetadata } from "./templates
 export {
   buildGenericParams,
   buildParameterDeclaration,
-  buildTypeAliases,
   renderOperationFunction,
 } from "./templates/operation-templates.js";
 

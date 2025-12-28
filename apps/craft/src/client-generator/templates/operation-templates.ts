@@ -72,16 +72,6 @@ export interface ParameterDeclarationConfig {
   paramsInterface: string;
 }
 
-export type TypeAliasesConfig = ContentTypeMapsConfig & {
-  /* ImportManager for handling type imports */
-  importManager: ImportManager;
-  /* Parameter schema generation */
-  operationId: string | undefined;
-  parameterGroups: ReturnType<typeof extractParameterGroups>;
-  responseMapName?: string;
-  responseMapType?: string;
-};
-
 /*
  * Creates generic parameter list for dynamic force validation and content-type selection.
  * Example output (after removal of forceValidation generic): <TRequestContentType extends keyof MyOpRequestMap = "application/json", TResponseContentType extends keyof MyOpResponseMap = "application/json">
@@ -130,52 +120,6 @@ export function buildParameterDeclaration(
     return "{}: {} = {}";
   }
   return `${config.destructuredParams}: ${config.paramsInterface}`;
-}
-
-/*
- * Emits exported request/response content-type map aliases and parameter schemas.
- * Skips each side when no map required (empty object or no body for request).
- */
-export function buildTypeAliases(config: TypeAliasesConfig): string {
-  let typeAliases = "";
-
-  /* Parameter schema imports removed: parameters available through clientRoute from routes */
-
-  /*
-   * Discriminated union response types (e.g., FindPetsByStatusOperationResponse) are not generated
-   * for client operations as they are unused in the generated client code. The server generator
-   * creates its own response union types using the shared response union generator.
-   */
-
-  if (config.shouldGenerateRequestMap) {
-    typeAliases += `export type ${config.requestMapTypeName} = ${config.contentTypeMaps.requestMapType};\n\n`;
-  }
-  /* Always emit response map type alias for stability; if empty map that's fine */
-  if (
-    config.shouldGenerateResponseMap ||
-    config.contentTypeMaps.responseMapType
-  ) {
-    const responseMapRuntime = config.contentTypeMaps.responseMapType || "{}";
-    // Emit runtime object (only if non-empty) + type alias
-    if (responseMapRuntime !== "{}") {
-      typeAliases += `export const ${config.responseMapTypeName} = ${responseMapRuntime} as const;\n`;
-    }
-    typeAliases += `export type ${config.responseMapTypeName} = ${responseMapRuntime};\n\n`;
-
-    /* Emit a narrowed DeserializerMap type for this operation.
-     * Extract content types from the nested response map structure for proper indexing.
-     * Response map structure: { "status": { "content-type": Schema } }
-     * DeserializerMap should be indexed only by content-type: { "content-type": Deserializer }
-     */
-    const perOpDeserializerMap =
-      responseMapRuntime !== "{}"
-        ? `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = Partial<Record<{
-  [Status in keyof typeof ${config.responseMapTypeName}]: keyof typeof ${config.responseMapTypeName}[Status]
-}[keyof typeof ${config.responseMapTypeName}], import('./config.js').Deserializer>>;\n\n`
-        : `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = import('./config.js').DeserializerMap;\n\n`;
-    typeAliases += perOpDeserializerMap;
-  }
-  return typeAliases;
 }
 
 /**

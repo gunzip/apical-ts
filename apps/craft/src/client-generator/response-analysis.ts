@@ -6,9 +6,6 @@ import type {
   ResponseObject,
 } from "openapi3-ts/oas31";
 
-import assert from "assert";
-import { isReferenceObject } from "openapi3-ts/oas31";
-
 import type {
   ContentTypeAnalysis,
   ParsingStrategy,
@@ -18,6 +15,7 @@ import type {
 } from "./models/response-models.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { resolveSchemaTypeName } from "../shared/schema-type-resolver.js";
 import { getResponseContentType, resolveResponse } from "./utils.js";
 
 // Interfaces (alphabetical keys inside)
@@ -112,11 +110,14 @@ export function buildResponseTypeInfo(
 
   if (contentType && response.content?.[contentType]?.schema) {
     hasSchema = true;
-    typeName = resolveResponseTypeName(
+    const suffix =
+      statusCode === "default" ? "DefaultResponse" : `${statusCode}Response`;
+    typeName = resolveSchemaTypeName(
       response.content[contentType].schema,
-      operation,
-      statusCode,
+      operation.operationId || "unknown",
+      suffix,
       typeImports,
+      "response",
     );
   }
 
@@ -156,38 +157,6 @@ export function determineParsingStrategy(
     requiresRuntimeContentTypeCheck,
     useValidation,
   };
-}
-
-/*
- * Resolves a schema to a TypeScript type name and updates type imports
- */
-export function resolveResponseTypeName(
-  schema: unknown,
-  operation: OperationObject,
-  statusCode: string,
-  typeImports: Set<string>,
-): string {
-  if (isReferenceObject(schema)) {
-    const ref = schema.$ref;
-    assert(
-      ref.startsWith("#/components/schemas/"),
-      `Unsupported schema reference: ${ref}`,
-    );
-    const originalSchemaName = ref.split("/").pop();
-    assert(originalSchemaName, "Invalid $ref in response schema");
-    const typeName = sanitizeIdentifier(originalSchemaName as string);
-    typeImports.add(typeName);
-    return typeName;
-  }
-
-  /* Inline schema: synthesize a type name based on operationId and status code */
-  assert(operation.operationId, "Invalid operationId");
-  const sanitizedOperationId = sanitizeIdentifier(operation.operationId);
-  const suffix =
-    statusCode === "default" ? "DefaultResponse" : `${statusCode}Response`;
-  const typeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}${suffix}`;
-  typeImports.add(typeName);
-  return typeName;
 }
 
 // Helpers (ordered alphabetically by name)
