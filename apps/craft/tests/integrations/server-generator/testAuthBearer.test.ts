@@ -13,8 +13,8 @@ describe("testAuthBearer operation integration tests", () => {
     const handler: testAuthBearerHandler = async (params) => {
       if ("isValid" in params && params.isValid) {
         // Validate that required query parameters are present
-        expect(params.value.query.qr).toBeDefined();
-        expect(params.value.query.qr).toBe("test-required");
+        expect(params.value.query?.qr).toBeDefined();
+        expect(params.value.query?.qr).toBe("test-required");
 
         return {
           status: "200",
@@ -184,10 +184,10 @@ describe("testAuthBearer operation integration tests", () => {
     const handler: testAuthBearerHandler = async (params) => {
       if ("isValid" in params && params.isValid) {
         // Only qr should be required according to OpenAPI spec
-        expect(params.value.query.qr).toBe("required-only");
+        expect(params.value.query?.qr).toBe("required-only");
         // Optional parameters should be undefined when not provided
-        expect(params.value.query.qo).toBeUndefined();
-        expect(params.value.query.cursor).toBeUndefined();
+        expect(params.value.query?.qo).toBeUndefined();
+        expect(params.value.query?.cursor).toBeUndefined();
 
         return {
           status: "200",

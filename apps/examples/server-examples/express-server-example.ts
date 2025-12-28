@@ -123,11 +123,13 @@ const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
     };
   }
 
-  const { status } = params.value.query;
+  const status = params.value.query?.status;
   console.log(`Finding pets by status: ${status}`);
 
   /* Filter pets by status */
-  const filteredPets = mockPets.filter((pet) => pet.status === status);
+  const filteredPets = status
+    ? mockPets.filter((pet) => pet.status === status)
+    : mockPets;
 
   return {
     status: "200",

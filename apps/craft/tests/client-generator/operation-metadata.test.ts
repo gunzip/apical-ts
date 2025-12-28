@@ -60,12 +60,12 @@ describe("extractOperationMetadata", () => {
     expect(metadata.summary).toBe("/** Create a new user */\n");
     expect(metadata.hasBody).toBe(true);
 
-    /* Type imports should include referenced schemas */
-    const schemaImports = metadata.importManager.getSchemaImports();
-    expect(schemaImports.some((imp) => imp.name === "User")).toBe(true);
-    expect(
-      schemaImports.some((imp) => imp.name === "CreateUser400Response"),
-    ).toBe(true);
+    /* Type imports - after refactoring, request/response maps come from routes */
+    const routeImports = metadata.importManager.getRouteImports();
+    // extractOperationMetadata only extracts metadata, not generate full code with route imports
+    // So we just check that the body info is correctly set up
+    expect(metadata.bodyInfo.requestMapTypeName).toBe("CreateUserRequestMap");
+    expect(metadata.bodyInfo.responseMapTypeName).toBe("CreateUserResponseMap");
 
     /* Body info */
     expect(metadata.bodyInfo.shouldGenerateRequestMap).toBe(true);
@@ -161,10 +161,10 @@ describe("extractOperationMetadata", () => {
     expect(metadata.bodyInfo.requestContentTypes).toEqual([]);
     expect(metadata.bodyInfo.bodyTypeInfo).toBeUndefined();
 
-    /* Parameter structures should use simple params approach */
+    /* Parameter structures should use type alias (params now uses type alias format) */
     expect(metadata.parameterStructures.destructuredParams).toBe("params");
     expect(metadata.parameterStructures.paramsInterface).toContain(
-      "path: getUserPath", // Now uses Zod schema types instead of hardcoded strings
+      "GetUserParams", // After refactoring, paramsInterface is a type alias name
     );
   });
 
@@ -323,9 +323,11 @@ describe("extractOperationMetadata", () => {
       basicDoc,
     );
 
-    /* Should generate empty parameter structures */
+    /* Should generate type alias even for empty parameters (after refactoring) */
     expect(metadata.parameterStructures.destructuredParams).toBe("{}");
-    expect(metadata.parameterStructures.paramsInterface).toBe("{}");
+    expect(metadata.parameterStructures.paramsInterface).toContain(
+      "SimpleOperationParams",
+    );
     expect(metadata.hasBody).toBe(false);
     expect(metadata.bodyInfo.bodyTypeInfo).toBeUndefined();
   });

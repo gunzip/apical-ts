@@ -40,13 +40,14 @@ describe("parameter template functions", () => {
 
   describe("renderParameterInterface", () => {
     it("should render empty interface for no parameters", () => {
-      const analysis = createBasicAnalysis();
+      const analysis = createBasicAnalysis({ operationId: "testOp" });
       const result = renderParameterInterface(analysis);
-      expect(result).toBe("{}");
+      expect(result).toBe("TestOpParams");
     });
 
     it("should render path parameters correctly", () => {
       const analysis = createBasicAnalysis({
+        operationId: "getUser",
         pathProperties: [
           {
             name: "userId",
@@ -84,13 +85,12 @@ describe("parameter template functions", () => {
       });
 
       const result = renderParameterInterface(analysis);
-      expect(result).toContain("path: {");
-      expect(result).toContain('"userId": string');
-      expect(result).toContain('"projectId": string');
+      expect(result).toBe("GetUserParams");
     });
 
     it("should render query parameters with optionality", () => {
       const analysis = createBasicAnalysis({
+        operationId: "searchItems",
         queryProperties: [
           {
             name: "filter",
@@ -133,13 +133,12 @@ describe("parameter template functions", () => {
       });
 
       const result = renderParameterInterface(analysis);
-      expect(result).toContain("query: {");
-      expect(result).toContain('"filter": string');
-      expect(result).toContain('"sort"?: string');
+      expect(result).toBe("SearchItemsParams");
     });
 
     it("should render header parameters with quoting", () => {
       const analysis = createBasicAnalysis({
+        operationId: "getData",
         headerProperties: [
           {
             name: "Content-Type",
@@ -182,13 +181,12 @@ describe("parameter template functions", () => {
       });
 
       const result = renderParameterInterface(analysis);
-      expect(result).toContain("headers: {");
-      expect(result).toContain('"Content-Type": string');
-      expect(result).toContain('"simpleheader"?: string');
+      expect(result).toBe("GetDataParams");
     });
 
     it("should render security headers", () => {
       const analysis = createBasicAnalysis({
+        operationId: "protectedOp",
         securityHeaderProperties: [
           {
             headerName: "Authorization",
@@ -212,11 +210,12 @@ describe("parameter template functions", () => {
       });
 
       const result = renderParameterInterface(analysis);
-      expect(result).toContain('"Authorization": string');
+      expect(result).toBe("ProtectedOpParams");
     });
 
     it("should render body parameter", () => {
       const analysis = createBasicAnalysis({
+        operationId: "createUser",
         structure: {
           ...createBasicAnalysis().structure,
           hasBody: true,
@@ -234,11 +233,12 @@ describe("parameter template functions", () => {
       });
 
       const result = renderParameterInterface(analysis);
-      expect(result).toContain("body: UserCreateRequest");
+      expect(result).toBe("CreateUserParams");
     });
 
     it("should render contentType parameter for request/response maps", () => {
       const analysis = createBasicAnalysis({
+        operationId: "uploadFile",
         structure: {
           ...createBasicAnalysis().structure,
           hasRequestMap: true,
@@ -249,8 +249,8 @@ describe("parameter template functions", () => {
       });
 
       const result = renderParameterInterface(analysis);
-      expect(result).toContain(
-        "contentType?: { request?: TRequestContentType; response?: TResponseContentType }",
+      expect(result).toBe(
+        "UploadFileParams<TRequestContentType, TResponseContentType>",
       );
     });
   });

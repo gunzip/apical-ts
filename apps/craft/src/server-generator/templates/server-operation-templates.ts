@@ -65,11 +65,11 @@ export function renderServerOperationWrapper(
   | { kind: "headers-error"; error: z.ZodError; isValid: false }
   | { kind: "body-error"; error: z.ZodError; isValid: false };`;
 
-  /* Define server-specific parsed params type with server transformations applied */
+  /* Extract params type from serverRoute.params */
   const parsedParamsType = `type ${sanitizedId}ParsedParams = {
-  query: z.infer<typeof ${sanitizedId}RouteMetadata.params.query>;
+  query?: z.infer<typeof ${sanitizedId}RouteMetadata.params.query>;
   path: z.infer<typeof ${sanitizedId}RouteMetadata.params.path>;
-  headers: z.infer<typeof ${sanitizedId}RouteMetadata.params.headers>;
+  headers?: z.infer<typeof ${sanitizedId}RouteMetadata.params.headers>;
   body?: ${bodyType};
 };`;
 

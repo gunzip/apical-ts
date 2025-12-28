@@ -97,25 +97,7 @@ export function extractOperationMetadata(
     operation.operationId,
   );
 
-  /* Import parameter schemas when operation has an operationId */
-  if (operation.operationId) {
-    const sanitizedId = sanitizeIdentifier(operation.operationId);
-    
-    /* Import query schema if has query parameters */
-    if (parameterGroups.queryParams.length > 0) {
-      importManager.addParameterSchema(sanitizedId, "Query");
-    }
-    
-    /* Import path schema if has path parameters */
-    if (parameterGroups.pathParams.length > 0) {
-      importManager.addParameterSchema(sanitizedId, "Path");
-    }
-    
-    /* Import headers schema if has header parameters or security headers */
-    if (parameterGroups.headerParams.length > 0 || (operationSecurityHeaders && operationSecurityHeaders.length > 0)) {
-      importManager.addParameterSchema(sanitizedId, "Headers");
-    }
-  }
+  /* Parameter schemas removed: parameters are available through clientRoute.params from routes */
 
   /* Responses & union return type */
   /* Build response handlers + discriminated union return type (ApiResponse<code, data>) */
@@ -123,7 +105,7 @@ export function extractOperationMetadata(
   const responseMapRuntimeName = bodyInfo.shouldExportResponseMap
     ? sanitizeIdentifier(operation.operationId) + "ResponseMap"
     : undefined;
-  
+
   const responseHandlers = generateResponseHandlers(
     operation,
     responseTypeImports,
@@ -132,8 +114,7 @@ export function extractOperationMetadata(
     doc,
   );
 
-  // Migrate response type imports to ImportManager
-  responseTypeImports.forEach((imp) => importManager.addSchemaImport(imp));
+  // Schema imports removed: schemas are available through route imports
 
   /* Security overrides/auth headers */
   const overridesSecurity = hasSecurityOverride(operation);
@@ -205,6 +186,13 @@ export function generateOperationFunction(
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
   doc: OpenAPIObject,
 ): GeneratedFunction {
+  /* Ensure operation has an operationId */
+  if (!operation.operationId) {
+    throw new Error(
+      `Operation ${method.toUpperCase()} ${pathKey} is missing operationId`,
+    );
+  }
+
   /* Extract all metadata using pure logic function */
   const metadata = extractOperationMetadata(
     pathKey,
@@ -232,7 +220,24 @@ export function generateOperationFunction(
 
   /* Emit request/response map type aliases (only when non-empty / applicable) */
   const typeAliases = buildTypeAliasesFromRoute({
+    bodyTypeName: metadata.bodyInfo.bodyTypeInfo?.typeName ?? undefined,
+    contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+    hasBody: metadata.hasBody,
+    hasHeaderParams:
+      metadata.parameterGroups.headerParams.length > 0 ||
+      (metadata.operationSecurityHeaders &&
+        metadata.operationSecurityHeaders.length > 0),
+    hasPathParams: metadata.parameterGroups.pathParams.length > 0,
+    hasQueryParams: metadata.parameterGroups.queryParams.length > 0,
+    hasRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
+    hasResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
     importManager: metadata.importManager,
+    isBodyOptional:
+      !metadata.hasBody || !metadata.bodyInfo.bodyTypeInfo?.isRequired,
+    isHeadersOptional:
+      metadata.parameterGroups.headerParams.length === 0 &&
+      (!metadata.operationSecurityHeaders ||
+        metadata.operationSecurityHeaders.length === 0),
     operationId: operation.operationId,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
@@ -331,18 +336,14 @@ function collectBodyAndContentTypes(
       doc.components?.schemas,
     );
     requestContentType = bodyTypeInfo.contentType;
-    bodyTypeInfo.typeImports.forEach((imp) => {
-      importManager.addSchemaImport(imp);
-    });
+    /* Schema imports removed: available through route imports */
   }
 
   const requestMapTypeName = `${operationName}RequestMap`;
   const responseMapTypeName = `${operationName}ResponseMap`;
 
   const contentTypeMaps = generateContentTypeMaps(operation, doc);
-  contentTypeMaps.typeImports.forEach((imp) => {
-    importManager.addSchemaImport(imp);
-  });
+  /* Schema imports removed: available through route imports */
 
   let requestContentTypes: string[] = [];
   if (

@@ -54,15 +54,13 @@ describe("DeserializerMap Integration Test", () => {
 
       /* Should extract content types from the nested response map */
       expect(typeDefinition).toContain(
-        "[Status in keyof typeof TestAuthBearerHttpResponseMap]: keyof typeof TestAuthBearerHttpResponseMap[Status]",
+        "[Status in keyof TestAuthBearerHttpResponseMap]: keyof TestAuthBearerHttpResponseMap[Status]",
       );
-      expect(typeDefinition).toContain(
-        "[keyof typeof TestAuthBearerHttpResponseMap]",
-      );
+      expect(typeDefinition).toContain("[keyof TestAuthBearerHttpResponseMap]");
 
       /* Should not directly use status codes as keys */
       expect(typeDefinition).not.toContain(
-        "keyof typeof TestAuthBearerHttpResponseMap,",
+        "keyof TestAuthBearerHttpResponseMap,",
       );
     }
   });
@@ -88,12 +86,12 @@ describe("DeserializerMap Integration Test", () => {
     expect(operationContent).toContain(
       "export const TestAuthBearerHttpResponseMap",
     );
-    
+
     /* Check that route is imported */
     expect(operationContent).toContain(
       'from "../routes/testAuthBearerHttp.js"',
     );
-    
+
     /* Response map structure should be in route file */
     const routePath = join(generatedDir, "routes/testAuthBearerHttp.ts");
     const routeContent = await readFile(routePath, "utf-8");

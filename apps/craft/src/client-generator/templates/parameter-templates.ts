@@ -1,8 +1,8 @@
 import type { ParameterObject } from "openapi3-ts/oas31";
 
-import type { ParameterAnalysis } from "../models/parameter-models.js";
+import assert from "assert";
 
-import { sanitizeIdentifier } from "../../schema-generator/utils.js";
+import type { ParameterAnalysis } from "../models/parameter-models.js";
 
 /**
  * Renders simple parameters for function signature (no destructuring to avoid duplicate identifiers)
@@ -73,165 +73,25 @@ export function renderParameterHandling(
  * Renders TypeScript interface for parameters (using a params object instead of destructuring)
  */
 export function renderParameterInterface(analysis: ParameterAnalysis): string {
-  const sections: string[] = [];
-  const { structure } = analysis;
+  /* Use the params type alias generated from the route */
+  assert(
+    analysis.operationId,
+    "Operation ID is required for parameter interface generation",
+  );
 
-  // Check if we need a params object at all
-  const needsParams =
-    structure.processed.pathParams.length > 0 ||
-    structure.processed.queryParams.length > 0 ||
-    structure.processed.headerParams.length > 0 ||
-    structure.processed.securityHeaders.length > 0;
+  const operationName =
+    analysis.operationId.charAt(0).toUpperCase() +
+    analysis.operationId.slice(1);
+  /* Add generic type parameters only for the ones we actually use */
+  const hasRequestGeneric = analysis.structure.hasRequestMap;
+  const hasResponseGeneric = analysis.structure.hasResponseMap;
 
-  if (needsParams) {
-    const pathSection = renderPathParametersSection(analysis);
-    if (pathSection) sections.push(pathSection);
-
-    const querySection = renderQueryParametersSection(analysis);
-    if (querySection) sections.push(querySection);
-
-    const headerSection = renderHeaderParametersSection(analysis);
-    if (headerSection) sections.push(headerSection);
+  if (hasRequestGeneric || hasResponseGeneric) {
+    const genericParts: string[] = [];
+    if (hasRequestGeneric) genericParts.push("TRequestContentType");
+    if (hasResponseGeneric) genericParts.push("TResponseContentType");
+    return `${operationName}Params<${genericParts.join(", ")}>`;
   }
 
-  // Body parameter
-  if (structure.hasBody && structure.bodyTypeInfo) {
-    const requiredMarker = structure.bodyTypeInfo.isRequired ? "" : "?";
-    let typeName = structure.bodyTypeInfo.typeName || "any";
-
-    // Use generic type if we have a request map
-    if (structure.requestMapTypeName) {
-      typeName = `${structure.requestMapTypeName}[TRequestContentType]`;
-    }
-
-    sections.push(`body${requiredMarker}: ${typeName}`);
-  }
-
-  // ContentType parameter
-  if (structure.requestMapTypeName || structure.responseMapTypeName) {
-    const contentTypeParts: string[] = [];
-
-    if (structure.requestMapTypeName) {
-      contentTypeParts.push("request?: TRequestContentType");
-    }
-
-    if (structure.responseMapTypeName) {
-      contentTypeParts.push("response?: TResponseContentType");
-    }
-
-    sections.push(`contentType?: { ${contentTypeParts.join("; ")} }`);
-  }
-
-  return sections.length > 0 ? `{\n  ${sections.join(";\n  ")};\n}` : "{}";
-}
-
-/* Helper functions for rendering parameter sections */
-
-/**
- * Renders header parameters section for the params interface
- */
-function renderHeaderParametersSection(
-  analysis: ParameterAnalysis,
-): null | string {
-  const { structure } = analysis;
-  if (
-    structure.processed.headerParams.length === 0 &&
-    structure.processed.securityHeaders.length === 0
-  ) {
-    return null;
-  }
-
-  const optionalMarker = analysis.optionalityRules.isHeadersOptional ? "?" : "";
-
-  if (analysis.operationId && structure.processed.headerParams.length > 0) {
-    /* Use the inferred Zod type which handles proper parameter validation */
-    const sanitizedOperationId = sanitizeIdentifier(analysis.operationId);
-    const headersTypeName = `${sanitizedOperationId}HeadersSchema`;
-
-    /* If we have security headers, we need to combine both regular and security headers */
-    if (structure.processed.securityHeaders.length > 0) {
-      const securityHeaderProperties: string[] = [];
-      analysis.securityHeaderProperties.forEach((prop) => {
-        const requiredMarker = prop.isRequired ? "" : "?";
-        securityHeaderProperties.push(
-          `"${prop.headerName}"${requiredMarker}: string`,
-        );
-      });
-      return `headers${optionalMarker}: ${headersTypeName} & {\n      ${securityHeaderProperties.join(";\n      ")};\n    }`;
-    }
-
-    return `headers${optionalMarker}: ${headersTypeName}`;
-  }
-
-  /* Fallback to manual expansion if operationId is not available or no regular headers */
-  const headerProperties: string[] = [];
-
-  // Regular header parameters
-  analysis.headerProperties.forEach((prop) => {
-    const requiredMarker = prop.isRequired ? "" : "?";
-    headerProperties.push(`"${prop.name}"${requiredMarker}: string`);
-  });
-
-  // Security headers
-  analysis.securityHeaderProperties.forEach((prop) => {
-    const requiredMarker = prop.isRequired ? "" : "?";
-    headerProperties.push(`"${prop.headerName}"${requiredMarker}: string`);
-  });
-
-  return `headers${optionalMarker}: {\n      ${headerProperties.join(";\n      ")};\n    }`;
-}
-
-/**
- * Renders path parameters section for the params interface
- */
-function renderPathParametersSection(
-  analysis: ParameterAnalysis,
-): null | string {
-  if (analysis.structure.processed.pathParams.length === 0) return null;
-
-  if (analysis.operationId) {
-    /* Use the inferred Zod type which handles proper parameter validation */
-    const sanitizedOperationId = sanitizeIdentifier(analysis.operationId);
-    const pathTypeName = `${sanitizedOperationId}PathSchema`;
-    return `path: ${pathTypeName}`;
-  }
-
-  /* Fallback to manual expansion if operationId is not available */
-  const pathProperties: string[] = [];
-  analysis.pathProperties.forEach((prop) => {
-    const requiredMarker = prop.isRequired ? "" : "?";
-    pathProperties.push(`"${prop.name}"${requiredMarker}: string`);
-  });
-  return `path: {\n      ${pathProperties.join(";\n      ")};\n    }`;
-}
-
-/**
- * Renders query parameters section for the params interface
- */
-function renderQueryParametersSection(
-  analysis: ParameterAnalysis,
-): null | string {
-  if (analysis.structure.processed.queryParams.length === 0) return null;
-
-  /*
-   * Instead of hardcoding individual parameter types as 'string', use the inferred Zod type
-   * which properly handles arrays, enums, and other complex types
-   */
-  const optionalMarker = analysis.optionalityRules.isQueryOptional ? "?" : "";
-
-  if (analysis.operationId) {
-    /* Use the inferred Zod type which handles arrays, enums, and complex types correctly */
-    const sanitizedOperationId = sanitizeIdentifier(analysis.operationId);
-    const queryTypeName = `${sanitizedOperationId}QuerySchema`;
-    /* Remove key-value pairs since the type is already defined by the Zod schema */
-    return `query${optionalMarker}: ${queryTypeName}`;
-  }
-
-  /* Fallback to manual expansion if operationId is not available */
-  const queryProperties: string[] = [];
-  analysis.queryProperties.forEach((prop) => {
-    const requiredMarker = prop.isRequired ? "" : "?";
-    queryProperties.push(`"${prop.name}"${requiredMarker}: string`);
-  });
-  return `query${optionalMarker}: {\n      ${queryProperties.join(";\n      ")};\n    }`;
+  return `${operationName}Params`;
 }

@@ -53,6 +53,7 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
       /* Act - call with only non-readOnly properties */
       const response = await client.createUserReadOnly({
         body: {
+          id: "test-id",
           username: "testuser",
           email: "test@example.com",
         },
@@ -122,6 +123,7 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
       /* Act - call with only request-valid properties */
       const response = await client.createUserBoth({
         body: {
+          id: "test-id",
           username: "testuser",
           email: "test@example.com",
           password: "secret123",
@@ -140,6 +142,7 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
       /* Act */
       const response = await client.updateUserBoth({
         body: {
+          id: "test-id",
           username: "updateduser",
           email: "updated@example.com",
           password: "newpassword123",

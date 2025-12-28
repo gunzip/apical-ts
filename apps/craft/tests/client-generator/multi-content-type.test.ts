@@ -67,29 +67,15 @@ describe("Multi-content-type operation function generation", () => {
       doc,
     );
 
-    // Check that type maps are always generated
+    // Check that type maps are re-exported from routes (as const exports)
     expect(result.functionCode).toContain(
-      "export type PetFindByStatusRequestMap = {",
-    );
-    expect(result.functionCode).toContain('"application/json": Pet;');
-    expect(result.functionCode).toContain(
-      '"application/x-www-form-urlencoded": PetFindByStatusRequest;',
-    );
-
-    expect(result.functionCode).toContain(
-      "export type PetFindByStatusResponseMap = {",
+      "export const PetFindByStatusRequestMap = petFindByStatusRequestMap",
     );
     expect(result.functionCode).toContain(
-      '"application/json": PetFindByStatus200Response,',
-    );
-    expect(result.functionCode).toContain(
-      '"application/xml": PetFindByStatus200Response,',
-    );
-    expect(result.functionCode).toContain(
-      '"text/plain": PetFindByStatus404Response,',
+      "export const PetFindByStatusResponseMap = petFindByStatusResponseMap",
     );
 
-    // Check generic function signature
+    // Check generic function signature uses re-exported PascalCase type names
     expect(result.functionCode).toContain(
       "export async function petFindByStatus<",
     );
@@ -101,9 +87,9 @@ describe("Multi-content-type operation function generation", () => {
       "TResponseContentType extends { [K in keyof PetFindByStatusResponseMap]: keyof PetFindByStatusResponseMap[K]; }[keyof PetFindByStatusResponseMap] =",
     );
 
-    // Check parameter type uses generic and includes contentType in first parameter
+    // Check parameter type uses generic with z.infer for runtime schema validation
     expect(result.functionCode).toContain(
-      "body: PetFindByStatusRequestMap[TRequestContentType];",
+      "body: import('zod').infer<PetFindByStatusRequestMap[TRequestContentType]>",
     );
     // contentType now supports both request and response overrides
     expect(result.functionCode).toContain(
@@ -113,9 +99,9 @@ describe("Multi-content-type operation function generation", () => {
     // Check NO options parameter (contentType should be in first parameter now)
     expect(result.functionCode).not.toContain("options?: {");
 
-    // Check return type uses precise ApiResponseWithParse types
+    // Check return type uses precise ApiResponseWithParse types (using camelCase imported route names in typeof)
     expect(result.functionCode).toContain(
-      'Promise<(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof PetFindByStatusResponseMap> : ApiResponseWithParse<"200", typeof PetFindByStatusResponseMap>) | (TForceValidation extends true ? ApiResponseWithForcedParse<"404", typeof PetFindByStatusResponseMap> : ApiResponseWithParse<"404", typeof PetFindByStatusResponseMap>) | ApiResponseError>',
+      'Promise<(TForceValidation extends true ? ApiResponseWithForcedParse<"200", typeof petFindByStatusResponseMap> : ApiResponseWithParse<"200", typeof petFindByStatusResponseMap>) | (TForceValidation extends true ? ApiResponseWithForcedParse<"404", typeof petFindByStatusResponseMap> : ApiResponseWithParse<"404", typeof petFindByStatusResponseMap>) | ApiResponseError>',
     );
 
     // Check discriminated union type definition is NOT generated for client operations
@@ -142,17 +128,10 @@ describe("Multi-content-type operation function generation", () => {
       '"Accept": params.contentType?.response || "application/json",',
     );
 
-    // Check type imports
-    const schemaImports = result.importManager.getSchemaImports();
-    expect(schemaImports.some((imp) => imp.name === "Pet")).toBe(true);
+    // Check type imports - after refactoring, we import from routes not schemas
+    const routeImports = result.importManager.getRouteImports();
     expect(
-      schemaImports.some((imp) => imp.name === "PetFindByStatusRequest"),
-    ).toBe(true);
-    expect(
-      schemaImports.some((imp) => imp.name === "PetFindByStatus200Response"),
-    ).toBe(true);
-    expect(
-      schemaImports.some((imp) => imp.name === "PetFindByStatus404Response"),
+      routeImports.some((imp) => imp.operationId === "petFindByStatus"),
     ).toBe(true);
   });
 
@@ -193,9 +172,9 @@ describe("Multi-content-type operation function generation", () => {
       doc,
     );
 
-    // Should now ALWAYS generate type maps
-    expect(result.functionCode).toContain("export type GetUserRequestMap");
-    expect(result.functionCode).toContain("export type GetUserResponseMap");
+    // Should now ALWAYS re-export type maps from routes
+    expect(result.functionCode).toContain("export const GetUserRequestMap");
+    expect(result.functionCode).toContain("export const GetUserResponseMap");
 
     // Should have generic parameters
     expect(result.functionCode).toContain("export async function getUser<");
@@ -235,15 +214,15 @@ describe("Multi-content-type operation function generation", () => {
       doc,
     );
 
-    // Should generate response map for GET operations with responses
-    expect(result.functionCode).toContain("export type GetUserByIdResponseMap");
-
-    // Should NOT generate request map for GET operations with no request body
-    expect(result.functionCode).not.toContain(
-      "export type GetUserByIdRequestMap",
+    // Should re-export response map from routes for GET operations with responses
+    expect(result.functionCode).toContain(
+      "export const GetUserByIdResponseMap",
     );
 
-    // Should have generic parameter for response (no request body)
+    // Should NOT re-export request map for GET operations with no request body
+    expect(result.functionCode).not.toContain("GetUserByIdRequestMap");
+
+    // Should have generic parameter for response (no request body), using re-exported type
     expect(result.functionCode).toContain(
       "TResponseContentType extends { [K in keyof GetUserByIdResponseMap]: keyof GetUserByIdResponseMap[K]; }[keyof GetUserByIdResponseMap]",
     );

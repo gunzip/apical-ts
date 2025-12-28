@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { createUnauthenticatedClient } from "./client.js";
+import {
+  createAuthenticatedClient,
+  createUnauthenticatedClient,
+} from "./client.js";
 import { getRandomPort, MockServer } from "./setup.js";
 
 describe("Working Integration Test Demo", () => {
@@ -42,14 +45,12 @@ describe("Working Integration Test Demo", () => {
   });
 
   it("should work with custom token authentication via parameters", async () => {
-    // Arrange - testCustomTokenHeader expects custom token as parameter
-    const client = createUnauthenticatedClient(baseURL);
+    // Arrange - testCustomTokenHeader expects custom token in config headers (security)
+    const client = createAuthenticatedClient(baseURL, "customToken");
 
-    // Act
+    // Act - custom-token is provided via client configuration (global headers)
     const response = await client.testCustomTokenHeader({
-      headers: {
-        "custom-token": "test-custom-token-abc",
-      },
+      headers: {},
     });
 
     // Assert

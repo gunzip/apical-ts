@@ -3,6 +3,7 @@
  */
 
 export interface ImportInfo {
+  readonly alias?: string; // For aliased imports (e.g., clientRoute as testParameterWithDashClientRoute)
   readonly filePath?: string; // For explicit file paths
   readonly isSchema?: boolean; // Whether it's a schema (e.g., QuerySchema) vs type (e.g., Query)
   readonly name: string;
@@ -23,6 +24,26 @@ export type ParameterType = "Headers" | "Path" | "Query";
 export class ImportManager {
   private importKeys = new Set<string>();
   private imports: ImportInfo[] = [];
+
+  /**
+   * Adds import for clientRoute from route file
+   */
+  addClientRouteImport(operationId: string): void {
+    const clientRouteName = `${operationId}ClientRoute`;
+    const importInfo: ImportInfo = {
+      alias: clientRouteName,
+      filePath: `../routes/${operationId}.js`,
+      name: "clientRoute",
+      operationId,
+      type: "route",
+    };
+    const key = this.generateKey(importInfo);
+
+    if (!this.importKeys.has(key)) {
+      this.importKeys.add(key);
+      this.imports.push(importInfo);
+    }
+  }
 
   addConfigImport(configName: string): void {
     const importInfo: ImportInfo = {
@@ -196,12 +217,12 @@ export class ImportManager {
     );
   }
 
-  getSchemaImports(): ImportInfo[] {
-    return this.imports.filter((imp) => imp.type === "schema");
-  }
-
   getRouteImports(): ImportInfo[] {
     return this.imports.filter((imp) => imp.type === "route");
+  }
+
+  getSchemaImports(): ImportInfo[] {
+    return this.imports.filter((imp) => imp.type === "schema");
   }
 
   hasZodImport(): boolean {

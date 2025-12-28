@@ -11,7 +11,7 @@ describe("Request Bodies Unit Tests", () => {
   describe("CreateUserWithRequestBodies operation", () => {
     it("should have correct request map type", () => {
       // Verify that the request map is correctly typed
-      type RequestMap = CreateUserWithRequestBodiesRequestMap;
+      type RequestMap = typeof CreateUserWithRequestBodiesRequestMap;
 
       // Should have application/json content type
       const hasJsonContentType: "application/json" extends keyof RequestMap
@@ -20,7 +20,7 @@ describe("Request Bodies Unit Tests", () => {
       expect(hasJsonContentType).toBe(true);
 
       // The request body should be of type Profile
-      const requestBody: RequestMap["application/json"] = {
+      const requestBody: Profile = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
         has_profile: true,
@@ -134,7 +134,7 @@ describe("Request Bodies Unit Tests", () => {
       // Currently only application/json is supported, but this test ensures
       // the type system is set up correctly for future extensions
 
-      type RequestMap = CreateUserWithRequestBodiesRequestMap;
+      type RequestMap = typeof CreateUserWithRequestBodiesRequestMap;
       const contentTypes: (keyof RequestMap)[] = ["application/json"];
 
       expect(contentTypes).toContain("application/json");

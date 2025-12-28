@@ -33,9 +33,6 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "bearerToken");
       const params = {
-        headers: {
-          Authorization: "Bearer test-bearer-token-123",
-        },
         query: {
           cursor: sampleData.queryParams.cursor,
           qo: sampleData.queryParams.qo,
@@ -64,9 +61,6 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createUnauthenticatedClient(baseURL);
       const params = {
-        headers: {
-          Authorization: "Bearer invalid-token",
-        },
         query: {
           cursor: sampleData.queryParams.cursor,
           qo: sampleData.queryParams.qo,
@@ -96,9 +90,6 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "bearerToken");
       const params = {
-        headers: {
-          Authorization: "Bearer test-bearer-token-123",
-        },
         query: {
           cursor: sampleData.queryParams.cursor,
           // Missing required 'qr' parameter
@@ -126,9 +117,6 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "bearerTokenHttp");
       const params = {
-        headers: {
-          Authorization: "Bearer test-bearer-http-token-456",
-        },
         query: {
           cursor: sampleData.queryParams.cursor,
           qo: sampleData.queryParams.qo,
@@ -152,9 +140,6 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "bearerTokenHttp");
       const params = {
-        headers: {
-          Authorization: "Bearer test-bearer-http-token-456",
-        },
         query: {
           cursor: sampleData.queryParams.cursor,
           qo: sampleData.queryParams.qo,
@@ -180,9 +165,6 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createUnauthenticatedClient(baseURL);
       const params = {
-        headers: {
-          Authorization: "Bearer invalid-token",
-        },
         query: {
           cursor: sampleData.queryParams.cursor,
           qo: sampleData.queryParams.qo,
@@ -212,9 +194,6 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "simpleToken");
       const params = {
-        headers: {
-          "X-Functions-Key": "test-simple-token-789",
-        },
         query: {
           cursor: sampleData.queryParams.cursor,
           qo: sampleData.queryParams.qo,
@@ -238,9 +217,6 @@ describe("Authentication Operations", () => {
       // Arrange
       const client = createUnauthenticatedClient(baseURL);
       const params = {
-        headers: {
-          "X-Functions-Key": "",
-        },
         query: {
           cursor: sampleData.queryParams.cursor,
           qo: sampleData.queryParams.qo,
@@ -270,11 +246,7 @@ describe("Authentication Operations", () => {
       const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act
-      const response = await client.testCustomTokenHeader({
-        headers: {
-          "custom-token": "test-custom-token-abc",
-        },
-      });
+      const response = await client.testCustomTokenHeader({});
 
       // Assert
       if (response.isValid && response.status === "200") {
@@ -290,11 +262,7 @@ describe("Authentication Operations", () => {
       const client = createUnauthenticatedClient(baseURL);
 
       // Act
-      const response = await client.testCustomTokenHeader({
-        headers: {
-          "custom-token": "",
-        },
-      });
+      const response = await client.testCustomTokenHeader({});
 
       // Assert
       if (response.isValid) {

@@ -71,6 +71,16 @@ export async function generateParameterSchemaFile(
     }
   }
 
+  /* Calculate optionality for parameters */
+  const queryParams = parameterMetadata.parameterGroups.queryParams || [];
+  const headerParams = parameterMetadata.parameterGroups.headerParams || [];
+  const isQueryOptional = queryParams.every(
+    (p: { required?: boolean }) => p.required !== true,
+  );
+  const isHeadersOptional = headerParams.every(
+    (p: { required?: boolean }) => p.required !== true,
+  );
+
   /* Generate ParsedParams runtime object and type */
   const parsedParamsName = `${sanitizedId}ParsedParams`;
   const parsedParamsObject = `export const ${parsedParamsName} = {
@@ -79,10 +89,13 @@ export async function generateParameterSchemaFile(
   headers: ${result.schemaNames.headersSchema},
 } as const;`;
 
+  const queryOptionalMarker = isQueryOptional ? "?" : "";
+  const headersOptionalMarker = isHeadersOptional ? "?" : "";
+
   const parsedParamsType = `export type ${parsedParamsName}Type = {
-  query: z.infer<typeof ${result.schemaNames.querySchema}>;
+  query${queryOptionalMarker}: z.infer<typeof ${result.schemaNames.querySchema}>;
   path: z.infer<typeof ${result.schemaNames.pathSchema}>;
-  headers: z.infer<typeof ${result.schemaNames.headersSchema}>;
+  headers${headersOptionalMarker}: z.infer<typeof ${result.schemaNames.headersSchema}>;
 };`;
 
   /* Generate server-specific ParsedParams */
@@ -91,6 +104,13 @@ export async function generateParameterSchemaFile(
   path: ${serverSchemaNames.pathSchema},
   headers: ${serverSchemaNames.headersSchema},
 } as const;`;
+
+  /* Generate server ParsedParams type with same optionality as client */
+  const serverParsedParamsType = `export type ${sanitizedId}${serverSchemaPrefix}ParsedParamsType = {
+  query${queryOptionalMarker}: z.infer<typeof ${serverSchemaNames.querySchema}>;
+  path: z.infer<typeof ${serverSchemaNames.pathSchema}>;
+  headers${headersOptionalMarker}: z.infer<typeof ${serverSchemaNames.headersSchema}>;
+};`;
 
   /* Rename server schema definitions to use Server prefix */
   const serverSchemaCode = serverResult.schemaCode
@@ -139,6 +159,9 @@ export async function generateParameterSchemaFile(
     "",
     "/* Combined server parsed parameters object */",
     serverParsedParamsObject,
+    "",
+    "/* Combined server parsed parameters type */",
+    serverParsedParamsType,
     "",
   ].join("\n");
 

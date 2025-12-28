@@ -447,7 +447,7 @@ describe("Parameters Operations", () => {
       // Arrange
       const client = createAuthenticatedClient(baseURL, "customToken");
       const params = {
-        // param is optional, not providing it
+        headers: {},
       };
 
       // Act

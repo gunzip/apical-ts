@@ -353,7 +353,7 @@ describe("client-generator security", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "finalHeaders['X-API-Key'] = params.headers[\"X-API-Key\"];",
+        "const _sec_XAPIKey = config.headers['X-API-Key'];\n    if (_sec_XAPIKey === undefined) throw new Error('Missing required security header: X-API-Key');\n    finalHeaders['X-API-Key'] = _sec_XAPIKey;",
       );
     });
 
@@ -368,7 +368,7 @@ describe("client-generator security", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        'if (params.headers?.["X-API-Key"] !== undefined) finalHeaders[\'X-API-Key\'] = params.headers["X-API-Key"];',
+        "if (config.headers?.['X-API-Key'] !== undefined) finalHeaders['X-API-Key'] = config.headers['X-API-Key'];",
       );
     });
 
@@ -388,8 +388,8 @@ describe("client-generator security", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "finalHeaders['X-API-Key'] = params.headers[\"X-API-Key\"];\n" +
-          '    if (params.headers?.["Authorization"] !== undefined) finalHeaders[\'Authorization\'] = params.headers["Authorization"];',
+        "const _sec_XAPIKey = config.headers['X-API-Key'];\n    if (_sec_XAPIKey === undefined) throw new Error('Missing required security header: X-API-Key');\n    finalHeaders['X-API-Key'] = _sec_XAPIKey;\n" +
+          "    if (config.headers?.['Authorization'] !== undefined) finalHeaders['Authorization'] = config.headers['Authorization'];",
       );
     });
 
@@ -404,7 +404,7 @@ describe("client-generator security", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "finalHeaders['X-Custom-Auth-Token'] = params.headers[\"X-Custom-Auth-Token\"];",
+        "const _sec_XCustomAuthToken = config.headers['X-Custom-Auth-Token'];\n    if (_sec_XCustomAuthToken === undefined) throw new Error('Missing required security header: X-Custom-Auth-Token');\n    finalHeaders['X-Custom-Auth-Token'] = _sec_XCustomAuthToken;",
       );
     });
 
@@ -424,7 +424,7 @@ describe("client-generator security", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "finalHeaders['X-Special@Header'] = params.headers[\"X-Special@Header\"];",
+        "const _sec_XSpecialHeader = config.headers['X-Special@Header'];\n    if (_sec_XSpecialHeader === undefined) throw new Error('Missing required security header: X-Special@Header');\n    finalHeaders['X-Special@Header'] = _sec_XSpecialHeader;",
       );
     });
   });

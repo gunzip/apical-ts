@@ -20,6 +20,7 @@ export function renderAuthHeaderValidation(authHeaders: string[]): string {
 
 /**
  * Renders security header handling code from security headers using bracket notation
+ * Security headers are taken from config.headers (global auth), not params.headers
  */
 export function renderSecurityHeaderHandling(
   operationSecurityHeaders: SecurityHeader[],
@@ -29,9 +30,12 @@ export function renderSecurityHeaderHandling(
   return operationSecurityHeaders
     .map((securityHeader) => {
       if (securityHeader.isRequired) {
-        return `finalHeaders['${securityHeader.headerName}'] = params.headers["${securityHeader.headerName}"];`;
+        // Required headers must be present, throw error if missing
+        return `const _sec_${toValidVariableName(securityHeader.headerName)} = config.headers['${securityHeader.headerName}'];
+    if (_sec_${toValidVariableName(securityHeader.headerName)} === undefined) throw new Error('Missing required security header: ${securityHeader.headerName}');
+    finalHeaders['${securityHeader.headerName}'] = _sec_${toValidVariableName(securityHeader.headerName)};`;
       } else {
-        return `if (params.headers?.["${securityHeader.headerName}"] !== undefined) finalHeaders['${securityHeader.headerName}'] = params.headers["${securityHeader.headerName}"];`;
+        return `if (config.headers?.['${securityHeader.headerName}'] !== undefined) finalHeaders['${securityHeader.headerName}'] = config.headers['${securityHeader.headerName}'];`;
       }
     })
     .join("\n    ");

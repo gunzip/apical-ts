@@ -35,10 +35,8 @@ describe("Dynamic Force Validation Integration Test", () => {
     expect(content).toContain(
       "export const TestDeserializationResponseMap = testDeserializationResponseMap",
     );
-    // Check that route is imported
-    expect(content).toContain(
-      'import { testDeserializationRequestMap, testDeserializationResponseMap } from "../routes/testDeserialization.js"',
-    );
+    // Check that route is imported (includes clientRoute alias)
+    expect(content).toContain('from "../routes/testDeserialization.js"');
   });
 
   it("multi content type operation has both code paths", async () => {
