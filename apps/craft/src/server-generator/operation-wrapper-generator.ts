@@ -1,7 +1,13 @@
-import type { OperationObject } from "openapi3-ts/oas31";
+import type {
+  OpenAPIObject,
+  OperationObject,
+  ParameterObject,
+  ReferenceObject,
+} from "openapi3-ts/oas31";
 
 import assert from "assert";
 
+import { extractParameterGroups } from "../client-generator/parameters.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { renderServerOperationWrapper } from "./templates/server-operation-templates.js";
 
@@ -18,6 +24,9 @@ export interface GeneratedServerWrapper {
 interface ServerWrapperMetadata {
   functionName: string;
   hasBody: boolean;
+  hasHeaders: boolean;
+  hasPath: boolean;
+  hasQuery: boolean;
   method: string;
   operationId: string;
   pathKey: string;
@@ -34,12 +43,23 @@ export function generateServerOperationWrapper(
   pathKey: string,
   method: string,
   operation: OperationObject,
+  pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
+  doc: OpenAPIObject,
 ): GeneratedServerWrapper {
-  const metadata = extractServerWrapperMetadata(pathKey, method, operation);
+  const metadata = extractServerWrapperMetadata(
+    pathKey,
+    method,
+    operation,
+    pathLevelParameters,
+    doc,
+  );
 
   const wrapperCode = renderServerOperationWrapper({
     functionName: metadata.functionName,
     hasBody: metadata.hasBody,
+    hasHeaders: metadata.hasHeaders,
+    hasPath: metadata.hasPath,
+    hasQuery: metadata.hasQuery,
     method: metadata.method,
     operationId: metadata.operationId,
     pathKey: metadata.pathKey,
@@ -61,15 +81,27 @@ function extractServerWrapperMetadata(
   pathKey: string,
   method: string,
   operation: OperationObject,
+  pathLevelParameters: (ParameterObject | ReferenceObject)[],
+  doc: OpenAPIObject,
 ): ServerWrapperMetadata {
   assert(operation.operationId, "Operation ID is required");
   const operationId = operation.operationId;
   const sanitizedId = sanitizeIdentifier(operationId);
   const hasBody = !!operation.requestBody;
 
+  /* Extract parameter groups to determine which parameter types exist */
+  const parameterGroups = extractParameterGroups(
+    operation,
+    pathLevelParameters,
+    doc,
+  );
+
   return {
     functionName: `${sanitizedId}Wrapper`,
     hasBody,
+    hasHeaders: parameterGroups.headerParams.length > 0,
+    hasPath: parameterGroups.pathParams.length > 0,
+    hasQuery: parameterGroups.queryParams.length > 0,
     method: method.toLowerCase(),
     operationId,
     pathKey,

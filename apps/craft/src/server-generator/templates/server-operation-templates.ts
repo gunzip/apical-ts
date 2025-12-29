@@ -7,6 +7,9 @@ export interface ServerOperationTemplateParams {
   functionName: string;
   /** True if the operation defines a request body (even if only one content type) */
   hasBody: boolean;
+  hasHeaders: boolean;
+  hasPath: boolean;
+  hasQuery: boolean;
   /** HTTP method in lowercase (e.g., "get", "post") */
   method: string;
   operationId: string;
@@ -26,6 +29,9 @@ export function renderServerOperationWrapper(
   const {
     functionName,
     hasBody,
+    hasHeaders,
+    hasPath,
+    hasQuery,
     operationId,
     requestMapTypeName,
     responseMapTypeName,
@@ -49,6 +55,9 @@ export function renderServerOperationWrapper(
     operationId,
     requestMapTypeName,
     hasBody,
+    hasQuery,
+    hasPath,
+    hasHeaders,
   );
 
   /* Build handler and parsed params types */
@@ -65,12 +74,27 @@ export function renderServerOperationWrapper(
   | { kind: "headers-error"; error: z.ZodError; isValid: false }
   | { kind: "body-error"; error: z.ZodError; isValid: false };`;
 
-  /* Extract params type from serverRoute.params */
+  /* Extract params type from serverRoute.params - build dynamically based on which params exist */
+  const parsedParamsTypeProps: string[] = [];
+  if (hasQuery) {
+    parsedParamsTypeProps.push(
+      `  query?: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.query>;`,
+    );
+  }
+  if (hasPath) {
+    parsedParamsTypeProps.push(
+      `  path: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.path>;`,
+    );
+  }
+  if (hasHeaders) {
+    parsedParamsTypeProps.push(
+      `  headers?: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.headers>;`,
+    );
+  }
+  parsedParamsTypeProps.push(`  body?: ${bodyType};`);
+
   const parsedParamsType = `type ${sanitizedId}ParsedParams = {
-  query?: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.query>;
-  path: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.path>;
-  headers?: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.headers>;
-  body?: ${bodyType};
+${parsedParamsTypeProps.join("\n")}
 };`;
 
   const handlerType = `export type ${sanitizedId}Handler = (
@@ -123,19 +147,40 @@ function renderValidationLogic(
   operationId: string,
   requestMapTypeName: string | undefined,
   hasBody: boolean | undefined,
+  hasQuery: boolean,
+  hasPath: boolean,
+  hasHeaders: boolean,
 ): string {
   const sanitizedId = sanitizeIdentifier(operationId);
   const bodyType = requestMapTypeName
     ? `z.infer<(typeof ${requestMapTypeName})[keyof typeof ${requestMapTypeName}]>`
     : "undefined";
-  const shared = `  const queryParse = ${sanitizedId}RouteMetadata.params.shape.query.safeParse(req.query);
-  if (!queryParse.success) return handler({ kind: "query-error", error: queryParse.error, isValid: false });
 
-  const pathParse = ${sanitizedId}RouteMetadata.params.shape.path.safeParse(req.path);
-  if (!pathParse.success) return handler({ kind: "path-error", error: pathParse.error, isValid: false });
+  /* Build parameter validation conditionally */
+  const paramValidations: string[] = [];
 
-  const headersParse = ${sanitizedId}RouteMetadata.params.shape.headers.safeParse(req.headers);
-  if (!headersParse.success) return handler({ kind: "headers-error", error: headersParse.error, isValid: false });`;
+  if (hasQuery) {
+    paramValidations.push(
+      `  const queryParse = ${sanitizedId}RouteMetadata.params.shape.query.safeParse(req.query);`,
+      `  if (!queryParse.success) return handler({ kind: "query-error", error: queryParse.error, isValid: false });`,
+    );
+  }
+
+  if (hasPath) {
+    paramValidations.push(
+      `  const pathParse = ${sanitizedId}RouteMetadata.params.shape.path.safeParse(req.path);`,
+      `  if (!pathParse.success) return handler({ kind: "path-error", error: pathParse.error, isValid: false });`,
+    );
+  }
+
+  if (hasHeaders) {
+    paramValidations.push(
+      `  const headersParse = ${sanitizedId}RouteMetadata.params.shape.headers.safeParse(req.headers);`,
+      `  if (!headersParse.success) return handler({ kind: "headers-error", error: headersParse.error, isValid: false });`,
+    );
+  }
+
+  const shared = paramValidations.join("\n");
 
   const bodyLogic = requestMapTypeName
     ? `
@@ -166,14 +211,24 @@ function renderValidationLogic(
       : `
   let parsedBody: undefined | undefined = undefined;`;
 
+  /* Build return value object dynamically based on which parameters exist */
+  const returnValueProps: string[] = [];
+  if (hasQuery) {
+    returnValueProps.push(`      query: queryParse.data`);
+  }
+  if (hasPath) {
+    returnValueProps.push(`      path: pathParse.data`);
+  }
+  if (hasHeaders) {
+    returnValueProps.push(`      headers: headersParse.data`);
+  }
+  returnValueProps.push(`      body: parsedBody`);
+
   const tail = `
   return handler({
     isValid: true,
     value: {
-      query: queryParse.data,
-      path: pathParse.data,
-      headers: headersParse.data,
-      body: parsedBody
+${returnValueProps.join(",\n")}
     },
   });`;
 

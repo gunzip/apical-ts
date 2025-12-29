@@ -177,14 +177,15 @@ export function buildTypeAliasesFromRoute(config: {
   const clientRouteName = `${sanitizedId}ClientRoute`;
   if (hasAnyParams) {
     /* Build type parts - headers optional based on spec requirements and security config */
+    /* Use Extract to safely access shape properties that may or may not exist */
     const queryPart = config.hasQueryParams
-      ? `query?: z.infer<typeof ${clientRouteName}.params.shape.query>`
+      ? `query?: z.infer<Extract<NonNullable<typeof ${clientRouteName}.params>['shape']['query'], import('zod').ZodTypeAny>>`
       : "";
     const pathPart = config.hasPathParams
-      ? `path: z.infer<typeof ${clientRouteName}.params.shape.path>`
+      ? `path: z.infer<Extract<NonNullable<typeof ${clientRouteName}.params>['shape']['path'], import('zod').ZodTypeAny>>`
       : "";
     const headersPart = config.hasHeaderParams
-      ? `headers${config.isHeadersOptional ? "?" : ""}: z.infer<typeof ${clientRouteName}.params.shape.headers>`
+      ? `headers${config.isHeadersOptional ? "?" : ""}: z.infer<Extract<NonNullable<typeof ${clientRouteName}.params>['shape']['headers'], import('zod').ZodTypeAny>>`
       : "";
     const parts = [queryPart, pathPart, headersPart].filter(Boolean);
     if (parts.length > 0) {

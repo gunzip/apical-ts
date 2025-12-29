@@ -49,9 +49,7 @@ describe("Working Integration Test Demo", () => {
     const client = createAuthenticatedClient(baseURL, "customToken");
 
     // Act - custom-token is provided via client configuration (global headers)
-    const response = await client.testCustomTokenHeader({
-      headers: {},
-    });
+    const response = await client.testCustomTokenHeader({});
 
     // Assert
     if (!response.isValid) {

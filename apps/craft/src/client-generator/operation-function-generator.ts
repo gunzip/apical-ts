@@ -229,10 +229,7 @@ export function generateOperationFunction(
     bodyTypeName: metadata.bodyInfo.bodyTypeInfo?.typeName ?? undefined,
     contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
     hasBody: metadata.hasBody,
-    hasHeaderParams:
-      metadata.parameterGroups.headerParams.length > 0 ||
-      (metadata.operationSecurityHeaders &&
-        metadata.operationSecurityHeaders.length > 0),
+    hasHeaderParams: metadata.parameterGroups.headerParams.length > 0,
     hasPathParams: metadata.parameterGroups.pathParams.length > 0,
     hasQueryParams: metadata.parameterGroups.queryParams.length > 0,
     hasRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,

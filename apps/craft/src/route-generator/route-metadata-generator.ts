@@ -36,6 +36,7 @@ export interface RouteOperationMetadata {
   };
   operation: OperationObject;
   operationId: string;
+  parameterInfo: LightweightRouteMetadata["parameterInfo"];
 }
 
 /**
@@ -147,6 +148,9 @@ export function generateRouteMetadata(
 
   /* Render the complete route metadata */
   const routeCode = renderRouteMetadata({
+    hasHeaders: metadata.parameterInfo.hasHeaders,
+    hasPath: metadata.parameterInfo.hasPath,
+    hasQuery: metadata.parameterInfo.hasQuery,
     method: method.toLowerCase(),
     operationId: metadata.operationId,
     pathKey,
@@ -206,5 +210,6 @@ function extractCompleteRouteMetadata(
     },
     operation,
     operationId,
+    parameterInfo: lightweightMeta.parameterInfo,
   };
 }

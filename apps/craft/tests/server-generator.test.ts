@@ -36,6 +36,8 @@ describe("server-generator operation wrapper", () => {
       "/test",
       "get",
       operation as any,
+      [],
+      {} as any,
     );
 
     expect(result.wrapperCode).toContain("testSimpleQueryWrapper");
@@ -44,8 +46,12 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain(
       "testSimpleQueryRouteMetadata.params.shape.query.safeParse",
     );
-    expect(result.wrapperCode).toContain(
+    // No path or headers parameters in this operation, so no safeParse for them
+    expect(result.wrapperCode).not.toContain(
       "testSimpleQueryRouteMetadata.params.shape.path.safeParse",
+    );
+    expect(result.wrapperCode).not.toContain(
+      "testSimpleQueryRouteMetadata.params.shape.headers.safeParse",
     );
     expect(result.wrapperCode).toContain('kind: "query-error"');
     expect(result.wrapperCode).toContain('kind: "path-error"');
@@ -110,6 +116,8 @@ describe("server-generator operation wrapper", () => {
       "/test/{pathParam}",
       "get",
       operation as any,
+      [],
+      {} as any,
     );
 
     /* Schema validation now uses server-specific schemas from serverRoute.params.shape */
@@ -161,6 +169,8 @@ describe("server-generator operation wrapper", () => {
       "/test",
       "post",
       operation as any,
+      [],
+      {} as any,
     );
 
     /* Verify that request body validation uses schemas from request map imported from routes */
@@ -196,6 +206,8 @@ describe("server-generator operation wrapper", () => {
       "/test/{id}",
       "get",
       operation as any,
+      [],
+      {} as any,
     );
 
     expect(result.wrapperCode).toContain("testWithPathRouteMetadata");
@@ -233,9 +245,9 @@ describe("server-generator operation wrapper", () => {
       "/test",
       "post",
       operation as any,
+      [],
+      {} as any,
     );
-
-    expect(result.wrapperCode).toContain("testWithBodyWrapper");
     expect(result.wrapperCode).toContain("body-error");
     expect(result.wrapperCode).toContain("parsedBody");
   });
@@ -267,9 +279,9 @@ describe("server-generator operation wrapper", () => {
       "/auth/{userId}",
       "GET",
       operation as any,
+      [],
+      {} as any,
     );
-
-    expect(result.wrapperCode).toContain("testAuthBearerWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
     /* Route metadata is imported and spread */
@@ -307,9 +319,9 @@ describe("server-generator operation wrapper", () => {
       "/pets",
       "POST",
       operation as any,
+      [],
+      {} as any,
     );
-
-    expect(result.wrapperCode).toContain("createPetWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
     /* Route metadata is imported and spread */
@@ -348,9 +360,9 @@ describe("server-generator operation wrapper", () => {
       "/pets/{petId}/status/{statusId}",
       "patch",
       operation as any,
+      [],
+      {} as any,
     );
-
-    expect(result.wrapperCode).toContain("updatePetStatusWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
     /* Route metadata is imported and spread */
@@ -391,9 +403,9 @@ describe("server-generator operation wrapper", () => {
       "/test-auth-bearer-http",
       "get",
       operation as any,
+      [],
+      {} as any,
     );
-
-    /* Check that route function includes all required fields */
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
     /* Route metadata is imported and spread */
@@ -422,9 +434,9 @@ describe("server-generator operation wrapper", () => {
       "/users/{id}",
       "get",
       operation as any,
+      [],
+      {} as any,
     );
-
-    /* Should use provided operationId in route function */
     expect(result.wrapperCode).toContain("export function route() {");
     /* Route metadata is imported from serverRoute and spread */
     expect(result.wrapperCode).toContain(

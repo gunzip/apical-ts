@@ -56,6 +56,9 @@ export async function generateParameterSchemaFile(
     querySchema: `${sanitizedId}${serverSchemaPrefix}QuerySchema`,
   };
 
+  /* Track which parameter types actually exist */
+  const { hasHeaders, hasPath, hasQuery } = result.hasParameters;
+
   /* Build the file content */
   const imports: string[] = [];
 
@@ -87,28 +90,22 @@ export async function generateParameterSchemaFile(
     (p: { required?: boolean }) => p.required !== true,
   );
 
-  /* Generate ParsedParams as Zod schema with proper optionality */
-  const parsedParamsName = `${sanitizedId}ParsedParams`;
-  const queryOptionalCode = isQueryOptional ? ".optional()" : "";
-  const headersOptionalCode = isHeadersOptional ? ".optional()" : "";
+  /* Build client parsed params */
+  const clientParsedParams = buildParsedParamsSchema(
+    sanitizedId,
+    result.schemaNames,
+    { hasHeaders, hasPath, hasQuery },
+    { isHeadersOptional, isQueryOptional },
+  );
 
-  const parsedParamsObject = `export const ${parsedParamsName} = z.object({
-  query: ${result.schemaNames.querySchema}${queryOptionalCode},
-  path: ${result.schemaNames.pathSchema},
-  headers: ${result.schemaNames.headersSchema}${headersOptionalCode},
-});`;
-
-  const parsedParamsType = `export type ${parsedParamsName}Type = z.infer<typeof ${parsedParamsName}>;`;
-
-  /* Generate server-specific ParsedParams as Zod schema with proper optionality */
-  const serverParsedParamsName = `${sanitizedId}${serverSchemaPrefix}ParsedParams`;
-  const serverParsedParamsObject = `export const ${serverParsedParamsName} = z.object({
-  query: ${serverSchemaNames.querySchema}${queryOptionalCode},
-  path: ${serverSchemaNames.pathSchema},
-  headers: ${serverSchemaNames.headersSchema}${headersOptionalCode},
-});`;
-
-  const serverParsedParamsType = `export type ${sanitizedId}${serverSchemaPrefix}ParsedParamsType = z.infer<typeof ${serverParsedParamsName}>;`;
+  /* Build server parsed params */
+  const serverParsedParams = buildParsedParamsSchema(
+    sanitizedId,
+    serverSchemaNames,
+    { hasHeaders, hasPath, hasQuery },
+    { isHeadersOptional, isQueryOptional },
+    serverSchemaPrefix,
+  );
 
   /* Rename server schema definitions to use Server prefix */
   const serverSchemaCode = serverResult.schemaCode
@@ -125,43 +122,70 @@ export async function generateParameterSchemaFile(
       `const ${serverSchemaNames.headersSchema} =`,
     );
 
-  const content = [
+  /* Build exports dynamically based on which schemas exist */
+  const clientSchemaExports = buildSchemaExports(result.schemaNames, {
+    hasHeaders,
+    hasPath,
+    hasQuery,
+  });
+  const serverSchemaExports = buildSchemaExports(serverSchemaNames, {
+    hasHeaders,
+    hasPath,
+    hasQuery,
+  });
+  const clientTypeExports = buildTypeExports(result.schemaNames, {
+    hasHeaders,
+    hasPath,
+    hasQuery,
+  });
+
+  const contentParts: string[] = [
     ...imports,
     "",
     "/* Parameter schemas for type-safe inputs */",
     result.schemaCode,
-    "",
-    "/* Server parameter schemas with coercion and lowercase headers */",
-    serverSchemaCode,
-    "",
-    "/* Export schemas for external use */",
-    `export { ${result.schemaNames.querySchema} };`,
-    `export { ${result.schemaNames.pathSchema} };`,
-    `export { ${result.schemaNames.headersSchema} };`,
-    "",
-    "/* Export server schemas */",
-    `export { ${serverSchemaNames.querySchema} };`,
-    `export { ${serverSchemaNames.pathSchema} };`,
-    `export { ${serverSchemaNames.headersSchema} };`,
-    "",
-    "/* Export types for external use */",
-    `export type ${result.schemaNames.querySchema} = z.infer<typeof ${result.schemaNames.querySchema}>;`,
-    `export type ${result.schemaNames.pathSchema} = z.infer<typeof ${result.schemaNames.pathSchema}>;`,
-    `export type ${result.schemaNames.headersSchema} = z.infer<typeof ${result.schemaNames.headersSchema}>;`,
+  ];
+
+  if (serverResult.schemaCode) {
+    contentParts.push(
+      "",
+      "/* Server parameter schemas with coercion and lowercase headers */",
+      serverSchemaCode,
+    );
+  }
+
+  if (clientSchemaExports.length > 0) {
+    contentParts.push("", "/* Export schemas for external use */");
+    contentParts.push(...clientSchemaExports);
+  }
+
+  if (serverSchemaExports.length > 0) {
+    contentParts.push("", "/* Export server schemas */");
+    contentParts.push(...serverSchemaExports);
+  }
+
+  if (clientTypeExports.length > 0) {
+    contentParts.push("", "/* Export types for external use */");
+    contentParts.push(...clientTypeExports);
+  }
+
+  contentParts.push(
     "",
     "/* Combined parsed parameters object */",
-    parsedParamsObject,
+    clientParsedParams.objectCode,
     "",
     "/* Combined parsed parameters type */",
-    parsedParamsType,
+    clientParsedParams.typeCode,
     "",
     "/* Combined server parsed parameters object */",
-    serverParsedParamsObject,
+    serverParsedParams.objectCode,
     "",
     "/* Combined server parsed parameters type */",
-    serverParsedParamsType,
+    serverParsedParams.typeCode,
     "",
-  ].join("\n");
+  );
+
+  const content = contentParts.join("\n");
 
   return {
     content,
@@ -190,4 +214,103 @@ export async function writeParameterSchemaFile(
 
   const filePath = path.join(schemasDir, result.fileName);
   await fs.writeFile(filePath, result.content, "utf-8");
+}
+
+/**
+ * Builds parsed params schema object with dynamic properties
+ */
+function buildParsedParamsSchema(
+  sanitizedId: string,
+  schemaNames: {
+    headersSchema: string;
+    pathSchema: string;
+    querySchema: string;
+  },
+  hasParameters: { hasHeaders: boolean; hasPath: boolean; hasQuery: boolean },
+  optionality: { isHeadersOptional: boolean; isQueryOptional: boolean },
+  prefix = "",
+): { objectCode: string; typeCode: string } {
+  const name = `${sanitizedId}${prefix}ParsedParams`;
+  const queryOptionalCode = optionality.isQueryOptional ? ".optional()" : "";
+  const headersOptionalCode = optionality.isHeadersOptional
+    ? ".optional()"
+    : "";
+
+  const props: string[] = [];
+  if (hasParameters.hasQuery) {
+    props.push(`  query: ${schemaNames.querySchema}${queryOptionalCode}`);
+  }
+  if (hasParameters.hasPath) {
+    props.push(`  path: ${schemaNames.pathSchema}`);
+  }
+  if (hasParameters.hasHeaders) {
+    props.push(`  headers: ${schemaNames.headersSchema}${headersOptionalCode}`);
+  }
+
+  const objectCode =
+    props.length > 0
+      ? `export const ${name} = z.object({\n${props.join(",\n")}\n});`
+      : `export const ${name} = z.object({});`;
+
+  const typeCode = `export type ${name}Type = z.infer<typeof ${name}>;`;
+
+  return { objectCode, typeCode };
+}
+
+/**
+ * Builds conditional schema exports
+ */
+function buildSchemaExports(
+  schemaNames: {
+    headersSchema: string;
+    pathSchema: string;
+    querySchema: string;
+  },
+  hasParameters: { hasHeaders: boolean; hasPath: boolean; hasQuery: boolean },
+): string[] {
+  const exports: string[] = [];
+
+  if (hasParameters.hasQuery) {
+    exports.push(`export { ${schemaNames.querySchema} };`);
+  }
+  if (hasParameters.hasPath) {
+    exports.push(`export { ${schemaNames.pathSchema} };`);
+  }
+  if (hasParameters.hasHeaders) {
+    exports.push(`export { ${schemaNames.headersSchema} };`);
+  }
+
+  return exports;
+}
+
+/**
+ * Builds conditional type exports
+ */
+function buildTypeExports(
+  schemaNames: {
+    headersSchema: string;
+    pathSchema: string;
+    querySchema: string;
+  },
+  hasParameters: { hasHeaders: boolean; hasPath: boolean; hasQuery: boolean },
+): string[] {
+  const exports: string[] = [];
+
+  if (hasParameters.hasQuery) {
+    exports.push(
+      `export type ${schemaNames.querySchema} = z.infer<typeof ${schemaNames.querySchema}>;`,
+    );
+  }
+  if (hasParameters.hasPath) {
+    exports.push(
+      `export type ${schemaNames.pathSchema} = z.infer<typeof ${schemaNames.pathSchema}>;`,
+    );
+  }
+  if (hasParameters.hasHeaders) {
+    exports.push(
+      `export type ${schemaNames.headersSchema} = z.infer<typeof ${schemaNames.headersSchema}>;`,
+    );
+  }
+
+  return exports;
 }

@@ -7,6 +7,7 @@ import type {
 
 import type { ContentTypeMaps } from "../shared/content-type-maps.js";
 
+import { extractParameterGroups } from "../client-generator/parameters.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateContentTypeMaps } from "../shared/content-type-maps.js";
 
@@ -24,6 +25,12 @@ export interface RouteOperationMetadata {
   method: string;
   operation: OperationObject;
   operationId: string;
+  /* Flags indicating which parameter types have actual parameters */
+  parameterInfo: {
+    hasHeaders: boolean;
+    hasPath: boolean;
+    hasQuery: boolean;
+  };
   pathKey: string;
 }
 
@@ -53,6 +60,13 @@ export function extractRouteOperationMetadata(
   const shouldGenerateRequestMap =
     hasBody && contentTypeMaps.requestContentTypeCount > 0;
 
+  /* Extract parameter groups to determine which parameter types exist */
+  const parameterGroups = extractParameterGroups(
+    operation,
+    pathLevelParameters,
+    doc,
+  );
+
   return {
     bodyInfo: {
       contentTypeMaps,
@@ -64,6 +78,11 @@ export function extractRouteOperationMetadata(
     method,
     operation,
     operationId,
+    parameterInfo: {
+      hasHeaders: parameterGroups.headerParams.length > 0,
+      hasPath: parameterGroups.pathParams.length > 0,
+      hasQuery: parameterGroups.queryParams.length > 0,
+    },
     pathKey,
   };
 }

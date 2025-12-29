@@ -53,6 +53,8 @@ describe("server-generator comprehensive validation", () => {
       "/pets/{petId}",
       "get",
       operation as any,
+      [],
+      {} as any,
     );
 
     /* Verify it contains the key elements from the problem statement */
@@ -80,7 +82,8 @@ describe("server-generator comprehensive validation", () => {
     /* Verify validation logic sequence */
     expect(result.wrapperCode).toContain("queryParse.success");
     expect(result.wrapperCode).toContain("pathParse.success");
-    expect(result.wrapperCode).toContain("headersParse.success");
+    // No headers parameter in this operation, so no headersParse
+    expect(result.wrapperCode).not.toContain("headersParse.success");
     expect(result.wrapperCode).toContain("bodyParse.success");
 
     /* Verify success handler call */
@@ -88,7 +91,8 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain("value: {");
     expect(result.wrapperCode).toContain("query: queryParse.data");
     expect(result.wrapperCode).toContain("path: pathParse.data");
-    expect(result.wrapperCode).toContain("headers: headersParse.data");
+    // No headers in return value since operation has no header parameters
+    expect(result.wrapperCode).not.toContain("headers: headersParse.data");
     expect(result.wrapperCode).toContain("body: parsedBody");
   });
 
@@ -112,6 +116,8 @@ describe("server-generator comprehensive validation", () => {
       "/test/{id}",
       "get",
       operation as any,
+      [],
+      {} as any,
     );
 
     /* Should include validation error discriminated union */
