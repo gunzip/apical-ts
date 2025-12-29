@@ -12,6 +12,8 @@ import type {
   SecurityHeader,
 } from "./models/security-models.js";
 
+export type { SecurityHeader };
+
 /*
  * Pure security analysis functions - separate from code generation
  */

@@ -9,7 +9,7 @@ import {
   getOperationSecuritySchemes,
   hasSecurityOverride,
   type SecurityHeader,
-} from "../../src/client-generator/security.js";
+} from "../../src/shared/security-utils.js";
 
 describe("client-generator security", () => {
   describe("extractAuthHeaders", () => {

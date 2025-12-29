@@ -1,7 +1,7 @@
 import type { ParameterObject } from "openapi3-ts/oas31";
 
+import type { SecurityHeader } from "../../shared/models/security-models.js";
 import type { RequestBodyTypeInfo } from "../request-body.js";
-import type { SecurityHeader } from "../security.js";
 
 /**
  * Analyzed parameter information for template generation

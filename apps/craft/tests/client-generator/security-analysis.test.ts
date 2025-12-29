@@ -11,7 +11,7 @@ import {
   analyzeSecurityScheme,
   determineAuthHeaderRequirements,
   processOperationSecurity,
-} from "../../src/client-generator/security.js";
+} from "../../src/shared/security-utils.js";
 
 describe("client-generator security analysis", () => {
   describe("analyzeSecurityScheme", () => {

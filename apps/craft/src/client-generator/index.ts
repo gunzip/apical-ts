@@ -2,6 +2,10 @@ import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import pLimit from "p-limit";
 
+import type { OperationMetadata } from "../shared/operation-extractor.js";
+
+import { extractAllOperations } from "../shared/operation-extractor.js";
+import { extractServerUrls } from "../shared/operation-utils.js";
 import { extractAuthHeaders } from "../shared/security-utils.js";
 import {
   createOperationsDirectory,
@@ -9,11 +13,6 @@ import {
   writeIndexFile,
   writeOperationFile,
 } from "./file-writer.js";
-import {
-  extractAllOperations,
-  extractServerUrls,
-  type OperationMetadata,
-} from "./operation-extractor.js";
 import { generateOperationFunction } from "./operation-function-generator.js";
 
 /**
@@ -86,11 +85,9 @@ export type { ParameterGroups } from "../shared/models/parameter-models.js";
 export type { SecurityHeader } from "../shared/models/security-models.js";
 /* Re-export key types and functions for external use */
 export type { OperationMetadata } from "../shared/operation-extractor.js";
+export { extractAllOperations } from "../shared/operation-extractor.js";
+export { extractServerUrls } from "../shared/operation-utils.js";
 export { extractAuthHeaders } from "../shared/security-utils.js";
-export {
-  extractAllOperations,
-  extractServerUrls,
-} from "./operation-extractor.js";
 export {
   extractOperationMetadata,
   generateOperationFunction,

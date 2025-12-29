@@ -1,11 +1,11 @@
 import type { ImportManager } from "../../core-generator/import-types.js";
-import type { extractParameterGroups } from "../parameters.js";
+import type { extractParameterGroups } from "../../shared/parameter-utils.js";
+import type { getOperationSecuritySchemes } from "../../shared/security-utils.js";
 import type { resolveRequestBodyType } from "../request-body.js";
 import type {
   generateContentTypeMaps,
   ResponseHandlerResult,
 } from "../responses.js";
-import type { getOperationSecuritySchemes } from "../security.js";
 
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
 
