@@ -13,15 +13,15 @@ import type { OperationMetadata } from "./templates/operation-templates.js";
 import { ImportManager } from "../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateContentTypeMaps } from "../shared/content-type-maps.js";
-import { generateFunctionBody } from "./code-generation.js";
-import { extractParameterGroups } from "./parameters.js";
-import { resolveRequestBodyType } from "./request-body.js";
-import { generateResponseHandlers } from "./responses.js";
+import { extractParameterGroups } from "../shared/parameter-utils.js";
 import {
   extractAuthHeaders,
   getOperationSecuritySchemes,
   hasSecurityOverride,
-} from "./security.js";
+} from "../shared/security-utils.js";
+import { generateFunctionBody } from "./code-generation.js";
+import { resolveRequestBodyType } from "./request-body.js";
+import { generateResponseHandlers } from "./responses.js";
 import {
   buildGenericParams,
   buildParameterDeclaration,

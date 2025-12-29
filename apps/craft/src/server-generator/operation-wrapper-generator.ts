@@ -7,8 +7,8 @@ import type {
 
 import assert from "assert";
 
-import { extractParameterGroups } from "../client-generator/parameters.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { extractParameterGroups } from "../shared/parameter-utils.js";
 import { renderServerOperationWrapper } from "./templates/server-operation-templates.js";
 
 /* Result of generating a server wrapper function */

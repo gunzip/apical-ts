@@ -124,4 +124,4 @@ export function shouldIncludeProperty(
  * Groups parameters by their location (query, path, header)
  * Re-exported from client generator for compatibility
  */
-export type { ParameterGroups } from "../client-generator/models/parameter-models.js";
+export type { ParameterGroups } from "./models/parameter-models.js";

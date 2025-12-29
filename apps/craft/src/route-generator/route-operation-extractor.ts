@@ -7,9 +7,9 @@ import type {
 
 import type { ContentTypeMaps } from "../shared/content-type-maps.js";
 
-import { extractParameterGroups } from "../client-generator/parameters.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateContentTypeMaps } from "../shared/content-type-maps.js";
+import { extractParameterGroups } from "../shared/parameter-utils.js";
 
 /**
  * Route operation metadata for template generation

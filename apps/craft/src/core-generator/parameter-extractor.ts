@@ -2,12 +2,12 @@ import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 
-import type { ParameterGroups } from "../client-generator/models/parameter-models.js";
-import type { SecurityHeader } from "../client-generator/security.js";
+import type { ParameterGroups } from "../shared/models/parameter-models.js";
+import type { SecurityHeader } from "../shared/models/security-models.js";
 
-import { extractParameterGroups } from "../client-generator/parameters.js";
-import { getOperationSecuritySchemes } from "../client-generator/security.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { extractParameterGroups } from "../shared/parameter-utils.js";
+import { getOperationSecuritySchemes } from "../shared/security-utils.js";
 
 /**
  * Metadata for operation parameters that need schema generation

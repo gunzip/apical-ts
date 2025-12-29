@@ -8,7 +8,7 @@ import type {
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
-import type { ParameterGroups } from "../client-generator/models/parameter-models.js";
+import type { ParameterGroups } from "./models/parameter-models.js";
 
 import { zodSchemaToCode } from "../schema-generator/index.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";

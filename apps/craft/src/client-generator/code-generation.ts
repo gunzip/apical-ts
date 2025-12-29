@@ -1,7 +1,7 @@
 import type { ContentTypeMaps } from "./responses.js";
 
-import { type ParameterGroups } from "./parameters.js";
-import { type SecurityHeader } from "./security.js";
+import { type ParameterGroups } from "../shared/models/parameter-models.js";
+import { type SecurityHeader } from "../shared/models/security-models.js";
 import {
   determineFunctionBodyStructure,
   determineHeaderConfiguration,

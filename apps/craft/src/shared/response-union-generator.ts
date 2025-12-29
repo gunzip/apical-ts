@@ -6,8 +6,8 @@ import type {
   SchemaObject,
 } from "openapi3-ts/oas31";
 
-import { extractResponseContentTypes } from "../client-generator/operation-extractor.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { extractResponseContentTypes } from "./operation-utils.js";
 import { resolveSchemaTypeName } from "./schema-type-resolver.js";
 
 /**

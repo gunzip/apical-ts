@@ -15,8 +15,9 @@ import type {
 } from "./models/response-models.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { resolveResponse } from "../shared/operation-utils.js";
 import { resolveSchemaTypeName } from "../shared/schema-type-resolver.js";
-import { getResponseContentType, resolveResponse } from "./utils.js";
+import { getResponseContentType } from "./utils.js";
 
 // Interfaces (alphabetical keys inside)
 interface BuildUnionTypesParams {
