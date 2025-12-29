@@ -430,4 +430,45 @@ describe("Body and Schema Operations", () => {
       }
     });
   });
+
+  describe("Dashed property names in body", () => {
+    it("should POST and parse a body containing dashed property names", async () => {
+      // Arrange
+      const client = createAuthenticatedClient(baseURL, "customToken");
+
+      const payload = {
+        "id-field": "example-id",
+        "nested-dash": {
+          "child-prop": "child-value",
+        },
+      } as const;
+
+      // Act
+      const response = await client.testDashedBody({
+        body: payload,
+      });
+
+      // Assert
+      if ("isValid" in response && response.isValid) {
+        expect(response.status).toBe("200");
+        // Manually parse/validate (lazy) since forceValidation false by default
+        const parsed = await (response as any).parse();
+        if ("parsed" in parsed) {
+          expect(parsed.parsed["id-field"]).toBe(payload["id-field"]);
+          expect(parsed.parsed["nested-dash"]?.["child-prop"]).toBe(
+            payload["nested-dash"]?.["child-prop"],
+          );
+        } else {
+          expect.fail("Expected successful parse result");
+        }
+      } else if ("kind" in response) {
+        // Unexpected response; surface diagnostics
+        expect.fail(
+          `Unexpected error response: ${response.kind} ${response.error}`,
+        );
+      } else {
+        expect.fail("Unknown response shape");
+      }
+    });
+  });
 });
