@@ -183,7 +183,7 @@ describe("force validation flag", () => {
       expect(result.returnType).toContain("TForceValidation extends true");
       expect(result.returnType).toContain("ApiResponseWithForcedParse");
       expect(result.returnType).toContain("ApiResponseWithParse");
-      
+
       /*
        * The conditional type structure allows TypeScript to:
        * 1. Eliminate the parse() method when forceValidation is true
@@ -200,7 +200,7 @@ describe("force validation flag", () => {
        * Verify that we have a proper integration test showing type narrowing.
        * The createDocument-reference.test.ts file uses forceValidation: true
        * and should demonstrate that the response type is correctly narrowed.
-       * 
+       *
        * For a compile-time type test with ts-expect-error, see the integration
        * test where forceValidation: true results in ApiResponseWithForcedParse
        * which does NOT have a parse() method.
@@ -212,16 +212,16 @@ describe("force validation flag", () => {
 
       // Verify the test uses forceValidation: true
       expect(testFile).toContain("forceValidation: true");
-      
+
       /*
        * The test demonstrates that when forceValidation is true:
        * - The response is automatically parsed (no parse() method needed)
        * - The data is available directly without calling parse()
-       * 
+       *
        * When forceValidation is false or omitted:
        * - The response has a parse() method
        * - The data must be manually parsed before use
-       * 
+       *
        * To add a ts-expect-error test for type narrowing:
        * 1. Call operation with forceValidation: true
        * 2. Try to access response.parse() with @ts-expect-error
