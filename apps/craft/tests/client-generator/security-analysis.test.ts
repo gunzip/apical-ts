@@ -193,11 +193,13 @@ describe("client-generator security analysis", () => {
       expect(result.operationHeaders).toEqual([
         {
           headerName: "X-API-Key",
+          isOverride: true,
           isRequired: true,
           schemeName: "apiKey",
         },
         {
           headerName: "Authorization",
+          isOverride: true,
           isRequired: true,
           schemeName: "bearerAuth",
         },
@@ -265,6 +267,7 @@ describe("client-generator security analysis", () => {
       expect(result.operationHeaders).toEqual([
         {
           headerName: "X-Operation-Key",
+          isOverride: true,
           isRequired: true,
           schemeName: "operationKey",
         },

@@ -31,12 +31,16 @@ export async function generateParameterSchemaFile(
   /* Extract security headers from metadata */
   const sanitizedId = sanitizeIdentifier(operationId);
   const fileName = `${sanitizedId}Parameters.ts`;
+  const { securityHeaders = [] } = parameterMetadata;
 
   /* Generate parameter schemas using shared logic */
   const result = generateParameterSchemas(
     operationId,
     parameterMetadata.parameterGroups,
-    options,
+    {
+      ...options,
+      securityHeaders,
+    },
   );
 
   /* Generate server-specific schemas with coercion and lowercase headers */
@@ -46,6 +50,7 @@ export async function generateParameterSchemaFile(
     {
       coercePrimitives: true,
       lowercaseHeaderKeys: true,
+      securityHeaders,
     },
   );
 
@@ -82,13 +87,23 @@ export async function generateParameterSchemaFile(
     (p: { required?: boolean }) => p.required !== true,
   );
   /*
-   * Headers are optional only if all explicit header params are optional.
-   * Security headers are NOT included in the schema - they're added by the client config.
-   * So we only consider explicit header parameters when determining optionality.
+   * Headers optional only if:
+   * - All explicit header params are optional
+   * - AND no required security override headers
+   *
+   * Notes:
+   * - Security override (operation.security): go in params.headers (required if present)
+   * - Global security: go in config.headers (always optional, not in params)
+   * - security: [] → empty array, no required headers (disables global security)
+   * - security: [{ apiKey: [] }] → requires apiKey header in params.headers
    */
-  const isHeadersOptional = headerParams.every(
-    (p: { required?: boolean }) => p.required !== true,
+  const securityOverrideHeaders = securityHeaders.filter((sh) => sh.isOverride);
+  const hasRequiredSecurityOverride = securityOverrideHeaders.some(
+    (sh) => sh.isRequired,
   );
+  const isHeadersOptional =
+    headerParams.every((p: { required?: boolean }) => p.required !== true) &&
+    !hasRequiredSecurityOverride;
 
   /* Build client parsed params */
   const clientParsedParams = buildParsedParamsSchema(

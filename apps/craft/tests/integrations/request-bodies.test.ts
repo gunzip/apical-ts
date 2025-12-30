@@ -106,7 +106,7 @@ describe("Request Bodies Unit Tests", () => {
       const mockConfig = {
         baseURL: "http://example.com",
         fetch: async () => new Response(JSON.stringify({}), { status: 201 }),
-        headers: {},
+        headers: { "custom-token": "" },
         forceValidation: false,
       };
 

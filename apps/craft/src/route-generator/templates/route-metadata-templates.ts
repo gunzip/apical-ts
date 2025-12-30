@@ -8,6 +8,8 @@ export interface RouteMetadataTemplateParams {
   hasPath: boolean;
   /** Flags indicating which parameter types have actual parameters */
   hasQuery: boolean;
+  isHeadersOptional: boolean;
+  isQueryOptional: boolean;
   /** HTTP method in lowercase (e.g., "get", "post") */
   method: string;
   operationId: string;
@@ -29,6 +31,8 @@ export function renderRouteMetadata(
     hasHeaders,
     hasPath,
     hasQuery,
+    isHeadersOptional,
+    isQueryOptional,
     method,
     operationId,
     pathKey,
@@ -82,11 +86,15 @@ export function renderRouteMetadata(
 export const clientRoute = {
   ...baseRoute,
   params: ${clientParamsValue},
+  isQueryOptional: ${isQueryOptional},
+  isHeadersOptional: ${isHeadersOptional},
 } as const;
 
 export const serverRoute = {
   ...baseRoute,
   params: ${serverParamsValue},
+  isQueryOptional: ${isQueryOptional},
+  isHeadersOptional: ${isHeadersOptional},
 } as const;`;
 
   /* Combine all parts */

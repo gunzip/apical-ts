@@ -33,7 +33,9 @@ describe("Security Operations", () => {
       const client = createAuthenticatedClient(baseURL, "bearerToken");
 
       // Act
-      const response = await client.testOverriddenSecurity({});
+      const response = await client.testOverriddenSecurity({
+        headers: { Authorization: "Bearer test-token" },
+      });
 
       // Assert
       if (response.isValid) {
@@ -50,7 +52,9 @@ describe("Security Operations", () => {
 
       // Act & Assert
       try {
-        await client.testOverriddenSecurity({});
+        await client.testOverriddenSecurity({
+          headers: { Authorization: "Bearer test-token" },
+        });
         expect.fail(
           "Expected operation to throw error due to wrong auth scheme",
         );
@@ -76,7 +80,9 @@ describe("Security Operations", () => {
 
       // Act & Assert
       try {
-        await client.testOverriddenSecurity({});
+        await client.testOverriddenSecurity({
+          headers: { Authorization: "Bearer test-token" },
+        });
         expect.fail(
           "Expected operation to throw error due to missing authentication",
         );
@@ -156,7 +162,9 @@ describe("Security Operations", () => {
       const client = createAuthenticatedClient(baseURL, "customToken");
 
       // Act - testCustomTokenHeader uses global security (customToken)
-      const response = await client.testCustomTokenHeader({});
+      const response = await client.testCustomTokenHeader({
+        headers: { "custom-token": "test-token" },
+      });
 
       // Assert
       if (response.isValid) {
@@ -172,7 +180,9 @@ describe("Security Operations", () => {
 
       // Act & Assert - testCustomTokenHeader should fail
       try {
-        await client.testCustomTokenHeader({});
+        await client.testCustomTokenHeader({
+          headers: { "custom-token": "test-token" },
+        });
         expect.fail(
           "Expected operation to throw error due to wrong auth scheme",
         );
@@ -204,10 +214,14 @@ describe("Security Operations", () => {
       );
 
       // Act - testOverriddenSecurity uses bearerToken (overrides global customToken)
-      const bearerResponse = await bearerTokenClient.testOverriddenSecurity({});
+      const bearerResponse = await bearerTokenClient.testOverriddenSecurity({
+        headers: { Authorization: "Bearer test-token" },
+      });
 
       // testCustomTokenHeader uses global customToken
-      const customResponse = await customTokenClient.testCustomTokenHeader({});
+      const customResponse = await customTokenClient.testCustomTokenHeader({
+        headers: { "custom-token": "test-token" },
+      });
 
       // Assert
       if (bearerResponse.isValid) {
@@ -230,7 +244,9 @@ describe("Security Operations", () => {
 
       // Act & Assert - Should fail for operation requiring bearerToken
       try {
-        await client.testOverriddenSecurity({});
+        await client.testOverriddenSecurity({
+          headers: { Authorization: "Bearer test-token" },
+        });
         expect.fail(
           "Expected operation to throw error due to wrong token format",
         );
@@ -268,6 +284,9 @@ describe("Security Operations", () => {
           qo: "optional-param",
           qr: "required-param",
         },
+        headers: {
+          "X-Functions-Key": "test-simple-token",
+        },
       });
 
       // Assert
@@ -284,6 +303,9 @@ describe("Security Operations", () => {
             cursor: "test-cursor",
             qo: "optional-param",
             qr: "required-param",
+          },
+          headers: {
+            "X-Functions-Key": "test-simple-token",
           },
         });
         expect.fail(
@@ -313,7 +335,9 @@ describe("Security Operations", () => {
 
       // Act & Assert
       try {
-        await client.testOverriddenSecurity({});
+        await client.testOverriddenSecurity({
+          headers: { Authorization: "Bearer test-token" },
+        });
         expect.fail("Expected request to throw an error");
       } catch (error: unknown) {
         expect(error).toBeDefined();
@@ -338,7 +362,9 @@ describe("Security Operations", () => {
 
       // Act & Assert
       try {
-        await client.testOverriddenSecurity({});
+        await client.testOverriddenSecurity({
+          headers: { Authorization: "Bearer test-token" },
+        });
         expect.fail("Expected request to throw an error");
       } catch (error: unknown) {
         expect(error).toBeDefined();
@@ -365,7 +391,9 @@ describe("Security Operations", () => {
       );
 
       // Act
-      const result = await invalidClient.testOverriddenSecurity({});
+      const result = await invalidClient.testOverriddenSecurity({
+        headers: { Authorization: "Bearer test-token" },
+      });
 
       // Assert - Should return error result instead of throwing
       expect(result).toBeDefined();

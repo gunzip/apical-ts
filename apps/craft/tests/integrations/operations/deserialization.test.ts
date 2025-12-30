@@ -98,7 +98,7 @@ describe("Deserialization Operation", () => {
       {},
       {
         baseURL,
-        headers: {},
+        headers: { "custom-token": "" },
         fetch,
         deserializers: {
           "application/json": () => {
@@ -137,7 +137,7 @@ describe("Deserialization Operation", () => {
       {},
       {
         baseURL,
-        headers: {},
+        headers: { "custom-token": "" },
         fetch,
         deserializers: {
           "application/json": () => ({
@@ -178,7 +178,7 @@ describe("Deserialization Operation", () => {
       },
       {
         baseURL,
-        headers: {},
+        headers: { "custom-token": "" },
         fetch,
         deserializers: {
           "application/xml": (xml: unknown) => {
@@ -227,7 +227,7 @@ describe("Deserialization Operation", () => {
       },
       {
         baseURL,
-        headers: {},
+        headers: { "custom-token": "" },
         fetch,
         deserializers: {
           "application/vnd.custom+json": (data: unknown) => ({

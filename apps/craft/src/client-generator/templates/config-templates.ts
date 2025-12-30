@@ -257,11 +257,17 @@ export function renderAuthHeadersType(config: ConfigStructure): string {
 export function renderConfigImplementation(config: ConfigStructure): string {
   const { server } = config;
 
+  const headersDefault = config.auth.hasAuthHeaders
+    ? `{
+${config.auth.authHeaders.map((h) => `    '${h}': ''`).join(",\n")}
+  }`
+    : `{}`;
+
   return `// Default global configuration - immutable
 export const globalConfig: GlobalConfig = {
   baseURL: '${server.defaultBaseURL}',
   fetch: fetch,
-  headers: {},
+  headers: ${headersDefault},
   forceValidation: true
 };
 
@@ -285,13 +291,16 @@ export function renderConfigImports(): string {
 export function renderConfigInterface(config: ConfigStructure): string {
   const { auth, server } = config;
 
+  const authHeadersType = auth.hasAuthHeaders
+    ? `export type AuthHeaders = ${auth.authHeadersType};\n`
+    : "";
+
   return `// Configuration types
+${authHeadersType}
 export interface GlobalConfig {
   baseURL: ${server.baseURLType};
   fetch: typeof fetch;
-  headers: {
-    [K in ${auth.hasAuthHeaders ? `AuthHeaders` : "string"}]?: string;
-  } & Record<string, string>;
+    headers: ${auth.hasAuthHeaders ? `{\n    [K in AuthHeaders]: string;\n  }` : "{}"};
   deserializers?: DeserializerMap;
   forceValidation?: boolean;
 }`;

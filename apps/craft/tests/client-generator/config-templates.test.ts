@@ -34,7 +34,7 @@ describe("client-generator config-templates", () => {
       expect(result).toContain(
         "baseURL: 'https://api.example.com' | (string & {});",
       );
-      expect(result).toContain("[K in AuthHeaders]?: string;");
+      expect(result).toContain("[K in AuthHeaders]: string;");
     });
 
     it("should render interface without auth headers", () => {
@@ -56,7 +56,7 @@ describe("client-generator config-templates", () => {
 
       expect(result).toContain("export interface GlobalConfig");
       expect(result).toContain("baseURL: string;");
-      expect(result).toContain("[K in string]?: string;");
+      expect(result).toContain("headers: {};");
     });
   });
 

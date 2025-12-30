@@ -7,7 +7,6 @@ import type {
 } from "./models/config-models.js";
 
 import {
-  renderAuthHeadersType,
   renderConfigImplementation,
   renderConfigImports,
   renderConfigInterface,
@@ -75,8 +74,6 @@ export function generateConfigTypes(
   const parts = [
     renderConfigImports(),
     renderConfigInterface(config),
-    "",
-    renderAuthHeadersType(config),
     "",
     renderConfigImplementation(config),
     renderConfigSupport(),

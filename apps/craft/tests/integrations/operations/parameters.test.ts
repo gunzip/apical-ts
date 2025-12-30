@@ -448,7 +448,7 @@ describe("Parameters Operations", () => {
       const client = createAuthenticatedClient(baseURL, "customToken");
       const params = {
         headers: {},
-      };
+      } as any;
 
       // Act
       const response = await client.testHeaderOptional(params);

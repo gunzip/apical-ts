@@ -121,8 +121,30 @@ export function getOperationSecuritySchemes(
   operation: OperationObject,
   doc: OpenAPIObject,
 ): SecurityHeader[] {
-  const analysis = processOperationSecurity(operation, doc);
-  return analysis.operationHeaders;
+  const operationAnalysis = processOperationSecurity(operation, doc);
+
+  // If there's an override, return only override headers
+  // - security: [] → empty array, disables global security, no headers
+  // - security: [{}] → empty object, no auth scheme required
+  // - security: [{ apiKey: [] }] → requires apiKey scheme, override header required
+  if (operationAnalysis.hasOverride) {
+    return operationAnalysis.operationHeaders;
+  }
+
+  // No override: use global security
+  // Marked as isRequired: false because they're optional in config.headers (TypeScript ?)
+  // But if the endpoint requires them and you don't provide them, the API will reject the request
+  const globalAnalysis = analyzeGlobalSecuritySchemes(doc);
+  const globalHeaders: SecurityHeader[] = globalAnalysis.analyzedSchemes
+    .filter((s) => s.isHeaderBased && s.headerName)
+    .map((s) => ({
+      headerName: s.headerName as string,
+      isOverride: false, // From global security, not operation.security
+      isRequired: false, // Optional in config (don't throw error if missing)
+      schemeName: s.schemeName,
+    }));
+
+  return globalHeaders;
 }
 
 /**
@@ -134,6 +156,10 @@ export function hasSecurityOverride(operation: OperationObject): boolean {
 
 /**
  * Processes operation-specific security requirements
+ * - security: [] → hasOverride: true, operationHeaders: [] (array vuoto: disabilita global)
+ * - security: [{}] → hasOverride: true, operationHeaders: [] (oggetto vuoto: no auth required)
+ * - security: [{ apiKey: [] }] → hasOverride: true, operationHeaders: [apiKey header]
+ * - no security field → hasOverride: false (usa global security)
  */
 export function processOperationSecurity(
   operation: OperationObject,
@@ -158,7 +184,8 @@ export function processOperationSecurity(
         if (analyzed.isHeaderBased && analyzed.headerName) {
           operationHeaders.push({
             headerName: analyzed.headerName,
-            isRequired: true, // Operation-specific security is always required
+            isOverride: true, // From operation.security (override of global security)
+            isRequired: true, // Required in params.headers, no fallback to config
             schemeName,
           });
         }

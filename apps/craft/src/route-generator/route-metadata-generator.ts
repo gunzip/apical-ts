@@ -151,6 +151,8 @@ export function generateRouteMetadata(
     hasHeaders: metadata.parameterInfo.hasHeaders,
     hasPath: metadata.parameterInfo.hasPath,
     hasQuery: metadata.parameterInfo.hasQuery,
+    isHeadersOptional: metadata.parameterInfo.isHeadersOptional,
+    isQueryOptional: metadata.parameterInfo.isQueryOptional,
     method: method.toLowerCase(),
     operationId: metadata.operationId,
     pathKey,

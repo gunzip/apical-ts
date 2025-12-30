@@ -19,8 +19,9 @@ export function renderAuthHeaderValidation(authHeaders: string[]): string {
 }
 
 /**
- * Renders security header handling code from security headers using bracket notation
- * Security headers are taken from config.headers (global auth), not params.headers
+ * Renders security header handling code from security headers
+ * - Global security: from config.securityHeaders
+ * - Security override: from params.headers (required)
  */
 export function renderSecurityHeaderHandling(
   operationSecurityHeaders: SecurityHeader[],
@@ -29,13 +30,28 @@ export function renderSecurityHeaderHandling(
 
   return operationSecurityHeaders
     .map((securityHeader) => {
-      if (securityHeader.isRequired) {
-        // Required headers must be present, throw error if missing
-        return `const _sec_${toValidVariableName(securityHeader.headerName)} = config.headers['${securityHeader.headerName}'];
-    if (_sec_${toValidVariableName(securityHeader.headerName)} === undefined) throw new Error('Missing required security header: ${securityHeader.headerName}');
-    finalHeaders['${securityHeader.headerName}'] = _sec_${toValidVariableName(securityHeader.headerName)};`;
+      const varName = toValidVariableName(securityHeader.headerName);
+
+      if (securityHeader.isOverride) {
+        // Security override: MUST be in params.headers (required)
+        if (securityHeader.isRequired) {
+          return `const _sec_${varName} = params.headers['${securityHeader.headerName}'];
+    if (_sec_${varName} === undefined) throw new Error('Missing required security header: ${securityHeader.headerName}');
+    finalHeaders['${securityHeader.headerName}'] = _sec_${varName};`;
+        } else {
+          return `const _sec_${varName} = params.headers?.['${securityHeader.headerName}'];
+    if (_sec_${varName} !== undefined) finalHeaders['${securityHeader.headerName}'] = _sec_${varName};`;
+        }
       } else {
-        return `if (config.headers?.['${securityHeader.headerName}'] !== undefined) finalHeaders['${securityHeader.headerName}'] = config.headers['${securityHeader.headerName}'];`;
+        // Global security: from config.headers
+        if (securityHeader.isRequired) {
+          return `const _sec_${varName} = config.headers?.['${securityHeader.headerName}'];
+    if (_sec_${varName} === undefined) throw new Error('Missing required security header: ${securityHeader.headerName}');
+    finalHeaders['${securityHeader.headerName}'] = _sec_${varName};`;
+        } else {
+          return `const _sec_${varName} = config.headers?.['${securityHeader.headerName}'];
+    if (_sec_${varName} !== undefined) finalHeaders['${securityHeader.headerName}'] = _sec_${varName};`;
+        }
       }
     })
     .join("\n    ");
@@ -43,16 +59,19 @@ export function renderSecurityHeaderHandling(
 
 /**
  * Renders security parameter extraction code
+ * Always reads global security values from config.securityHeaders
  */
 export function renderSecurityParameterExtraction(
   securityHeaders: SecurityHeader[],
 ): string {
   if (securityHeaders.length === 0) return "";
 
-  const extractions = securityHeaders.map((header) => {
-    const varName = toValidVariableName(header.headerName);
-    return `const ${varName} = config.headers?.['${header.headerName}'];`;
-  });
+  const extractions = securityHeaders
+    .filter((h) => !h.isOverride) // Only global security
+    .map((header) => {
+      const varName = toValidVariableName(header.headerName);
+      return `const ${varName} = config.headers?.['${header.headerName}'];`;
+    });
 
   return extractions.join("\n  ");
 }

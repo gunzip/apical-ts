@@ -44,6 +44,12 @@ export interface OperationSecurityAnalysis {
  */
 export interface SecurityHeader {
   headerName: string;
+  /** true if from operation.security (override), false if from global security */
+  isOverride: boolean;
+  /**
+   * true = throw runtime error if missing (e.g. security override)
+   * false = don't throw error if missing (e.g. optional global security in config)
+   */
   isRequired: boolean;
   schemeName: string;
 }

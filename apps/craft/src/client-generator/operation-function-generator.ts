@@ -95,10 +95,19 @@ export function extractOperationMetadata(
 
   /*
    * Calculate if headers are optional for TypeScript types
-   * Headers are optional only if all explicit header params are optional
-   * Security headers are NOT included in the schema - they're added by client config
+   * Headers are optional only if ALL explicit header params AND security headers are optional.
+   * If any header is required, the headers object must be provided in params OR config.
+   * Runtime code merges from both sources, but types enforce presence.
    */
-  const isHeadersOptional = parameterGroups.headerParams.every(
+  const hasRequiredSecurityHeader = operationSecurityHeaders.some(
+    (sh) => sh.isRequired,
+  );
+  const isHeadersOptional =
+    parameterGroups.headerParams.every((p) => p.required !== true) &&
+    !hasRequiredSecurityHeader;
+
+  /* Calculate if query is optional */
+  const isQueryOptional = parameterGroups.queryParams.every(
     (p) => p.required !== true,
   );
 
@@ -161,6 +170,7 @@ export function extractOperationMetadata(
     hasBody,
     importManager,
     isHeadersOptional,
+    isQueryOptional,
     operationName,
     operationSecurityHeaders,
     overridesSecurity,
@@ -229,7 +239,9 @@ export function generateOperationFunction(
     bodyTypeName: metadata.bodyInfo.bodyTypeInfo?.typeName ?? undefined,
     contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
     hasBody: metadata.hasBody,
-    hasHeaderParams: metadata.parameterGroups.headerParams.length > 0,
+    hasHeaderParams:
+      metadata.parameterGroups.headerParams.length > 0 ||
+      metadata.operationSecurityHeaders.length > 0,
     hasPathParams: metadata.parameterGroups.pathParams.length > 0,
     hasQueryParams: metadata.parameterGroups.queryParams.length > 0,
     hasRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
@@ -238,6 +250,7 @@ export function generateOperationFunction(
     isBodyOptional:
       !metadata.hasBody || !metadata.bodyInfo.bodyTypeInfo?.isRequired,
     isHeadersOptional: metadata.isHeadersOptional,
+    isQueryOptional: metadata.isQueryOptional,
     operationId: operation.operationId,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,

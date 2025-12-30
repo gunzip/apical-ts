@@ -201,6 +201,7 @@ describe("parameter template functions", () => {
             securityHeaders: [
               {
                 headerName: "Authorization",
+                isOverride: true,
                 isRequired: true,
                 schemeName: "bearerAuth",
               },

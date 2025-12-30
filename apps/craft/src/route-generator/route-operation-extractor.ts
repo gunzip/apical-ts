@@ -10,6 +10,7 @@ import type { ContentTypeMaps } from "../shared/content-type-maps.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { generateContentTypeMaps } from "../shared/content-type-maps.js";
 import { extractParameterGroups } from "../shared/parameter-utils.js";
+import { getOperationSecuritySchemes } from "../shared/security-utils.js";
 
 /**
  * Route operation metadata for template generation
@@ -30,6 +31,8 @@ export interface RouteOperationMetadata {
     hasHeaders: boolean;
     hasPath: boolean;
     hasQuery: boolean;
+    isHeadersOptional: boolean;
+    isQueryOptional: boolean;
   };
   pathKey: string;
 }
@@ -67,6 +70,22 @@ export function extractRouteOperationMetadata(
     doc,
   );
 
+  /* Extract security headers to calculate header optionality */
+  const securityHeaders = getOperationSecuritySchemes(operation, doc);
+
+  /* Calculate optionality - same logic as in parameter-file-generator */
+  const isQueryOptional = parameterGroups.queryParams.every(
+    (p) => p.required !== true,
+  );
+  /*
+   * Headers are optional only if all header params AND security headers are optional.
+   * When required headers exist, they must be provided in params OR config.
+   */
+  const hasRequiredSecurityHeader = securityHeaders.some((sh) => sh.isRequired);
+  const isHeadersOptional =
+    parameterGroups.headerParams.every((p) => p.required !== true) &&
+    !hasRequiredSecurityHeader;
+
   return {
     bodyInfo: {
       contentTypeMaps,
@@ -79,9 +98,12 @@ export function extractRouteOperationMetadata(
     operation,
     operationId,
     parameterInfo: {
-      hasHeaders: parameterGroups.headerParams.length > 0,
+      hasHeaders:
+        parameterGroups.headerParams.length > 0 || securityHeaders.length > 0,
       hasPath: parameterGroups.pathParams.length > 0,
       hasQuery: parameterGroups.queryParams.length > 0,
+      isHeadersOptional,
+      isQueryOptional,
     },
     pathKey,
   };

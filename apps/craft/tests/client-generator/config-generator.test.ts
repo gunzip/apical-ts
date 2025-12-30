@@ -186,17 +186,17 @@ describe("client-generator config-generator", () => {
       expect(result).toContain(
         "export type AuthHeaders = 'authorization' | 'x-api-key';",
       );
-      expect(result).toContain("[K in AuthHeaders]?: string;");
+      expect(result).toContain("[K in AuthHeaders]: string;");
     });
 
-    it("should fallback to string type for headers when no auth headers", () => {
+    it("should use empty object type for headers when no auth headers", () => {
       const authHeaders: string[] = [];
       const serverUrls = ["https://api.example.com"];
 
       const result = generateConfigTypes(authHeaders, serverUrls);
 
       expect(result).not.toContain("export type AuthHeaders");
-      expect(result).toContain("[K in string]?: string;");
+      expect(result).toContain("headers: {};");
     });
 
     it("should escape special characters in server URLs", () => {

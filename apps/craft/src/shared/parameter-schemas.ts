@@ -21,6 +21,13 @@ export interface ParameterSchemaOptions {
   /* Apply coercion transformations for primitive types */
   coercePrimitives?: boolean;
   lowercaseHeaderKeys?: boolean;
+  /* Security headers to include in the headers schema */
+  securityHeaders?: {
+    headerName: string;
+    isOverride: boolean;
+    isRequired: boolean;
+    schemeName: string;
+  }[];
 }
 
 /**
@@ -59,7 +66,11 @@ export function generateParameterSchemas(
   parameterGroups: ParameterGroups,
   options: ParameterSchemaOptions = {},
 ): ParameterSchemaResult {
-  const { coercePrimitives = false, lowercaseHeaderKeys = false } = options;
+  const {
+    coercePrimitives = false,
+    lowercaseHeaderKeys = false,
+    securityHeaders = [],
+  } = options;
   const sanitizedId = sanitizeIdentifier(operationId);
   const typeImports = new Set<string>();
   const schemas: string[] = [];
@@ -67,7 +78,8 @@ export function generateParameterSchemas(
   /* Track whether each parameter type has actual parameters */
   const hasQuery = parameterGroups.queryParams.length > 0;
   const hasPath = parameterGroups.pathParams.length > 0;
-  const hasHeaders = parameterGroups.headerParams.length > 0;
+  const hasHeaders =
+    parameterGroups.headerParams.length > 0 || securityHeaders.length > 0;
 
   /* Helper to build property entry using zodSchemaToCode; fallback to z.string()
      For servers, applies parameter-specific transformations:
@@ -145,12 +157,34 @@ export function generateParameterSchemas(
   const headersSchemaName = `${sanitizedId}HeadersSchema`;
   const headersTypeName = `${sanitizedId}HeadersSchema`;
 
-  if (hasHeaders) {
+  // Only security overrides go into the headers schema, not global security headers
+  const securityOverrideHeaders = securityHeaders.filter((sh) => sh.isOverride);
+  const hasSecurityOverrides = securityOverrideHeaders.length > 0;
+  const hasCombinedHeaders = hasHeaders || hasSecurityOverrides;
+
+  if (hasCombinedHeaders) {
     const headerProps = parameterGroups.headerParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
+
+    /* Add security override headers to the schema (always required) */
+    const securityHeaderProps = securityOverrideHeaders
+      .map((sh) => {
+        const name = lowercaseHeaderKeys
+          ? sh.headerName.toLowerCase()
+          : sh.headerName;
+        // Security override headers are always required
+        const zodCode = "z.string()";
+        return `${JSON.stringify(name)}: ${zodCode}`;
+      })
+      .join(", ");
+
+    const allHeaderProps = [headerProps, securityHeaderProps]
+      .filter(Boolean)
+      .join(", ");
+
     schemas.push(
-      `const ${headersSchemaName} = ${headerObjectMethod}({ ${headerProps} });`,
+      `const ${headersSchemaName} = ${headerObjectMethod}({ ${allHeaderProps} });`,
     );
   }
 
