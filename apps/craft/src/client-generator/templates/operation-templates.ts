@@ -227,7 +227,13 @@ export function renderOperationFunction(
   );
   /* Overload signatures receive a single named parameter (no destructuring, no defaults) */
   const overloadParamDecl = `params: ${config.parameterInterface}`;
-  const configType = "GlobalConfig";
+
+  /* Use narrowed config type if we have a response map type name */
+  /* This intersection type helps TypeScript distinguish overload signatures for forceValidation discrimination */
+  const configType = config.responseMapTypeName
+    ? `GlobalConfig & { deserializers?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
+    : "GlobalConfig";
+
   return `${config.typeAliases}${config.summary}export function ${config.functionName}${config.genericParams}(
   ${overloadParamDecl},
   config: ${configType} & { forceValidation: true }
