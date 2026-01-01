@@ -28,33 +28,25 @@ export function renderSecurityHeaderHandling(
 ): string {
   if (operationSecurityHeaders.length === 0) return "";
 
-  return operationSecurityHeaders
-    .map((securityHeader) => {
-      const varName = toValidVariableName(securityHeader.headerName);
+  /* Helper to generate security header handling code */
+  const generateHeaderCode = (header: SecurityHeader): string => {
+    const varName = toValidVariableName(header.headerName);
+    const source = header.isOverride ? "params.headers" : "config.headers";
+    const useOptionalChaining = !(header.isOverride && header.isRequired);
+    const optionalChain = useOptionalChaining ? "?" : "";
+    const accessExpression = `${source}${optionalChain}['${header.headerName}']`;
 
-      if (securityHeader.isOverride) {
-        // Security override: MUST be in params.headers (required)
-        if (securityHeader.isRequired) {
-          return `const _sec_${varName} = params.headers['${securityHeader.headerName}'];
-    if (_sec_${varName} === undefined) throw new Error('Missing required security header: ${securityHeader.headerName}');
-    finalHeaders['${securityHeader.headerName}'] = _sec_${varName};`;
-        } else {
-          return `const _sec_${varName} = params.headers?.['${securityHeader.headerName}'];
-    if (_sec_${varName} !== undefined) finalHeaders['${securityHeader.headerName}'] = _sec_${varName};`;
-        }
-      } else {
-        // Global security: from config.headers
-        if (securityHeader.isRequired) {
-          return `const _sec_${varName} = config.headers?.['${securityHeader.headerName}'];
-    if (_sec_${varName} === undefined) throw new Error('Missing required security header: ${securityHeader.headerName}');
-    finalHeaders['${securityHeader.headerName}'] = _sec_${varName};`;
-        } else {
-          return `const _sec_${varName} = config.headers?.['${securityHeader.headerName}'];
-    if (_sec_${varName} !== undefined) finalHeaders['${securityHeader.headerName}'] = _sec_${varName};`;
-        }
-      }
-    })
-    .join("\n    ");
+    if (header.isRequired) {
+      return `const _sec_${varName} = ${accessExpression};
+    if (_sec_${varName} === undefined) throw new Error('Missing required security header: ${header.headerName}');
+    finalHeaders['${header.headerName}'] = _sec_${varName};`;
+    } else {
+      return `const _sec_${varName} = ${accessExpression};
+    if (_sec_${varName} !== undefined) finalHeaders['${header.headerName}'] = _sec_${varName};`;
+    }
+  };
+
+  return operationSecurityHeaders.map(generateHeaderCode).join("\n    ");
 }
 
 /**
