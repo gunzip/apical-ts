@@ -2,19 +2,18 @@ import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import pLimit from "p-limit";
 
+import type { OperationMetadata } from "../shared/operation-extractor.js";
+
+import { extractAllOperations } from "../shared/operation-extractor.js";
+import { extractServerUrls } from "../shared/operation-utils.js";
+import { extractAuthHeaders } from "../shared/security-utils.js";
 import {
   createOperationsDirectory,
   writeConfigFile,
   writeIndexFile,
   writeOperationFile,
 } from "./file-writer.js";
-import {
-  extractAllOperations,
-  extractServerUrls,
-  type OperationMetadata,
-} from "./operation-extractor.js";
 import { generateOperationFunction } from "./operation-function-generator.js";
-import { extractAuthHeaders } from "./security.js";
 
 /**
  * Generates individual operation files and configuration
@@ -82,28 +81,25 @@ async function processOperations(
   return operations;
 }
 
+export type { ParameterGroups } from "../shared/models/parameter-models.js";
+export type { SecurityHeader } from "../shared/models/security-models.js";
 /* Re-export key types and functions for external use */
-export type { OperationMetadata } from "./operation-extractor.js";
-export {
-  extractAllOperations,
-  extractServerUrls,
-} from "./operation-extractor.js";
+export type { OperationMetadata } from "../shared/operation-extractor.js";
+export { extractAllOperations } from "../shared/operation-extractor.js";
+export { extractServerUrls } from "../shared/operation-utils.js";
+export { extractAuthHeaders } from "../shared/security-utils.js";
 export {
   extractOperationMetadata,
   generateOperationFunction,
 } from "./operation-function-generator.js";
-export type { ParameterGroups } from "./parameters.js";
-export type { RequestBodyTypeInfo } from "./request-body.js";
-export type { SecurityHeader } from "./security.js";
 
-export { extractAuthHeaders } from "./security.js";
+export type { RequestBodyTypeInfo } from "./request-body.js";
 
 export type { OperationMetadata as OperationFunctionMetadata } from "./templates/operation-templates.js";
 
 export {
   buildGenericParams,
   buildParameterDeclaration,
-  buildTypeAliases,
   renderOperationFunction,
 } from "./templates/operation-templates.js";
 

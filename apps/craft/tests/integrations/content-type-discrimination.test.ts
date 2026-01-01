@@ -38,19 +38,23 @@ describe("Content Type Discrimination Integration Test", () => {
     // We're testing the generated types structure rather than runtime behavior
     const configPath = join(generatedDir, "client/config.ts");
     const operationPath = join(generatedDir, "client/testMultiContentTypes.ts");
+    const routePath = join(generatedDir, "routes/testMultiContentTypes.ts");
 
     const configContent = await readFile(configPath, "utf-8");
     const operationContent = await readFile(operationPath, "utf-8");
+    const routeContent = await readFile(routePath, "utf-8");
 
     // Verify response map is properly typed for multi-content scenarios
     expect(operationContent).toContain("TestMultiContentTypesResponseMap");
-    expect(operationContent).toContain('"application/json"');
-    expect(operationContent).toContain('"application/vnd.custom+json"');
-    expect(operationContent).toContain('"application/xml"');
 
-    // Verify the forced parse type is used in the function signature
+    // Content types are now in routes file
+    expect(routeContent).toContain('"application/json"');
+    expect(routeContent).toContain('"application/vnd.custom+json"');
+    expect(routeContent).toContain('"application/xml"');
+
+    // Verify the forced parse type is used in the function signature (uses camelCase imported route name)
     expect(operationContent).toContain(
-      'ApiResponseWithForcedParse<"200", typeof TestMultiContentTypesResponseMap>',
+      'ApiResponseWithForcedParse<"200", typeof testMultiContentTypesResponseMap>',
     );
   });
 });

@@ -44,19 +44,39 @@ export async function generateSchemaIndex(
     try {
       await fs.access(parameterFilePath);
 
-      /* Add imports for all parameter schema exports */
-      imports.push(`import {`);
-      imports.push(`  ${sanitizedId}QuerySchema,`);
-      imports.push(`  ${sanitizedId}PathSchema,`);
-      imports.push(`  ${sanitizedId}HeadersSchema,`);
-      imports.push(`} from "./${parameterFileName}.js";`);
-
-      /* Add to exports */
-      exports.push(
-        `${sanitizedId}QuerySchema`,
-        `${sanitizedId}PathSchema`,
-        `${sanitizedId}HeadersSchema`,
+      /* Read the parameter file to check which schemas actually exist */
+      const parameterFileContent = await fs.readFile(
+        parameterFilePath,
+        "utf-8",
       );
+
+      /* Collect available schema exports from the file */
+      const availableExports: string[] = [];
+
+      /* Check for both client and server schema exports */
+      const querySchemaName = `${sanitizedId}QuerySchema`;
+      const pathSchemaName = `${sanitizedId}PathSchema`;
+      const headersSchemaName = `${sanitizedId}HeadersSchema`;
+
+      if (parameterFileContent.includes(`export { ${querySchemaName} }`)) {
+        availableExports.push(querySchemaName);
+      }
+      if (parameterFileContent.includes(`export { ${pathSchemaName} }`)) {
+        availableExports.push(pathSchemaName);
+      }
+      if (parameterFileContent.includes(`export { ${headersSchemaName} }`)) {
+        availableExports.push(headersSchemaName);
+      }
+
+      /* Only add imports if there are any exports */
+      if (availableExports.length > 0) {
+        imports.push(`import {`);
+        imports.push(...availableExports.map((exp) => `  ${exp},`));
+        imports.push(`} from "./${parameterFileName}.js";`);
+
+        /* Add to exports */
+        exports.push(...availableExports);
+      }
     } catch {
       /* Parameter file doesn't exist - skip */
     }

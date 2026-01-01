@@ -19,36 +19,51 @@ export function renderAuthHeaderValidation(authHeaders: string[]): string {
 }
 
 /**
- * Renders security header handling code from security headers using bracket notation
+ * Renders security header handling code from security headers
+ * - Global security: from config.securityHeaders
+ * - Security override: from params.headers (required)
  */
 export function renderSecurityHeaderHandling(
   operationSecurityHeaders: SecurityHeader[],
 ): string {
   if (operationSecurityHeaders.length === 0) return "";
 
-  return operationSecurityHeaders
-    .map((securityHeader) => {
-      if (securityHeader.isRequired) {
-        return `finalHeaders['${securityHeader.headerName}'] = params.headers["${securityHeader.headerName}"];`;
-      } else {
-        return `if (params.headers?.["${securityHeader.headerName}"] !== undefined) finalHeaders['${securityHeader.headerName}'] = params.headers["${securityHeader.headerName}"];`;
-      }
-    })
-    .join("\n    ");
+  /* Helper to generate security header handling code */
+  const generateHeaderCode = (header: SecurityHeader): string => {
+    const varName = toValidVariableName(header.headerName);
+    const source = header.isOverride ? "params.headers" : "config.headers";
+    const useOptionalChaining = !(header.isOverride && header.isRequired);
+    const optionalChain = useOptionalChaining ? "?." : "";
+    const accessExpression = `${source}${optionalChain}['${header.headerName}']`;
+
+    if (header.isRequired) {
+      return `const _sec_${varName} = ${accessExpression};
+    if (_sec_${varName} === undefined) throw new Error('Missing required security header: ${header.headerName}');
+    finalHeaders['${header.headerName}'] = _sec_${varName};`;
+    } else {
+      return `const _sec_${varName} = ${accessExpression};
+    if (_sec_${varName} !== undefined) finalHeaders['${header.headerName}'] = _sec_${varName};`;
+    }
+  };
+
+  return operationSecurityHeaders.map(generateHeaderCode).join("\n    ");
 }
 
 /**
  * Renders security parameter extraction code
+ * Always reads global security values from config.securityHeaders
  */
 export function renderSecurityParameterExtraction(
   securityHeaders: SecurityHeader[],
 ): string {
   if (securityHeaders.length === 0) return "";
 
-  const extractions = securityHeaders.map((header) => {
-    const varName = toValidVariableName(header.headerName);
-    return `const ${varName} = config.headers?.['${header.headerName}'];`;
-  });
+  const extractions = securityHeaders
+    .filter((h) => !h.isOverride) // Only global security
+    .map((header) => {
+      const varName = toValidVariableName(header.headerName);
+      return `const ${varName} = config.headers?.['${header.headerName}'];`;
+    });
 
   return extractions.join("\n  ");
 }

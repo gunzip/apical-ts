@@ -31,11 +31,12 @@ describe("Dynamic Force Validation Integration Test", () => {
   it("response map is defined once", async () => {
     const operationPath = join(generatedDir, "client/testDeserialization.ts");
     const content = await readFile(operationPath, "utf-8");
+    // Now we import from routes and re-export
     expect(content).toContain(
-      "export const TestDeserializationResponseMap = {",
+      "export const TestDeserializationResponseMap = testDeserializationResponseMap",
     );
-    expect(content).toContain('"200": {');
-    expect(content).toContain('"application/json": TestDeserUser');
+    // Check that route is imported (includes clientRoute alias)
+    expect(content).toContain('from "../routes/testDeserialization.js"');
   });
 
   it("multi content type operation has both code paths", async () => {

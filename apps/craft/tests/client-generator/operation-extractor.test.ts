@@ -8,12 +8,12 @@ import type {
 import { describe, expect, it } from "vitest";
 
 import { applyGeneratedOperationIds } from "../../src/operation-id-generator/index.js";
+import { extractAllOperations } from "../../src/shared/operation-extractor.js";
 import {
-  extractAllOperations,
-  extractServerUrls,
   extractRequestContentTypes,
   extractResponseContentTypes,
-} from "../../src/client-generator/operation-extractor.js";
+  extractServerUrls,
+} from "../../src/shared/operation-utils.js";
 
 describe("client-generator operation-extractor", () => {
   describe("extractServerUrls", () => {

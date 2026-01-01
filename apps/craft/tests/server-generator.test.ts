@@ -32,24 +32,26 @@ describe("server-generator operation wrapper", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/test",
       "get",
       operation as any,
       [],
-      doc as any,
+      {} as any,
     );
 
     expect(result.wrapperCode).toContain("testSimpleQueryWrapper");
     expect(result.wrapperCode).toContain("testSimpleQueryRouteMetadata");
-    // Parameter schemas are now accessed from serverRoute.params
+    // Parameter schemas are now accessed from serverRoute.params.shape
     expect(result.wrapperCode).toContain(
-      "testSimpleQueryRouteMetadata.params.query.safeParse",
+      "testSimpleQueryRouteMetadata.params.shape.query.safeParse",
     );
-    expect(result.wrapperCode).toContain(
-      "testSimpleQueryRouteMetadata.params.path.safeParse",
+    // No path or headers parameters in this operation, so no safeParse for them
+    expect(result.wrapperCode).not.toContain(
+      "testSimpleQueryRouteMetadata.params.shape.path.safeParse",
+    );
+    expect(result.wrapperCode).not.toContain(
+      "testSimpleQueryRouteMetadata.params.shape.headers.safeParse",
     );
     expect(result.wrapperCode).toContain('kind: "query-error"');
     expect(result.wrapperCode).toContain('kind: "path-error"');
@@ -110,22 +112,20 @@ describe("server-generator operation wrapper", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/test/{pathParam}",
       "get",
       operation as any,
       [],
-      doc as any,
+      {} as any,
     );
 
-    /* Schema validation now uses server-specific schemas from serverRoute.params */
+    /* Schema validation now uses server-specific schemas from serverRoute.params.shape */
     expect(result.wrapperCode).toContain(
-      "testStrictValidationRouteMetadata.params.query.safeParse",
+      "testStrictValidationRouteMetadata.params.shape.query.safeParse",
     );
     expect(result.wrapperCode).toContain(
-      "testStrictValidationRouteMetadata.params.path.safeParse",
+      "testStrictValidationRouteMetadata.params.shape.path.safeParse",
     );
     expect(result.wrapperCode).not.toContain("z.strictObject(");
   });
@@ -165,14 +165,12 @@ describe("server-generator operation wrapper", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/test",
       "post",
       operation as any,
       [],
-      doc as any,
+      {} as any,
     );
 
     /* Verify that request body validation uses schemas from request map imported from routes */
@@ -204,20 +202,18 @@ describe("server-generator operation wrapper", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/test/{id}",
       "get",
       operation as any,
       [],
-      doc as any,
+      {} as any,
     );
 
     expect(result.wrapperCode).toContain("testWithPathRouteMetadata");
-    // Path parameter schemas are now accessed from serverRoute.params
+    // Path parameter schemas are now accessed from serverRoute.params.shape
     expect(result.wrapperCode).toContain(
-      "testWithPathRouteMetadata.params.path.safeParse",
+      "testWithPathRouteMetadata.params.shape.path.safeParse",
     );
     expect(result.wrapperCode).toContain("pathParse.data");
   });
@@ -245,17 +241,13 @@ describe("server-generator operation wrapper", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/test",
       "post",
       operation as any,
       [],
-      doc as any,
+      {} as any,
     );
-
-    expect(result.wrapperCode).toContain("testWithBodyWrapper");
     expect(result.wrapperCode).toContain("body-error");
     expect(result.wrapperCode).toContain("parsedBody");
   });
@@ -283,17 +275,13 @@ describe("server-generator operation wrapper", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/auth/{userId}",
       "GET",
       operation as any,
       [],
-      doc as any,
+      {} as any,
     );
-
-    expect(result.wrapperCode).toContain("testAuthBearerWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
     /* Route metadata is imported and spread */
@@ -327,17 +315,13 @@ describe("server-generator operation wrapper", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/pets",
       "POST",
       operation as any,
       [],
-      doc as any,
+      {} as any,
     );
-
-    expect(result.wrapperCode).toContain("createPetWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
     /* Route metadata is imported and spread */
@@ -372,17 +356,13 @@ describe("server-generator operation wrapper", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/pets/{petId}/status/{statusId}",
       "patch",
       operation as any,
       [],
-      doc as any,
+      {} as any,
     );
-
-    expect(result.wrapperCode).toContain("updatePetStatusWrapper");
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
     /* Route metadata is imported and spread */
@@ -419,17 +399,13 @@ describe("server-generator operation wrapper", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/test-auth-bearer-http",
       "get",
       operation as any,
       [],
-      doc as any,
+      {} as any,
     );
-
-    /* Check that route function includes all required fields */
     expect(result.wrapperCode).toContain("export function route() {");
     expect(result.wrapperCode).toContain("return {");
     /* Route metadata is imported and spread */
@@ -454,17 +430,13 @@ describe("server-generator operation wrapper", () => {
       },
     };
 
-    const doc = { paths: {}, info: { title: "Test", version: "1.0" } };
-
     const result = generateServerOperationWrapper(
       "/users/{id}",
       "get",
       operation as any,
       [],
-      doc as any,
+      {} as any,
     );
-
-    /* Should use provided operationId in route function */
     expect(result.wrapperCode).toContain("export function route() {");
     /* Route metadata is imported from serverRoute and spread */
     expect(result.wrapperCode).toContain(

@@ -5,7 +5,7 @@ import pLimit from "p-limit";
 import {
   extractAllOperations,
   type OperationMetadata,
-} from "../client-generator/operation-extractor.js";
+} from "../shared/operation-extractor.js";
 import {
   createRoutesDirectory,
   writeRouteMetadataFile,
@@ -79,11 +79,14 @@ export {
 export {
   buildRequestMap,
   buildResponseMap,
-  extractRouteOperationMetadata,
   type GeneratedRouteMetadata,
   generateRouteMetadata,
   type RouteOperationMetadata,
 } from "./route-metadata-generator.js";
+export {
+  extractRouteOperationMetadata,
+  type RouteOperationMetadata as LightweightRouteOperationMetadata,
+} from "./route-operation-extractor.js";
 export {
   renderRouteMetadata,
   type RouteMetadataTemplateParams,

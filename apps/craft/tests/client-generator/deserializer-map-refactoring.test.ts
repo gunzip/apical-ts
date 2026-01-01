@@ -1,8 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateResponseHandlers } from "../../src/client-generator/responses.js";
-import { buildTypeAliases } from "../../src/client-generator/templates/operation-templates.js";
 import { renderConfigInterface } from "../../src/client-generator/templates/config-templates.js";
-import { ImportManager } from "../../src/core-generator/import-types.js";
 import type { OperationObject } from "openapi3-ts/oas31";
 
 /*
@@ -69,50 +67,6 @@ describe("DeserializerMap Refactoring", () => {
       "deserializers || config.deserializers",
     );
     expect(result.responseHandlers[0]).not.toContain("parse: (deserializers?:");
-  });
-
-  it("should generate content-type indexed deserializer map types", () => {
-    const mockParameterGroups = {
-      queryParams: [],
-      pathParams: [],
-      headerParams: [],
-    };
-
-    const config = {
-      operationId: "testOperation",
-      responseMapTypeName: "TestOperationResponseMap",
-      shouldGenerateResponseMap: true,
-      shouldGenerateRequestMap: false,
-      requestMapTypeName: "TestOperationRequestMap",
-      parameterGroups: mockParameterGroups,
-      contentTypeMaps: {
-        defaultRequestContentType: null,
-        defaultResponseContentType: "application/json",
-        requestContentTypeCount: 0,
-        requestMapType: "{}",
-        responseContentTypeCount: 2,
-        responseMapType: `{
-  "200": {
-    "application/json": TestSchema,
-    "application/xml": TestSchema,
-  },
-}`,
-        typeImports: new Set<string>(),
-      },
-      importManager: new ImportManager(),
-    };
-
-    const result = buildTypeAliases(config);
-
-    /* Verify the DeserializerMap type extracts content types, not status codes */
-    expect(result).toContain("TestOperationResponseDeserializerMap");
-    expect(result).toContain("keyof typeof TestOperationResponseMap[Status]");
-    expect(result).toContain("[keyof typeof TestOperationResponseMap]");
-
-    /* Should not directly index by status codes like the old implementation */
-    expect(result).not.toContain(
-      "keyof typeof TestOperationResponseMap, import",
-    );
   });
 
   it("should use only config.deserializers without explicit parameter", () => {

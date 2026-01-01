@@ -21,6 +21,7 @@ export function createTestClient(config: TestClientConfig) {
     baseURL: config.baseURL,
     fetch: fetch,
     headers: {
+      "custom-token": config.authHeaders?.["custom-token"] ?? "",
       ...config.customHeaders,
       ...config.authHeaders,
     },

@@ -5,7 +5,7 @@ import pLimit from "p-limit";
 import {
   extractAllOperations,
   type OperationMetadata,
-} from "../client-generator/operation-extractor.js";
+} from "../shared/operation-extractor.js";
 import {
   createServerOperationsDirectory,
   writeServerIndexFile,
@@ -74,6 +74,6 @@ async function processServerOperations(
 }
 
 /* Re-export key types for external use */
-export type { OperationMetadata } from "../client-generator/operation-extractor.js";
-export { extractAllOperations } from "../client-generator/operation-extractor.js";
+export type { OperationMetadata } from "../shared/operation-extractor.js";
+export { extractAllOperations } from "../shared/operation-extractor.js";
 export { generateServerOperationWrapper } from "./operation-wrapper-generator.js";

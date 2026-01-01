@@ -1,14 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { ImportManager } from "../../src/core-generator/import-types.js";
 import {
   buildGenericParams,
   buildParameterDeclaration,
-  buildTypeAliases,
   renderOperationFunction,
   type GenericParamsConfig,
   type ParameterDeclarationConfig,
-  type TypeAliasesConfig,
   type OperationFunctionRenderConfig,
 } from "../../src/client-generator/templates/operation-templates.js";
 
@@ -184,154 +181,6 @@ describe("operation-templates", () => {
       const result = buildParameterDeclaration(config);
 
       expect(result).toBe("{}: { query?: { limit?: number } }");
-    });
-  });
-
-  describe("buildTypeAliases", () => {
-    it("should build both request and response type aliases (runtime const included)", () => {
-      const config: TypeAliasesConfig = {
-        shouldGenerateRequestMap: true,
-        shouldGenerateResponseMap: true,
-        requestMapTypeName: "TestRequestMap",
-        responseMapTypeName: "TestResponseMap",
-        operationId: undefined,
-        parameterGroups: {
-          path: [],
-          query: [],
-          header: [],
-          cookie: [],
-          matrix: [],
-        } as any,
-        contentTypeMaps: {
-          defaultRequestContentType: "application/json",
-          defaultResponseContentType: "application/json",
-          requestContentTypeCount: 2,
-          requestMapType:
-            "{ 'application/json': User; 'application/xml': string; }",
-          responseContentTypeCount: 2,
-          responseMapType:
-            "{ 'application/json': User; 'text/plain': string; }",
-          typeImports: new Set<string>(),
-        },
-        importManager: new ImportManager(),
-      };
-
-      const result = buildTypeAliases(config);
-
-      expect(result).toBe(
-        "export type TestRequestMap = { 'application/json': User; 'application/xml': string; };\n\n" +
-          "export const TestResponseMap = { 'application/json': User; 'text/plain': string; } as const;\n" +
-          "export type TestResponseMap = { 'application/json': User; 'text/plain': string; };\n\n" +
-          "export type TestResponseDeserializerMap = Partial<Record<{\n" +
-          "  [Status in keyof typeof TestResponseMap]: keyof typeof TestResponseMap[Status]\n" +
-          "}[keyof typeof TestResponseMap], import('./config.js').Deserializer>>;\n\n",
-      );
-    });
-
-    it("should build only request type alias", () => {
-      const config: TypeAliasesConfig = {
-        shouldGenerateRequestMap: true,
-        shouldGenerateResponseMap: false,
-        requestMapTypeName: "TestRequestMap",
-        responseMapTypeName: "TestResponseMap",
-        operationId: undefined,
-        parameterGroups: {
-          path: [],
-          query: [],
-          header: [],
-          cookie: [],
-          matrix: [],
-        } as any,
-        contentTypeMaps: {
-          defaultRequestContentType: "application/json",
-          defaultResponseContentType: null,
-          requestContentTypeCount: 1,
-          requestMapType: "{ 'application/json': User; }",
-          responseContentTypeCount: 0,
-          responseMapType: "{}",
-          typeImports: new Set<string>(),
-        },
-        importManager: new ImportManager(),
-      };
-
-      const result = buildTypeAliases(config);
-
-      expect(result).toBe(
-        "export type TestRequestMap = { 'application/json': User; };\n\n" +
-          "export type TestResponseMap = {};\n\n" +
-          "export type TestResponseDeserializerMap = import('./config.js').DeserializerMap;\n\n",
-      );
-    });
-
-    it("should build only response type alias (runtime const included)", () => {
-      const config: TypeAliasesConfig = {
-        shouldGenerateRequestMap: false,
-        shouldGenerateResponseMap: true,
-        requestMapTypeName: "TestRequestMap",
-        responseMapTypeName: "TestResponseMap",
-        operationId: undefined,
-        parameterGroups: {
-          path: [],
-          query: [],
-          header: [],
-          cookie: [],
-          matrix: [],
-        } as any,
-        contentTypeMaps: {
-          defaultRequestContentType: null,
-          defaultResponseContentType: "application/json",
-          requestContentTypeCount: 0,
-          requestMapType: "{}",
-          responseContentTypeCount: 1,
-          responseMapType: "{ 'application/json': User; }",
-          typeImports: new Set<string>(),
-        },
-        importManager: new ImportManager(),
-      };
-
-      const result = buildTypeAliases(config);
-
-      expect(result).toBe(
-        "export const TestResponseMap = { 'application/json': User; } as const;\n" +
-          "export type TestResponseMap = { 'application/json': User; };\n\n" +
-          "export type TestResponseDeserializerMap = Partial<Record<{\n" +
-          "  [Status in keyof typeof TestResponseMap]: keyof typeof TestResponseMap[Status]\n" +
-          "}[keyof typeof TestResponseMap], import('./config.js').Deserializer>>;\n\n",
-      );
-    });
-
-    it("should handle empty response map type", () => {
-      const config: TypeAliasesConfig = {
-        shouldGenerateRequestMap: false,
-        shouldGenerateResponseMap: false,
-        requestMapTypeName: "TestRequestMap",
-        responseMapTypeName: "TestResponseMap",
-        operationId: undefined,
-        parameterGroups: {
-          path: [],
-          query: [],
-          header: [],
-          cookie: [],
-          matrix: [],
-        } as any,
-        contentTypeMaps: {
-          defaultRequestContentType: null,
-          defaultResponseContentType: null,
-          requestContentTypeCount: 0,
-          requestMapType: "{}",
-          responseContentTypeCount: 0,
-          responseMapType: "{}",
-          typeImports: new Set<string>(),
-        },
-        importManager: new ImportManager(),
-      };
-
-      const result = buildTypeAliases(config);
-
-      expect(result).toBe(
-        "export type TestResponseMap = {};\n\n" +
-          "export type TestResponseDeserializerMap = import('./config.js').DeserializerMap;\n\n",
-      );
     });
   });
 

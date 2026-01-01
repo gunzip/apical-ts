@@ -34,9 +34,7 @@ describe("Security Operations", () => {
 
       // Act
       const response = await client.testOverriddenSecurity({
-        headers: {
-          Authorization: "Bearer test-bearer-token-123",
-        },
+        headers: { Authorization: "Bearer test-token" },
       });
 
       // Assert
@@ -55,9 +53,7 @@ describe("Security Operations", () => {
       // Act & Assert
       try {
         await client.testOverriddenSecurity({
-          headers: {
-            Authorization: "Bearer wrong-token",
-          },
+          headers: { Authorization: "Bearer test-token" },
         });
         expect.fail(
           "Expected operation to throw error due to wrong auth scheme",
@@ -85,9 +81,7 @@ describe("Security Operations", () => {
       // Act & Assert
       try {
         await client.testOverriddenSecurity({
-          headers: {
-            Authorization: "Bearer invalid-token",
-          },
+          headers: { Authorization: "Bearer test-token" },
         });
         expect.fail(
           "Expected operation to throw error due to missing authentication",
@@ -169,9 +163,7 @@ describe("Security Operations", () => {
 
       // Act - testCustomTokenHeader uses global security (customToken)
       const response = await client.testCustomTokenHeader({
-        headers: {
-          "custom-token": "test-custom-token-abc",
-        },
+        headers: { "custom-token": "test-token" },
       });
 
       // Assert
@@ -189,9 +181,7 @@ describe("Security Operations", () => {
       // Act & Assert - testCustomTokenHeader should fail
       try {
         await client.testCustomTokenHeader({
-          headers: {
-            "custom-token": "wrong-type-of-token",
-          },
+          headers: { "custom-token": "test-token" },
         });
         expect.fail(
           "Expected operation to throw error due to wrong auth scheme",
@@ -225,16 +215,12 @@ describe("Security Operations", () => {
 
       // Act - testOverriddenSecurity uses bearerToken (overrides global customToken)
       const bearerResponse = await bearerTokenClient.testOverriddenSecurity({
-        headers: {
-          Authorization: "Bearer test-bearer-token-123",
-        },
+        headers: { Authorization: "Bearer test-token" },
       });
 
       // testCustomTokenHeader uses global customToken
       const customResponse = await customTokenClient.testCustomTokenHeader({
-        headers: {
-          "custom-token": "test-custom-token-abc",
-        },
+        headers: { "custom-token": "test-token" },
       });
 
       // Assert
@@ -259,9 +245,7 @@ describe("Security Operations", () => {
       // Act & Assert - Should fail for operation requiring bearerToken
       try {
         await client.testOverriddenSecurity({
-          headers: {
-            Authorization: "X-Functions-Key test-simple-token-789", // Wrong format
-          },
+          headers: { Authorization: "Bearer test-token" },
         });
         expect.fail(
           "Expected operation to throw error due to wrong token format",
@@ -295,13 +279,13 @@ describe("Security Operations", () => {
 
       // Act
       const simpleResponse = await simpleTokenClient.testSimpleToken({
-        headers: {
-          "X-Functions-Key": "test-simple-token-789",
-        },
         query: {
           cursor: "test-cursor",
           qo: "optional-param",
           qr: "required-param",
+        },
+        headers: {
+          "X-Functions-Key": "test-simple-token",
         },
       });
 
@@ -315,13 +299,13 @@ describe("Security Operations", () => {
       // Act & Assert - bearerToken should fail for simpleToken operation
       try {
         await bearerTokenClient.testSimpleToken({
-          headers: {
-            "X-Functions-Key": "bearer-token-instead-of-simple",
-          },
           query: {
             cursor: "test-cursor",
             qo: "optional-param",
             qr: "required-param",
+          },
+          headers: {
+            "X-Functions-Key": "test-simple-token",
           },
         });
         expect.fail(
@@ -352,9 +336,7 @@ describe("Security Operations", () => {
       // Act & Assert
       try {
         await client.testOverriddenSecurity({
-          headers: {
-            Authorization: "Bearer invalid-token",
-          },
+          headers: { Authorization: "Bearer test-token" },
         });
         expect.fail("Expected request to throw an error");
       } catch (error: unknown) {
@@ -381,9 +363,7 @@ describe("Security Operations", () => {
       // Act & Assert
       try {
         await client.testOverriddenSecurity({
-          headers: {
-            Authorization: "Bearer wrong-token-type",
-          },
+          headers: { Authorization: "Bearer test-token" },
         });
         expect.fail("Expected request to throw an error");
       } catch (error: unknown) {
@@ -412,9 +392,7 @@ describe("Security Operations", () => {
 
       // Act
       const result = await invalidClient.testOverriddenSecurity({
-        headers: {
-          Authorization: "Bearer test-token",
-        },
+        headers: { Authorization: "Bearer test-token" },
       });
 
       // Assert - Should return error result instead of throwing

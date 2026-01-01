@@ -18,14 +18,14 @@ describe.skip("testParameterWithDash operation integration tests", () => {
         expect(params.value.path["path-param"]).toBe("test-path-param");
 
         // Validate query parameters
-        expect(params.value.query["foo-bar"]).toBe("test-query-value");
-        expect(params.value.query["request-id"]).toBe("request-id-123");
+        expect(params.value.query?.["foo-bar"]).toBe("test-query-value");
+        expect(params.value.query?.["request-id"]).toBe("request-id-123");
 
         // Validate header parameters
-        expect(params.value.headers.headerinlineparam).toBe(
+        expect(params.value.headers?.headerinlineparam).toBe(
           "inline-header-value",
         );
-        expect(params.value.headers["x-header-param"]).toBe("x-header-value");
+        expect(params.value.headers?.["x-header-param"]).toBe("x-header-value");
 
         return {
           status: "200",

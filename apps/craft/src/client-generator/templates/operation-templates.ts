@@ -1,11 +1,11 @@
 import type { ImportManager } from "../../core-generator/import-types.js";
-import type { extractParameterGroups } from "../parameters.js";
+import type { extractParameterGroups } from "../../shared/parameter-utils.js";
+import type { getOperationSecuritySchemes } from "../../shared/security-utils.js";
 import type { resolveRequestBodyType } from "../request-body.js";
 import type {
   generateContentTypeMaps,
   ResponseHandlerResult,
 } from "../responses.js";
-import type { getOperationSecuritySchemes } from "../security.js";
 
 import { sanitizeIdentifier } from "../../schema-generator/utils.js";
 
@@ -54,6 +54,8 @@ export interface OperationMetadata {
   functionName: string;
   hasBody: boolean;
   importManager: ImportManager;
+  isHeadersOptional: boolean;
+  isQueryOptional: boolean;
   operationName: string;
   operationSecurityHeaders: ReturnType<typeof getOperationSecuritySchemes>;
   overridesSecurity: boolean;
@@ -70,16 +72,6 @@ export interface ParameterDeclarationConfig {
   destructuredParams: string;
   paramsInterface: string;
 }
-
-export type TypeAliasesConfig = ContentTypeMapsConfig & {
-  /* ImportManager for handling type imports */
-  importManager: ImportManager;
-  /* Parameter schema generation */
-  operationId: string | undefined;
-  parameterGroups: ReturnType<typeof extractParameterGroups>;
-  responseMapName?: string;
-  responseMapType?: string;
-};
 
 /*
  * Creates generic parameter list for dynamic force validation and content-type selection.
@@ -131,71 +123,98 @@ export function buildParameterDeclaration(
   return `${config.destructuredParams}: ${config.paramsInterface}`;
 }
 
-/*
- * Emits exported request/response content-type map aliases and parameter schemas.
- * Skips each side when no map required (empty object or no body for request).
+/**
+ * Builds type aliases by importing from route files instead of regenerating them.
+ * This is the new approach that consumes route metadata.
  */
-export function buildTypeAliases(config: TypeAliasesConfig): string {
+export function buildTypeAliasesFromRoute(config: {
+  bodyTypeName?: string;
+  contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
+  hasBody: boolean;
+  hasHeaderParams: boolean;
+  hasPathParams: boolean;
+  hasQueryParams: boolean;
+  hasRequestMap: boolean;
+  hasResponseMap: boolean;
+  importManager: ImportManager;
+  isBodyOptional: boolean;
+  isHeadersOptional: boolean;
+  isQueryOptional: boolean;
+  operationId: string;
+  requestMapTypeName: string;
+  responseMapTypeName: string;
+  shouldGenerateRequestMap: boolean;
+  shouldGenerateResponseMap: boolean;
+}): string {
+  const sanitizedId = sanitizeIdentifier(config.operationId);
+  const requestMapName = sanitizedId + "RequestMap";
+  const responseMapName = sanitizedId + "ResponseMap";
+
+  /* Import route metadata */
+  config.importManager.addRouteImport(
+    sanitizedId,
+    requestMapName,
+    responseMapName,
+  );
+  config.importManager.addClientRouteImport(sanitizedId);
+
+  const hasAnyParams =
+    config.hasPathParams || config.hasQueryParams || config.hasHeaderParams;
+  const hasAdditionalProps =
+    config.hasBody || config.hasRequestMap || config.hasResponseMap;
+
   let typeAliases = "";
+  const paramsTypeName = `${config.operationId.charAt(0).toUpperCase() + config.operationId.slice(1)}Params`;
+  const clientRouteName = `${sanitizedId}ClientRoute`;
+  const genericParams =
+    config.hasRequestMap || config.hasResponseMap
+      ? buildGenericTypeParams(config)
+      : "";
 
-  /* Add parameter schema imports instead of generating them inline */
-  if (config.operationId) {
-    const sanitizedId = sanitizeIdentifier(config.operationId);
-
-    /* Add imports for parameter schemas from the centralized schema files */
-    config.importManager.addParameterSchema(sanitizedId, "Query");
-    config.importManager.addParameterSchema(sanitizedId, "Path");
-    config.importManager.addParameterSchema(sanitizedId, "Headers");
+  /* Build params type */
+  if (hasAnyParams && hasAdditionalProps) {
+    /* Params + body/contentType: use intersection */
+    const baseType = `z.infer<NonNullable<typeof ${clientRouteName}.params>>`;
+    const additionalProps = buildAdditionalProperties(config);
+    typeAliases += `type ${paramsTypeName}${genericParams} = ${baseType} & {\n  ${additionalProps.join(";\n  ")};\n};\n\n`;
+  } else if (hasAnyParams) {
+    /* Only params */
+    typeAliases += `type ${paramsTypeName} = z.infer<NonNullable<typeof ${clientRouteName}.params>>;\n\n`;
+  } else if (hasAdditionalProps) {
+    /* Only body/contentType */
+    const props = buildAdditionalProperties(config);
+    typeAliases += `type ${paramsTypeName}${genericParams} = {\n  ${props.join(";\n  ")};\n};\n\n`;
+  } else {
+    /* No params at all */
+    typeAliases += `type ${paramsTypeName} = Record<string, never>;\n\n`;
   }
 
-  /*
-   * Discriminated union response types (e.g., FindPetsByStatusOperationResponse) are not generated
-   * for client operations as they are unused in the generated client code. The server generator
-   * creates its own response union types using the shared response union generator.
-   */
-
+  /* Re-export request/response maps */
   if (config.shouldGenerateRequestMap) {
-    typeAliases += `export type ${config.requestMapTypeName} = ${config.contentTypeMaps.requestMapType};\n\n`;
+    typeAliases += `export const ${config.requestMapTypeName} = ${requestMapName};\n`;
+    typeAliases += `type ${config.requestMapTypeName} = typeof ${requestMapName};\n`;
   }
-  /* Always emit response map type alias for stability; if empty map that's fine */
-  if (
-    config.shouldGenerateResponseMap ||
-    config.contentTypeMaps.responseMapType
-  ) {
-    const responseMapRuntime = config.contentTypeMaps.responseMapType || "{}";
-    // Emit runtime object (only if non-empty) + type alias
-    if (responseMapRuntime !== "{}") {
-      typeAliases += `export const ${config.responseMapTypeName} = ${responseMapRuntime} as const;\n`;
-    }
-    typeAliases += `export type ${config.responseMapTypeName} = ${responseMapRuntime};\n\n`;
 
-    /* Emit a narrowed DeserializerMap type for this operation.
-     * Extract content types from the nested response map structure for proper indexing.
-     * Response map structure: { "status": { "content-type": Schema } }
-     * DeserializerMap should be indexed only by content-type: { "content-type": Deserializer }
-     */
-    const perOpDeserializerMap =
-      responseMapRuntime !== "{}"
-        ? `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = Partial<Record<{
-  [Status in keyof typeof ${config.responseMapTypeName}]: keyof typeof ${config.responseMapTypeName}[Status]
-}[keyof typeof ${config.responseMapTypeName}], import('./config.js').Deserializer>>;\n\n`
-        : `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = import('./config.js').DeserializerMap;\n\n`;
-    typeAliases += perOpDeserializerMap;
+  if (config.shouldGenerateResponseMap) {
+    typeAliases += `export const ${config.responseMapTypeName} = ${responseMapName};\n`;
+    typeAliases += `type ${config.responseMapTypeName} = typeof ${responseMapName};\n\n`;
   }
+
+  /* Generate DeserializerMap type */
+  if (config.shouldGenerateResponseMap) {
+    typeAliases += `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = Partial<Record<{
+  [Status in keyof ${config.responseMapTypeName}]: keyof ${config.responseMapTypeName}[Status]
+}[keyof ${config.responseMapTypeName}], import('./config.js').Deserializer>>;\n\n`;
+  } else {
+    typeAliases += `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = import('./config.js').DeserializerMap;\n\n`;
+  }
+
   return typeAliases;
 }
 
 export function renderOperationFunction(
   config: OperationFunctionRenderConfig,
 ): string {
-  /* Use narrowed config type if we have a response map type name */
-  const baseConfigType = config.responseMapTypeName
-    ? `GlobalConfig & { deserializers?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
-    : "GlobalConfig";
-
-  /* forceValidation typing now handled exclusively by configureOperations overload discrimination */
-  const configType = baseConfigType;
-
   /* Only add type cast when we have a narrowed type (handled implicitly) */
   /* Overloads: specialize conditional branches by substituting TForceValidation with literals */
   const trueReturn = config.updatedReturnType.replace(
@@ -208,6 +227,13 @@ export function renderOperationFunction(
   );
   /* Overload signatures receive a single named parameter (no destructuring, no defaults) */
   const overloadParamDecl = `params: ${config.parameterInterface}`;
+
+  /* Use narrowed config type if we have a response map type name */
+  /* This intersection type helps TypeScript distinguish overload signatures for forceValidation discrimination */
+  const configType = config.responseMapTypeName
+    ? `GlobalConfig & { deserializers?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
+    : "GlobalConfig";
+
   return `${config.typeAliases}${config.summary}export function ${config.functionName}${config.genericParams}(
   ${overloadParamDecl},
   config: ${configType} & { forceValidation: true }
@@ -226,4 +252,67 @@ export async function ${config.functionName}${config.genericParams}(
 ): Promise<${config.updatedReturnType}> {
   ${config.functionBodyCode}
 }`;
+}
+
+/**
+ * Helper: builds body and contentType properties for params type
+ */
+function buildAdditionalProperties(config: {
+  bodyTypeName?: string;
+  hasBody: boolean;
+  hasRequestMap: boolean;
+  hasResponseMap: boolean;
+  isBodyOptional: boolean;
+  requestMapTypeName: string;
+}): string[] {
+  const props: string[] = [];
+
+  /* Add body if present */
+  if (config.hasBody) {
+    const bodyOptional = config.isBodyOptional ? "?" : "";
+    let bodyType = config.bodyTypeName || "any";
+    if (config.requestMapTypeName) {
+      bodyType = `import('zod').infer<${config.requestMapTypeName}[TRequestContentType]>`;
+    }
+    props.push(`body${bodyOptional}: ${bodyType}`);
+  }
+
+  /* Add contentType if needed */
+  if (config.hasRequestMap || config.hasResponseMap) {
+    const contentTypeParts: string[] = [];
+    if (config.hasRequestMap)
+      contentTypeParts.push("request?: TRequestContentType");
+    if (config.hasResponseMap)
+      contentTypeParts.push("response?: TResponseContentType");
+    props.push(`contentType?: { ${contentTypeParts.join("; ")} }`);
+  }
+
+  return props;
+}
+
+/**
+ * Helper: builds generic type parameters string
+ */
+function buildGenericTypeParams(config: {
+  contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
+  hasRequestMap: boolean;
+  hasResponseMap: boolean;
+  requestMapTypeName: string;
+}): string {
+  const genericParts: string[] = [];
+
+  if (config.hasRequestMap) {
+    const defaultReq =
+      config.contentTypeMaps.defaultRequestContentType || "application/json";
+    genericParts.push(
+      `TRequestContentType extends keyof ${config.requestMapTypeName} = "${defaultReq}"`,
+    );
+  }
+  if (config.hasResponseMap) {
+    const defaultResp =
+      config.contentTypeMaps.defaultResponseContentType || "application/json";
+    genericParts.push(`TResponseContentType = "${defaultResp}"`);
+  }
+
+  return genericParts.length > 0 ? `<${genericParts.join(", ")}>` : "";
 }

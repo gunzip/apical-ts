@@ -44,7 +44,7 @@ describe("createDocument response reference integration", () => {
             headers: { "Content-Type": "application/json" },
           });
         },
-        headers: {},
+        headers: { "custom-token": "" },
         forceValidation: true,
       },
     );

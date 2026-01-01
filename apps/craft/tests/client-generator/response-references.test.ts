@@ -2,7 +2,7 @@ import type { OperationObject, OpenAPIObject } from "openapi3-ts/oas31";
 
 import { describe, expect, it } from "vitest";
 
-import { extractResponseContentTypes } from "../../src/client-generator/operation-extractor.js";
+import { extractResponseContentTypes } from "../../src/shared/operation-utils.js";
 
 describe("client-generator response references", () => {
   describe("extractResponseContentTypes", () => {

@@ -24,7 +24,7 @@ describe("Query Parameter Integration", () => {
       {
         baseURL: "https://api.example.com",
         fetch: mockFetch,
-        headers: {},
+        headers: { "custom-token": "" },
         forceValidation: false,
       },
     );
@@ -64,7 +64,7 @@ describe("Query Parameter Integration", () => {
       {
         baseURL: "https://api.example.com",
         fetch: mockFetch,
-        headers: {},
+        headers: { "custom-token": "" },
         forceValidation: false,
       },
     );
@@ -90,7 +90,7 @@ describe("Query Parameter Integration", () => {
       {
         baseURL: "https://api.example.com",
         fetch: mockFetch,
-        headers: {},
+        headers: { "custom-token": "" },
         forceValidation: false,
       },
     );

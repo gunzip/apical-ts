@@ -12,26 +12,20 @@ import type { OperationMetadata } from "./templates/operation-templates.js";
 
 import { ImportManager } from "../core-generator/import-types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { generateFunctionBody } from "./code-generation.js";
-import { extractParameterGroups } from "./parameters.js";
-import {
-  buildDestructuredParameters,
-  buildParameterInterface,
-} from "./parameters.js";
-import { resolveRequestBodyType } from "./request-body.js";
-import {
-  generateContentTypeMaps,
-  generateResponseHandlers,
-} from "./responses.js";
+import { generateContentTypeMaps } from "../shared/content-type-maps.js";
+import { extractParameterGroups } from "../shared/parameter-utils.js";
 import {
   extractAuthHeaders,
   getOperationSecuritySchemes,
   hasSecurityOverride,
-} from "./security.js";
+} from "../shared/security-utils.js";
+import { generateFunctionBody } from "./code-generation.js";
+import { resolveRequestBodyType } from "./request-body.js";
+import { generateResponseHandlers } from "./responses.js";
 import {
   buildGenericParams,
   buildParameterDeclaration,
-  buildTypeAliases,
+  buildTypeAliasesFromRoute,
   renderOperationFunction,
 } from "./templates/operation-templates.js";
 import { renderDefaultResponseHandler } from "./templates/response-templates.js";
@@ -99,18 +93,42 @@ export function extractOperationMetadata(
     operation.operationId,
   );
 
+  /*
+   * Calculate if headers are optional for TypeScript types
+   * Headers are optional only if ALL explicit header params AND security headers are optional.
+   * If any header is required, the headers object must be provided in params OR config.
+   * Runtime code merges from both sources, but types enforce presence.
+   */
+  const hasRequiredSecurityHeader = operationSecurityHeaders.some(
+    (sh) => sh.isRequired,
+  );
+  const isHeadersOptional =
+    parameterGroups.headerParams.every((p) => p.required !== true) &&
+    !hasRequiredSecurityHeader;
+
+  /* Calculate if query is optional */
+  const isQueryOptional = parameterGroups.queryParams.every(
+    (p) => p.required !== true,
+  );
+
+  /* Parameter schemas removed: parameters are available through clientRoute.params from routes */
+
   /* Responses & union return type */
   /* Build response handlers + discriminated union return type (ApiResponse<code, data>) */
+  /* Pass camelCase runtime value name for response map access */
+  const responseMapRuntimeName = bodyInfo.shouldExportResponseMap
+    ? sanitizeIdentifier(operation.operationId) + "ResponseMap"
+    : undefined;
+
   const responseHandlers = generateResponseHandlers(
     operation,
     responseTypeImports,
     bodyInfo.shouldExportResponseMap,
-    bodyInfo.shouldExportResponseMap ? bodyInfo.responseMapTypeName : undefined,
+    responseMapRuntimeName,
     doc,
   );
 
-  // Migrate response type imports to ImportManager
-  responseTypeImports.forEach((imp) => importManager.addSchemaImport(imp));
+  // Schema imports removed: schemas are available through route imports
 
   /* Security overrides/auth headers */
   const overridesSecurity = hasSecurityOverride(operation);
@@ -151,6 +169,8 @@ export function extractOperationMetadata(
     functionName,
     hasBody,
     importManager,
+    isHeadersOptional,
+    isQueryOptional,
     operationName,
     operationSecurityHeaders,
     overridesSecurity,
@@ -182,6 +202,13 @@ export function generateOperationFunction(
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
   doc: OpenAPIObject,
 ): GeneratedFunction {
+  /* Ensure operation has an operationId */
+  if (!operation.operationId) {
+    throw new Error(
+      `Operation ${method.toUpperCase()} ${pathKey} is missing operationId`,
+    );
+  }
+
   /* Extract all metadata using pure logic function */
   const metadata = extractOperationMetadata(
     pathKey,
@@ -208,14 +235,24 @@ export function generateOperationFunction(
   });
 
   /* Emit request/response map type aliases (only when non-empty / applicable) */
-  const typeAliases = buildTypeAliases({
+  const typeAliases = buildTypeAliasesFromRoute({
+    bodyTypeName: metadata.bodyInfo.bodyTypeInfo?.typeName ?? undefined,
     contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+    hasBody: metadata.hasBody,
+    hasHeaderParams:
+      metadata.parameterGroups.headerParams.length > 0 ||
+      metadata.operationSecurityHeaders.length > 0,
+    hasPathParams: metadata.parameterGroups.pathParams.length > 0,
+    hasQueryParams: metadata.parameterGroups.queryParams.length > 0,
+    hasRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
+    hasResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
     importManager: metadata.importManager,
-    /* Parameter schema generation */
+    isBodyOptional:
+      !metadata.hasBody || !metadata.bodyInfo.bodyTypeInfo?.isRequired,
+    isHeadersOptional: metadata.isHeadersOptional,
+    isQueryOptional: metadata.isQueryOptional,
     operationId: operation.operationId,
-    parameterGroups: metadata.parameterGroups,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
-    responseMapName: metadata.responseHandlers.responseMapName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
@@ -247,7 +284,7 @@ export function generateOperationFunction(
 /**
  * buildParameterStructures
  * Returns both: (1) destructured parameter object used in the function signature, (2) its interface type.
- * Injects generic request/response map references if those maps exist.
+ * The interface type name is derived from the operation ID and matches the type alias generated in routes.
  */
 function buildParameterStructures(
   parameterGroups: ReturnType<typeof extractParameterGroups>,
@@ -260,24 +297,37 @@ function buildParameterStructures(
   responseMapTypeName: string,
   operationId: string,
 ) {
-  const destructuredParams = buildDestructuredParameters(
-    parameterGroups,
-    hasBody,
-    bodyTypeInfo,
-    operationSecurityHeaders,
-    shouldGenerateRequestMap,
-    shouldGenerateResponseMap,
-  );
+  /* Check if we have any parameters at all */
+  const hasAnyParams =
+    parameterGroups.pathParams.length > 0 ||
+    parameterGroups.queryParams.length > 0 ||
+    parameterGroups.headerParams.length > 0 ||
+    operationSecurityHeaders.length > 0 ||
+    hasBody ||
+    shouldGenerateRequestMap ||
+    shouldGenerateResponseMap;
 
-  const paramsInterface = buildParameterInterface(
-    parameterGroups,
-    hasBody,
-    bodyTypeInfo,
-    operationSecurityHeaders,
-    shouldGenerateRequestMap ? requestMapTypeName : undefined,
-    shouldGenerateResponseMap ? responseMapTypeName : undefined,
-    operationId,
-  );
+  /* Destructured params is just "params" if we have anything, otherwise "{}" */
+  const destructuredParams = hasAnyParams ? "params" : "{}";
+
+  /* Interface type name matches the type alias generated from routes */
+  const operationName =
+    operationId.charAt(0).toUpperCase() + operationId.slice(1);
+
+  let paramsInterface = `${operationName}Params`;
+
+  /* Add generic parameters if needed */
+  if (shouldGenerateRequestMap || shouldGenerateResponseMap) {
+    const genericParts: string[] = [];
+    if (shouldGenerateRequestMap) genericParts.push("TRequestContentType");
+    if (shouldGenerateResponseMap) genericParts.push("TResponseContentType");
+    paramsInterface = `${operationName}Params<${genericParts.join(", ")}>`;
+  }
+
+  /* If no params at all, use empty object literal type */
+  if (!hasAnyParams) {
+    paramsInterface = "{}";
+  }
 
   return { destructuredParams, paramsInterface };
 }
@@ -312,18 +362,14 @@ function collectBodyAndContentTypes(
       doc.components?.schemas,
     );
     requestContentType = bodyTypeInfo.contentType;
-    bodyTypeInfo.typeImports.forEach((imp) => {
-      importManager.addSchemaImport(imp);
-    });
+    /* Schema imports removed: available through route imports */
   }
 
   const requestMapTypeName = `${operationName}RequestMap`;
   const responseMapTypeName = `${operationName}ResponseMap`;
 
   const contentTypeMaps = generateContentTypeMaps(operation, doc);
-  contentTypeMaps.typeImports.forEach((imp) => {
-    importManager.addSchemaImport(imp);
-  });
+  /* Schema imports removed: available through route imports */
 
   let requestContentTypes: string[] = [];
   if (

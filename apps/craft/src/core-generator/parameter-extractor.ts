@@ -2,10 +2,12 @@ import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 
 import assert from "assert";
 
-import type { ParameterGroups } from "../client-generator/models/parameter-models.js";
+import type { ParameterGroups } from "../shared/models/parameter-models.js";
+import type { SecurityHeader } from "../shared/models/security-models.js";
 
-import { extractParameterGroups } from "../client-generator/parameters.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { extractParameterGroups } from "../shared/parameter-utils.js";
+import { getOperationSecuritySchemes } from "../shared/security-utils.js";
 
 /**
  * Metadata for operation parameters that need schema generation
@@ -13,6 +15,7 @@ import { sanitizeIdentifier } from "../schema-generator/utils.js";
 export interface OperationParameterMetadata {
   operationId: string;
   parameterGroups: ParameterGroups;
+  securityHeaders?: SecurityHeader[];
 }
 
 /**
@@ -59,11 +62,18 @@ export function extractOperationParameters(
           openApiDoc,
         );
 
+        /* Extract security headers for this operation */
+        const securityHeaders = getOperationSecuritySchemes(
+          operation,
+          openApiDoc,
+        );
+
         /* Always include operation parameters even if empty -
            we need to generate empty schemas for consistency */
         operationParameters.push({
           operationId: operation.operationId,
           parameterGroups,
+          securityHeaders,
         });
       }
     }

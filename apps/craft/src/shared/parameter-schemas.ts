@@ -8,7 +8,7 @@ import type {
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
-import type { ParameterGroups } from "../client-generator/models/parameter-models.js";
+import type { ParameterGroups } from "./models/parameter-models.js";
 
 import { zodSchemaToCode } from "../schema-generator/index.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
@@ -21,12 +21,25 @@ export interface ParameterSchemaOptions {
   /* Apply coercion transformations for primitive types */
   coercePrimitives?: boolean;
   lowercaseHeaderKeys?: boolean;
+  /* Security headers to include in the headers schema */
+  securityHeaders?: {
+    headerName: string;
+    isOverride: boolean;
+    isRequired: boolean;
+    schemeName: string;
+  }[];
 }
 
 /**
  * Result of parameter schema generation
  */
 export interface ParameterSchemaResult {
+  /* Flags indicating which parameter types have actual parameters */
+  hasParameters: {
+    hasHeaders: boolean;
+    hasPath: boolean;
+    hasQuery: boolean;
+  };
   /* Generated Zod schemas and TypeScript types */
   schemaCode: string;
   /* Schema names for external reference */
@@ -53,10 +66,20 @@ export function generateParameterSchemas(
   parameterGroups: ParameterGroups,
   options: ParameterSchemaOptions = {},
 ): ParameterSchemaResult {
-  const { coercePrimitives = false, lowercaseHeaderKeys = false } = options;
+  const {
+    coercePrimitives = false,
+    lowercaseHeaderKeys = false,
+    securityHeaders = [],
+  } = options;
   const sanitizedId = sanitizeIdentifier(operationId);
   const typeImports = new Set<string>();
   const schemas: string[] = [];
+
+  /* Track whether each parameter type has actual parameters */
+  const hasQuery = parameterGroups.queryParams.length > 0;
+  const hasPath = parameterGroups.pathParams.length > 0;
+  const hasHeaders =
+    parameterGroups.headerParams.length > 0 || securityHeaders.length > 0;
 
   /* Helper to build property entry using zodSchemaToCode; fallback to z.string()
      For servers, applies parameter-specific transformations:
@@ -108,48 +131,69 @@ export function generateParameterSchemas(
   const querySchemaName = `${sanitizedId}QuerySchema`;
   const queryTypeName = `${sanitizedId}QuerySchema`;
 
-  if (parameterGroups.queryParams.length > 0) {
+  if (hasQuery) {
     const queryProps = parameterGroups.queryParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
     schemas.push(
       `const ${querySchemaName} = ${objectMethod}({ ${queryProps} });`,
     );
-  } else {
-    schemas.push(`const ${querySchemaName} = ${objectMethod}({});`);
   }
 
   /* Path schema */
   const pathSchemaName = `${sanitizedId}PathSchema`;
   const pathTypeName = `${sanitizedId}PathSchema`;
 
-  if (parameterGroups.pathParams.length > 0) {
+  if (hasPath) {
     const pathProps = parameterGroups.pathParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
     schemas.push(
       `const ${pathSchemaName} = ${objectMethod}({ ${pathProps} });`,
     );
-  } else {
-    schemas.push(`const ${pathSchemaName} = ${objectMethod}({});`);
   }
 
   /* Headers schema */
   const headersSchemaName = `${sanitizedId}HeadersSchema`;
   const headersTypeName = `${sanitizedId}HeadersSchema`;
 
-  if (parameterGroups.headerParams.length > 0) {
+  // Only security overrides go into the headers schema, not global security headers
+  const securityOverrideHeaders = securityHeaders.filter((sh) => sh.isOverride);
+  const hasSecurityOverrides = securityOverrideHeaders.length > 0;
+  const hasCombinedHeaders = hasHeaders || hasSecurityOverrides;
+
+  if (hasCombinedHeaders) {
     const headerProps = parameterGroups.headerParams
       .map((p) => buildProp(p.name, p))
       .join(", ");
+
+    /* Add security override headers to the schema (always required) */
+    const securityHeaderProps = securityOverrideHeaders
+      .map((sh) => {
+        const name = lowercaseHeaderKeys
+          ? sh.headerName.toLowerCase()
+          : sh.headerName;
+        // Security override headers are always required
+        const zodCode = "z.string()";
+        return `${JSON.stringify(name)}: ${zodCode}`;
+      })
+      .join(", ");
+
+    const allHeaderProps = [headerProps, securityHeaderProps]
+      .filter(Boolean)
+      .join(", ");
+
     schemas.push(
-      `const ${headersSchemaName} = ${headerObjectMethod}({ ${headerProps} });`,
+      `const ${headersSchemaName} = ${headerObjectMethod}({ ${allHeaderProps} });`,
     );
-  } else {
-    schemas.push(`const ${headersSchemaName} = ${headerObjectMethod}({});`);
   }
 
   return {
+    hasParameters: {
+      hasHeaders,
+      hasPath,
+      hasQuery,
+    },
     schemaCode: schemas.join("\n"),
     schemaNames: {
       headersSchema: headersSchemaName,

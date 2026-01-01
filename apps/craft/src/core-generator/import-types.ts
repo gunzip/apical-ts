@@ -3,12 +3,15 @@
  */
 
 export interface ImportInfo {
+  readonly alias?: string; // For aliased imports (e.g., clientRoute as testParameterWithDashClientRoute)
   readonly filePath?: string; // For explicit file paths
   readonly isSchema?: boolean; // Whether it's a schema (e.g., QuerySchema) vs type (e.g., Query)
   readonly name: string;
-  readonly operationId?: string; // For parameter imports
+  readonly operationId?: string; // For parameter imports or route imports
   readonly parameterType?: ParameterType; // For parameter imports
-  readonly type: "config" | "parameter" | "schema" | "zod";
+  readonly requestMapName?: string; // For route imports
+  readonly responseMapName?: string; // For route imports
+  readonly type: "config" | "parameter" | "route" | "schema" | "zod";
 }
 
 export interface ParameterImportGroup {
@@ -21,6 +24,26 @@ export type ParameterType = "Headers" | "Path" | "Query";
 export class ImportManager {
   private importKeys = new Set<string>();
   private imports: ImportInfo[] = [];
+
+  /**
+   * Adds import for clientRoute from route file
+   */
+  addClientRouteImport(operationId: string): void {
+    const clientRouteName = `${operationId}ClientRoute`;
+    const importInfo: ImportInfo = {
+      alias: clientRouteName,
+      filePath: `../routes/${operationId}.js`,
+      name: "clientRoute",
+      operationId,
+      type: "route",
+    };
+    const key = this.generateKey(importInfo);
+
+    if (!this.importKeys.has(key)) {
+      this.importKeys.add(key);
+      this.imports.push(importInfo);
+    }
+  }
 
   addConfigImport(configName: string): void {
     const importInfo: ImportInfo = {
@@ -92,6 +115,45 @@ export class ImportManager {
     }
   }
 
+  /**
+   * Adds import from route file (requestMap, responseMap, and potentially response union type)
+   */
+  addRouteImport(
+    operationId: string,
+    requestMapName: string,
+    responseMapName: string,
+  ): void {
+    // Import request map (both type and value with same name, distinguished by TypeScript automatically)
+    const requestMapImportInfo: ImportInfo = {
+      filePath: `../routes/${operationId}.js`,
+      name: requestMapName,
+      operationId,
+      requestMapName,
+      type: "route",
+    };
+    const requestMapKey = this.generateKey(requestMapImportInfo);
+
+    if (!this.importKeys.has(requestMapKey)) {
+      this.importKeys.add(requestMapKey);
+      this.imports.push(requestMapImportInfo);
+    }
+
+    // Import response map (both type and value with same name)
+    const responseMapImportInfo: ImportInfo = {
+      filePath: `../routes/${operationId}.js`,
+      name: responseMapName,
+      operationId,
+      responseMapName,
+      type: "route",
+    };
+    const responseMapKey = this.generateKey(responseMapImportInfo);
+
+    if (!this.importKeys.has(responseMapKey)) {
+      this.importKeys.add(responseMapKey);
+      this.imports.push(responseMapImportInfo);
+    }
+  }
+
   addSchemaImport(schemaName: string): void {
     const importInfo: ImportInfo = {
       filePath: `../schemas/${schemaName}.js`,
@@ -155,6 +217,10 @@ export class ImportManager {
     );
   }
 
+  getRouteImports(): ImportInfo[] {
+    return this.imports.filter((imp) => imp.type === "route");
+  }
+
   getSchemaImports(): ImportInfo[] {
     return this.imports.filter((imp) => imp.type === "schema");
   }
@@ -171,6 +237,8 @@ export class ImportManager {
       importInfo.operationId,
       importInfo.parameterType,
       importInfo.isSchema?.toString(),
+      importInfo.requestMapName,
+      importInfo.responseMapName,
     ];
     return parts.filter(Boolean).join("|");
   }

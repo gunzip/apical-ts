@@ -4,6 +4,12 @@ import { sanitizeIdentifier } from "../../schema-generator/utils.js";
  * Template parameters for route metadata generation
  */
 export interface RouteMetadataTemplateParams {
+  hasHeaders: boolean;
+  hasPath: boolean;
+  /** Flags indicating which parameter types have actual parameters */
+  hasQuery: boolean;
+  isHeadersOptional: boolean;
+  isQueryOptional: boolean;
   /** HTTP method in lowercase (e.g., "get", "post") */
   method: string;
   operationId: string;
@@ -22,6 +28,11 @@ export function renderRouteMetadata(
   params: RouteMetadataTemplateParams,
 ): string {
   const {
+    hasHeaders,
+    hasPath,
+    hasQuery,
+    isHeadersOptional,
+    isQueryOptional,
     method,
     operationId,
     pathKey,
@@ -33,13 +44,18 @@ export function renderRouteMetadata(
 
   const sanitizedId = sanitizeIdentifier(operationId);
 
-  /* Import parameter schemas from schemas directory */
+  /* Import parameter schemas from schemas directory only if they exist */
   const parsedParamsName = `${sanitizedId}ParsedParams`;
   const serverParsedParamsName = `${sanitizedId}ServerParsedParams`;
-  const parameterImports = `import {
+
+  /* Only generate import if at least one parameter type exists */
+  const hasAnyParams = hasQuery || hasPath || hasHeaders;
+  const parameterImports = hasAnyParams
+    ? `import {
   ${parsedParamsName},
   ${serverParsedParamsName},
-} from "../schemas/${sanitizedId}Parameters.js";`;
+} from "../schemas/${sanitizedId}Parameters.js";`
+    : "";
 
   /* Build request/response maps if needed */
   const mapsCode = [requestMapCode, responseMapCode]
@@ -55,6 +71,10 @@ export function renderRouteMetadata(
     ? `${sanitizedId}RequestMap`
     : "{}";
 
+  /* Build params object dynamically based on which parameter types exist */
+  const clientParamsValue = hasAnyParams ? parsedParamsName : "undefined";
+  const serverParamsValue = hasAnyParams ? serverParsedParamsName : "undefined";
+
   const routeObjects = `const baseRoute = {
   path: "${pathKey}",
   method: "${method}",
@@ -65,12 +85,16 @@ export function renderRouteMetadata(
 
 export const clientRoute = {
   ...baseRoute,
-  params: ${parsedParamsName},
+  params: ${clientParamsValue},
+  isQueryOptional: ${isQueryOptional},
+  isHeadersOptional: ${isHeadersOptional},
 } as const;
 
 export const serverRoute = {
   ...baseRoute,
-  params: ${serverParsedParamsName},
+  params: ${serverParamsValue},
+  isQueryOptional: ${isQueryOptional},
+  isHeadersOptional: ${isHeadersOptional},
 } as const;`;
 
   /* Combine all parts */

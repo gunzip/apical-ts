@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-import type { OperationMetadata } from "../client-generator/operation-extractor.js";
+import type { OperationMetadata } from "../shared/operation-extractor.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 

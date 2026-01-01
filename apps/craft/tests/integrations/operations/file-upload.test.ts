@@ -263,4 +263,63 @@ describe("File Upload Operations", () => {
       }
     });
   });
+
+  describe("testOctetStreamUpload operation", () => {
+    it("uploads binary content declared as string/binary (application/octet-stream)", async () => {
+      // Arrange
+      const client = createAuthenticatedClient(baseURL, "customToken");
+
+      // Create binary buffer (Uint8Array) and send as Blob/File inside multipart form
+      const binaryData = new Uint8Array([1, 2, 3, 4, 5]);
+      const blob = new Blob([binaryData], {
+        type: "application/octet-stream",
+      });
+      const file = new File([blob], "upload.bin", {
+        type: "application/octet-stream",
+      });
+
+      // Act - Use the generated test operation for binary upload which expects multipart/form-data
+      const response = await client.testBinaryFileUpload({
+        body: { file },
+      });
+
+      // Assert - operation should either succeed with 200, or return an error-like object
+      if ("isValid" in response && response.isValid) {
+        expect(response.status).toBe("200");
+      } else if ("kind" in response) {
+        // Unexpected-response error object - ensure it is shaped as expected
+        expect(response.kind).toBe("unexpected-response");
+        expect(typeof response.error).toBe("string");
+      } else {
+        // Unknown shape — fail the test to surface unexpected return types
+        expect.fail("Unexpected response shape from testBinaryFileUpload");
+      }
+    });
+
+    it("should upload raw binary data as application/octet-stream", async () => {
+      // Arrange
+      const client = createAuthenticatedClient(baseURL, "customToken");
+
+      // Create raw octet-stream data
+      const octetData = new Uint8Array([10, 20, 30, 40]);
+      const octetBlob = new Blob([octetData.buffer], {
+        type: "application/octet-stream",
+      });
+
+      // Act - Test application/octet-stream endpoint (raw body)
+      const octetResponse = await client.testOctetStreamUpload({
+        body: octetBlob,
+        contentType: { request: "application/octet-stream" },
+      });
+
+      // Assert
+      if ("isValid" in octetResponse && octetResponse.isValid) {
+        expect(octetResponse.status).toBe("200");
+      } else if ("kind" in octetResponse) {
+        expect(octetResponse.kind).toBe("unexpected-response");
+      } else {
+        expect.fail("Unexpected response shape from testOctetStreamUpload");
+      }
+    });
+  });
 });

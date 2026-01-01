@@ -9,9 +9,9 @@ import {
 
 import {
   extractResponseContentTypes,
+  resolveResponse,
   type ResponseContentTypes,
-} from "../client-generator/operation-extractor.js";
-import { resolveResponse } from "../client-generator/utils.js";
+} from "./operation-utils.js";
 import { resolveSchemaTypeName } from "./schema-type-resolver.js";
 
 /**

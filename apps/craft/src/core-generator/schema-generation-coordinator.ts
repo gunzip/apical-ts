@@ -63,10 +63,6 @@ export async function generateSchemas(
   extraProps: ExtraPropsMode,
   profiler?: Profiler,
 ): Promise<void> {
-  if (!openApiDoc.components?.schemas) {
-    return;
-  }
-
   const schemasDir = path.join(output, "schemas");
   await fs.mkdir(schemasDir, { recursive: true });
 
@@ -76,7 +72,7 @@ export async function generateSchemas(
     generateServer,
     limit,
     openApiDoc,
-    resolvedSchemas: openApiDoc.components.schemas,
+    resolvedSchemas: openApiDoc.components?.schemas ?? {},
     schemasDir,
   };
 

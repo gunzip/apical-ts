@@ -56,24 +56,32 @@ function buildImportStatements(
     `import { ${configImports.valueImports.join(", ")} } from "./config.js";`,
   );
 
-  /* Add Zod import */
-  if (importManager.hasZodImport()) {
+  /* Add Zod import if needed (either explicit via ImportManager or implicit via z.infer usage) */
+  if (importManager.hasZodImport() || functionCode?.includes("z.infer")) {
     imports.push(`import * as z from "zod";`);
   }
 
-  /* Add schema imports */
-  for (const schemaImport of importManager.getSchemaImports()) {
+  /* Schema imports removed: all schemas are available through request/response maps from routes */
+
+  /* Add route imports (requestMap, responseMap, clientRoute) */
+  const routeImportsByFile = new Map<string, Set<string>>();
+  for (const routeImport of importManager.getRouteImports()) {
+    if (!routeImport.filePath) continue;
+    if (!routeImportsByFile.has(routeImport.filePath)) {
+      routeImportsByFile.set(routeImport.filePath, new Set());
+    }
+    const importName = routeImport.alias
+      ? `${routeImport.name} as ${routeImport.alias}`
+      : routeImport.name;
+    routeImportsByFile.get(routeImport.filePath)?.add(importName);
+  }
+  for (const [filePath, names] of routeImportsByFile.entries()) {
     imports.push(
-      `import { ${schemaImport.name} } from "../schemas/${schemaImport.name}.js";`,
+      `import { ${Array.from(names).join(", ")} } from "${filePath}";`,
     );
   }
 
-  /* Add parameter imports grouped by operation */
-  for (const paramGroup of importManager.getParameterGroups()) {
-    imports.push(
-      `import { ${paramGroup.imports.join(", ")} } from "../schemas/${paramGroup.operationId}Parameters.js";`,
-    );
-  }
+  /* Parameter imports removed: parameters are available through clientRoute.params from routes */
 
   return imports;
 }

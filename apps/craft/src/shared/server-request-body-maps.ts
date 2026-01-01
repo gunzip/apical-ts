@@ -8,7 +8,7 @@ import type {
 
 import type { ContentTypeMapping } from "./types.js";
 
-import { extractRequestContentTypes } from "../client-generator/operation-extractor.js";
+import { extractRequestContentTypes } from "./operation-utils.js";
 import { resolveSchemaTypeName } from "./schema-type-resolver.js";
 
 /**

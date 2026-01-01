@@ -31,7 +31,7 @@ describe("core-generator response reference resolution", () => {
   });
 
   it("should have generated client imports for $ref response schemas", async () => {
-    // Check that client files import the generated response schemas
+    // Check that client files import from routes (not directly from schemas after refactoring)
     const clientDir = path.join(
       process.cwd(),
       "tests/integrations/generated/client",
@@ -41,7 +41,7 @@ describe("core-generator response reference resolution", () => {
     const testContent = await fs.readFile(testFile, "utf-8");
 
     expect(testContent).toContain(
-      'import { TestResponseRefWithInlineSchema200Response } from "../schemas/TestResponseRefWithInlineSchema200Response.js"',
+      'from "../routes/testResponseRefWithInlineSchema.js"',
     );
   });
 

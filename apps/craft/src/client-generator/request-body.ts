@@ -4,8 +4,6 @@ import type {
   SchemaObject,
 } from "openapi3-ts/oas31";
 
-import { isSchemaObject } from "openapi3-ts/oas31";
-
 import type {
   ContentTypeAnalysis,
   ContentTypePriority,
@@ -13,8 +11,7 @@ import type {
   RequestBodyTypeInfo,
 } from "./models/request-body-models.js";
 
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { analyzeReadWriteProperties } from "../shared/types.js";
+import { resolveSchemaTypeName } from "../shared/schema-type-resolver.js";
 import {
   DEFAULT_CONTENT_TYPE_HANDLERS,
   renderLegacyRequestBodyHandling,
@@ -182,47 +179,22 @@ export function resolveRequestBodyType(
   }
 
   const schema = content.schema;
+  const typeImports = new Set<string>();
 
-  // If it's a reference to a schema, use that as the type name
-  if (schema["$ref"]) {
-    const originalTypeName = schema["$ref"].split("/").pop();
-    const typeName = originalTypeName
-      ? sanitizeIdentifier(originalTypeName)
-      : null;
+  // Use shared resolver with "request" context for readOnly property handling
+  const typeName = resolveSchemaTypeName(
+    schema,
+    operationId,
+    "Request",
+    typeImports,
+    "request",
+    resolvedSchemas,
+  );
 
-    /* Check if the referenced schema has readOnly properties - if so, use Request variant */
-    if (typeName && resolvedSchemas && originalTypeName) {
-      const referencedSchema = resolvedSchemas[originalTypeName];
-      if (referencedSchema && isSchemaObject(referencedSchema)) {
-        const analysis = analyzeReadWriteProperties(referencedSchema);
-        if (analysis.hasReadOnly) {
-          const requestVariant = `${typeName}Request`;
-          return {
-            contentType,
-            isRequired,
-            typeImports: new Set([requestVariant]),
-            typeName: requestVariant,
-          };
-        }
-      }
-    }
-
-    return {
-      contentType,
-      isRequired,
-      typeImports: new Set([typeName || ""]),
-      typeName: typeName || null,
-    };
-  }
-
-  // For inline schemas, use the pre-generated request schema
-  // The request schema will be generated as {operationId}Request in the main generator
-  const sanitizedOperationId: string = sanitizeIdentifier(operationId);
-  const requestTypeName = `${sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1)}Request`;
   return {
     contentType,
     isRequired,
-    typeImports: new Set([requestTypeName]),
-    typeName: requestTypeName,
+    typeImports,
+    typeName,
   };
 }
