@@ -60,8 +60,6 @@ describe("extractOperationMetadata", () => {
     expect(metadata.summary).toBe("/** Create a new user */\n");
     expect(metadata.hasBody).toBe(true);
 
-    /* Type imports - after refactoring, request/response maps come from routes */
-    const routeImports = metadata.importManager.getRouteImports();
     // extractOperationMetadata only extracts metadata, not generate full code with route imports
     // So we just check that the body info is correctly set up
     expect(metadata.bodyInfo.requestMapTypeName).toBe("CreateUserRequestMap");
