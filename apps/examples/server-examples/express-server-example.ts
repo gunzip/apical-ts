@@ -123,7 +123,10 @@ const findPetsByStatusHandler: findPetsByStatusHandler = async (params) => {
     };
   }
 
-  const status = params.value.query?.status;
+  /* Access status directly from validated params.
+     If the OpenAPI spec marks 'status' as required, params.isValid will only be true
+     when status is present — using direct access avoids making status undefined. */
+  const status = params.value.query.status;
   console.log(`Finding pets by status: ${status}`);
 
   /* Filter pets by status */

@@ -34,11 +34,14 @@ describe("testAuthBearerHttp operation integration tests", () => {
     );
 
     // Act
-    const response = await supertest(app).get("/test-auth-bearer-http").query({
-      qr: "test-503",
-      qo: "",
-      cursor: "x",
-    });
+    const response = await supertest(app)
+      .get("/test-auth-bearer-http")
+      .set("Authorization", "Bearer test-token")
+      .query({
+        qr: "test-503",
+        qo: "",
+        cursor: "x",
+      });
 
     // Assert
     expect(response.status).toBe(503);
@@ -73,11 +76,14 @@ describe("testAuthBearerHttp operation integration tests", () => {
     );
 
     // Act
-    const response = await supertest(app).get("/test-auth-bearer-http").query({
-      qr: "test-504",
-      qo: "",
-      cursor: "x",
-    });
+    const response = await supertest(app)
+      .get("/test-auth-bearer-http")
+      .set("Authorization", "Bearer test-token")
+      .query({
+        qr: "test-504",
+        qo: "",
+        cursor: "x",
+      });
 
     // Assert
     expect(response.status).toBe(504);
@@ -195,6 +201,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
     // Act & Assert: Test JSON content type
     const jsonResponse = await supertest(app)
       .get("/test-auth-bearer-http")
+      .set("Authorization", "Bearer test-token")
       .query({
         qr: "json",
         qo: "",
@@ -208,6 +215,7 @@ describe("testAuthBearerHttp operation integration tests", () => {
     // Act & Assert: Test Problem+JSON content type
     const problemResponse = await supertest(app)
       .get("/test-auth-bearer-http")
+      .set("Authorization", "Bearer test-token")
       .query({
         qr: "problem",
         qo: "",

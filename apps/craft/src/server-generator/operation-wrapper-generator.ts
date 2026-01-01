@@ -9,6 +9,7 @@ import assert from "assert";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { extractParameterGroups } from "../shared/parameter-utils.js";
+import { getOperationSecuritySchemes } from "../shared/security-utils.js";
 import { renderServerOperationWrapper } from "./templates/server-operation-templates.js";
 
 /* Result of generating a server wrapper function */
@@ -96,10 +97,14 @@ function extractServerWrapperMetadata(
     doc,
   );
 
+  /* Extract security headers - same as route-generator */
+  const securityHeaders = getOperationSecuritySchemes(operation, doc);
+
   return {
     functionName: `${sanitizedId}Wrapper`,
     hasBody,
-    hasHeaders: parameterGroups.headerParams.length > 0,
+    hasHeaders:
+      parameterGroups.headerParams.length > 0 || securityHeaders.length > 0,
     hasPath: parameterGroups.pathParams.length > 0,
     hasQuery: parameterGroups.queryParams.length > 0,
     method: method.toLowerCase(),

@@ -74,28 +74,11 @@ export function renderServerOperationWrapper(
   | { kind: "headers-error"; error: z.ZodError; isValid: false }
   | { kind: "body-error"; error: z.ZodError; isValid: false };`;
 
-  /* Extract params type from serverRoute.params - build dynamically based on which params exist */
-  const parsedParamsTypeProps: string[] = [];
-  if (hasQuery) {
-    parsedParamsTypeProps.push(
-      `  query?: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.query>;`,
-    );
-  }
-  if (hasPath) {
-    parsedParamsTypeProps.push(
-      `  path: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.path>;`,
-    );
-  }
-  if (hasHeaders) {
-    parsedParamsTypeProps.push(
-      `  headers?: z.infer<typeof ${sanitizedId}RouteMetadata.params.shape.headers>;`,
-    );
-  }
-  parsedParamsTypeProps.push(`  body?: ${bodyType};`);
-
-  const parsedParamsType = `type ${sanitizedId}ParsedParams = {
-${parsedParamsTypeProps.join("\n")}
-};`;
+  /*
+   * Use parsed params type directly from route (which correctly imports from schema),
+   * extending it only with the body type.
+   */
+  const parsedParamsType = `type ${sanitizedId}ParsedParams = z.infer<typeof ${sanitizedId}RouteMetadata.params> & { body?: ${bodyType} };`;
 
   const handlerType = `export type ${sanitizedId}Handler = (
   params: { isValid: true; value: ${sanitizedId}ParsedParams } | ${sanitizedId}ValidationError,
