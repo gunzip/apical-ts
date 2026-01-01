@@ -33,7 +33,7 @@ export function renderSecurityHeaderHandling(
     const varName = toValidVariableName(header.headerName);
     const source = header.isOverride ? "params.headers" : "config.headers";
     const useOptionalChaining = !(header.isOverride && header.isRequired);
-    const optionalChain = useOptionalChaining ? "?" : "";
+    const optionalChain = useOptionalChaining ? "?." : "";
     const accessExpression = `${source}${optionalChain}['${header.headerName}']`;
 
     if (header.isRequired) {
