@@ -111,6 +111,21 @@ export function extractOperationMetadata(
     (p) => p.required !== true,
   );
 
+  const hasOptionalSurface =
+    parameterGroups.queryParams.length > 0 ||
+    parameterGroups.headerParams.length > 0 ||
+    operationSecurityHeaders.length > 0 ||
+    hasBody ||
+    bodyInfo.shouldGenerateRequestMap ||
+    bodyInfo.shouldGenerateResponseMap;
+  const isBodyRequired = !!(hasBody && bodyInfo.bodyTypeInfo?.isRequired);
+  const shouldDefaultParams =
+    hasOptionalSurface &&
+    parameterGroups.pathParams.length === 0 &&
+    isQueryOptional &&
+    isHeadersOptional &&
+    !isBodyRequired;
+
   /* Parameter schemas removed: parameters are available through clientRoute.params from routes */
 
   /* Responses & union return type */
@@ -177,6 +192,7 @@ export function extractOperationMetadata(
     parameterGroups,
     parameterStructures,
     responseHandlers,
+    shouldDefaultParams,
     summary,
   };
 }
@@ -222,6 +238,7 @@ export function generateOperationFunction(
   const parameterDeclaration = buildParameterDeclaration({
     destructuredParams: metadata.parameterStructures.destructuredParams,
     paramsInterface: metadata.parameterStructures.paramsInterface,
+    shouldDefaultParams: metadata.shouldDefaultParams,
   });
 
   /* Compute generic parameters and adjust return type if response map present */
@@ -260,6 +277,7 @@ export function generateOperationFunction(
 
   /* Render the complete function */
   const functionStr = renderOperationFunction({
+    canOmitParams: metadata.shouldDefaultParams,
     functionBodyCode: metadata.functionBodyCode,
     functionName: metadata.functionName,
     genericParams,

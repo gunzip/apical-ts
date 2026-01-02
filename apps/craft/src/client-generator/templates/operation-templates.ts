@@ -30,6 +30,7 @@ export interface GenericParamsResult {
 
 /* Renders the complete TypeScript function code from structured metadata */
 export interface OperationFunctionRenderConfig {
+  canOmitParams: boolean;
   functionBodyCode: string;
   functionName: string;
   genericParams: string;
@@ -65,12 +66,14 @@ export interface OperationMetadata {
     paramsInterface: string;
   };
   responseHandlers: ResponseHandlerResult;
+  shouldDefaultParams: boolean;
   summary: string;
 }
 
 export interface ParameterDeclarationConfig {
   destructuredParams: string;
   paramsInterface: string;
+  shouldDefaultParams: boolean;
 }
 
 /*
@@ -119,6 +122,9 @@ export function buildParameterDeclaration(
 ): string {
   if (config.destructuredParams === "{}" && config.paramsInterface === "{}") {
     return "{}: {} = {}";
+  }
+  if (config.shouldDefaultParams) {
+    return `${config.destructuredParams}: ${config.paramsInterface} = {}`;
   }
   return `${config.destructuredParams}: ${config.paramsInterface}`;
 }
@@ -233,6 +239,9 @@ export function renderOperationFunction(
   const configType = config.responseMapTypeName
     ? `GlobalConfig & { deserializers?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
     : "GlobalConfig";
+  const zeroArgOverload = config.canOmitParams
+    ? `export function ${config.functionName}${config.genericParams}(): Promise<${config.updatedReturnType}>;\n`
+    : "";
 
   return `${config.typeAliases}${config.summary}export function ${config.functionName}${config.genericParams}(
   ${overloadParamDecl},
@@ -246,7 +255,7 @@ export function ${config.functionName}${config.genericParams}(
   ${overloadParamDecl},
   config?: ${configType}
 ): Promise<${config.updatedReturnType}>;
-export async function ${config.functionName}${config.genericParams}(
+${zeroArgOverload}export async function ${config.functionName}${config.genericParams}(
   ${config.parameterDeclaration},
   config: ${configType} = globalConfig
 ): Promise<${config.updatedReturnType}> {
