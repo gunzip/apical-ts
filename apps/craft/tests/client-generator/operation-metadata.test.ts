@@ -1,4 +1,8 @@
-import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
+import type {
+  OpenAPIObject,
+  OperationObject,
+  ParameterObject,
+} from "openapi3-ts/oas31";
 
 import { describe, expect, it } from "vitest";
 
@@ -326,5 +330,183 @@ describe("extractOperationMetadata", () => {
     expect(metadata.parameterStructures.paramsInterface).toBe("{}");
     expect(metadata.hasBody).toBe(false);
     expect(metadata.bodyInfo.bodyTypeInfo).toBeUndefined();
+  });
+
+  it("should set shouldDefaultParams to true when all parameters are optional", () => {
+    const operation: OperationObject = {
+      operationId: "optionalParamsOperation",
+      parameters: [
+        {
+          name: "limit",
+          in: "query",
+          required: false,
+          schema: { type: "number" },
+        },
+        {
+          name: "X-Custom-Header",
+          in: "header",
+          required: false,
+          schema: { type: "string" },
+        },
+      ],
+      responses: {
+        "200": { description: "Success" },
+      },
+    };
+
+    const metadata = extractOperationMetadata(
+      "/items",
+      "get",
+      operation,
+      [],
+      basicDoc,
+    );
+
+    /* Should be true: no path params, no required body, all query/header params optional */
+    expect(metadata.shouldDefaultParams).toBe(true);
+  });
+
+  it("should set shouldDefaultParams to false when operation has required path parameters", () => {
+    const pathParams: ParameterObject[] = [
+      {
+        name: "id",
+        in: "path",
+        required: true,
+        schema: { type: "string" as const },
+      },
+    ];
+
+    const operation: OperationObject = {
+      operationId: "getItemById",
+      parameters: [
+        {
+          name: "limit",
+          in: "query",
+          required: false,
+          schema: { type: "number" },
+        },
+      ],
+      responses: {
+        "200": { description: "Success" },
+      },
+    };
+
+    const metadata = extractOperationMetadata(
+      "/items/{id}",
+      "get",
+      operation,
+      pathParams,
+      basicDoc,
+    );
+
+    /* Should be false: has path parameters */
+    expect(metadata.shouldDefaultParams).toBe(false);
+  });
+
+  it("should set shouldDefaultParams to false when operation has required body", () => {
+    const operation: OperationObject = {
+      operationId: "createItem",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: { name: { type: "string" } },
+            },
+          },
+        },
+      },
+      responses: {
+        "201": { description: "Created" },
+      },
+    };
+
+    const metadata = extractOperationMetadata(
+      "/items",
+      "post",
+      operation,
+      [],
+      basicDoc,
+    );
+
+    /* Should be false: has required body */
+    expect(metadata.shouldDefaultParams).toBe(false);
+  });
+
+  it("should set shouldDefaultParams to false when operation has required query parameters", () => {
+    const operation: OperationObject = {
+      operationId: "searchItems",
+      parameters: [
+        {
+          name: "query",
+          in: "query",
+          required: true,
+          schema: { type: "string" },
+        },
+      ],
+      responses: {
+        "200": { description: "Success" },
+      },
+    };
+
+    const metadata = extractOperationMetadata(
+      "/items/search",
+      "get",
+      operation,
+      [],
+      basicDoc,
+    );
+
+    /* Should be false: has required query parameter */
+    expect(metadata.shouldDefaultParams).toBe(false);
+  });
+
+  it("should set shouldDefaultParams to false when operation has required header parameters", () => {
+    const operation: OperationObject = {
+      operationId: "customHeaderOperation",
+      parameters: [
+        {
+          name: "X-Required-Header",
+          in: "header",
+          required: true,
+          schema: { type: "string" },
+        },
+      ],
+      responses: {
+        "200": { description: "Success" },
+      },
+    };
+
+    const metadata = extractOperationMetadata(
+      "/items",
+      "get",
+      operation,
+      [],
+      basicDoc,
+    );
+
+    /* Should be false: has required header parameter */
+    expect(metadata.shouldDefaultParams).toBe(false);
+  });
+
+  it("should set shouldDefaultParams to false when operation has no parameters at all", () => {
+    const operation: OperationObject = {
+      operationId: "noParamsOperation",
+      responses: {
+        "200": { description: "Success" },
+      },
+    };
+
+    const metadata = extractOperationMetadata(
+      "/items",
+      "get",
+      operation,
+      [],
+      basicDoc,
+    );
+
+    /* Should be false: no surface parameters to omit */
+    expect(metadata.shouldDefaultParams).toBe(false);
   });
 });

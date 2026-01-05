@@ -30,6 +30,9 @@ export interface GenericParamsResult {
 
 /* Renders the complete TypeScript function code from structured metadata */
 export interface OperationFunctionRenderConfig {
+  /* When true, generates a zero-argument overload allowing the function to be called without any parameters.
+     This should only be true when all parameters (path, query, headers, body) are optional,
+     enabling calls like operationName() instead of requiring operationName({}). */
   canOmitParams: boolean;
   functionBodyCode: string;
   functionName: string;
@@ -66,6 +69,9 @@ export interface OperationMetadata {
     paramsInterface: string;
   };
   responseHandlers: ResponseHandlerResult;
+  /* When true, adds a default empty object assignment to the parameter declaration,
+     enabling the parameter to be omitted in function calls. Set to true when all
+     parameters in the params object are optional. */
   shouldDefaultParams: boolean;
   summary: string;
 }

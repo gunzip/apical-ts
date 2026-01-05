@@ -111,7 +111,7 @@ export function extractOperationMetadata(
     (p) => p.required !== true,
   );
 
-  const hasOptionalSurface =
+  const hasSurfaceParams =
     parameterGroups.queryParams.length > 0 ||
     parameterGroups.headerParams.length > 0 ||
     operationSecurityHeaders.length > 0 ||
@@ -120,7 +120,7 @@ export function extractOperationMetadata(
     bodyInfo.shouldGenerateResponseMap;
   const isBodyRequired = !!(hasBody && bodyInfo.bodyTypeInfo?.isRequired);
   const shouldDefaultParams =
-    hasOptionalSurface &&
+    hasSurfaceParams &&
     parameterGroups.pathParams.length === 0 &&
     isQueryOptional &&
     isHeadersOptional &&

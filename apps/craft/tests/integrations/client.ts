@@ -17,7 +17,7 @@ export interface TestClientConfig {
  * Create a configured test client from generated operations
  */
 export function createTestClient(config: TestClientConfig) {
-  const apiConfig: GlobalConfig = {
+  const apiConfig: Omit<GlobalConfig, "forceValidation"> = {
     baseURL: config.baseURL,
     fetch: fetch,
     headers: {
