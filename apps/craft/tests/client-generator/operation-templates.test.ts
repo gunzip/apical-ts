@@ -152,6 +152,7 @@ describe("operation-templates", () => {
         destructuredParams: "{ path, query, body }",
         paramsInterface:
           "{ path: { id: string }; query?: { limit?: number }; body: User }",
+        shouldDefaultParams: false,
       };
 
       const result = buildParameterDeclaration(config);
@@ -165,6 +166,7 @@ describe("operation-templates", () => {
       const config: ParameterDeclarationConfig = {
         destructuredParams: "{}",
         paramsInterface: "{}",
+        shouldDefaultParams: false,
       };
 
       const result = buildParameterDeclaration(config);
@@ -176,11 +178,24 @@ describe("operation-templates", () => {
       const config: ParameterDeclarationConfig = {
         destructuredParams: "{}",
         paramsInterface: "{ query?: { limit?: number } }",
+        shouldDefaultParams: false,
       };
 
       const result = buildParameterDeclaration(config);
 
       expect(result).toBe("{}: { query?: { limit?: number } }");
+    });
+
+    it("should add default assignment when params can be omitted", () => {
+      const config: ParameterDeclarationConfig = {
+        destructuredParams: "params",
+        paramsInterface: "{ query?: { limit?: number } }",
+        shouldDefaultParams: true,
+      };
+
+      const result = buildParameterDeclaration(config);
+
+      expect(result).toBe("params: { query?: { limit?: number } } = {}");
     });
   });
 
@@ -194,6 +209,7 @@ describe("operation-templates", () => {
         parameterDeclaration:
           "{ body }: { body: TestRequestMap[TRequestContentType] }",
         parameterInterface: "{ body: TestRequestMap[TRequestContentType] }",
+        canOmitParams: false,
         updatedReturnType: 'ApiResponse<"200", User>',
         functionBodyCode: "return fetchApi('/test', { method: 'POST', body });",
         typeAliases:
@@ -233,6 +249,7 @@ describe("operation-templates", () => {
         genericParams: "<TForceValidation extends boolean = true>",
         parameterDeclaration: "{}: {} = {}",
         parameterInterface: "{}",
+        canOmitParams: false,
         updatedReturnType: 'ApiResponse<"200", User>',
         functionBodyCode: "return fetchApi('/test');",
         typeAliases: "",
@@ -255,6 +272,44 @@ describe("operation-templates", () => {
           '): Promise<ApiResponse<"200", User>>;\n' +
           "export async function testOperation<TForceValidation extends boolean = true>(\n" +
           "  {}: {} = {},\n" +
+          "  config: GlobalConfig = globalConfig\n" +
+          '): Promise<ApiResponse<"200", User>> {\n' +
+          "  return fetchApi('/test');\n" +
+          "}",
+      );
+    });
+
+    it("should emit overload without params when they can be omitted", () => {
+      const config: OperationFunctionRenderConfig = {
+        functionName: "testOperation",
+        summary: "",
+        genericParams: "<TForceValidation extends boolean = true>",
+        parameterDeclaration: "params: { query?: { limit?: number } } = {}",
+        parameterInterface: "{ query?: { limit?: number } }",
+        canOmitParams: true,
+        updatedReturnType: 'ApiResponse<"200", User>',
+        functionBodyCode: "return fetchApi('/test');",
+        typeAliases: "",
+      };
+
+      const result = renderOperationFunction(config);
+
+      expect(result).toBe(
+        "export function testOperation<TForceValidation extends boolean = true>(\n" +
+          "  params: { query?: { limit?: number } },\n" +
+          "  config: GlobalConfig & { forceValidation: true }\n" +
+          '): Promise<ApiResponse<"200", User>>;\n' +
+          "export function testOperation<TForceValidation extends boolean = true>(\n" +
+          "  params: { query?: { limit?: number } },\n" +
+          "  config: GlobalConfig & { forceValidation: false }\n" +
+          '): Promise<ApiResponse<"200", User>>;\n' +
+          "export function testOperation<TForceValidation extends boolean = true>(\n" +
+          "  params: { query?: { limit?: number } },\n" +
+          "  config?: GlobalConfig\n" +
+          '): Promise<ApiResponse<"200", User>>;\n' +
+          'export function testOperation<TForceValidation extends boolean = true>(): Promise<ApiResponse<"200", User>>;\n' +
+          "export async function testOperation<TForceValidation extends boolean = true>(\n" +
+          "  params: { query?: { limit?: number } } = {},\n" +
           "  config: GlobalConfig = globalConfig\n" +
           '): Promise<ApiResponse<"200", User>> {\n' +
           "  return fetchApi('/test');\n" +

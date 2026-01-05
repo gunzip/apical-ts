@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createUnauthenticatedClient } from "./client.js";
 import { getRandomPort, MockServer } from "./setup.js";
 import { Profile } from "./generated/schemas/Profile.js";
+import { CreateUserWithRequestBodiesRequestMap } from "./generated/client/createUserWithRequestBodies.js";
 
 describe("CreateUserWithRequestBodies Operation Tests", () => {
   let mockServer: MockServer;
@@ -37,9 +38,11 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
 
       // This verifies that the operation accepts the correct parameters
       // The function should accept a body parameter of type Profile
-      const validBody: Parameters<
-        typeof client.createUserWithRequestBodies
-      >[0]["body"] = {
+      type CreateUserBody = import("zod").infer<
+        (typeof CreateUserWithRequestBodiesRequestMap)["application/json"]
+      >;
+
+      const validBody: CreateUserBody = {
         fiscal_code: "SPNDNL80R13C555X",
         family_name: "Doe",
         has_profile: true,

@@ -30,6 +30,10 @@ export interface GenericParamsResult {
 
 /* Renders the complete TypeScript function code from structured metadata */
 export interface OperationFunctionRenderConfig {
+  /* When true, generates a zero-argument overload allowing the function to be called without any parameters.
+     This should only be true when all parameters (path, query, headers, body) are optional,
+     enabling calls like operationName() instead of requiring operationName({}). */
+  canOmitParams: boolean;
   functionBodyCode: string;
   functionName: string;
   genericParams: string;
@@ -65,12 +69,17 @@ export interface OperationMetadata {
     paramsInterface: string;
   };
   responseHandlers: ResponseHandlerResult;
+  /* When true, adds a default empty object assignment to the parameter declaration,
+     enabling the parameter to be omitted in function calls. Set to true when all
+     parameters in the params object are optional. */
+  shouldDefaultParams: boolean;
   summary: string;
 }
 
 export interface ParameterDeclarationConfig {
   destructuredParams: string;
   paramsInterface: string;
+  shouldDefaultParams: boolean;
 }
 
 /*
@@ -119,6 +128,9 @@ export function buildParameterDeclaration(
 ): string {
   if (config.destructuredParams === "{}" && config.paramsInterface === "{}") {
     return "{}: {} = {}";
+  }
+  if (config.shouldDefaultParams) {
+    return `${config.destructuredParams}: ${config.paramsInterface} = {}`;
   }
   return `${config.destructuredParams}: ${config.paramsInterface}`;
 }
@@ -233,6 +245,9 @@ export function renderOperationFunction(
   const configType = config.responseMapTypeName
     ? `GlobalConfig & { deserializers?: ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} }`
     : "GlobalConfig";
+  const zeroArgOverload = config.canOmitParams
+    ? `export function ${config.functionName}${config.genericParams}(): Promise<${config.updatedReturnType}>;\n`
+    : "";
 
   return `${config.typeAliases}${config.summary}export function ${config.functionName}${config.genericParams}(
   ${overloadParamDecl},
@@ -246,7 +261,7 @@ export function ${config.functionName}${config.genericParams}(
   ${overloadParamDecl},
   config?: ${configType}
 ): Promise<${config.updatedReturnType}>;
-export async function ${config.functionName}${config.genericParams}(
+${zeroArgOverload}export async function ${config.functionName}${config.genericParams}(
   ${config.parameterDeclaration},
   config: ${configType} = globalConfig
 ): Promise<${config.updatedReturnType}> {
