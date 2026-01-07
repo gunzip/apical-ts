@@ -126,43 +126,6 @@ importers:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.18.4)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.1)
 
-  apps/examples:
-    dependencies:
-      express:
-        specifier: ^5.1.0
-        version: 5.1.0
-      neverthrow:
-        specifier: ^8.2.0
-        version: 8.2.0
-      zocker:
-        specifier: ^3.0.0
-        version: 3.0.0(zod@4.1.8)
-      zod:
-        specifier: ^4.0.0
-        version: 4.1.8
-    devDependencies:
-      '@apical-ts/craft':
-        specifier: workspace:*
-        version: link:../craft
-      '@tsconfig/node22':
-        specifier: 'catalog:'
-        version: 22.0.2
-      '@types/express':
-        specifier: ^5.0.3
-        version: 5.0.3
-      '@types/js-yaml':
-        specifier: ^4.0.9
-        version: 4.0.9
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.18.4
-      prettier:
-        specifier: 'catalog:'
-        version: 3.6.2
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.2
-
   apps/website:
     dependencies:
       '@docusaurus/core':
@@ -196,6 +159,43 @@ importers:
       '@docusaurus/types':
         specifier: ^3.9.2
         version: 3.9.2(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.6.2
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.2
+
+  examples/express:
+    dependencies:
+      express:
+        specifier: ^5.1.0
+        version: 5.1.0
+      neverthrow:
+        specifier: ^8.2.0
+        version: 8.2.0
+      zocker:
+        specifier: ^3.0.0
+        version: 3.0.0(zod@4.3.5)
+      zod:
+        specifier: ^4.0.0
+        version: 4.3.5
+    devDependencies:
+      '@apical-ts/craft':
+        specifier: workspace:*
+        version: link:../../apps/craft
+      '@tsconfig/node22':
+        specifier: 'catalog:'
+        version: 22.0.2
+      '@types/express':
+        specifier: ^5.0.3
+        version: 5.0.3
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.18.4
       prettier:
         specifier: 'catalog:'
         version: 3.6.2
@@ -2385,11 +2385,6 @@ packages:
   '@rollup/rollup-linux-s390x-gnu@4.54.0':
     resolution: {integrity: sha512-2AdWy5RdDF5+4YfG/YesGDDtbyJlC9LHmL6rZw6FurBJ5n4vFGupsOBGfwMRjBYH7qRQowT8D/U4LoSvVwOhSQ==}
     cpu: [s390x]
-    os: [linux]
-
-  '@rollup/rollup-linux-x64-gnu@4.50.2':
-    resolution: {integrity: sha512-9Jie/At6qk70dNIcopcL4p+1UirusEtznpNtcq/u/C5cC4HBX7qSGsYIcG6bdxj15EYWhHiu02YvmdPzylIZlA==}
-    cpu: [x64]
     os: [linux]
 
   '@rollup/rollup-linux-x64-gnu@4.54.0':
@@ -7697,9 +7692,6 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  zod@4.1.8:
-    resolution: {integrity: sha512-5R1P+WwQqmmMIEACyzSvo4JXHY5WiAFHRMg+zBZKgKS+Q1viRa0C1hmUKtHltoIFKtIdki3pRxkmpP74jnNYHQ==}
-
   zod@4.2.1:
     resolution: {integrity: sha512-0wZ1IRqGGhMP76gLqz8EyfBXKk0J2qo2+H3fi4mcUP/KtTocoX08nmIAHl1Z2kJIZbZee8KOpBCSNPRgauucjw==}
 
@@ -10349,9 +10341,6 @@ snapshots:
   '@rollup/rollup-linux-s390x-gnu@4.54.0':
     optional: true
 
-  '@rollup/rollup-linux-x64-gnu@4.50.2':
-    optional: true
-
   '@rollup/rollup-linux-x64-gnu@4.54.0':
     optional: true
 
@@ -10926,7 +10915,7 @@ snapshots:
   '@typescript-eslint/eslint-plugin@8.44.0(@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3))(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
+      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.9.2)
       '@typescript-eslint/scope-manager': 8.44.0
       '@typescript-eslint/type-utils': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
       '@typescript-eslint/utils': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
@@ -10940,7 +10929,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)':
+  '@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.9.2)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.44.0
       '@typescript-eslint/types': 8.44.0
@@ -10948,7 +10937,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.44.0
       debug: 4.4.3
       eslint: 9.35.0(jiti@1.21.7)
-      typescript: 5.8.3
+      typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
 
@@ -14150,7 +14139,7 @@ snapshots:
 
   neverthrow@8.2.0:
     optionalDependencies:
-      '@rollup/rollup-linux-x64-gnu': 4.50.2
+      '@rollup/rollup-linux-x64-gnu': 4.54.0
 
   no-case@3.0.4:
     dependencies:
@@ -16088,7 +16077,7 @@ snapshots:
   typescript-eslint@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3):
     dependencies:
       '@typescript-eslint/eslint-plugin': 8.44.0(@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3))(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
-      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
+      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.9.2)
       '@typescript-eslint/typescript-estree': 8.44.0(typescript@5.8.3)
       '@typescript-eslint/utils': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
       eslint: 9.35.0(jiti@1.21.7)
@@ -16604,13 +16593,11 @@ snapshots:
 
   yocto-queue@1.2.2: {}
 
-  zocker@3.0.0(zod@4.1.8):
+  zocker@3.0.0(zod@4.3.5):
     dependencies:
       '@faker-js/faker': 10.0.0
       randexp: 0.5.3
-      zod: 4.1.8
-
-  zod@4.1.8: {}
+      zod: 4.3.5
 
   zod@4.2.1: {}
 

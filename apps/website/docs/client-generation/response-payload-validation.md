@@ -27,7 +27,7 @@ Don't worry if it seems confusing at first, type inference will help you.
 ## Examples
 
 ```ts
-// ../examples/client-examples/force-validation.ts
+// ../../examples/express/client-examples/force-validation.ts
 
 import {
   configureOperations,

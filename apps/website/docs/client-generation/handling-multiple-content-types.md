@@ -52,7 +52,7 @@ The generated operation function will accept a `contentType` object to select
 the body and/or response format:
 
 ```ts
-// ../examples/client-examples/multi-content-types.ts#L5-L68
+// ../../examples/express/client-examples/multi-content-types.ts#L5-L68
 
 const parseXml = () => {
   // Implement XML deserialization logic here
