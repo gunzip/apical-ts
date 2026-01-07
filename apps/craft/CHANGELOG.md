@@ -1,5 +1,12 @@
 # @apical-ts/craft
 
+## 0.11.2
+
+### Patch Changes
+
+- Fix NPM package publish action
+- 9db49a8: Fix package generation for NPM registry
+
 ## 0.11.1
 
 ### Patch Changes

@@ -41,9 +41,8 @@ jobs:
       - name: Security audit
         run: pnpm audit --audit-level moderate
 
-      # Build happens in pre-publish hook
-      # - name: Build project
-      #   run: pnpm run build
+      - name: Build all packages
+        run: pnpm run build
 
       - name: Bump version
         if: github.event.inputs.version_bump
