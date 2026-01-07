@@ -14,7 +14,7 @@ import {
   renameSanitizationConflictingSchemas,
   resolveRequestBodies,
 } from "@apical-ts/core-utils";
-import { generateRoutes } from "@apical-ts/route-generator";
+import { generateRoutes as generateRouteMetadata } from "@apical-ts/route-generator";
 import { generateServerOperations } from "@apical-ts/server-generator";
 import $RefParser from "@apidevtools/json-schema-ref-parser";
 import { promises as fs } from "fs";
@@ -50,6 +50,7 @@ export interface GenerationOptions {
    */
   extraProps?: ExtraPropsMode;
   generateClient: boolean;
+  generateRoutes?: boolean;
   generateServer?: boolean;
   input: string;
   output: string;
@@ -58,13 +59,34 @@ export interface GenerationOptions {
 }
 
 /**
- * Generates TypeScript schemas and optional API client from OpenAPI specification
+ * Generates TypeScript schemas, and optionally API client, route metadata, and server operations from an OpenAPI specification.
+ *
+ * This function supports the following generation options:
+ * - **Schemas**: Generates Zod schemas for runtime validation.
+ * - **Client**: Generates a fully-typed API client.
+ * - **Routes**: Generates route metadata for server-side integration.
+ * - **Server**: Generates server-side operation handlers.
+ *
+ * @param options - Configuration options for code generation.
+ * @example
+ * ```javascript
+ * const options: GenerationOptions = {
+ *   input: './openapi.yaml',
+ *   output: './generated',
+ *   generateClient: true,
+ *   generateRoutes: true,
+ *   generateServer: false,
+ *   concurrency: 10,
+ *   extraProps: 'strip'
+ * };
+ * ```
  */
 export async function generate(options: GenerationOptions): Promise<void> {
   const {
     concurrency = DEFAULT_CONCURRENCY,
     extraProps = "strip",
     generateClient: genClient,
+    generateRoutes: genRoutes = false,
     generateServer: genServer = false,
     input,
     output,
@@ -95,6 +117,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
     output,
     concurrency,
     genClient,
+    genRoutes,
     genServer,
     profiler,
   );
@@ -114,16 +137,17 @@ async function generateAllOperations(
   output: string,
   concurrency: number,
   generateClient: boolean,
+  generateRoutes: boolean,
   generateServer: boolean,
   profiler?: Profiler,
 ): Promise<void> {
   const operationPromises: Promise<void>[] = [];
 
-  /* Generate routes if either client or server is enabled */
-  if (generateClient || generateServer) {
+  /* Generate routes if explicitly requested or if client/server is enabled */
+  if (generateRoutes || generateClient || generateServer) {
     profiler?.start("routes");
     operationPromises.push(
-      generateRoutes(openApiDoc, output, concurrency).finally(() => {
+      generateRouteMetadata(openApiDoc, output, concurrency).finally(() => {
         profiler?.end("routes");
       }),
     );
