@@ -208,7 +208,7 @@ describe("force validation flag", () => {
       const testFile = await readFile(
         join(
           __dirname,
-          "../../test-core/tests/integrations/createDocument-reference.test.ts",
+          "../../../apps/craft/tests/integrations/createDocument-reference.test.ts",
         ),
         "utf-8",
       );
