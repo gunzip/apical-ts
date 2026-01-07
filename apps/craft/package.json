@@ -32,7 +32,7 @@
     "generate:tests": "node dist/index.js generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --client --server",
     "clean": "rm -rf tests/integrations/generated",
     "start": "node dist/index.js",
-    "prepublishOnly": "turbo run build --filter=@apical-ts/craft"
+    "prepublishOnly": "pnpm run build"
   },
   "keywords": [
     "openapi",
@@ -46,6 +46,10 @@
   "author": "gunzip",
   "license": "MIT",
   "devDependencies": {
+    "@apical-ts/core-utils": "workspace:*",
+    "@apical-ts/client-generator": "workspace:*",
+    "@apical-ts/server-generator": "workspace:*",
+    "@apical-ts/route-generator": "workspace:*",
     "@pagopa/eslint-config": "^5.0.0",
     "@stoplight/prism-cli": "^5.14.2",
     "@tsconfig/node22": "catalog:",
@@ -63,10 +67,6 @@
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^14.2.0",
-    "@apical-ts/core-utils": "workspace:*",
-    "@apical-ts/client-generator": "workspace:*",
-    "@apical-ts/server-generator": "workspace:*",
-    "@apical-ts/route-generator": "workspace:*",
     "commander": "^14.0.0",
     "openapi3-ts": "^4.3.0",
     "zod": "^4.1.8"
