@@ -13,10 +13,12 @@ const apiDir = path.join(root, "generated");
 const hooksDir = path.join(apiDir, "react-query-hooks");
 const indexFile = path.join(apiDir, "react-query-hooks", "index.ts");
 
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 async function main() {
-  const clientExports = Object.keys(importedClient).filter(
-    (k) => typeof (importedClient as any)[k] === "function",
-  );
+  const clientExports = (
+    Object.keys(importedClient) as (keyof typeof importedClient)[]
+  ).filter((k) => typeof importedClient[k] === "function");
   const routesObj = importedRoutes.routes;
 
   const ops = clientExports.map((fnName) => {
@@ -39,8 +41,8 @@ async function main() {
     limit(async () => {
       const fnName = op.name;
       const method = op.method;
-      const hookQueryName = `use${fnName}`;
-      const hookMutationName = `use${fnName}Mutation`;
+      const hookQueryName = `use${capitalize(fnName)}`;
+      const hookMutationName = `use${capitalize(fnName)}Mutation`;
 
       const fileName = `${fnName}.ts`;
       const filePath = path.join(hooksDir, fileName);
@@ -70,8 +72,9 @@ async function main() {
         body.push(`  type Result = Awaited<ReturnType<typeof ops.${fnName}>>;`);
         body.push(`  type Variables = Parameters<typeof ops.${fnName}>[0];`);
         body.push(`  const qc = useQueryClient();`);
+        body.push(`  return useMutation<Result, unknown, Variables>({`);
         body.push(
-          `  return useMutation<Result, unknown, Variables>((variables: Variables) => ops.${fnName}(variables), {`,
+          `    mutationFn: (variables: Variables) => ops.${fnName}(variables),`,
         );
         body.push(`    onSuccess: () => qc.invalidateQueries(),`);
         body.push(`  });`);
@@ -87,7 +90,9 @@ ${body.join("\n\n")}
       console.log("Wrote", filePath);
 
       // Export compiled JS files for ESM compatibility in the published output
-      indexExports.push(`export * from './${fileName.replace(/\.ts$/, "")}.js';`);
+      indexExports.push(
+        `export * from './${fileName.replace(/\.ts$/, "")}.js';`,
+      );
     }),
   );
 

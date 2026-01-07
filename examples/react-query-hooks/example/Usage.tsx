@@ -1,9 +1,6 @@
 import React from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFindPetsByStatus } from "../generated/react-query-hooks/findPetsByStatus.js";
 import { useAddPetMutation } from "../generated/react-query-hooks/addPet.js";
-
-const qc = new QueryClient();
 
 export default function Usage() {
   const { data, error, isLoading } = useFindPetsByStatus({
@@ -24,14 +21,12 @@ export default function Usage() {
   }
 
   return (
-    <QueryClientProvider client={qc}>
-      <div>
-        <h1>Pets</h1>
-        {isLoading && <div>Loading...</div>}
-        {error != null && <div>Error</div>}
-        <pre>{JSON.stringify(data, null, 2)}</pre>
-        <button onClick={handleAdd}>Add</button>
-      </div>
-    </QueryClientProvider>
+    <div>
+      <h1>Pets</h1>
+      {isLoading && <div>Loading...</div>}
+      {error != null && <div>Error</div>}
+      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <button onClick={handleAdd}>Add</button>
+    </div>
   );
 }
