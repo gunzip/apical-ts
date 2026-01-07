@@ -49,6 +49,28 @@ importers:
 
   apps/craft:
     dependencies:
+      '@apidevtools/json-schema-ref-parser':
+        specifier: ^14.2.0
+        version: 14.2.1(@types/json-schema@7.0.15)
+      commander:
+        specifier: ^14.0.0
+        version: 14.0.1
+      js-yaml:
+        specifier: ^4.1.1
+        version: 4.1.1
+      openapi3-ts:
+        specifier: ^4.3.0
+        version: 4.5.0
+      p-limit:
+        specifier: ^7.1.0
+        version: 7.1.1
+      swagger2openapi:
+        specifier: ^7.0.8
+        version: 7.0.8
+      zod:
+        specifier: ^4.1.8
+        version: 4.2.1
+    devDependencies:
       '@apical-ts/client-generator':
         specifier: workspace:*
         version: link:../../packages/client-generator
@@ -61,19 +83,6 @@ importers:
       '@apical-ts/server-generator':
         specifier: workspace:*
         version: link:../../packages/server-generator
-      '@apidevtools/json-schema-ref-parser':
-        specifier: ^14.2.0
-        version: 14.2.1(@types/json-schema@7.0.15)
-      commander:
-        specifier: ^14.0.0
-        version: 14.0.1
-      openapi3-ts:
-        specifier: ^4.3.0
-        version: 4.5.0
-      zod:
-        specifier: ^4.1.8
-        version: 4.2.1
-    devDependencies:
       '@pagopa/eslint-config':
         specifier: ^5.0.0
         version: 5.0.0(@types/eslint@9.6.1)(eslint@9.35.0(jiti@1.21.7))(prettier@3.6.2)(vitest@4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.18.4)(jiti@1.21.7)(terser@5.44.1)(yaml@2.8.1))
