@@ -59,7 +59,27 @@ export interface GenerationOptions {
 }
 
 /**
- * Generates TypeScript schemas and optional API client from OpenAPI specification
+ * Generates TypeScript schemas, and optionally API client, route metadata, and server operations from an OpenAPI specification.
+ *
+ * This function supports the following generation options:
+ * - **Schemas**: Generates Zod schemas for runtime validation.
+ * - **Client**: Generates a fully-typed API client.
+ * - **Routes**: Generates route metadata for server-side integration.
+ * - **Server**: Generates server-side operation handlers.
+ *
+ * @param options - Configuration options for code generation.
+ * @example
+ * ```javascript
+ * const options: GenerationOptions = {
+ *   input: './openapi.yaml',
+ *   output: './generated',
+ *   generateClient: true,
+ *   generateRoutes: true,
+ *   generateServer: false,
+ *   concurrency: 10,
+ *   extraProps: 'strip'
+ * };
+ * ```
  */
 export async function generate(options: GenerationOptions): Promise<void> {
   const {
