@@ -6,17 +6,15 @@ export default function Usage() {
   const { data, error, isLoading } = useFindPetsByStatus({
     query: { status: ["available"] },
   });
-  const addPet = useAddPetMutation();
 
+  const addPet = useAddPetMutation();
   async function handleAdd() {
-    try {
-      const result = await addPet.mutateAsync({
-        body: { name: "Rex", photoUrls: [] },
-      });
-      // handle success (result typing derived from client)
-      console.log("Added pet", result);
-    } catch (err) {
-      console.error("Failed to add pet", err);
+    const result = await addPet.mutateAsync({
+      body: { name: "Rex", photoUrls: [] },
+    });
+    // API always returns 405 for this operation in the example spec
+    if (result.isValid && result.status === "405") {
+      console.log("Validation errors:");
     }
   }
 
