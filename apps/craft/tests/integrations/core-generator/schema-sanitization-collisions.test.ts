@@ -13,10 +13,7 @@ describe("schema sanitization collision detection", () => {
     // Test that the collision detection has worked by verifying the existence and structure of renamed schemas
 
     // Verify that the renamed schema files exist in the generated directory
-    const schemasDir = path.resolve(
-      __dirname,
-      "../generated/schemas",
-    );
+    const schemasDir = path.resolve(__dirname, "../generated/schemas");
     const schemaFiles = await fs.readdir(schemasDir);
 
     // Check that all the expected collision-resolved files exist
