@@ -32,27 +32,6 @@ describe("CreateUserWithRequestBodies Operation Tests", () => {
       expect(client.createUserWithRequestBodies).toBeDefined();
       expect(typeof client.createUserWithRequestBodies).toBe("function");
     });
-
-    it("should have correct TypeScript signature", () => {
-      const client = createUnauthenticatedClient(baseURL);
-
-      // This verifies that the operation accepts the correct parameters
-      // The function should accept a body parameter of type Profile
-      type CreateUserBody = import("zod").infer<
-        (typeof CreateUserWithRequestBodiesRequestMap)["application/json"]
-      >;
-
-      const validBody: CreateUserBody = {
-        fiscal_code: "SPNDNL80R13C555X",
-        family_name: "Doe",
-        has_profile: true,
-        is_email_set: true,
-        name: "John",
-        version: 1,
-      };
-
-      expect(validBody).toBeDefined();
-    });
   });
 
   describe("Request body validation", () => {

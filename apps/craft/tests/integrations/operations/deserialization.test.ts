@@ -1,8 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import {
-  createUnauthenticatedClient,
-  createAuthenticatedClient,
-} from "../client.js";
+import { createUnauthenticatedClient } from "../client.js";
 import { getRandomPort, MockServer } from "../setup.js";
 
 /*

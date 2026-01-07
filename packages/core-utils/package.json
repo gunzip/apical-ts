@@ -1,0 +1,75 @@
+{
+  "name": "@apical-ts/core-utils",
+  "version": "0.10.0",
+  "private": true,
+  "description": "Core utilities and generators for apical-ts OpenAPI tooling",
+  "main": "dist/index.js",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gunzip/apical-ts.git"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./shared": "./dist/shared/index.js",
+    "./shared/*": "./dist/shared/*.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:docs": "embedme README.md && prettier --write README.md",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck:code": "tsc --noEmit",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
+    "typecheck": "pnpm typecheck:code && pnpm typecheck:tests",
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage"
+  },
+  "keywords": [
+    "openapi",
+    "typescript",
+    "generator",
+    "utilities",
+    "zod"
+  ],
+  "author": "gunzip",
+  "license": "MIT",
+  "devDependencies": {
+    "@pagopa/eslint-config": "^5.0.0",
+    "@stoplight/prism-cli": "^5.14.2",
+    "@tsconfig/node22": "catalog:",
+    "@types/express": "^5.0.3",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "catalog:",
+    "@types/supertest": "^6.0.3",
+    "@types/swagger2openapi": "^7.0.4",
+    "@vitest/coverage-v8": "^4.0.16",
+    "embedme": "catalog:",
+    "eslint": "catalog:",
+    "express": "^5.1.0",
+    "prettier": "catalog:",
+    "supertest": "^7.1.4",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "^4.0.16"
+  },
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^14.2.0",
+    "js-yaml": "^4.1.1",
+    "openapi3-ts": "^4.3.0",
+    "p-limit": "^7.1.0",
+    "swagger2openapi": "^7.0.8",
+    "zod": "^4.1.8"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
+}

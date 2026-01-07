@@ -8,7 +8,6 @@ describe("AllOf Schema Composition Integration", () => {
   describe("Object spread optimization", () => {
     it("should generate flat object with spread syntax for compatible allOf", () => {
       // Test that AllOfTest uses object spread instead of nested intersections
-      const allOfTestType = {} as AllOfTest;
 
       // This should compile without issues if the type is properly flattened
       const validAllOfTest: AllOfTest = {

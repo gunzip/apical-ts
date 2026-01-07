@@ -1,19 +1,18 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
+import type { ExtraPropsMode } from "@apical-ts/core-utils";
+
 import { Command } from "commander";
 
-import { generate } from "./core-generator/index.js";
-import { ExtraPropsMode } from "./shared/types.js";
-
-export { analyzeReadWriteProperties, SchemaContext } from "./shared/types.js";
+import { generate } from "./generate.js";
 
 const program = new Command();
 
 program
   .name("@apical-ts/craft")
   .description("Generate TypeScript from an OpenAPI specification.")
-  .version("0.0.1");
+  .version("0.10.0");
 
 program
   .command("generate")
@@ -39,17 +38,9 @@ program
     "Control how additional properties are handled in object schemas. Options: strip (default), loose, strict",
     "strip",
   )
-  // Disable strict validation setting, this should remain strict for the server
-  // and loose for the client
-  // .option(
-  //   "--strict-validation",
-  //   "Use strict object validation (reject unknown properties)",
-  //   false,
-  // )
   .action(async (options: Record<string, unknown>) => {
     try {
       const started = process.hrtime.bigint();
-      // Map CLI option names to GenerationOptions interface
       const generationOptions = {
         extraProps: String(options.extraProps) as ExtraPropsMode,
         generateClient: Boolean(options.client),

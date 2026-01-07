@@ -31,7 +31,7 @@
       "dependsOn": ["^typecheck:generated"]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": ["^test", "generate:tests"]
     },
     "//#test:coverage": {
       "dependsOn": ["^build"],
@@ -54,7 +54,7 @@
       "outputs": ["generated"]
     },
     "generate:tests": {
-      "dependsOn": ["^generate:tests"],
+      "dependsOn": ["^build"],
       "outputs": ["tests/integrations/generated"]
     },
     "prepublishOnly": {
