@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - apps/*
+  - examples/*
 
 catalog:
   '@tsconfig/node22': ^22.0.2
