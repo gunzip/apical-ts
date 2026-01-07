@@ -48,7 +48,7 @@ framework and customize error handling as needed.
 Example usage with Express and a helper for parameter extraction:
 
 ```ts
-// ../examples/server-examples/express-server-example.ts#L62-L91
+// ../../examples/express/server-examples/express-server-example.ts#L62-L91
 
 /* Implementation of getPetById handler */
 const getPetByIdHandler: getPetByIdHandler = async (params) => {
