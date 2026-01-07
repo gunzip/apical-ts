@@ -12,6 +12,7 @@ export default defineConfig({
     "@apical-ts/route-generator",
   ],
   outDir: "dist",
+  platform: "node",
   sourcemap: true,
   target: "es2022",
 });
