@@ -18,8 +18,8 @@ pnpm run generate
 3. You can also run only the client or only the hooks generator from top-level:
 
 ```bash
-pnpm --filter @apical-ts/example-react-query-hooks --workspace run generate:client
-pnpm --filter @apical-ts/example-react-query-hooks --workspace run generate:hooks:local
+pnpm --filter @apical-ts/react-query-hooks --workspace run generate:client
+pnpm --filter @apical-ts/react-query-hooks --workspace run generate:hooks:local
 ```
 
 4. Example React usage is at `./example/Usage.tsx`.
