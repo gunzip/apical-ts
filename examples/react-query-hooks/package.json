@@ -1,0 +1,26 @@
+{
+  "name": "@apical-ts/react-query-hooks",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate:client": "npx @apical-ts/craft generate --client -i https://petstore.swagger.io/v2/swagger.json -o generated",
+    "generate:hooks": "tsx ./scripts/generate-hooks.ts",
+    "generate": "pnpm run generate:client && pnpm run generate:hooks",
+    "build": "tsc -p tsconfig.json",
+    "typecheck:generated": "tsc --noEmit -p tsconfig.generated.json"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^4.34.0",
+    "react": "^18.3.1",
+    "tsx": "^4.21.0",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "^22.16.2",
+    "@types/react": "^18.0.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.5"
+  }
+}
