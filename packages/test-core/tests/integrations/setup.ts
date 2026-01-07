@@ -163,7 +163,7 @@ export async function waitForPort(
 
   while (Date.now() - startTime < timeout) {
     try {
-      const response = await fetch(`http://${host}:${port}`, {
+      await fetch(`http://${host}:${port}`, {
         method: "GET",
         signal: AbortSignal.timeout(1000),
       });

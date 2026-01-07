@@ -11,7 +11,7 @@ describe("Query Parameter Integration", () => {
     };
 
     // Call the operation with array parameter
-    const result = await testQueryParamInlineEnum(
+    await testQueryParamInlineEnum(
       {
         query: {
           "fields[catalog-item-bulk-create-job]": [
@@ -55,7 +55,7 @@ describe("Query Parameter Integration", () => {
       return new Response(null, { status: 404 });
     };
 
-    const result = await testQueryParamInlineEnum(
+    await testQueryParamInlineEnum(
       {
         query: {
           "fields[catalog-item-bulk-create-job]": [],
@@ -83,7 +83,7 @@ describe("Query Parameter Integration", () => {
       return new Response(null, { status: 404 });
     };
 
-    const result = await testQueryParamInlineEnum(
+    await testQueryParamInlineEnum(
       {
         query: {},
       },

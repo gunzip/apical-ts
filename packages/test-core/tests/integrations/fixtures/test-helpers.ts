@@ -1,6 +1,5 @@
 import {
   createAuthenticatedClient,
-  createTestClient,
   createUnauthenticatedClient,
 } from "../client.js";
 
