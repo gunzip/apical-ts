@@ -3,11 +3,13 @@
   "compilerOptions": {
     "noEmit": true,
     // Override rootDir so that TypeScript doesn't complain about files outside ./src
-    "rootDir": "../../",
+    "rootDir": "./",
     // Use incremental false to keep it fast for CI runs
     "incremental": false,
     // Ensure strictness mirrors project settings
-    "strict": true
+    "strict": true,
+    // Generated client code uses fetch and Headers from DOM with iterable methods
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["generated/**/*.ts"]
 }

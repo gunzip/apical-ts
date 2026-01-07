@@ -1,0 +1,11 @@
+This is a sample text file for testing file upload operations.
+It contains multiple lines of text to test file handling.
+
+Test data includes:
+- Line breaks
+- Special characters: áéíóú, ñ, ç
+- Numbers: 123456789
+- Symbols: !@#$%^&*()
+
+This file is used by the integration tests to verify that file upload
+operations work correctly with the generated TypeScript client.
