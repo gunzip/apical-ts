@@ -1,5 +1,15 @@
 # @apical-ts/craft
 
+## 0.12.0
+
+### Minor Changes
+
+- 81536ba: Add `--routes` CLI flag to generate only schemas and route metadata
+
+  This new flag allows developers to generate type-safe schemas and route
+  metadata without the full client or server implementations, enabling custom
+  client/server implementations using preferred frameworks or tools.
+
 ## 0.11.2
 
 ### Patch Changes
