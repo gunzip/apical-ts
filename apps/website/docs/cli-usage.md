@@ -83,12 +83,16 @@ specification.
   false)
 - `--server`: Generate the operation wrapper functions for server-side usage
   (default: false)
+- `--routes`: Generate route metadata only (default: false). Useful when you
+  want to generate your own type-safe client or server implementation while
+  leveraging the generated schemas and route definitions.
 - `--extra-props <mode>`: Control how Zod schemas handle additional properties.
   Options: `strip` (default), `loose`, `strict`. See
   [Schema Validation Modes](./schema-validation-modes.md) for details.
 
-> **Note**: The long-form flags `--generate-client` and `--generate-server` are
-> deprecated in favor of the shorter `--client` and `--server` aliases.
+> **Note**: The long-form flags `--generate-client`, `--generate-server`, and
+> `--generate-routes` are deprecated in favor of the shorter `--client`,
+> `--server`, and `--routes` aliases.
 
 ## Output Structure
 
@@ -97,6 +101,7 @@ The generated output follows a consistent structure:
 ```
 generated/
 ├── client/           # Client operation functions (if --client)
+├── routes/           # Route metadata (if --routes, --client, or --server)
 ├── server/           # Server handler wrappers (if --server)
 └── schemas/          # Zod schemas and TypeScript types
 ```
@@ -109,6 +114,36 @@ Each directory contains:
 
 The output directory will be created if it doesn't exist and existing files will
 be overwritten.
+
+## Custom Client or Server Implementation
+
+If you want to build your own type-safe client or server implementation while
+leveraging the generated schemas and route metadata, use the `--routes` flag:
+
+```bash
+npx @apical-ts/craft generate \
+  --routes \
+  -i openapi.yaml \
+  -o generated
+```
+
+This generates:
+
+- **Schemas**: Full Zod v4 schemas with TypeScript type inference
+- **Routes**: Route metadata including paths, HTTP methods, parameters, and
+  request/response types
+
+You can then build your own client or server using these generated artifacts.
+For example, you might want to:
+
+- Create a custom HTTP client with specific retry logic or authentication
+- Build a server using a framework not directly supported (e.g., Fastify, Koa,
+  Hono)
+- Generate GraphQL resolvers or tRPC procedures from REST definitions
+- Create mock servers or testing utilities
+
+The route metadata provides all the type information you need, while the schemas
+handle runtime validation.
 
 ## Formatting Generated Code
 

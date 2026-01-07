@@ -32,6 +32,7 @@ program
     "Generate server endpoint wrappers.",
     false,
   )
+  .option("--generate-routes, --routes", "Generate route metadata.", false)
   .option("--profile", "Print timing breakdown for generation phases.", false)
   .option(
     "--extra-props <mode>",
@@ -44,6 +45,7 @@ program
       const generationOptions = {
         extraProps: String(options.extraProps) as ExtraPropsMode,
         generateClient: Boolean(options.client),
+        generateRoutes: Boolean(options.routes),
         generateServer: Boolean(options.server),
         input: String(options.input),
         output: String(options.output),
