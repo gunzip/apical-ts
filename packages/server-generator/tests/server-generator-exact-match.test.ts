@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { generateServerOperationWrapper } from "../src/operation-wrapper-generator.js";
+import { generateServerOperationWrapper } from "../src/index.js";
 
 describe("server-generator - problem statement validation", () => {
   it("should match exactly the expected output format from problem statement", () => {

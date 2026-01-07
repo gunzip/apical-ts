@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { generateServerOperationWrapper } from "../src/operation-wrapper-generator.js";
+import { generateServerOperationWrapper } from "../src/index.js";
 
 describe("server-generator operation wrapper", () => {
   it("should generate a simple operation wrapper with query parameters", () => {

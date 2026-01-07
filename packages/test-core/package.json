@@ -17,7 +17,7 @@
   "devDependencies": {
     "@apical-ts/client-generator": "workspace:*",
     "@apical-ts/core-utils": "workspace:*",
-    "@apical-ts/server-generator": "workspace:*",
+    "@apical-ts/craft": "workspace:*",
     "@apical-ts/route-generator": "workspace:*",
     "@stoplight/prism-cli": "^5.14.2",
     "@tsconfig/node22": "catalog:",

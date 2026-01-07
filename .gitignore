@@ -33,3 +33,4 @@ tmp/
 .idea/
 
 .playwright-mcp
+core

@@ -3,10 +3,10 @@ import { promises as fs } from "fs";
 import path from "path";
 
 // Import the generated schemas that demonstrate collision detection
-import { Catalog } from "../integrations/generated/schemas/Catalog.js";
-import { CatalogMeta } from "../integrations/generated/schemas/CatalogMeta.js";
-import { catalog2 } from "../integrations/generated/schemas/catalog2.js";
-import { catalogmeta2 } from "../integrations/generated/schemas/catalogmeta2.js";
+import { Catalog } from "../generated/schemas/Catalog.js";
+import { CatalogMeta } from "../generated/schemas/CatalogMeta.js";
+import { catalog2 } from "../generated/schemas/catalog2.js";
+import { catalogmeta2 } from "../generated/schemas/catalogmeta2.js";
 
 describe("schema sanitization collision detection", () => {
   it("should have renamed schemas to avoid case-sensitivity conflicts in the generated client", async () => {
@@ -15,7 +15,7 @@ describe("schema sanitization collision detection", () => {
     // Verify that the renamed schema files exist in the generated directory
     const schemasDir = path.resolve(
       __dirname,
-      "../integrations/generated/schemas",
+      "../generated/schemas",
     );
     const schemaFiles = await fs.readdir(schemasDir);
 

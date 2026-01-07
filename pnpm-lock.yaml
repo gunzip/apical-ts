@@ -420,12 +420,12 @@ importers:
       '@apical-ts/core-utils':
         specifier: workspace:*
         version: link:../core-utils
+      '@apical-ts/craft':
+        specifier: workspace:*
+        version: link:../../apps/craft
       '@apical-ts/route-generator':
         specifier: workspace:*
         version: link:../route-generator
-      '@apical-ts/server-generator':
-        specifier: workspace:*
-        version: link:../server-generator
       '@stoplight/prism-cli':
         specifier: ^5.14.2
         version: 5.14.2
