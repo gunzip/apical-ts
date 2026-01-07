@@ -1,5 +1,19 @@
 # @apical-ts/craft
 
+## 0.11.0
+
+### Minor Changes
+
+- eb5d356: Refactor monorepo splitting packages
+
+### Patch Changes
+
+- Updated dependencies [eb5d356]
+  - @apical-ts/client-generator@0.11.0
+  - @apical-ts/server-generator@0.11.0
+  - @apical-ts/route-generator@0.11.0
+  - @apical-ts/core-utils@0.11.0
+
 ## 0.10.0
 
 ### Minor Changes
