@@ -31,7 +31,8 @@
     "test:coverage": "vitest --coverage",
     "generate:tests": "node dist/index.js generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --client --server",
     "clean": "rm -rf tests/integrations/generated",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "prepublishOnly": "turbo run build --filter=@apical-ts/craft"
   },
   "keywords": [
     "openapi",
