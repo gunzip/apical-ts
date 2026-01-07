@@ -4,7 +4,7 @@ import { generate } from "../../src/generate.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("Routes-only generation", () => {
-  const inputSpec = join(__dirname, "../fixtures/test.yaml");
+  const inputSpec = join(__dirname, "./fixtures/test.yaml");
   const outputDir = join(__dirname, "../../tmp/routes-only");
 
   beforeEach(async () => {
