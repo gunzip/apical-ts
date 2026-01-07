@@ -49,18 +49,6 @@ importers:
 
   apps/craft:
     dependencies:
-      '@apical-ts/client-generator':
-        specifier: workspace:*
-        version: link:../../packages/client-generator
-      '@apical-ts/core-utils':
-        specifier: workspace:*
-        version: link:../../packages/core-utils
-      '@apical-ts/route-generator':
-        specifier: workspace:*
-        version: link:../../packages/route-generator
-      '@apical-ts/server-generator':
-        specifier: workspace:*
-        version: link:../../packages/server-generator
       '@apidevtools/json-schema-ref-parser':
         specifier: ^14.2.0
         version: 14.2.1(@types/json-schema@7.0.15)
@@ -74,6 +62,18 @@ importers:
         specifier: ^4.1.8
         version: 4.2.1
     devDependencies:
+      '@apical-ts/client-generator':
+        specifier: workspace:*
+        version: link:../../packages/client-generator
+      '@apical-ts/core-utils':
+        specifier: workspace:*
+        version: link:../../packages/core-utils
+      '@apical-ts/route-generator':
+        specifier: workspace:*
+        version: link:../../packages/route-generator
+      '@apical-ts/server-generator':
+        specifier: workspace:*
+        version: link:../../packages/server-generator
       '@pagopa/eslint-config':
         specifier: ^5.0.0
         version: 5.0.0(@types/eslint@9.6.1)(eslint@9.35.0(jiti@1.21.7))(prettier@3.6.2)(vitest@4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.18.4)(jiti@1.21.7)(terser@5.44.1)(yaml@2.8.1))
@@ -10835,7 +10835,7 @@ snapshots:
   '@typescript-eslint/eslint-plugin@8.44.0(@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3))(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.9.2)
+      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
       '@typescript-eslint/scope-manager': 8.44.0
       '@typescript-eslint/type-utils': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
       '@typescript-eslint/utils': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
@@ -10849,7 +10849,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.9.2)':
+  '@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.44.0
       '@typescript-eslint/types': 8.44.0
@@ -10857,7 +10857,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.44.0
       debug: 4.4.3
       eslint: 9.35.0(jiti@1.21.7)
-      typescript: 5.9.2
+      typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
 
@@ -15973,7 +15973,7 @@ snapshots:
   typescript-eslint@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3):
     dependencies:
       '@typescript-eslint/eslint-plugin': 8.44.0(@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3))(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
-      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.9.2)
+      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
       '@typescript-eslint/typescript-estree': 8.44.0(typescript@5.8.3)
       '@typescript-eslint/utils': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
       eslint: 9.35.0(jiti@1.21.7)
