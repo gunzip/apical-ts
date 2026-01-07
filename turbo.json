@@ -33,6 +33,10 @@
     "test": {
       "dependsOn": ["^test", "generate:tests"]
     },
+    "@apical-ts/react-query-hooks#build": {
+      "dependsOn": ["^build", "generate"],
+      "outputs": ["dist/**", "build/**"]
+    },
     "//#test:coverage": {
       "dependsOn": ["^build"],
       "inputs": [
