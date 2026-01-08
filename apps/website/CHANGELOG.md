@@ -1,5 +1,11 @@
 # @apical-ts/website
 
+## 0.3.0
+
+### Minor Changes
+
+- 9a9e468: Add comparison table
+
 ## 0.2.0
 
 ### Minor Changes
