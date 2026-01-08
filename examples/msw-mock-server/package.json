@@ -1,0 +1,36 @@
+{
+  "name": "@apical-ts/examples-msw",
+  "version": "0.0.1",
+  "private": true,
+  "description": "MSW mock server examples for apical-ts generated clients.",
+  "type": "module",
+  "scripts": {
+    "typecheck:code": "tsc -p tsconfig.examples.json",
+    "generate": "craft generate -i examples.yaml -o generated --server --client",
+    "clean": "rm -rf generated",
+    "dev": "tsx server-examples/mock-server-example.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "author": "gunzip",
+  "license": "MIT",
+  "devDependencies": {
+    "@apical-ts/craft": "workspace:*",
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "^1.6.0",
+    "prettier": "catalog:",
+    "tsx": "^4.19.2",
+    "typescript": "catalog:",
+    "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "msw": "^2.6.8",
+    "zocker": "^3.0.0",
+    "zod": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
+}
