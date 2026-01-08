@@ -55,7 +55,7 @@ wrappers.
 
 ```typescript
 // Generated route wrapper
-app.get("/pets", createExpressHandler(findPetsByStatusRoute));
+app.get("/pets", createExpressAdapter(findPetsByStatusRoute));
 ```
 
 ### MSW Mock Server
