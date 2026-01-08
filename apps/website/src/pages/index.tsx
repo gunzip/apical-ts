@@ -136,6 +136,30 @@ function WhyChooseUs() {
               validation. Client calls never throw.
             </p>
           </li>
+          <li className={styles.whyChooseItem}>
+            <span className={styles.whyChooseIcon} aria-hidden="true">
+              🔧
+            </span>
+            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>
+              Framework Integrations
+            </h3>
+            <p>
+              Easily adapt to any framework with generated Zod schemas. Includes
+              ready-to-use integrations for{" "}
+              <Link to="/docs/client-generation/framework-integrations#react-query-hooks">
+                React Query
+              </Link>
+              ,{" "}
+              <Link to="/docs/client-generation/framework-integrations#express-server-wrappers">
+                Express
+              </Link>
+              , and{" "}
+              <Link to="/docs/client-generation/framework-integrations#msw-mock-server">
+                MSW
+              </Link>
+              .
+            </p>
+          </li>
         </ul>
       </div>
     </section>
