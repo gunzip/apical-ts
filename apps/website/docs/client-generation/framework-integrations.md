@@ -55,7 +55,11 @@ wrappers.
 
 ```typescript
 // Generated route wrapper
+<<<<<<< HEAD
 createExpressAdapter(findPetsByStatusRoute(), findPetsByStatusHandler)(app);
+=======
+app.get("/pets", createExpressAdapter(findPetsByStatusRoute));
+>>>>>>> df0a174c50668113ffbce48279e19bb824d7b7e0
 ```
 
 ### MSW Mock Server
@@ -100,7 +104,7 @@ To explore these integrations:
 2. Navigate to the desired example: `cd examples/[framework]`
 3. Install dependencies: `pnpm install`
 4. Generate the code: `pnpm run generate`
-5. Run the example: `pnpm dev` or `pnpm start`
+5. Run the example using the command documented in that example's README (for MSW: `pnpm dev`).
 
 The examples include comprehensive documentation and working code you can adapt
 for your own projects.
