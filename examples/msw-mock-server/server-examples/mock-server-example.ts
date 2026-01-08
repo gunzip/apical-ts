@@ -133,7 +133,7 @@ const createMockHandler = <
 };
 
 /* Create MSW handlers for all operations */
-const createHandlers = (baseUrl = "http://localhost:3001") => {
+const createHandlers = (baseUrl = "http://0.0.0.0:3001") => {
   const handlers = Object.values(routes).map((routeFn) => {
     const routeInfo = routeFn();
     const handler = createMockHandler(routeInfo);
