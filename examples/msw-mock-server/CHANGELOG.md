@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0
+
+### Minor Changes
+
+- e1bce3f: Add mock service worker example
+
 All notable changes to this project will be documented in this file.
 
 ## [0.0.1] - 2026-01-08
