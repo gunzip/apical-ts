@@ -33,6 +33,7 @@ const sidebars: SidebarsConfig = {
         "client-generation/custom-response-deserialization",
         "client-generation/handling-multiple-content-types",
         "client-generation/using-generated-zod-schemas",
+        "client-generation/framework-integrations",
       ],
     },
     {

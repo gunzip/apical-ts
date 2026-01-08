@@ -102,6 +102,30 @@ function WhyChooseUs() {
           </li>
           <li className={styles.whyChooseItem}>
             <span className={styles.whyChooseIcon} aria-hidden="true">
+              🔧
+            </span>
+            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>
+              Framework Integrations
+            </h3>
+            <p>
+              Easily adapt to any framework with generated Zod schemas. Includes
+              ready-to-use integrations for{" "}
+              <Link to="/docs/client-generation/framework-integrations#react-query-hooks">
+                React Query
+              </Link>
+              ,{" "}
+              <Link to="/docs/client-generation/framework-integrations#express-server-wrappers">
+                Express
+              </Link>
+              , and{" "}
+              <Link to="/docs/client-generation/framework-integrations#msw-mock-server">
+                MSW
+              </Link>
+              .
+            </p>
+          </li>
+          {/* <li className={styles.whyChooseItem}>
+            <span className={styles.whyChooseIcon} aria-hidden="true">
               ⚡
             </span>
             <h3 style={{ fontWeight: 700, marginBottom: 20 }}>Performance</h3>
@@ -109,7 +133,7 @@ function WhyChooseUs() {
               Bring your own validator: choose Zod v4 for runtime validation,
               swap in your own library, or skip validation entirely.
             </p>
-          </li>
+          </li> */}
           <li className={styles.whyChooseItem}>
             <span className={styles.whyChooseIcon} aria-hidden="true">
               🔒
