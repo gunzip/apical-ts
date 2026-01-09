@@ -31,7 +31,6 @@
   "author": "gunzip",
   "license": "MIT",
   "devDependencies": {
-    "@pagopa/eslint-config": "^5.0.0",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",

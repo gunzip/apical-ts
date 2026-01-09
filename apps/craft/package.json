@@ -50,7 +50,6 @@
     "@apical-ts/client-generator": "workspace:*",
     "@apical-ts/server-generator": "workspace:*",
     "@apical-ts/route-generator": "workspace:*",
-    "@pagopa/eslint-config": "^5.0.0",
     "@stoplight/prism-cli": "^5.14.2",
     "@tsconfig/node22": "catalog:",
     "@types/express": "^5.0.3",
