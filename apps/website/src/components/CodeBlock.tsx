@@ -28,11 +28,14 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
   };
 
   return (
-    <Highlight
-      code={code.trim()}
-      language={language}
-      theme={resolvedTheme}
-      children={({ className, style, tokens, getLineProps, getTokenProps }) => (
+    <>
+      {/* @ts-expect-error - prism-react-renderer types are incompatible with React 18 types */}
+      <Highlight
+        code={code.trim()}
+        language={language}
+        theme={resolvedTheme}
+      >
+        {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <div
           className="codeblock-group"
           style={{
@@ -99,7 +102,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
           </pre>
         </div>
       )}
-    />
+    </Highlight>
+    </>
   );
 };
 
