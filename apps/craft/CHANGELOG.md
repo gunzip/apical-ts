@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.13.0
+
+### Minor Changes
+
+- Improve server wrappers handling of wildcard statuses ie. 5XX, 4XX
+
 ## 0.12.0
 
 ### Minor Changes
