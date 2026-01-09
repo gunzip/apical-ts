@@ -797,6 +797,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProductWithReadOnlyMeta"
 
+  /wildcards:
+    get:
+      operationId: testWildcards
+      responses:
+        "200":
+          description: Test wildcard response handling
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          description: Not found
+        "4XX":
+          description: Some 4xx error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductWithReadOnlyMeta"
+
 # -------------
 # Components
 # -------------
