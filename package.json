@@ -23,7 +23,8 @@
     "@changesets/cli": "^2.29.8",
     "@devcontainers/cli": "^0.80.3",
     "oxlint": "^1.38.0",
-    "turbo": "^2.7.3"
+    "turbo": "^2.7.3",
+    "vitest": "catalog:"
   },
   "packageManager": "pnpm@10.15.1"
 }

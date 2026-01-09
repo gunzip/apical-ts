@@ -20,12 +20,12 @@
     "./shared/*": "./dist/shared/*.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsgo",
     "build:docs": "embedme README.md && prettier --write README.md",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck:code": "tsc --noEmit",
-    "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
+    "typecheck:code": "tsgo --noEmit",
+    "typecheck:tests": "tsgo --noEmit -p tsconfig.tests.json",
     "typecheck": "pnpm typecheck:code && pnpm typecheck:tests",
     "test": "vitest run",
     "test:coverage": "vitest --coverage"
@@ -48,14 +48,14 @@
     "@types/node": "catalog:",
     "@types/supertest": "^6.0.3",
     "@types/swagger2openapi": "^7.0.4",
-    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/coverage-v8": "catalog:",
     "embedme": "catalog:",
     "express": "^5.1.0",
     "prettier": "catalog:",
     "supertest": "^7.1.4",
     "tsup": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "^4.0.16"
+    "@typescript/native-preview": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^14.2.0",

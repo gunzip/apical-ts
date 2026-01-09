@@ -28,12 +28,12 @@
     "@types/node": "catalog:",
     "@types/supertest": "^6.0.3",
     "@types/swagger2openapi": "^7.0.4",
-    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/coverage-v8": "catalog:",
     "express": "^5.1.0",
     "prettier": "catalog:",
     "supertest": "^7.1.4",
-    "typescript": "catalog:",
-    "vitest": "^4.0.16"
+    "@typescript/native-preview": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^14.2.0",

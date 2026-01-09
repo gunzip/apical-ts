@@ -6,11 +6,12 @@ packages:
 catalog:
   '@tsconfig/node22': ^22.0.2
   '@types/node': ^22.16.2
+  '@typescript/native-preview': ^7.0.0-dev.20260109.1
+  '@vitest/coverage-v8': ^4.0.16
   embedme: ^1.22.1
-  eslint: ^9.34.0
   prettier: 3.6.2
   tsup: ^8.5.0
-  typescript: ~5.9.2
+  vitest: ^4.0.16
 
 cleanupUnusedCatalogs: true
 

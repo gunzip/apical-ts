@@ -15,10 +15,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsgo",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest --coverage"
   },
@@ -34,11 +34,11 @@
     "@pagopa/eslint-config": "^5.0.0",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/coverage-v8": "catalog:",
     "prettier": "catalog:",
     "tsup": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "^4.0.16"
+    "@typescript/native-preview": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
     "@apical-ts/core-utils": "workspace:*",
