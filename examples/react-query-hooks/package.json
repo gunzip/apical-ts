@@ -7,8 +7,8 @@
     "generate:client": "node ../../apps/craft/dist/index.js generate --client -i https://petstore.swagger.io/v2/swagger.json -o generated",
     "generate:hooks": "tsx ./scripts/generate-hooks.ts",
     "generate": "pnpm run generate:client && pnpm run generate:hooks",
-    "build": "tsc -p tsconfig.json",
-    "typecheck:generated": "tsc --noEmit -p tsconfig.generated.json"
+    "build": "tsgo -p tsconfig.json",
+    "typecheck:generated": "tsgo --noEmit -p tsconfig.generated.json"
   },
   "dependencies": {
     "@tanstack/react-query": "^4.34.0",
@@ -19,10 +19,10 @@
   "devDependencies": {
     "@apical-ts/craft": "workspace:*",
     "@tsconfig/node22": "catalog:",
-    "@types/node": "^22.16.2",
+    "@types/node": "catalog:",
     "@types/react": "^18.0.0",
-    "prettier": "^3.2.0",
+    "prettier": "catalog:",
     "p-limit": "^7.1.0",
-    "typescript": "^5.4.5"
+    "@typescript/native-preview": "catalog:"
   }
 }

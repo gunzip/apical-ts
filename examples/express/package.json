@@ -5,7 +5,7 @@
   "description": "Examples for using the apical-ts TypeScript library.",
   "type": "module",
   "scripts": {
-    "typecheck:code": "tsc -p tsconfig.examples.json",
+    "typecheck:code": "tsgo -p tsconfig.examples.json",
     "generate": "craft generate -i examples.yaml -o generated --server --client",
     "clean": "rm -rf generated"
   },
@@ -18,7 +18,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
     "prettier": "catalog:",
-    "typescript": "catalog:"
+    "@typescript/native-preview": "catalog:"
   },
   "dependencies": {
     "express": "^5.1.0",

@@ -5,7 +5,7 @@
   "description": "MSW mock server examples for apical-ts generated clients.",
   "type": "module",
   "scripts": {
-    "typecheck:code": "tsc -p tsconfig.examples.json",
+    "typecheck:code": "tsgo -p tsconfig.examples.json",
     "generate": "craft generate -i examples.yaml -o generated --server --client",
     "clean": "rm -rf generated",
     "dev": "tsx server-examples/mock-server-example.ts",
@@ -18,11 +18,11 @@
     "@apical-ts/craft": "workspace:*",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "^4.0.0",
+    "@vitest/coverage-v8": "catalog:",
     "prettier": "catalog:",
     "tsx": "^4.19.2",
-    "typescript": "catalog:",
-    "vitest": "^4.0.0"
+    "@typescript/native-preview": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
     "msw": "^2.6.8",

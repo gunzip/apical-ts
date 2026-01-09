@@ -28,6 +28,7 @@ function HomepageHeader() {
           {siteConfig.tagline}
         </p>
         <nav className={styles.buttons} aria-label="Main navigation">
+          {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
           <Link
             className={clsx("button button--lg", styles.ctaButton)}
             style={{
@@ -109,14 +110,17 @@ function WhyChooseUs() {
             <p>
               Easily adapt to any framework with generated Zod schemas. Includes
               ready-to-use integrations for{" "}
+              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
               <Link to="/docs/client-generation/framework-integrations#react-query-hooks">
                 React Query
               </Link>
               ,{" "}
+              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
               <Link to="/docs/client-generation/framework-integrations#express-server-wrappers">
                 Express
               </Link>
               , and{" "}
+              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
               <Link to="/docs/client-generation/framework-integrations#msw-mock-server">
                 MSW
               </Link>
