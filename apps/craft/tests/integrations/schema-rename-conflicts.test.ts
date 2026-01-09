@@ -30,13 +30,13 @@ describe("schema rename pre-processing (integration)", () => {
 
   it("renames ApiResponse, Blob, Buffer schemas", async () => {
     const files = await fs.readdir(generatedSchemasDir);
-    expect(files.some((f) => f.startsWith('ApiResponseSchema.'))).toBe(true);
-    expect(files.some((f) => f.startsWith('BlobSchema.'))).toBe(true);
-    expect(files.some((f) => f.startsWith('BufferSchema.'))).toBe(true);
+    expect(files.some((f) => f.startsWith("ApiResponseSchema."))).toBe(true);
+    expect(files.some((f) => f.startsWith("BlobSchema."))).toBe(true);
+    expect(files.some((f) => f.startsWith("BufferSchema."))).toBe(true);
     // Ensure originals are not present
-    expect(files.some((f) => f.startsWith('ApiResponse.'))).toBe(false);
-    expect(files.some((f) => f.startsWith('Blob.'))).toBe(false);
-    expect(files.some((f) => f.startsWith('Buffer.'))).toBe(false);
+    expect(files.some((f) => f.startsWith("ApiResponse."))).toBe(false);
+    expect(files.some((f) => f.startsWith("Blob."))).toBe(false);
+    expect(files.some((f) => f.startsWith("Buffer."))).toBe(false);
   });
 
   it("client type definitions use renamed schemas", async () => {
