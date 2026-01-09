@@ -153,11 +153,16 @@ describe("testWildcards operation integration tests", () => {
   });
 
   it("should return 4XX wildcard status code (400)", async () => {
-    // Arrange: Test 4XX wildcard pattern with 400 status
+    // Arrange: Test that handler can return concrete 400 status
     const handler: testWildcardsHandler = async (params) => {
       if ("isValid" in params && params.isValid) {
         return {
-          status: "4XX",
+          status: "400",
+          contentType: "application/json",
+          data: {
+            sku: "TEST-400",
+            name: "Bad Request Error",
+          },
         };
       }
 
@@ -169,36 +174,31 @@ describe("testWildcards operation integration tests", () => {
       "get",
       testWildcardsWrapper,
       handler,
-      (result, res) => {
-        // Custom handler to map 4XX wildcard to 400
-        if (result.status === "4XX") {
-          res.status(400).send();
-        } else if (result.contentType && result.data !== undefined) {
-          res
-            .status(Number(result.status))
-            .type(result.contentType)
-            .send(result.data);
-        } else if (result.contentType) {
-          res.status(Number(result.status)).type(result.contentType).send();
-        } else {
-          res.status(Number(result.status)).send();
-        }
-      },
     );
 
     // Act: Make the HTTP request
     const response = await supertest(app).get("/wildcards");
 
-    // Assert: Verify the response - 4XX wildcard maps to 400 in our handler
+    // Assert: Verify the response
     expect(response.status).toBe(400);
+    expect(response.headers["content-type"]).toContain("application/json");
+    expect(response.body).toMatchObject({
+      sku: "TEST-400",
+      name: "Bad Request Error",
+    });
   });
 
   it("should return 4XX wildcard status code (403)", async () => {
-    // Arrange: Test that 4XX pattern can handle other 4xx status codes
+    // Arrange: Test that handler can return concrete 403 status
     const handler: testWildcardsHandler = async (params) => {
       if ("isValid" in params && params.isValid) {
         return {
-          status: "4XX",
+          status: "403",
+          contentType: "application/json",
+          data: {
+            sku: "TEST-403",
+            name: "Forbidden Error",
+          },
         };
       }
 
@@ -210,28 +210,18 @@ describe("testWildcards operation integration tests", () => {
       "get",
       testWildcardsWrapper,
       handler,
-      (result, res) => {
-        // Custom handler to map 4XX wildcard to 403 for this test
-        if (result.status === "4XX") {
-          res.status(403).send();
-        } else if (result.contentType && result.data !== undefined) {
-          res
-            .status(Number(result.status))
-            .type(result.contentType)
-            .send(result.data);
-        } else if (result.contentType) {
-          res.status(Number(result.status)).type(result.contentType).send();
-        } else {
-          res.status(Number(result.status)).send();
-        }
-      },
     );
 
     // Act: Make the HTTP request
     const response = await supertest(app).get("/wildcards");
 
-    // Assert: Verify the response - 4XX wildcard maps to 403 in our handler
+    // Assert: Verify the response
     expect(response.status).toBe(403);
+    expect(response.headers["content-type"]).toContain("application/json");
+    expect(response.body).toMatchObject({
+      sku: "TEST-403",
+      name: "Forbidden Error",
+    });
   });
 
   it("should handle deeply nested wildcard object structures", async () => {

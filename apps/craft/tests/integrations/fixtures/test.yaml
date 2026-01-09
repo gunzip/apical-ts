@@ -812,6 +812,10 @@ paths:
           description: Not found
         "4XX":
           description: Some 4xx error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductWithReadOnlyMeta"
 
 # -------------
 # Components

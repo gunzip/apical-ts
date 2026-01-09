@@ -65,35 +65,47 @@ export function generateResponseUnion(
       responseContentTypes.map((r) => r.statusCode),
     );
 
-    /* Process all status codes */
+    /* Collect all explicitly defined status codes (including wildcards) to exclude them from expansion */
+    const explicitStatusCodes = new Set(allStatusCodes);
+
+    /* Process all status codes, expanding wildcards */
     for (const statusCode of allStatusCodes) {
-      if (statusCodesWithContent.has(statusCode)) {
-        /* Status code has content/schema - add typed responses */
-        const responseGroup = responseContentTypes.find(
-          (r) => r.statusCode === statusCode,
-        );
-        if (responseGroup) {
-          for (const mapping of responseGroup.contentTypes) {
-            const dataType = resolveSchemaTypeName(
-              mapping.schema,
-              operationId,
-              `${statusCode}Response`,
-              typeImports,
-              "response",
-              resolvedSchemas,
-            );
-            unionMembers.push({
-              contentType: mapping.contentType,
-              dataType,
-              statusCode,
-            });
+      /* Expand wildcard patterns and filter out explicitly defined codes */
+      const expandedCodes = expandWildcardStatusCode(statusCode).filter(
+        (code) =>
+          /* Keep the code if it's not explicitly defined, or if it IS the current wildcard being expanded */
+          code === statusCode || !explicitStatusCodes.has(code),
+      );
+
+      for (const expandedCode of expandedCodes) {
+        if (statusCodesWithContent.has(statusCode)) {
+          /* Status code has content/schema - add typed responses */
+          const responseGroup = responseContentTypes.find(
+            (r) => r.statusCode === statusCode,
+          );
+          if (responseGroup) {
+            for (const mapping of responseGroup.contentTypes) {
+              const dataType = resolveSchemaTypeName(
+                mapping.schema,
+                operationId,
+                `${statusCode}Response`,
+                typeImports,
+                "response",
+                resolvedSchemas,
+              );
+              unionMembers.push({
+                contentType: mapping.contentType,
+                dataType,
+                statusCode: expandedCode,
+              });
+            }
           }
+        } else {
+          /* Status code has no content/schema - add void response */
+          unionMembers.push({
+            statusCode: expandedCode,
+          });
         }
-      } else {
-        /* Status code has no content/schema - add void response */
-        unionMembers.push({
-          statusCode,
-        });
       }
     }
   }
@@ -120,6 +132,26 @@ export function renderUnionType(
   defaultType = "ApiResponse<string, unknown>",
 ): string {
   return unionTypes.length > 0 ? unionTypes.join(" | ") : defaultType;
+}
+
+/**
+ * Expands wildcard status codes (e.g., "4XX", "5XX") into arrays of concrete status codes.
+ * Returns the original code if it's not a wildcard pattern.
+ *
+ * @param statusCode - Status code which may be a wildcard pattern ("4XX", "5XX") or concrete code
+ * @returns Array of concrete status codes
+ */
+function expandWildcardStatusCode(statusCode: string): string[] {
+  if (statusCode === "4XX") {
+    // Expand to all 4xx codes (400-451 covers all IANA-registered client error codes)
+    return Array.from({ length: 52 }, (_, i) => String(400 + i));
+  }
+  if (statusCode === "5XX") {
+    // Expand to all 5xx codes (500-511 covers all IANA-registered server error codes)
+    return Array.from({ length: 12 }, (_, i) => String(500 + i));
+  }
+  // Not a wildcard, return as-is
+  return [statusCode];
 }
 
 /**
