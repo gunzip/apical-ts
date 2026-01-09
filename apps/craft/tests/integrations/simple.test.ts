@@ -277,11 +277,12 @@ describe("Working Integration Test Demo", () => {
       },
     );
 
-    // Assert - Should return status '4XX' for 400 (not '404')
+    // Assert - Should return status '4XX' for 400 (matches 4XX wildcard pattern)
     expect(response.isValid).toBe(true);
     if (response.isValid) {
+      // Client returns "4XX" when matching the wildcard range
       expect(response.status).toBe("4XX");
-      expect(response.data).toBeUndefined();
+      expect(response.data).toBeDefined(); // 4XX has typed data now
     }
   });
 
@@ -307,11 +308,11 @@ describe("Working Integration Test Demo", () => {
       },
     );
 
-    // Assert - Should return status '4XX' for 401 (not '404')
+    // Assert - Should return status '4XX' for 401 (matches 4XX wildcard pattern)
     expect(response.isValid).toBe(true);
     if (response.isValid) {
       expect(response.status).toBe("4XX");
-      expect(response.data).toBeUndefined();
+      expect(response.data).toBeDefined(); // 4XX has typed data now
     }
   });
 
@@ -337,11 +338,11 @@ describe("Working Integration Test Demo", () => {
       },
     );
 
-    // Assert - Should return status '4XX' for 403 (not '404')
+    // Assert - Should return status '4XX' for 403 (matches 4XX wildcard pattern)
     expect(response.isValid).toBe(true);
     if (response.isValid) {
       expect(response.status).toBe("4XX");
-      expect(response.data).toBeUndefined();
+      expect(response.data).toBeDefined(); // 4XX has typed data now
     }
   });
 
@@ -397,11 +398,11 @@ describe("Working Integration Test Demo", () => {
       },
     );
 
-    // Assert - Should return status '4XX' for 422 (not '404')
+    // Assert - Should return status '4XX' for 422 (matches 4XX wildcard pattern)
     expect(response.isValid).toBe(true);
     if (response.isValid) {
       expect(response.status).toBe("4XX");
-      expect(response.data).toBeUndefined();
+      expect(response.data).toBeDefined(); // 4XX has typed data now
     }
   });
 
@@ -427,11 +428,11 @@ describe("Working Integration Test Demo", () => {
       },
     );
 
-    // Assert - Should return status '4XX' for 429 (not '404')
+    // Assert - Should return status '4XX' for 429 (matches 4XX wildcard pattern)
     expect(response.isValid).toBe(true);
     if (response.isValid) {
       expect(response.status).toBe("4XX");
-      expect(response.data).toBeUndefined();
+      expect(response.data).toBeDefined(); // 4XX has typed data now
     }
   });
 
