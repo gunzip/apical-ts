@@ -797,6 +797,22 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProductWithReadOnlyMeta"
 
+  /wildcards:
+    get:
+      operationId: testWildcards
+      responses:
+        "200":
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          description: Not found
+        "4XX":
+          description: Some 4xx error
+
 # -------------
 # Components
 # -------------

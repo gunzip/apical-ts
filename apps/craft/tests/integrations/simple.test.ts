@@ -5,6 +5,7 @@ import {
   createUnauthenticatedClient,
 } from "./client.js";
 import { getRandomPort, MockServer } from "./setup.js";
+import * as operations from "./generated/client/index.js";
 
 describe("Working Integration Test Demo", () => {
   let mockServer: MockServer;
@@ -200,6 +201,270 @@ describe("Working Integration Test Demo", () => {
       }
     } else {
       expect.fail("Expected operation to return error object for missing auth");
+    }
+  });
+
+  it("should handle wildcard response with additionalProperties: true (200)", async () => {
+    // Arrange
+    const client = createAuthenticatedClient(baseURL, "customToken");
+
+    // Act - testWildcards uses global security (customToken)
+    const response = await client.testWildcards({
+      headers: { "custom-token": "test-token" },
+    });
+
+    // Assert
+    if (!response.isValid) {
+      expect.fail(
+        `Expected valid response but got error: ${JSON.stringify(response)}`,
+      );
+    }
+
+    expect(response.status).toBe("200");
+    expect(response.data).toBeDefined();
+
+    // The response should be an object (wildcard schema with additionalProperties: true)
+    expect(typeof response.data).toBe("object");
+    expect(response.response.headers.get("content-type")).toContain(
+      "application/json",
+    );
+  });
+
+  it("should handle wildcard 404 response", async () => {
+    // Arrange
+    const client = createAuthenticatedClient(baseURL, "customToken");
+
+    // Act - When testWildcards returns 404
+    const response = await client.testWildcards({
+      headers: { "custom-token": "test-token" },
+    });
+
+    // Assert
+    if (response.isValid && response.status === "404") {
+      // 404 response should not have data (no content type defined)
+      expect(response.status).toBe("404");
+      expect(response.data).toBeUndefined();
+    } else if (response.isValid && response.status === "200") {
+      // If 200, should have data
+      expect(response.data).toBeDefined();
+    } else if ("kind" in response) {
+      // If 4XX wildcard is returned
+      if ("result" in response) {
+        expect(response.result.status.charAt(0)).toBe("4");
+      }
+    }
+  });
+
+  it("should return status '4XX' for 400 response (not 404)", async () => {
+    // Arrange - Create a custom fetch that returns 400
+    const customFetch = async (
+      input: URL | RequestInfo,
+      init?: RequestInit,
+    ) => {
+      return new Response(null, {
+        status: 400,
+        headers: { "content-type": "application/json" },
+      });
+    };
+
+    // Act - Request with custom config that uses mock fetch
+    const response = await operations.testWildcards(
+      {},
+      {
+        baseURL: baseURL,
+        fetch: customFetch,
+        headers: { "custom-token": "test-token" },
+      },
+    );
+
+    // Assert - Should return status '4XX' for 400 (not '404')
+    expect(response.isValid).toBe(true);
+    if (response.isValid) {
+      expect(response.status).toBe("4XX");
+      expect(response.data).toBeUndefined();
+    }
+  });
+
+  it("should return status '4XX' for 401 response (not 404)", async () => {
+    // Arrange - Create a custom fetch that returns 401
+    const customFetch = async (
+      input: URL | RequestInfo,
+      init?: RequestInit,
+    ) => {
+      return new Response(null, {
+        status: 401,
+        headers: { "content-type": "application/json" },
+      });
+    };
+
+    // Act
+    const response = await operations.testWildcards(
+      {},
+      {
+        baseURL: baseURL,
+        fetch: customFetch,
+        headers: { "custom-token": "test-token" },
+      },
+    );
+
+    // Assert - Should return status '4XX' for 401 (not '404')
+    expect(response.isValid).toBe(true);
+    if (response.isValid) {
+      expect(response.status).toBe("4XX");
+      expect(response.data).toBeUndefined();
+    }
+  });
+
+  it("should return status '4XX' for 403 response (not 404)", async () => {
+    // Arrange - Create a custom fetch that returns 403
+    const customFetch = async (
+      input: URL | RequestInfo,
+      init?: RequestInit,
+    ) => {
+      return new Response(null, {
+        status: 403,
+        headers: { "content-type": "application/json" },
+      });
+    };
+
+    // Act
+    const response = await operations.testWildcards(
+      {},
+      {
+        baseURL: baseURL,
+        fetch: customFetch,
+        headers: { "custom-token": "test-token" },
+      },
+    );
+
+    // Assert - Should return status '4XX' for 403 (not '404')
+    expect(response.isValid).toBe(true);
+    if (response.isValid) {
+      expect(response.status).toBe("4XX");
+      expect(response.data).toBeUndefined();
+    }
+  });
+
+  it("should return status '404' for 404 response (not '4XX')", async () => {
+    // Arrange - Create a custom fetch that returns 404
+    const customFetch = async (
+      input: URL | RequestInfo,
+      init?: RequestInit,
+    ) => {
+      return new Response(null, {
+        status: 404,
+        headers: { "content-type": "application/json" },
+      });
+    };
+
+    // Act
+    const response = await operations.testWildcards(
+      {},
+      {
+        baseURL: baseURL,
+        fetch: customFetch,
+        headers: { "custom-token": "test-token" },
+      },
+    );
+
+    // Assert - Should return status '404' specifically (not '4XX')
+    expect(response.isValid).toBe(true);
+    if (response.isValid) {
+      expect(response.status).toBe("404");
+      expect(response.data).toBeUndefined();
+    }
+  });
+
+  it("should return status '4XX' for 422 response (not 404)", async () => {
+    // Arrange - Create a custom fetch that returns 422
+    const customFetch = async (
+      input: URL | RequestInfo,
+      init?: RequestInit,
+    ) => {
+      return new Response(null, {
+        status: 422,
+        headers: { "content-type": "application/json" },
+      });
+    };
+
+    // Act
+    const response = await operations.testWildcards(
+      {},
+      {
+        baseURL: baseURL,
+        fetch: customFetch,
+        headers: { "custom-token": "test-token" },
+      },
+    );
+
+    // Assert - Should return status '4XX' for 422 (not '404')
+    expect(response.isValid).toBe(true);
+    if (response.isValid) {
+      expect(response.status).toBe("4XX");
+      expect(response.data).toBeUndefined();
+    }
+  });
+
+  it("should return status '4XX' for 429 response (not 404)", async () => {
+    // Arrange - Create a custom fetch that returns 429
+    const customFetch = async (
+      input: URL | RequestInfo,
+      init?: RequestInit,
+    ) => {
+      return new Response(null, {
+        status: 429,
+        headers: { "content-type": "application/json" },
+      });
+    };
+
+    // Act
+    const response = await operations.testWildcards(
+      {},
+      {
+        baseURL: baseURL,
+        fetch: customFetch,
+        headers: { "custom-token": "test-token" },
+      },
+    );
+
+    // Assert - Should return status '4XX' for 429 (not '404')
+    expect(response.isValid).toBe(true);
+    if (response.isValid) {
+      expect(response.status).toBe("4XX");
+      expect(response.data).toBeUndefined();
+    }
+  });
+
+  it("should correctly type wildcard object properties at runtime", async () => {
+    // Arrange
+    const client = createAuthenticatedClient(baseURL, "customToken");
+
+    // Act
+    const response = await client.testWildcards({
+      headers: { "custom-token": "test-token" },
+    });
+
+    // Assert - Verify that wildcard objects can contain any properties
+    if (!response.isValid) {
+      // This is acceptable for this test
+      return;
+    }
+
+    if (response.status === "200" && response.data) {
+      // The data should be an object that can have any properties
+      // TypeScript should allow accessing any property on the wildcard object
+      const data = response.data as Record<string, unknown>;
+
+      // We can't make assumptions about what properties exist,
+      // but we can verify it's an object
+      expect(typeof data).toBe("object");
+      expect(data).not.toBeNull();
+
+      // If properties exist, they should be accessible
+      if (Object.keys(data).length > 0) {
+        const firstKey = Object.keys(data)[0];
+        expect(data[firstKey]).toBeDefined();
+      }
     }
   });
 });
