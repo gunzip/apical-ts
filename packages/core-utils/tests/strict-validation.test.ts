@@ -6,7 +6,9 @@ import { zodSchemaToCode } from "../src/schema-generator/schema-converter.js";
  * Helper function to evaluate Zod schema code for testing
  */
 function evalZod(zodCode: string) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires no-unused-vars
   const z = require("zod");
+  // eslint-disable-next-line no-eval
   return eval(zodCode);
 }
 

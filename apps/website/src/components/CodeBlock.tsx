@@ -21,7 +21,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
       await navigator.clipboard.writeText(code.trim());
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
-    } catch (err) {
+      // eslint-disable-next-line no-unused-vars
+    } catch (_) {
       // fallback or error handling
     }
   };

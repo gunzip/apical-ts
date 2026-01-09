@@ -12,7 +12,7 @@ describe("parse() discriminated union usage", () => {
         "200",
         typeof TestMultiContentTypesResponseMap
       >,
-    >(res: R) {
+    >(_: R) {
       // We only need to exercise the type-level narrowing. Create a typed helper
       // that accepts the parse() result type and tests narrowed access without
       // invoking parse() at runtime.
@@ -21,13 +21,16 @@ describe("parse() discriminated union usage", () => {
         if (!isParsed(result)) return;
         if (result.contentType === "application/xml") {
           // @ts-expect-no-error
+          // eslint-disable-next-line no-unused-expressions
           result.parsed.id;
         }
         if (result.contentType === "application/json") {
           // @ts-expect-no-error
+          // eslint-disable-next-line no-unused-expressions
           result.parsed.id;
         }
         if (isParsed(result)) {
+          // eslint-disable-next-line no-unused-expressions
           result.parsed;
         }
       }

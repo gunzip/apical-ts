@@ -22,8 +22,6 @@
   "scripts": {
     "build": "tsc",
     "build:docs": "embedme README.md && prettier --write README.md",
-    "lint": "eslint --fix src",
-    "lint:check": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck:code": "tsc --noEmit",
@@ -52,7 +50,6 @@
     "@types/swagger2openapi": "^7.0.4",
     "@vitest/coverage-v8": "^4.0.16",
     "embedme": "catalog:",
-    "eslint": "catalog:",
     "express": "^5.1.0",
     "prettier": "catalog:",
     "supertest": "^7.1.4",

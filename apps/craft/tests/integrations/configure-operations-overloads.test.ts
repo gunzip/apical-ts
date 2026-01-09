@@ -2,8 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   configureOperations,
   globalConfig,
-  type ApiResponseWithParse,
-  type ApiResponseWithForcedParse,
 } from "./generated/client/config.js";
 import { testMultiContentTypes } from "./generated/client/testMultiContentTypes.js";
 

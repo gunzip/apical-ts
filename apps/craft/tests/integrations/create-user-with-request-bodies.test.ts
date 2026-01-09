@@ -3,7 +3,6 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createUnauthenticatedClient } from "./client.js";
 import { getRandomPort, MockServer } from "./setup.js";
 import { Profile } from "./generated/schemas/Profile.js";
-import { CreateUserWithRequestBodiesRequestMap } from "./generated/client/createUserWithRequestBodies.js";
 
 describe("CreateUserWithRequestBodies Operation Tests", () => {
   let mockServer: MockServer;

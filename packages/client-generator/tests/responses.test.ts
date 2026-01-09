@@ -1,12 +1,10 @@
-import type { OperationObject, ResponseObject } from "openapi3-ts/oas31";
+import type { OperationObject } from "openapi3-ts/oas31";
 
 import { describe, expect, it } from "vitest";
 
 import {
   generateResponseHandlers,
   generateContentTypeMaps,
-  type ResponseHandlerResult,
-  type ResponseTypeInfo,
 } from "../src/responses.js";
 
 describe("client-generator responses", () => {

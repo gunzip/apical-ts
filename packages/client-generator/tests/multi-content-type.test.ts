@@ -3,7 +3,6 @@ import type { OperationObject, OpenAPIObject } from "openapi3-ts/oas31";
 import { describe, expect, it } from "vitest";
 
 import { generateOperationFunction } from "../src/operation-function-generator.js";
-import { generateContentTypeMaps } from "../src/responses.js";
 
 describe("Multi-content-type operation function generation", () => {
   it("should always generate function with type maps and contentType in first parameter", () => {

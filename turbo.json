@@ -9,12 +9,8 @@
       "dependsOn": ["^build:docs"],
       "outputs": ["README.md"]
     },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
-    "lint:check": {
-      "dependsOn": ["^lint:check"]
-    },
+    "//#lint:check": {},
+    "//#lint": {},
     "format": {
       "dependsOn": ["^format"]
     },

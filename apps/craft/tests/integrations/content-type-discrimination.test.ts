@@ -36,11 +36,9 @@ describe("Content Type Discrimination Integration Test", () => {
   it("should allow content type based discrimination in TypeScript", async () => {
     // This test validates that the TypeScript types would work correctly
     // We're testing the generated types structure rather than runtime behavior
-    const configPath = join(generatedDir, "client/config.ts");
     const operationPath = join(generatedDir, "client/testMultiContentTypes.ts");
     const routePath = join(generatedDir, "routes/testMultiContentTypes.ts");
 
-    const configContent = await readFile(configPath, "utf-8");
     const operationContent = await readFile(operationPath, "utf-8");
     const routeContent = await readFile(routePath, "utf-8");
 

@@ -170,7 +170,8 @@ export async function waitForPort(
 
       // If we get any response (even an error), the port is open
       return true;
-    } catch (error: any) {
+      // eslint-disable-next-line no-unused-vars
+    } catch (_) {
       // Port not ready yet, wait a bit
       await sleep(100);
     }

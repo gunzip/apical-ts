@@ -8,7 +8,10 @@ import {
 } from "@apical-ts/core-utils";
 
 /* Mock zodSchemaToCode function for testing */
-const mockZodSchemaToCode = (schema: any, options?: ObjectPropertyOptions) => ({
+const mockZodSchemaToCode = (
+  schema: any,
+  _options?: ObjectPropertyOptions,
+) => ({
   code: Array.isArray(schema.enum)
     ? `z.enum([${schema.enum.map((v: string) => `"${v}"`).join(", ")}])`
     : schema.type === "string"
@@ -283,8 +286,8 @@ describe("object-properties", () => {
 
       /* Mock that returns new imports */
       const mockWithImports = (
-        schema: any,
-        options?: ObjectPropertyOptions,
+        _schema: any,
+        _options?: ObjectPropertyOptions,
       ) => ({
         code: "z.string()",
         imports: new Set(["AdditionalType"]),

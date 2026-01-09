@@ -54,13 +54,6 @@ describe("createDocument response reference integration", () => {
   });
 
   it("should handle response reference resolution in type system", () => {
-    // Test that the response map type correctly maps to the Document schema
-    // This verifies that the $ref resolution worked for type generation
-
-    type ResponseMapType = typeof CreateDocumentResponseMap;
-    type Status200Type = ResponseMapType["200"];
-    type JsonType = Status200Type["application/json"];
-
     // At compile time, JsonType should be the document schema
     // At runtime, we can verify it's a proper Zod schema
     const schema = CreateDocumentResponseMap["200"]["application/json"];

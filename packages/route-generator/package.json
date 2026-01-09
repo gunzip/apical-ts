@@ -16,8 +16,6 @@
   ],
   "scripts": {
     "build": "tsc",
-    "lint": "eslint --fix src",
-    "lint:check": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
@@ -37,7 +35,6 @@
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "^4.0.16",
-    "eslint": "catalog:",
     "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",

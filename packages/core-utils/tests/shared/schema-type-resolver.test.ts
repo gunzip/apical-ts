@@ -1,10 +1,7 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
 import { describe, expect, it } from "vitest";
 
-import {
-  resolveSchemaTypeName,
-  type SchemaResolverContext,
-} from "../../src/shared/schema-type-resolver.js";
+import { resolveSchemaTypeName } from "../../src/shared/schema-type-resolver.js";
 
 describe("resolveSchemaTypeName with readOnly/writeOnly context", () => {
   const createResolvedSchemas = () => ({

@@ -31,7 +31,7 @@ describe("AllOf Schema Composition Integration", () => {
 
       // This should compile correctly with items as required
       // @ts-expect-error
-      const validTest: AllOfWithEmptyObjectAndRequireTest = {
+      const _: AllOfWithEmptyObjectAndRequireTest = {
         id: "test-id", // from NewModel
         name: "test", // from NewModel
       };
