@@ -802,7 +802,7 @@ paths:
       operationId: testWildcards
       responses:
         "200":
-          description: Product created successfully
+          description: Test wildcard response handling
           content:
             application/json:
               schema:

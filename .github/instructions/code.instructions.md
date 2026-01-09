@@ -7,7 +7,7 @@ applyTo: "**/*.ts"
 - Never add jsdoc comments: TypeScript typing is sufficient.
 - Use C block syntax (`/* ... */`) for method-level comments.
 - Use C++ style comments (`// ...`) for inline documentation.
-- Avoid to pass too many arguments to functions, prefer using typed
+- Avoid passing too many arguments to functions, prefer using typed
   configuration objects.
 - Nullable or boolean arguments are code smells; prefer configuration objects as
   arguments.

@@ -39,8 +39,6 @@ describe("testWildcards operation integration tests", () => {
     const response = await supertest(app).get("/wildcards");
 
     // Assert: Verify the response
-    if (response.status === 500)
-      console.log("500 Error Body:", JSON.stringify(response.body, null, 2));
     expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
