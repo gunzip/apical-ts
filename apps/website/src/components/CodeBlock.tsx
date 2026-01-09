@@ -30,23 +30,19 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
   return (
     <>
       {/* @ts-expect-error - prism-react-renderer types are incompatible with React 18 types */}
-      <Highlight
-        code={code.trim()}
-        language={language}
-        theme={resolvedTheme}
-      >
+      <Highlight code={code.trim()} language={language} theme={resolvedTheme}>
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
-        <div
-          className="codeblock-group"
-          style={{
-            position: "relative",
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            height: "100%",
-          }}
-        >
-          <style>{`
+          <div
+            className="codeblock-group"
+            style={{
+              position: "relative",
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+            }}
+          >
+            <style>{`
             .codeblock-copy-btn {
               position: absolute;
               top: 8px;
@@ -72,37 +68,37 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
               background: #d1fae5;
             }
           `}</style>
-          <button
-            onClick={handleCopy}
-            className={`codeblock-copy-btn${copied ? " copied" : ""}`}
-            aria-label="Copy code to clipboard"
-            tabIndex={0}
-          >
-            {copied ? "Copied!" : "Copy"}
-          </button>
-          <pre
-            className={[className, outerClassName].filter(Boolean).join(" ")}
-            style={{
-              ...style,
-              padding: 16,
-              borderRadius: 8,
-              overflowX: "auto",
-              flex: 1,
-              height: "100%",
-              minHeight: 0,
-            }}
-          >
-            {tokens.map((line, i) => (
-              <div key={i} {...getLineProps({ line })}>
-                {line.map((token, j) => (
-                  <span key={j} {...getTokenProps({ token })} />
-                ))}
-              </div>
-            ))}
-          </pre>
-        </div>
-      )}
-    </Highlight>
+            <button
+              onClick={handleCopy}
+              className={`codeblock-copy-btn${copied ? " copied" : ""}`}
+              aria-label="Copy code to clipboard"
+              tabIndex={0}
+            >
+              {copied ? "Copied!" : "Copy"}
+            </button>
+            <pre
+              className={[className, outerClassName].filter(Boolean).join(" ")}
+              style={{
+                ...style,
+                padding: 16,
+                borderRadius: 8,
+                overflowX: "auto",
+                flex: 1,
+                height: "100%",
+                minHeight: 0,
+              }}
+            >
+              {tokens.map((line, i) => (
+                <div key={i} {...getLineProps({ line })}>
+                  {line.map((token, j) => (
+                    <span key={j} {...getTokenProps({ token })} />
+                  ))}
+                </div>
+              ))}
+            </pre>
+          </div>
+        )}
+      </Highlight>
     </>
   );
 };
