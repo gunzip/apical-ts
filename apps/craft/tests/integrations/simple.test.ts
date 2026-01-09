@@ -255,186 +255,49 @@ describe("Working Integration Test Demo", () => {
     }
   });
 
-  it("should return status '4XX' for 400 response (not 404)", async () => {
-    // Arrange - Create a custom fetch that returns 400
-    const customFetch = async (
-      input: URL | RequestInfo,
-      init?: RequestInit,
-    ) => {
-      return new Response(null, {
-        status: 400,
-        headers: { "content-type": "application/json" },
-      });
-    };
+  it.each([
+    [400, "4XX", true],
+    [401, "4XX", true],
+    [403, "4XX", true],
+    [404, "404", false],
+    [422, "4XX", true],
+    [429, "4XX", true],
+  ])(
+    "should return status '%s' for %d response",
+    async (statusCode, expectedStatus, hasData) => {
+      // Arrange - Create a custom fetch that returns the specified status
+      const customFetch = async (
+        input: URL | RequestInfo,
+        init?: RequestInit,
+      ) => {
+        return new Response(null, {
+          status: statusCode,
+          headers: { "content-type": "application/json" },
+        });
+      };
 
-    // Act - Request with custom config that uses mock fetch
-    const response = await operations.testWildcards(
-      {},
-      {
-        baseURL: baseURL,
-        fetch: customFetch,
-        headers: { "custom-token": "test-token" },
-      },
-    );
+      // Act - Request with custom config that uses mock fetch
+      const response = await operations.testWildcards(
+        {},
+        {
+          baseURL: baseURL,
+          fetch: customFetch,
+          headers: { "custom-token": "test-token" },
+        },
+      );
 
-    // Assert - Should return status '4XX' for 400 (matches 4XX wildcard pattern)
-    expect(response.isValid).toBe(true);
-    if (response.isValid) {
-      // Client returns "4XX" when matching the wildcard range
-      expect(response.status).toBe("4XX");
-      expect(response.data).toBeDefined(); // 4XX has typed data now
-    }
-  });
-
-  it("should return status '4XX' for 401 response (not 404)", async () => {
-    // Arrange - Create a custom fetch that returns 401
-    const customFetch = async (
-      input: URL | RequestInfo,
-      init?: RequestInit,
-    ) => {
-      return new Response(null, {
-        status: 401,
-        headers: { "content-type": "application/json" },
-      });
-    };
-
-    // Act
-    const response = await operations.testWildcards(
-      {},
-      {
-        baseURL: baseURL,
-        fetch: customFetch,
-        headers: { "custom-token": "test-token" },
-      },
-    );
-
-    // Assert - Should return status '4XX' for 401 (matches 4XX wildcard pattern)
-    expect(response.isValid).toBe(true);
-    if (response.isValid) {
-      expect(response.status).toBe("4XX");
-      expect(response.data).toBeDefined(); // 4XX has typed data now
-    }
-  });
-
-  it("should return status '4XX' for 403 response (not 404)", async () => {
-    // Arrange - Create a custom fetch that returns 403
-    const customFetch = async (
-      input: URL | RequestInfo,
-      init?: RequestInit,
-    ) => {
-      return new Response(null, {
-        status: 403,
-        headers: { "content-type": "application/json" },
-      });
-    };
-
-    // Act
-    const response = await operations.testWildcards(
-      {},
-      {
-        baseURL: baseURL,
-        fetch: customFetch,
-        headers: { "custom-token": "test-token" },
-      },
-    );
-
-    // Assert - Should return status '4XX' for 403 (matches 4XX wildcard pattern)
-    expect(response.isValid).toBe(true);
-    if (response.isValid) {
-      expect(response.status).toBe("4XX");
-      expect(response.data).toBeDefined(); // 4XX has typed data now
-    }
-  });
-
-  it("should return status '404' for 404 response (not '4XX')", async () => {
-    // Arrange - Create a custom fetch that returns 404
-    const customFetch = async (
-      input: URL | RequestInfo,
-      init?: RequestInit,
-    ) => {
-      return new Response(null, {
-        status: 404,
-        headers: { "content-type": "application/json" },
-      });
-    };
-
-    // Act
-    const response = await operations.testWildcards(
-      {},
-      {
-        baseURL: baseURL,
-        fetch: customFetch,
-        headers: { "custom-token": "test-token" },
-      },
-    );
-
-    // Assert - Should return status '404' specifically (not '4XX')
-    expect(response.isValid).toBe(true);
-    if (response.isValid) {
-      expect(response.status).toBe("404");
-      expect(response.data).toBeUndefined();
-    }
-  });
-
-  it("should return status '4XX' for 422 response (not 404)", async () => {
-    // Arrange - Create a custom fetch that returns 422
-    const customFetch = async (
-      input: URL | RequestInfo,
-      init?: RequestInit,
-    ) => {
-      return new Response(null, {
-        status: 422,
-        headers: { "content-type": "application/json" },
-      });
-    };
-
-    // Act
-    const response = await operations.testWildcards(
-      {},
-      {
-        baseURL: baseURL,
-        fetch: customFetch,
-        headers: { "custom-token": "test-token" },
-      },
-    );
-
-    // Assert - Should return status '4XX' for 422 (matches 4XX wildcard pattern)
-    expect(response.isValid).toBe(true);
-    if (response.isValid) {
-      expect(response.status).toBe("4XX");
-      expect(response.data).toBeDefined(); // 4XX has typed data now
-    }
-  });
-
-  it("should return status '4XX' for 429 response (not 404)", async () => {
-    // Arrange - Create a custom fetch that returns 429
-    const customFetch = async (
-      input: URL | RequestInfo,
-      init?: RequestInit,
-    ) => {
-      return new Response(null, {
-        status: 429,
-        headers: { "content-type": "application/json" },
-      });
-    };
-
-    // Act
-    const response = await operations.testWildcards(
-      {},
-      {
-        baseURL: baseURL,
-        fetch: customFetch,
-        headers: { "custom-token": "test-token" },
-      },
-    );
-
-    // Assert - Should return status '4XX' for 429 (matches 4XX wildcard pattern)
-    expect(response.isValid).toBe(true);
-    if (response.isValid) {
-      expect(response.status).toBe("4XX");
-      expect(response.data).toBeDefined(); // 4XX has typed data now
-    }
-  });
+      // Assert - Should return expected status and data behavior
+      expect(response.isValid).toBe(true);
+      if (response.isValid) {
+        expect(response.status).toBe(expectedStatus);
+        if (hasData) {
+          expect(response.data).toBeDefined();
+        } else {
+          expect(response.data).toBeUndefined();
+        }
+      }
+    },
+  );
 
   it("should correctly type wildcard object properties at runtime", async () => {
     // Arrange
