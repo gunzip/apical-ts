@@ -2,14 +2,13 @@ import { describe, it, expect } from "vitest";
 import {
   configureOperations,
   globalConfig,
-  type ApiResponseWithParse,
-  type ApiResponseWithForcedParse,
 } from "./generated/client/config.js";
 import { testMultiContentTypes } from "./generated/client/testMultiContentTypes.js";
 
 // These tests rely on TypeScript compile-time; runtime just sanity checks functions exist.
 describe("configureOperations typing", () => {
   it("binds operations without parsed when forceValidation omitted (default false)", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { forceValidation, ...cfg } = globalConfig; // strip optional prop to avoid matching literal overloads
     const api = configureOperations({ testMultiContentTypes }, cfg);
     expect(typeof api.testMultiContentTypes).toBe("function");

@@ -5,7 +5,7 @@ describe("Query Parameter Integration", () => {
   it("should correctly serialize complex query parameters in real operations", async () => {
     // Mock fetch to capture the URL that gets called
     let capturedUrl: string = "";
-    const mockFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const mockFetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
       capturedUrl = input.toString();
       return new Response(null, { status: 404 });
     };
@@ -50,7 +50,7 @@ describe("Query Parameter Integration", () => {
 
   it("should handle empty arrays correctly", async () => {
     let capturedUrl: string = "";
-    const mockFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const mockFetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
       capturedUrl = input.toString();
       return new Response(null, { status: 404 });
     };
@@ -78,7 +78,7 @@ describe("Query Parameter Integration", () => {
 
   it("should handle undefined query parameters correctly", async () => {
     let capturedUrl: string = "";
-    const mockFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const mockFetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
       capturedUrl = input.toString();
       return new Response(null, { status: 404 });
     };

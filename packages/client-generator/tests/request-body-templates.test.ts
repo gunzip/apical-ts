@@ -17,7 +17,7 @@ describe("request-body templates", () => {
     ]);
     expect(code).toMatch(/let bodyContent: RequestBody/);
     expect(code).toMatch(/case "application\/octet-stream"/);
-    expect(code).toMatch(/Content-Type\": \"application\/octet-stream\"/);
+    expect(code).toMatch(/Content-Type": "application\/octet-stream"/);
   });
 });
 

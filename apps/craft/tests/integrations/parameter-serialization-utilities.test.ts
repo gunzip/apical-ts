@@ -3,9 +3,6 @@ import {
   serializeQueryParam,
   serializePathParam,
   serializeHeaderParam,
-  type QueryParamSerializationOptions,
-  type PathParamSerializationOptions,
-  type HeaderParamSerializationOptions,
 } from "./generated/client/config.js";
 
 describe("Parameter Serialization Utilities", () => {

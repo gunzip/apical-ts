@@ -1,7 +1,6 @@
 import {
   configureOperations,
   globalConfig,
-  isParsed,
 } from "../generated/client/config.js";
 import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 import { getInventory } from "../generated/client/getInventory.js";
@@ -19,6 +18,7 @@ async function demonstrateClient() {
   ) {
     // automatic validation: .parsed available
     if (greedyPetsResponse.parsed.data.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       greedyPetsResponse.parsed.data[0].name;
     }
   }
@@ -34,6 +34,7 @@ async function demonstrateClient() {
   });
   if (petsResponse1.isValid === true && petsResponse1.status === "200") {
     // bound automatic validation: .parsed available
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     petsResponse1.parsed;
   }
 

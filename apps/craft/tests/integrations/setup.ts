@@ -163,14 +163,15 @@ export async function waitForPort(
 
   while (Date.now() - startTime < timeout) {
     try {
-      const response = await fetch(`http://${host}:${port}`, {
+      await fetch(`http://${host}:${port}`, {
         method: "GET",
         signal: AbortSignal.timeout(1000),
       });
 
       // If we get any response (even an error), the port is open
       return true;
-    } catch (error: any) {
+      // eslint-disable-next-line no-unused-vars
+    } catch (_) {
       // Port not ready yet, wait a bit
       await sleep(100);
     }

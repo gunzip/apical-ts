@@ -1,10 +1,7 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
 import { describe, expect, it } from "vitest";
 
-import {
-  generateSchemaVariants,
-  type SchemaVariantsResult,
-} from "@apical-ts/core-utils";
+import { generateSchemaVariants } from "@apical-ts/core-utils";
 
 describe("generateSchemaVariants", () => {
   it("should return no variants for schema without readOnly/writeOnly", () => {
