@@ -307,9 +307,6 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.0.16
         version: 4.0.16(vitest@4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.18.4)(jiti@1.21.7)(msw@2.12.7(@types/node@22.18.4)(typescript@5.9.2))(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.1))
-      eslint:
-        specifier: 'catalog:'
-        version: 9.35.0(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
         version: 3.6.2
@@ -374,9 +371,6 @@ importers:
       embedme:
         specifier: 'catalog:'
         version: 1.22.1
-      eslint:
-        specifier: 'catalog:'
-        version: 9.35.0(jiti@1.21.7)
       express:
         specifier: ^5.1.0
         version: 5.1.0
@@ -423,9 +417,6 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.0.16
         version: 4.0.16(vitest@4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.18.4)(jiti@1.21.7)(msw@2.12.7(@types/node@22.18.4)(typescript@5.9.2))(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.1))
-      eslint:
-        specifier: 'catalog:'
-        version: 9.35.0(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
         version: 3.6.2
@@ -466,9 +457,6 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.0.16
         version: 4.0.16(vitest@4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.18.4)(jiti@1.21.7)(msw@2.12.7(@types/node@22.18.4)(typescript@5.9.2))(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.1))
-      eslint:
-        specifier: 'catalog:'
-        version: 9.35.0(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
         version: 3.6.2
@@ -11202,7 +11190,7 @@ snapshots:
   '@typescript-eslint/eslint-plugin@8.44.0(@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3))(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
+      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.9.2)
       '@typescript-eslint/scope-manager': 8.44.0
       '@typescript-eslint/type-utils': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
       '@typescript-eslint/utils': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
@@ -11216,7 +11204,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)':
+  '@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.9.2)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.44.0
       '@typescript-eslint/types': 8.44.0
@@ -11224,7 +11212,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.44.0
       debug: 4.4.3
       eslint: 9.35.0(jiti@1.21.7)
-      typescript: 5.8.3
+      typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
 
@@ -16437,7 +16425,7 @@ snapshots:
   typescript-eslint@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3):
     dependencies:
       '@typescript-eslint/eslint-plugin': 8.44.0(@typescript-eslint/parser@8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3))(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
-      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
+      '@typescript-eslint/parser': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.9.2)
       '@typescript-eslint/typescript-estree': 8.44.0(typescript@5.8.3)
       '@typescript-eslint/utils': 8.44.0(eslint@9.35.0(jiti@1.21.7))(typescript@5.8.3)
       eslint: 9.35.0(jiti@1.21.7)
