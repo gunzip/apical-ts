@@ -6,6 +6,9 @@ import Layout from "@theme/Layout";
 import CodeBlock from "../components/CodeBlock";
 import Heading from "@theme/Heading";
 
+// Workaround for React 19 type incompatibility with Docusaurus Link
+const TypedLink = Link as any;
+
 import styles from "./index.module.css";
 
 function HomepageHeader() {
@@ -28,7 +31,7 @@ function HomepageHeader() {
           {siteConfig.tagline}
         </p>
         <nav className={styles.buttons} aria-label="Main navigation">
-          <Link
+          <TypedLink
             className={clsx("button button--lg", styles.ctaButton)}
             style={{
               background: "linear-gradient(135deg, #2dd4bf, #22d3ee)",
@@ -38,7 +41,7 @@ function HomepageHeader() {
             aria-label="Get started with @apical-ts/craft documentation"
           >
             Get Started in 5&nbsp;min <span aria-hidden="true">→</span>
-          </Link>
+          </TypedLink>
         </nav>
         {/* <div
           className={styles.installBar}
@@ -109,17 +112,17 @@ function WhyChooseUs() {
             <p>
               Easily adapt to any framework with generated Zod schemas. Includes
               ready-to-use integrations for{" "}
-              <Link to="/docs/client-generation/framework-integrations#react-query-hooks">
+              <TypedLink to="/docs/client-generation/framework-integrations#react-query-hooks">
                 React Query
-              </Link>
+              </TypedLink>
               ,{" "}
-              <Link to="/docs/client-generation/framework-integrations#express-server-wrappers">
+              <TypedLink to="/docs/client-generation/framework-integrations#express-server-wrappers">
                 Express
-              </Link>
+              </TypedLink>
               , and{" "}
-              <Link to="/docs/client-generation/framework-integrations#msw-mock-server">
+              <TypedLink to="/docs/client-generation/framework-integrations#msw-mock-server">
                 MSW
-              </Link>
+              </TypedLink>
               .
             </p>
           </li>
