@@ -27,16 +27,10 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
     }
   };
 
-  // Workaround for React 19 type incompatibility with prism-react-renderer
-  const TypedHighlight = Highlight as any;
-
   return (
     <>
-      <TypedHighlight
-        code={code.trim()}
-        language={language}
-        theme={resolvedTheme}
-      >
+      {/* @ts-ignore - React 19 includes bigint in ReactNode but prism-react-renderer uses React 18 types */}
+      <Highlight code={code.trim()} language={language} theme={resolvedTheme}>
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
           <div
             className="codeblock-group"
@@ -104,7 +98,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
             </pre>
           </div>
         )}
-      </TypedHighlight>
+      </Highlight>
     </>
   );
 };

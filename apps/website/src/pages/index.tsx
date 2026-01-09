@@ -6,9 +6,6 @@ import Layout from "@theme/Layout";
 import CodeBlock from "../components/CodeBlock";
 import Heading from "@theme/Heading";
 
-// Workaround for React 19 type incompatibility with Docusaurus Link
-const TypedLink = Link as any;
-
 import styles from "./index.module.css";
 
 function HomepageHeader() {
@@ -31,7 +28,8 @@ function HomepageHeader() {
           {siteConfig.tagline}
         </p>
         <nav className={styles.buttons} aria-label="Main navigation">
-          <TypedLink
+          {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
+          <Link
             className={clsx("button button--lg", styles.ctaButton)}
             style={{
               background: "linear-gradient(135deg, #2dd4bf, #22d3ee)",
@@ -41,7 +39,7 @@ function HomepageHeader() {
             aria-label="Get started with @apical-ts/craft documentation"
           >
             Get Started in 5&nbsp;min <span aria-hidden="true">→</span>
-          </TypedLink>
+          </Link>
         </nav>
         {/* <div
           className={styles.installBar}
@@ -112,17 +110,20 @@ function WhyChooseUs() {
             <p>
               Easily adapt to any framework with generated Zod schemas. Includes
               ready-to-use integrations for{" "}
-              <TypedLink to="/docs/client-generation/framework-integrations#react-query-hooks">
+              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
+              <Link to="/docs/client-generation/framework-integrations#react-query-hooks">
                 React Query
-              </TypedLink>
+              </Link>
               ,{" "}
-              <TypedLink to="/docs/client-generation/framework-integrations#express-server-wrappers">
+              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
+              <Link to="/docs/client-generation/framework-integrations#express-server-wrappers">
                 Express
-              </TypedLink>
+              </Link>
               , and{" "}
-              <TypedLink to="/docs/client-generation/framework-integrations#msw-mock-server">
+              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
+              <Link to="/docs/client-generation/framework-integrations#msw-mock-server">
                 MSW
-              </TypedLink>
+              </Link>
               .
             </p>
           </li>
