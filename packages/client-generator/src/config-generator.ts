@@ -11,7 +11,7 @@ import {
   renderConfigImports,
   renderConfigInterface,
   renderConfigSupport,
-} from "./templates/config-templates.js";
+} from "./templates/config/index.js";
 
 /*
  * Analyzes authentication configuration from auth headers

@@ -9,7 +9,7 @@ import {
   renderConfigSupport,
   renderOperationUtilities,
   renderUtilityFunctions,
-} from "../src/templates/config-templates.js";
+} from "../src/templates/config/index.js";
 
 describe("client-generator config-templates", () => {
   describe("renderConfigInterface", () => {

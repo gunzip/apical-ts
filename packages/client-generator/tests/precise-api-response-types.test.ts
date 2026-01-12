@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { OperationObject } from "openapi3-ts/oas31";
 
 import { generateResponseHandlers } from "../src/responses.js";
-import { renderApiResponseTypes } from "../src/templates/config-templates.js";
+import { renderApiResponseTypes } from "../src/templates/config/index.js";
 
 describe("precise ApiResponse types", () => {
   describe("ApiResponseWithParse type generation", () => {

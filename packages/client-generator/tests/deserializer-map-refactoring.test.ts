@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateResponseHandlers } from "../src/responses.js";
-import { renderConfigInterface } from "../src/templates/config-templates.js";
+import { renderConfigInterface } from "../src/templates/config/index.js";
 import type { OperationObject } from "openapi3-ts/oas31";
 
 /*

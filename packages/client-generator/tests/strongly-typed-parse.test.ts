@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 /* Import the function we want to test */
-import { renderUtilityFunctions } from "../src/templates/config-templates.js";
+import { renderUtilityFunctions } from "../src/templates/config/index.js";
 
 /*
  * Test for enhanced parseApiResponseUnknownData function
