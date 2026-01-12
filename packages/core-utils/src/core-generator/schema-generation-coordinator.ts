@@ -15,9 +15,9 @@ import {
   generateSchemaFile,
   writeParameterSchemaFile,
 } from "../schema-generator/index.js";
-import { ResolvedSchemas } from "../schema-generator/schema-converter.js";
+import type { ResolvedSchemas } from "../schema-generator/types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { ExtraPropsMode } from "../shared/types.js";
+import type { ExtraPropsMode } from "../shared/types.js";
 import { isPlainSchemaObject } from "./openapi-utils.js";
 import { extractOperationParameters } from "./parameter-extractor.js";
 import {

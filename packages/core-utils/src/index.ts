@@ -52,10 +52,8 @@ export {
   createRecursiveContext,
   findReferencesInSchema,
 } from "./schema-generator/recursive-handlers.js";
-export {
-  type ZodSchemaResult,
-  zodSchemaToCode,
-} from "./schema-generator/schema-converter.js";
+export { zodSchemaToCode } from "./schema-generator/schema-converter.js";
+export type { ZodSchemaResult } from "./schema-generator/types.js";
 // Schema generator exports
 export { sanitizeIdentifier } from "./schema-generator/utils.js";
 

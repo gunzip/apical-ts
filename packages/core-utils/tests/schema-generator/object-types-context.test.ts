@@ -2,10 +2,8 @@ import type { SchemaObject } from "openapi3-ts/oas31";
 import { describe, expect, it } from "vitest";
 
 import { handleObjectType } from "../../src/schema-generator/object-types.js";
-import {
-  zodSchemaToCode,
-  type ZodSchemaResult,
-} from "../../src/schema-generator/schema-converter.js";
+import { zodSchemaToCode } from "../../src/schema-generator/schema-converter.js";
+import type { ZodSchemaResult } from "../../src/schema-generator/types.js";
 
 describe("object-types with schemaContext", () => {
   describe("handleObjectType with readOnly/writeOnly filtering", () => {

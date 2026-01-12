@@ -1,34 +1,12 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
-import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
-import type { ResolvedSchemas } from "./schema-converter.js";
-
 import { shouldIncludeProperty } from "../shared/types.js";
+import type {
+  ZodSchemaCodeOptions,
+  ZodSchemaResult,
+} from "./types.js";
 import { generateObjectCode } from "./object-properties.js";
 import { addDefaultValue } from "./utils.js";
-
-/**
- * Options for object type generation
- */
-interface ObjectTypeOptions {
-  currentSchemaName?: string;
-  extraProps?: ExtraPropsMode;
-  recursiveContext?: import("./recursive-handlers.js").RecursiveContext;
-  resolvedSchemas?: ResolvedSchemas;
-  schemaContext?: SchemaContext;
-}
-
-type ZodSchemaCodeOptions = ObjectTypeOptions & {
-  imports?: Set<string>;
-  isTopLevel?: boolean;
-};
-
-// Import from schema-converter to avoid circular dependencies
-interface ZodSchemaResult {
-  code: string;
-  extensibleEnumValues?: unknown[];
-  imports: Set<string>;
-}
 
 /**
  * Handle object type conversion
@@ -40,7 +18,7 @@ export function handleObjectType(
     schema: ReferenceObject | SchemaObject,
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
-  options: ObjectTypeOptions = {},
+  options: Omit<ZodSchemaCodeOptions, "imports" | "isTopLevel"> = {},
 ): ZodSchemaResult {
   const {
     currentSchemaName,
