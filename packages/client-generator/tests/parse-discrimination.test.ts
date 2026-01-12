@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderApiResponseTypes } from "../src/templates/config-templates.js";
+import { renderApiResponseTypes } from "../src/templates/config/index.js";
 
 /**
  * This test ensures the generated ApiResponseWithParse type produces a discriminated union
