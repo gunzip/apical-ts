@@ -2,10 +2,13 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { isReferenceObject, isSchemaObject } from "openapi3-ts/oas31";
 
+import type {
+  ZodSchemaCodeOptions,
+  ZodSchemaResult,
+  ResolvedSchemas,
+} from "./types.js";
 import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
-import type { ResolvedSchemas } from "./schema-converter.js";
-
 import { mergeImports } from "./utils.js";
 
 /**
@@ -20,22 +23,6 @@ export interface DiscriminatorConfig {
  * Union handling types
  */
 export type UnionType = "anyOf" | "oneOf";
-
-interface ZodSchemaCodeOptions {
-  currentSchemaName?: string;
-  extraProps?: ExtraPropsMode;
-  imports?: Set<string>;
-  isTopLevel?: boolean;
-  recursiveContext?: RecursiveContext;
-  resolvedSchemas?: ResolvedSchemas;
-}
-
-// Import from schema-converter to avoid circular dependencies
-interface ZodSchemaResult {
-  code: string;
-  extensibleEnumValues?: unknown[];
-  imports: Set<string>;
-}
 
 /**
  * Handle allOf schema composition

@@ -2,7 +2,7 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
-import type { ResolvedSchemas } from "./schema-converter.js";
+import type { ResolvedSchemas } from "./types.js";
 
 /**
  * Result of object code generation

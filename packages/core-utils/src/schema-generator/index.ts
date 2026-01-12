@@ -40,12 +40,14 @@ export {
 export { handleReference } from "./reference-handlers.js";
 
 // Main exports - commonly used functions and types
-export {
-  type OpenAPISchema,
-  type ZodSchemaCodeOptions,
-  type ZodSchemaResult,
-  zodSchemaToCode,
-} from "./schema-converter.js";
+export { zodSchemaToCode } from "./schema-converter.js";
+
+export type {
+  OpenAPISchema,
+  ResolvedSchemas,
+  ZodSchemaCodeOptions,
+  ZodSchemaResult,
+} from "./types.js";
 
 export type { DiscriminatorConfig, UnionType } from "./union-types.js";
 

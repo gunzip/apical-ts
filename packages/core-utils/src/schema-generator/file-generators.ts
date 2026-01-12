@@ -4,7 +4,7 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 
 import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
-import type { ResolvedSchemas } from "./schema-converter.js";
+import type { ResolvedSchemas } from "./types.js";
 
 import { analyzeReadWriteProperties } from "../shared/types.js";
 import { generateObjectCode } from "./object-properties.js";
