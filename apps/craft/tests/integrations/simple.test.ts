@@ -267,8 +267,8 @@ describe("Working Integration Test Demo", () => {
     async (statusCode, expectedStatus, hasData) => {
       // Arrange - Create a custom fetch that returns the specified status
       const customFetch = async (
-        input: URL | RequestInfo,
-        init?: RequestInit,
+        _input: URL | RequestInfo,
+        _init?: RequestInit,
       ) => {
         return new Response(null, {
           status: statusCode,

@@ -1,10 +1,7 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { shouldIncludeProperty } from "../shared/types.js";
-import type {
-  ZodSchemaCodeOptions,
-  ZodSchemaResult,
-} from "./types.js";
+import type { ZodSchemaCodeOptions, ZodSchemaResult } from "./types.js";
 import { generateObjectCode } from "./object-properties.js";
 import { addDefaultValue } from "./utils.js";
 

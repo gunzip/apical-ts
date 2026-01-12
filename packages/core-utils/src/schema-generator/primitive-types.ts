@@ -1,9 +1,6 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
-import type {
-  ZodSchemaCodeOptions,
-  ZodSchemaResult,
-} from "./types.js";
+import type { ZodSchemaCodeOptions, ZodSchemaResult } from "./types.js";
 import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { SchemaContext } from "../shared/types.js";
