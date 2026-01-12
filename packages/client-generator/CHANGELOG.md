@@ -1,5 +1,11 @@
 # @apical-ts/client-generator
 
+## 0.11.1
+
+### Patch Changes
+
+- Refactor client generator for better maintenability
+
 ## 0.11.0
 
 ### Minor Changes

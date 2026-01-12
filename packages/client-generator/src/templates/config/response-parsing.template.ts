@@ -1,5 +1,11 @@
 /* Response parsing utilities and request body types */
 
+/* Render RequestBody alias used across generated clients */
+export function renderRequestBodyType(): string {
+  return `/* Common request body union for generated clients */
+export type RequestBody = string | Blob | ArrayBuffer | FormData | undefined;`;
+}
+
 /*
  * Renders response parsing utility functions
  */
@@ -43,10 +49,4 @@ export function getResponseContentType(response: MinimalResponse): string {
   const firstPart = raw.split(";")[0];
   return firstPart ? firstPart.trim().toLowerCase() : "";
 }`;
-}
-
-/* Render RequestBody alias used across generated clients */
-export function renderRequestBodyType(): string {
-  return `/* Common request body union for generated clients */
-export type RequestBody = string | Blob | ArrayBuffer | FormData | undefined;`;
 }

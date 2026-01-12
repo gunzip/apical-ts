@@ -4,11 +4,6 @@ import {
   renderApiResponseParsingUtilities,
   renderApiResponseTypes,
 } from "./api-response-types.template.js";
-import {
-  renderAuthHeadersType,
-  renderConfigImplementation,
-  renderConfigInterface,
-} from "./config-structure.template.js";
 import { renderDeserializerTypes } from "./deserializer-types.template.js";
 import {
   renderFormDataUtilities,
