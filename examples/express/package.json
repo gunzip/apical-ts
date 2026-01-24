@@ -17,14 +17,14 @@
     "@types/express": "^5.0.3",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
-    "prettier": "catalog:",
-    "@typescript/native-preview": "catalog:"
+    "@typescript/native-preview": "catalog:",
+    "prettier": "catalog:"
   },
   "dependencies": {
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "neverthrow": "^8.2.0",
     "zocker": "^3.0.0",
-    "zod": "^4.0.0"
+    "zod": "^4.3.6"
   },
   "engines": {
     "node": ">=22.0.0"
