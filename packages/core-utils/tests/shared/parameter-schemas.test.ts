@@ -20,7 +20,9 @@ describe("generateParameterSchemas", () => {
     };
 
     const result = generateParameterSchemas("getUsers", parameterGroups as any);
-    expect(result.schemaCode).toContain('.describe("The unique ID of the user")');
+    expect(result.schemaCode).toContain(
+      '.describe("The unique ID of the user")',
+    );
   });
 
   it("should handle optional parameters with descriptions", () => {
@@ -41,7 +43,9 @@ describe("generateParameterSchemas", () => {
 
     const result = generateParameterSchemas("getUsers", parameterGroups as any);
     // .optional() should come before .describe()
-    expect(result.schemaCode).toContain('z.number().int().optional().describe("Maximum number of items")');
+    expect(result.schemaCode).toContain(
+      'z.number().int().optional().describe("Maximum number of items")',
+    );
   });
 
   it("should use parameter description as override for schema description", () => {
@@ -66,6 +70,8 @@ describe("generateParameterSchemas", () => {
     const result = generateParameterSchemas("getUsers", parameterGroups as any);
     // Zod .describe() replaces the previous one, so we should see both or just the last one depending on implementation
     // Our implementation currently does: z.string().describe("Schema desc").describe("Param desc")
-    expect(result.schemaCode).toContain('.describe("Schema desc").describe("Param desc")');
+    expect(result.schemaCode).toContain(
+      '.describe("Schema desc").describe("Param desc")',
+    );
   });
 });

@@ -802,7 +802,9 @@ describe("zodSchemaToCode", () => {
         'z.string().describe("Description with \\"quotes\\" and\\nnewlines")',
       );
       const zodSchema = evalZod(result.code);
-      expect(zodSchema.description).toBe('Description with "quotes" and\nnewlines');
+      expect(zodSchema.description).toBe(
+        'Description with "quotes" and\nnewlines',
+      );
     });
   });
 });

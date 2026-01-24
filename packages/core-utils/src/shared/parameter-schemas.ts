@@ -11,7 +11,10 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 import type { ParameterGroups } from "./models/parameter-models.js";
 
 import { zodSchemaToCode } from "../schema-generator/index.js";
-import { addDescription, sanitizeIdentifier } from "../schema-generator/utils.js";
+import {
+  addDescription,
+  sanitizeIdentifier,
+} from "../schema-generator/utils.js";
 
 /**
  * Options for parameter schema generation, controlling transformations
