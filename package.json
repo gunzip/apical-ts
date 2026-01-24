@@ -27,5 +27,10 @@
     "turbo": "^2.7.3",
     "vitest": "catalog:"
   },
+  "pnpm": {
+    "overrides": {
+      "lodash": ">=4.17.23"
+    }
+  },
   "packageManager": "pnpm@10.15.1"
 }
