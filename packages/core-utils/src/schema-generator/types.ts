@@ -53,6 +53,10 @@ export interface ZodSchemaCodeOptions {
    * Additional context about the schema (operation, request/response, etc.)
    */
   schemaContext?: SchemaContext;
+  /**
+   * Whether to skip adding the description to the Zod code (used for recursion)
+   */
+  skipDescription?: boolean;
 }
 
 /**

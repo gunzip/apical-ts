@@ -29,6 +29,7 @@ import {
 import { handleReferenceWithContext } from "./reference-handlers.js";
 import { handleAllOfSchema, handleUnionSchema } from "./union-types.js";
 import {
+  addDescription,
   analyzeTypeArray,
   cloneWithoutNullable,
   inferEffectiveType,
@@ -50,8 +51,16 @@ export function zodSchemaToCode(
     recursiveContext,
     resolvedSchemas,
     schemaContext,
+    skipDescription,
   } = options;
   const result = createResult(imports);
+
+  const applyDesc = (res: ZodSchemaResult) => {
+    if (!skipDescription) {
+      res.code = addDescription(res.code, schema.description);
+    }
+    return res;
+  };
 
   /* References */
   if (!isSchemaObject(schema)) {
@@ -65,38 +74,42 @@ export function zodSchemaToCode(
 
   /* Multi-type (array) declarations */
   if (Array.isArray(effectiveType)) {
-    return handleMultiTypeArray(
-      schema,
-      effectiveType,
-      result,
-      recursiveContext,
-      currentSchemaName,
-      resolvedSchemas,
-      extraProps,
+    return applyDesc(
+      handleMultiTypeArray(
+        schema,
+        effectiveType,
+        result,
+        recursiveContext,
+        currentSchemaName,
+        resolvedSchemas,
+        extraProps,
+      ),
     );
   }
 
   /* const values should be treated as literals */
   if (schema.const !== undefined) {
     result.code = `z.literal(${typeof schema.const === "string" ? JSON.stringify(schema.const) : schema.const})`;
-    return result;
+    return applyDesc(result);
   }
 
   /* Non-string enums (string enums handled inside string primitive for extensibility) */
   if (schema.enum && Array.isArray(schema.enum) && effectiveType !== "string") {
     result.code = handleRegularEnum(schema.enum, schema.default);
-    return result;
+    return applyDesc(result);
   }
 
   /* Nullable (OpenAPI 3.0) */
   if (isNullable(schema)) {
-    return handleNullableSchema(
-      schema,
-      result,
-      recursiveContext,
-      currentSchemaName,
-      resolvedSchemas,
-      extraProps,
+    return applyDesc(
+      handleNullableSchema(
+        schema,
+        result,
+        recursiveContext,
+        currentSchemaName,
+        resolvedSchemas,
+        extraProps,
+      ),
     );
   }
 
@@ -109,7 +122,7 @@ export function zodSchemaToCode(
     resolvedSchemas,
     extraProps,
   );
-  if (composition) return composition;
+  if (composition) return applyDesc(composition);
 
   /* Primitives & structured */
   const primitiveHandled = handlePrimitive(
@@ -122,11 +135,11 @@ export function zodSchemaToCode(
     extraProps,
     schemaContext,
   );
-  if (primitiveHandled) return primitiveHandled;
+  if (primitiveHandled) return applyDesc(primitiveHandled);
 
   /* Unknown fallback */
   result.code = "z.unknown()";
-  return result;
+  return applyDesc(result);
 }
 
 /* Internal helper: creates an empty ZodSchemaResult reusing provided imports set when present */
@@ -153,6 +166,7 @@ function handleMultiTypeArray(
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
+      skipDescription: true,
     });
     result.code = `(${subResult.code}).nullable()`;
     mergeImports(result.imports, subResult.imports);
@@ -165,6 +179,7 @@ function handleMultiTypeArray(
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
+      skipDescription: true,
     }),
   );
   const schemas = subResults.map((r) => r.code);
@@ -189,6 +204,7 @@ function handleNullableSchema(
     imports: result.imports,
     recursiveContext,
     resolvedSchemas,
+    skipDescription: true,
   });
   result.code = `(${subResult.code}).nullable()`;
   mergeImports(result.imports, subResult.imports);

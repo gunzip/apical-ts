@@ -749,4 +749,62 @@ describe("zodSchemaToCode", () => {
       );
     });
   });
+
+  describe("description handling", () => {
+    it("should add .describe() for string schema with description", () => {
+      const schema: SchemaObject = {
+        type: "string",
+        description: "A user's full name",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.string().describe("A user\'s full name")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.description).toBe("A user's full name");
+    });
+
+    it("should add .describe() for object schema with description", () => {
+      const schema: SchemaObject = {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "The name" },
+        },
+        description: "A user profile",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toContain('.describe("A user profile")');
+      expect(result.code).toContain('.describe("The name")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.description).toBe("A user profile");
+      expect(zodSchema.shape.name.description).toBe("The name");
+    });
+
+    it("should add .describe() for nullable schema with description only once", () => {
+      const schema: SchemaObject = {
+        type: ["string", "null"],
+        description: "Optional nickname",
+      };
+      const result = zodSchemaToCode(schema);
+      // Should be (z.string()).nullable().describe(...) and NOT (z.string().describe(...)).nullable().describe(...)
+      expect(result.code).toBe(
+        '(z.string()).nullable().describe("Optional nickname")',
+      );
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.description).toBe("Optional nickname");
+    });
+
+    it("should properly escape special characters in description", () => {
+      const schema: SchemaObject = {
+        type: "string",
+        description: 'Description with "quotes" and\nnewlines',
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe(
+        'z.string().describe("Description with \\"quotes\\" and\\nnewlines")',
+      );
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.description).toBe(
+        'Description with "quotes" and\nnewlines',
+      );
+    });
+  });
 });

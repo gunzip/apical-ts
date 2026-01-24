@@ -11,7 +11,10 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 import type { ParameterGroups } from "./models/parameter-models.js";
 
 import { zodSchemaToCode } from "../schema-generator/index.js";
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import {
+  addDescription,
+  sanitizeIdentifier,
+} from "../schema-generator/utils.js";
 
 /**
  * Options for parameter schema generation, controlling transformations
@@ -118,6 +121,9 @@ export function generateParameterSchemas(
     if (!isRequired) {
       zodCode = `${zodCode}.optional()`;
     }
+
+    /* Add parameter description if present (overrides schema description if any) */
+    zodCode = addDescription(zodCode, param.description);
 
     return `${JSON.stringify(name)}: ${zodCode}`;
   };
