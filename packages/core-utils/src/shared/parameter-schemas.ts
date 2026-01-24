@@ -11,7 +11,7 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 import type { ParameterGroups } from "./models/parameter-models.js";
 
 import { zodSchemaToCode } from "../schema-generator/index.js";
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
+import { addDescription, sanitizeIdentifier } from "../schema-generator/utils.js";
 
 /**
  * Options for parameter schema generation, controlling transformations
@@ -85,7 +85,8 @@ export function generateParameterSchemas(
      For servers, applies parameter-specific transformations:
        - Preserve original OpenAPI key verbatim (quoted)
        - Lowercase header parameter keys (Express normalizes)
-       - Coerce primitive number/integer/boolean to accept strings */
+       - Coerce primitive number/integer/boolean to accept strings
+       - Add parameter description via .describe() */
   const buildProp = (originalName: string, param: ParameterObject): string => {
     const schema = param.schema as ReferenceObject | SchemaObject | undefined;
     const isRequired = param.required === true;
@@ -114,6 +115,9 @@ export function generateParameterSchemas(
     } else {
       zodCode = "z.string()";
     }
+
+    /* Add parameter description if present (separate from schema description) */
+    zodCode = addDescription(zodCode, param.description);
 
     if (!isRequired) {
       zodCode = `${zodCode}.optional()`;

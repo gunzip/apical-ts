@@ -32,6 +32,21 @@ export function addDefaultValue(code: string, defaultValue: unknown): string {
 }
 
 /**
+ * Add description to zod code if present in schema
+ */
+export function addDescription(
+  code: string,
+  description: string | undefined,
+): string {
+  if (!description) {
+    return code;
+  }
+
+  // Use JSON.stringify to properly escape the description for JavaScript string
+  return `${code}.describe(${JSON.stringify(description)})`;
+}
+
+/**
  * Check if a type array represents a nullable type (e.g., ["string", "null"])
  */
 export function analyzeTypeArray(types: string[]): {
@@ -55,6 +70,16 @@ export function cloneWithoutNullable(schema: SchemaObject): SchemaObject {
   if ("nullable" in clone) {
     delete clone.nullable;
   }
+  return clone;
+}
+
+/**
+ * Create a clone of schema without the description property.
+ * Used when recursively processing the same schema to avoid duplicate .describe() calls.
+ */
+export function cloneWithoutDescription(schema: SchemaObject): SchemaObject {
+  const clone = { ...schema };
+  delete clone.description;
   return clone;
 }
 

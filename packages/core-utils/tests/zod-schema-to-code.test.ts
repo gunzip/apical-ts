@@ -749,4 +749,212 @@ describe("zodSchemaToCode", () => {
       );
     });
   });
+
+  describe("description handling", () => {
+    it("should add .describe() for string schema with description", () => {
+      const schema: SchemaObject = {
+        type: "string",
+        description: "A user's full name",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.string().describe("A user\'s full name")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse("John Doe").success).toBe(true);
+      expect(zodSchema.description).toBe("A user's full name");
+    });
+
+    it("should add .describe() for number schema with description", () => {
+      const schema: SchemaObject = {
+        type: "number",
+        description: "The user's age in years",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.number().describe("The user\'s age in years")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse(25).success).toBe(true);
+      expect(zodSchema.description).toBe("The user's age in years");
+    });
+
+    it("should add .describe() for boolean schema with description", () => {
+      const schema: SchemaObject = {
+        type: "boolean",
+        description: "Whether the user is active",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.boolean().describe("Whether the user is active")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse(true).success).toBe(true);
+      expect(zodSchema.description).toBe("Whether the user is active");
+    });
+
+    it("should add .describe() for array schema with description", () => {
+      const schema: SchemaObject = {
+        type: "array",
+        items: { type: "string" },
+        description: "List of tags",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.array(z.string()).describe("List of tags")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse(["tag1", "tag2"]).success).toBe(true);
+      expect(zodSchema.description).toBe("List of tags");
+    });
+
+    it("should add .describe() for object schema with description", () => {
+      const schema: SchemaObject = {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+        },
+        description: "A user profile",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.object({"name": z.string().optional()}).describe("A user profile")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse({ name: "John" }).success).toBe(true);
+      expect(zodSchema.description).toBe("A user profile");
+    });
+
+    it("should add .describe() for nullable schema with description", () => {
+      const schema: SchemaObject = {
+        type: ["string", "null"],
+        description: "Optional nickname",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('(z.string()).nullable().describe("Optional nickname")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse("Nick").success).toBe(true);
+      expect(zodSchema.safeParse(null).success).toBe(true);
+      expect(zodSchema.description).toBe("Optional nickname");
+    });
+
+    it("should add .describe() for OpenAPI 3.0 nullable schema with description", () => {
+      const schema: SchemaObject = {
+        type: "string",
+        nullable: true,
+        description: "Optional nickname",
+      } as SchemaObject;
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('(z.string()).nullable().describe("Optional nickname")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse("Nick").success).toBe(true);
+      expect(zodSchema.safeParse(null).success).toBe(true);
+      expect(zodSchema.description).toBe("Optional nickname");
+    });
+
+    it("should add .describe() for enum schema with description", () => {
+      const schema: SchemaObject = {
+        type: "string",
+        enum: ["active", "inactive", "pending"],
+        description: "User account status",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.enum(["active", "inactive", "pending"]).describe("User account status")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse("active").success).toBe(true);
+      expect(zodSchema.description).toBe("User account status");
+    });
+
+    it("should add .describe() for const schema with description", () => {
+      const schema: SchemaObject = {
+        const: "fixed-value",
+        description: "A constant value",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.literal("fixed-value").describe("A constant value")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.safeParse("fixed-value").success).toBe(true);
+      expect(zodSchema.description).toBe("A constant value");
+    });
+
+    it("should properly escape special characters in description", () => {
+      const schema: SchemaObject = {
+        type: "string",
+        description: 'Description with "quotes" and\nnewlines',
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.string().describe("Description with \\"quotes\\" and\\nnewlines")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.description).toBe('Description with "quotes" and\nnewlines');
+    });
+
+    it("should add .describe() after default value", () => {
+      const schema: SchemaObject = {
+        type: "string",
+        default: "default-value",
+        description: "A string with default",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.string().default("default-value").describe("A string with default")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.parse(undefined)).toBe("default-value");
+      expect(zodSchema.description).toBe("A string with default");
+    });
+
+    it("should add .describe() after constraints", () => {
+      const schema: SchemaObject = {
+        type: "string",
+        minLength: 5,
+        maxLength: 100,
+        description: "A constrained string",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.string().min(5).max(100).describe("A constrained string")');
+      const zodSchema = evalZod(result.code);
+      expect(zodSchema.description).toBe("A constrained string");
+    });
+
+    it("should not add .describe() when description is undefined", () => {
+      const schema: SchemaObject = {
+        type: "string",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe("z.string()");
+      expect(result.code).not.toContain("describe");
+    });
+
+    it("should not add .describe() when description is empty string", () => {
+      const schema: SchemaObject = {
+        type: "string",
+        description: "",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe("z.string()");
+      expect(result.code).not.toContain("describe");
+    });
+
+    it("should add .describe() for nested object properties with descriptions", () => {
+      const schema: SchemaObject = {
+        type: "object",
+        properties: {
+          name: {
+            type: "string",
+            description: "The person's name",
+          },
+          age: {
+            type: "number",
+            description: "Age in years",
+          },
+        },
+        description: "A person object",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toContain('.describe("The person\'s name")');
+      expect(result.code).toContain('.describe("Age in years")');
+      expect(result.code).toContain('.describe("A person object")');
+    });
+
+    it("should add .describe() for array items with description", () => {
+      const schema: SchemaObject = {
+        type: "array",
+        items: {
+          type: "string",
+          description: "A tag name",
+        },
+        description: "List of tags",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('z.array(z.string().describe("A tag name")).describe("List of tags")');
+    });
+  });
 });

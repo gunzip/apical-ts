@@ -29,12 +29,15 @@ import {
 import { handleReferenceWithContext } from "./reference-handlers.js";
 import { handleAllOfSchema, handleUnionSchema } from "./union-types.js";
 import {
+  addDescription,
   analyzeTypeArray,
+  cloneWithoutDescription,
   cloneWithoutNullable,
   inferEffectiveType,
   isNullable,
   mergeImports,
 } from "./utils.js";
+import { SchemaObjectType } from "openapi3-ts/oas30";
 
 /**
  * Converts an OpenAPI schema object to Zod validation code
@@ -61,6 +64,35 @@ export function zodSchemaToCode(
     });
   }
 
+  /* Process the schema and get the base result */
+  const baseResult = processSchemaObject(
+    schema,
+    result,
+    currentSchemaName,
+    extraProps,
+    recursiveContext,
+    resolvedSchemas,
+    schemaContext,
+  );
+
+  /* Add description if present in the schema */
+  baseResult.code = addDescription(baseResult.code, schema.description);
+
+  return baseResult;
+}
+
+/**
+ * Process a SchemaObject and return the Zod code result (without description)
+ */
+function processSchemaObject(
+  schema: SchemaObject,
+  result: ZodSchemaResult,
+  currentSchemaName?: string,
+  extraProps?: ExtraPropsMode,
+  recursiveContext?: RecursiveContext,
+  resolvedSchemas?: ResolvedSchemas,
+  schemaContext?: SchemaContext,
+): ZodSchemaResult {
   const effectiveType = inferEffectiveType(schema);
 
   /* Multi-type (array) declarations */
@@ -146,7 +178,11 @@ function handleMultiTypeArray(
 ): ZodSchemaResult {
   const { isNullable: hasNull, nonNullTypes } = analyzeTypeArray(effectiveType);
   if (nonNullTypes.length === 1 && hasNull) {
-    const clone = { ...schema, type: nonNullTypes[0] };
+    // Strip description - it will be added at the outer level
+    const clone = cloneWithoutDescription({
+      ...schema,
+      type: nonNullTypes[0] as SchemaObjectType,
+    });
     const subResult = zodSchemaToCode(clone as SchemaObject, {
       currentSchemaName,
       extraProps,
@@ -158,14 +194,21 @@ function handleMultiTypeArray(
     mergeImports(result.imports, subResult.imports);
     return result;
   }
+  // Strip description from all type variants - it will be added at the outer level
   const subResults = effectiveType.map((t: string) =>
-    zodSchemaToCode({ ...schema, type: t } as SchemaObject, {
-      currentSchemaName,
-      extraProps,
-      imports: result.imports,
-      recursiveContext,
-      resolvedSchemas,
-    }),
+    zodSchemaToCode(
+      cloneWithoutDescription({
+        ...schema,
+        type: t as SchemaObjectType,
+      }) as SchemaObject,
+      {
+        currentSchemaName,
+        extraProps,
+        imports: result.imports,
+        recursiveContext,
+        resolvedSchemas,
+      },
+    ),
   );
   const schemas = subResults.map((r) => r.code);
   subResults.forEach((r) => mergeImports(result.imports, r.imports));
@@ -182,7 +225,8 @@ function handleNullableSchema(
   resolvedSchemas?: ResolvedSchemas,
   extraProps?: ExtraPropsMode,
 ): ZodSchemaResult {
-  const clone = cloneWithoutNullable(schema);
+  // Strip both nullable and description - description will be added at the outer level
+  const clone = cloneWithoutDescription(cloneWithoutNullable(schema));
   const subResult = zodSchemaToCode(clone, {
     currentSchemaName,
     extraProps,
