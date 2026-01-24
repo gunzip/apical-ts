@@ -1,9 +1,10 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
+import { isSchemaObject } from "openapi3-ts/oas31";
 
 import { shouldIncludeProperty } from "../shared/types.js";
 import type { ZodSchemaCodeOptions, ZodSchemaResult } from "./types.js";
 import { generateObjectCode } from "./object-properties.js";
-import { addDefaultValue } from "./utils.js";
+import { addDefaultValue, addDescription } from "./utils.js";
 
 /**
  * Handle object type conversion
@@ -40,13 +41,18 @@ export function handleObjectType(
         recursiveContext,
         resolvedSchemas,
         schemaContext,
+        skipDescription: true,
       });
       result.imports = new Set([...propResult.imports, ...result.imports]);
 
       const isRequired = requiredFields.includes(key);
-      const propCode = isRequired
+      let propCode = isRequired
         ? propResult.code
         : `${propResult.code}.optional()`;
+
+      if (isSchemaObject(propSchema)) {
+        propCode = addDescription(propCode, propSchema.description);
+      }
 
       shape.push(`${JSON.stringify(key)}: ${propCode}`);
     }
