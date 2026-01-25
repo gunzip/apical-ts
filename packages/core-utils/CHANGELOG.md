@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.12.1
+
+### Patch Changes
+
+- b9d5b8f: Upgraded dependencies
+
 ## 0.12.0
 
 ### Minor Changes

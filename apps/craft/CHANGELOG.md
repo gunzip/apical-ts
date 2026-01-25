@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.13.1
+
+### Patch Changes
+
+- b9d5b8f: Upgraded dependencies
+
 ## 0.13.0
 
 ### Minor Changes
