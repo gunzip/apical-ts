@@ -28,18 +28,18 @@
     "@types/node": "catalog:",
     "@types/supertest": "^6.0.3",
     "@types/swagger2openapi": "^7.0.4",
+    "@typescript/native-preview": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "prettier": "catalog:",
     "supertest": "^7.1.4",
-    "@typescript/native-preview": "catalog:",
     "vitest": "catalog:"
   },
   "dependencies": {
-    "@apidevtools/json-schema-ref-parser": "^14.2.0",
+    "@apidevtools/json-schema-ref-parser": "^15.2.2",
     "js-yaml": "^4.1.1",
     "openapi3-ts": "^4.3.0",
     "swagger2openapi": "^7.0.8",
-    "zod": "^4.1.8"
+    "zod": "^4.3.6"
   }
 }

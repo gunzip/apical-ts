@@ -33,17 +33,17 @@
   "devDependencies": {
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "prettier": "catalog:",
     "tsup": "catalog:",
-    "@typescript/native-preview": "catalog:",
     "vitest": "catalog:"
   },
   "dependencies": {
     "@apical-ts/core-utils": "workspace:*",
     "openapi3-ts": "^4.3.0",
     "p-limit": "^7.1.0",
-    "zod": "^4.1.8"
+    "zod": "^4.3.6"
   },
   "engines": {
     "node": ">=20.0.0"

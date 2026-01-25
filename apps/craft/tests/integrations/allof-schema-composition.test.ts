@@ -53,9 +53,8 @@ describe("AllOf Schema Composition Integration", () => {
   describe("Generated schema validation", () => {
     it("should validate AllOfTest schema correctly", async () => {
       // Import the actual Zod schema
-      const { AllOfTest: AllOfTestSchema } = await import(
-        "./generated/schemas/AllOfTest.js"
-      );
+      const { AllOfTest: AllOfTestSchema } =
+        await import("./generated/schemas/AllOfTest.js");
 
       // Test valid data
       const validData = {
@@ -86,9 +85,7 @@ describe("AllOf Schema Composition Integration", () => {
     it("should validate AllOfWithEmptyObjectAndRequireTest with required items", async () => {
       // Import the actual Zod schema
       const { AllOfWithEmptyObjectAndRequireTest: RequireTestSchema } =
-        await import(
-          "./generated/schemas/AllOfWithEmptyObjectAndRequireTest.js"
-        );
+        await import("./generated/schemas/AllOfWithEmptyObjectAndRequireTest.js");
 
       // Test that items is required
       const invalidData = {
@@ -137,9 +134,8 @@ describe("AllOf Schema Composition Integration", () => {
 
     it("should handle optional items in regular AllOfTest", async () => {
       // Import the actual Zod schema
-      const { AllOfTest: AllOfTestSchema } = await import(
-        "./generated/schemas/AllOfTest.js"
-      );
+      const { AllOfTest: AllOfTestSchema } =
+        await import("./generated/schemas/AllOfTest.js");
 
       // Test that items is optional in regular AllOfTest
       const dataWithoutItems = {

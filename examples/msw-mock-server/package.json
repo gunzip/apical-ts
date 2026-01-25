@@ -18,16 +18,16 @@
     "@apical-ts/craft": "workspace:*",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "prettier": "catalog:",
     "tsx": "^4.19.2",
-    "@typescript/native-preview": "catalog:",
     "vitest": "catalog:"
   },
   "dependencies": {
     "msw": "^2.6.8",
     "zocker": "^3.0.0",
-    "zod": "^4.0.0"
+    "zod": "^4.3.6"
   },
   "engines": {
     "node": ">=22.0.0"
