@@ -122,9 +122,12 @@ export class ImportManager {
     operationId: string,
     requestMapName: string,
     responseMapName: string,
+    requestMapAlias?: string,
+    responseMapAlias?: string,
   ): void {
     // Import request map (both type and value with same name, distinguished by TypeScript automatically)
     const requestMapImportInfo: ImportInfo = {
+      alias: requestMapAlias,
       filePath: `../routes/${operationId}.js`,
       name: requestMapName,
       operationId,
@@ -140,6 +143,7 @@ export class ImportManager {
 
     // Import response map (both type and value with same name)
     const responseMapImportInfo: ImportInfo = {
+      alias: responseMapAlias,
       filePath: `../routes/${operationId}.js`,
       name: responseMapName,
       operationId,

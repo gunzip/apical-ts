@@ -26,6 +26,7 @@ export async function writeRouteMetadataFile(
   importManager: ImportManager,
   routesDir: string,
 ): Promise<void> {
+  const sanitizedId = sanitizeIdentifier(operationId);
   /* Use structured approach to categorize imports */
   const categorized = categorizeImportsFromManager(importManager);
 
@@ -45,7 +46,7 @@ export async function writeRouteMetadataFile(
   const fullCode =
     imports.length > 0 ? `${imports.join("\n")}\n\n${routeCode}` : routeCode;
 
-  const filePath = path.join(routesDir, `${operationId}.ts`);
+  const filePath = path.join(routesDir, `${sanitizedId}.ts`);
   await fs.writeFile(filePath, fullCode);
 }
 
@@ -60,7 +61,7 @@ export async function writeRoutesIndexFile(
   const exports = operations
     .map(({ operationId }) => {
       const sanitizedId = sanitizeIdentifier(operationId);
-      return `export { clientRoute as ${sanitizedId}ClientRoute, serverRoute as ${sanitizedId}ServerRoute } from "./${operationId}.js";`;
+      return `export { clientRoute as ${sanitizedId}ClientRoute, serverRoute as ${sanitizedId}ServerRoute } from "./${sanitizedId}.js";`;
     })
     .join("\n");
 
@@ -68,7 +69,7 @@ export async function writeRoutesIndexFile(
   const routeImports = operations
     .map(({ operationId }) => {
       const sanitizedId = sanitizeIdentifier(operationId);
-      return `import { serverRoute as ${sanitizedId}Route } from "./${operationId}.js";`;
+      return `import { serverRoute as ${sanitizedId}Route } from "./${sanitizedId}.js";`;
     })
     .join("\n");
 

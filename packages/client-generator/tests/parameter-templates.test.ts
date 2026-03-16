@@ -254,6 +254,21 @@ describe("parameter template functions", () => {
         "UploadFileParams<TRequestContentType, TResponseContentType>",
       );
     });
+
+    it("should sanitize dotted operation identifiers", () => {
+      const analysis = createBasicAnalysis({
+        operationId: "addonPropertiesResource.deleteAddonProperty_delete",
+        structure: {
+          ...createBasicAnalysis().structure,
+          hasResponseMap: true,
+        },
+      });
+
+      const result = renderParameterInterface(analysis);
+      expect(result).toBe(
+        "AddonPropertiesResourceDeleteAddonPropertyDeleteParams<TResponseContentType>",
+      );
+    });
   });
 
   describe("renderDestructuredParameters", () => {

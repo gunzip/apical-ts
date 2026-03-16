@@ -25,7 +25,7 @@ export async function writeServerIndexFile(
   const exports = operations
     .map(({ operationId }) => {
       const sanitizedId = sanitizeIdentifier(operationId);
-      return `export { ${sanitizedId}Wrapper } from "./${operationId}.js";`;
+      return `export { ${sanitizedId}Wrapper } from "./${sanitizedId}.js";`;
     })
     .join("\n");
 
@@ -33,7 +33,7 @@ export async function writeServerIndexFile(
   const routeImports = operations
     .map(({ operationId }) => {
       const sanitizedId = sanitizeIdentifier(operationId);
-      return `import { route as ${sanitizedId}Route } from "./${operationId}.js";`;
+      return `import { route as ${sanitizedId}Route } from "./${sanitizedId}.js";`;
     })
     .join("\n");
 
@@ -53,11 +53,11 @@ ${routeImports}
 ${exports}
 
 /* Re-export all handlers */
-${operations
-  .map(({ operationId }) => {
-    const sanitizedId = sanitizeIdentifier(operationId);
-    return `export type { ${sanitizedId}Handler } from "./${operationId}.js";`;
-  })
+  ${operations
+    .map(({ operationId }) => {
+      const sanitizedId = sanitizeIdentifier(operationId);
+      return `export type { ${sanitizedId}Handler } from "./${sanitizedId}.js";`;
+    })
   .join("\n")}
 
 /* Routes object with all route functions */
@@ -76,6 +76,9 @@ export async function writeServerOperationFile(
   wrapperCode: string,
   serverOperationsDir: string,
 ): Promise<void> {
-  const filePath = path.join(serverOperationsDir, `${operationId}.ts`);
+  const filePath = path.join(
+    serverOperationsDir,
+    `${sanitizeIdentifier(operationId)}.ts`,
+  );
   await fs.writeFile(filePath, wrapperCode);
 }

@@ -1,4 +1,4 @@
-import type { SchemaObject } from "openapi3-ts/oas31";
+import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
@@ -94,6 +94,71 @@ export function analyzeSchemaForRecursion(
   const selfRef = `#/components/schemas/${schemaName}`;
 
   return refs.includes(selfRef);
+}
+
+/**
+ * Finds all recursive schemas in a given set of component schemas
+ * by building a reference graph and detecting cycles.
+ */
+export function findRecursiveSchemas(
+  schemas: Record<string, SchemaObject | ReferenceObject>,
+): Set<string> {
+  const graph = new Map<string, Set<string>>();
+
+  for (const [name, schema] of Object.entries(schemas)) {
+    if (isReferenceObject(schema)) {
+      continue;
+    }
+
+    const sanitizedName = sanitizeIdentifier(name);
+    const refs = findReferencesInSchema(schema)
+      .filter((ref) => ref.startsWith("#/components/schemas/"))
+      .map((ref) =>
+        sanitizeIdentifier(ref.replace("#/components/schemas/", "")),
+      );
+
+    graph.set(sanitizedName, new Set(refs));
+  }
+
+  const recursiveSchemas = new Set<string>();
+  const visited = new Set<string>();
+  const stack: string[] = [];
+  const inStack = new Set<string>();
+
+  function visit(schemaName: string): void {
+    visited.add(schemaName);
+    stack.push(schemaName);
+    inStack.add(schemaName);
+
+    for (const referencedSchema of graph.get(schemaName) ?? []) {
+      if (!graph.has(referencedSchema)) {
+        continue;
+      }
+
+      if (!visited.has(referencedSchema)) {
+        visit(referencedSchema);
+        continue;
+      }
+
+      if (inStack.has(referencedSchema)) {
+        const cycleStartIndex = stack.indexOf(referencedSchema);
+        stack.slice(cycleStartIndex).forEach((cycleSchema) => {
+          recursiveSchemas.add(cycleSchema);
+        });
+      }
+    }
+
+    stack.pop();
+    inStack.delete(schemaName);
+  }
+
+  for (const schemaName of graph.keys()) {
+    if (!visited.has(schemaName)) {
+      visit(schemaName);
+    }
+  }
+
+  return recursiveSchemas;
 }
 
 /**

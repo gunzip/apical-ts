@@ -48,7 +48,10 @@ export function handleRegularEnum(
   if (enumValues.length === 1) {
     const value = enumValues[0];
     const code = `z.literal(${typeof value === "string" ? JSON.stringify(value) : value})`;
-    return addDefaultValue(code, defaultValue);
+    return addDefaultValue(
+      code,
+      defaultValue === value ? defaultValue : undefined,
+    );
   }
 
   // Check if all values are strings
@@ -67,5 +70,8 @@ export function handleRegularEnum(
     code = `z.union([${literals.join(", ")}])`;
   }
 
-  return addDefaultValue(code, defaultValue);
+  return addDefaultValue(
+    code,
+    enumValues.includes(defaultValue) ? defaultValue : undefined,
+  );
 }

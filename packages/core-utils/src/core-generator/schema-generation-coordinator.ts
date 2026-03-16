@@ -9,6 +9,7 @@ import type { Profiler } from "./profiler.js";
 import {
   analyzeSchemaForRecursion,
   createRecursiveContext,
+  findRecursiveSchemas,
   generateRecursiveSchemaFile,
   generateRequestSchemaFile,
   generateResponseSchemaFile,
@@ -155,9 +156,13 @@ function createComponentSchemaPromise(
     schemaName,
   } = options;
   const isRecursive = recursiveContext.recursiveSchemas.has(schemaName);
+  const isObjectType =
+    schema.type === "object" ||
+    (Array.isArray(schema.type) && schema.type.includes("object"));
+  const canUseRecursiveFile = isObjectType && !!schema.properties;
 
   return context.limit(async () => {
-    const generationPromise = isRecursive
+    const generationPromise = isRecursive && canUseRecursiveFile
       ? generateRecursiveSchemaFile({
           description,
           extraProps: context.extraProps,
@@ -227,19 +232,20 @@ function generateComponentSchemas(
   // Create a shared recursive context for all schemas
   const recursiveContext = createRecursiveContext();
 
-  // First pass: analyze all schemas for recursive patterns
-  for (const [name, schema] of Object.entries(
-    context.openApiDoc.components.schemas,
-  )) {
+  findRecursiveSchemas(context.openApiDoc.components.schemas).forEach(
+    (schemaName) => {
+      recursiveContext.recursiveSchemas.add(schemaName);
+    },
+  );
+
+  // Preserve direct self-reference detection as a fallback.
+  for (const [name, schema] of Object.entries(context.openApiDoc.components.schemas)) {
     if (!isPlainSchemaObject(schema)) {
       continue;
     }
 
     const sanitizedName = sanitizeIdentifier(name);
-
-    // Analyze for recursion and update context
-    const isRecursive = analyzeSchemaForRecursion(name, schema);
-    if (isRecursive) {
+    if (analyzeSchemaForRecursion(name, schema)) {
       recursiveContext.recursiveSchemas.add(sanitizedName);
     }
   }

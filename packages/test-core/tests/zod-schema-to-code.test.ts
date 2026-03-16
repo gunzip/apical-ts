@@ -545,6 +545,19 @@ describe("zodSchemaToCode", () => {
     expect(zodSchema.safeParse("option4").success).toBe(false);
   });
 
+  it("should ignore enum defaults that are not valid enum members", () => {
+    const schema: SchemaObject = {
+      type: "string",
+      enum: ["PUBLISHED", "ARCHIVED", "DRAFT"],
+      default: "",
+    };
+
+    const result = zodSchemaToCode(schema);
+
+    expect(result.code).toBe('z.enum(["PUBLISHED", "ARCHIVED", "DRAFT"])');
+  });
+
+
   it("should use z.union for mixed enum types", () => {
     const schema: SchemaObject = {
       enum: ["string", 42, true],
