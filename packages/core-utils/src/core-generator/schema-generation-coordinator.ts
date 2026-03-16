@@ -162,22 +162,23 @@ function createComponentSchemaPromise(
   const canUseRecursiveFile = isObjectType && !!schema.properties;
 
   return context.limit(async () => {
-    const generationPromise = isRecursive && canUseRecursiveFile
-      ? generateRecursiveSchemaFile({
-          description,
-          extraProps: context.extraProps,
-          name: schemaName,
-          originalSchemaName: originalSchemaName || schemaName,
-          recursiveContext,
-          resolvedSchemas: context.resolvedSchemas,
-          schema,
-        })
-      : generateSchemaFile(schemaName, schema, description, {
-          extraProps: context.extraProps,
-          originalSchemaName,
-          recursiveContext,
-          resolvedSchemas: context.resolvedSchemas,
-        });
+    const generationPromise =
+      isRecursive && canUseRecursiveFile
+        ? generateRecursiveSchemaFile({
+            description,
+            extraProps: context.extraProps,
+            name: schemaName,
+            originalSchemaName: originalSchemaName || schemaName,
+            recursiveContext,
+            resolvedSchemas: context.resolvedSchemas,
+            schema,
+          })
+        : generateSchemaFile(schemaName, schema, description, {
+            extraProps: context.extraProps,
+            originalSchemaName,
+            recursiveContext,
+            resolvedSchemas: context.resolvedSchemas,
+          });
 
     const schemaFile = await generationPromise;
     const filePath = path.join(context.schemasDir, schemaFile.fileName);
@@ -239,7 +240,9 @@ function generateComponentSchemas(
   );
 
   // Preserve direct self-reference detection as a fallback.
-  for (const [name, schema] of Object.entries(context.openApiDoc.components.schemas)) {
+  for (const [name, schema] of Object.entries(
+    context.openApiDoc.components.schemas,
+  )) {
     if (!isPlainSchemaObject(schema)) {
       continue;
     }

@@ -58,7 +58,7 @@ ${exports}
       const sanitizedId = sanitizeIdentifier(operationId);
       return `export type { ${sanitizedId}Handler } from "./${sanitizedId}.js";`;
     })
-  .join("\n")}
+    .join("\n")}
 
 /* Routes object with all route functions */
 ${routesObject}

@@ -38,7 +38,7 @@ describe("server-generator file writer", () => {
       "addonPropertiesResource.deleteAddonProperty_delete.ts",
     );
     expect(indexContent).toContain(
-      './addonPropertiesResourceDeleteAddonPropertyDelete.js',
+      "./addonPropertiesResourceDeleteAddonPropertyDelete.js",
     );
   });
 });
