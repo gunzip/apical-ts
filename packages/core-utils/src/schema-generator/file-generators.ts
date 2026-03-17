@@ -92,17 +92,63 @@ export async function generateRecursiveSchemaFile(
   /* Process each property to generate the correct Zod code */
   for (const [key, propSchema] of Object.entries(schema.properties)) {
     const isRequired = requiredFields.includes(key);
+    const isRecursive = isRecursiveProperty(
+      propSchema,
+      originalSchemaName,
+      recursiveContext,
+    );
 
-    if (
-      isRecursiveProperty(propSchema, originalSchemaName, recursiveContext) &&
-      getRecursiveReferenceName(propSchema) !== undefined
-    ) {
+    if (isRecursive && getRecursiveReferenceName(propSchema) !== undefined) {
       const referencedSchemaName = getRecursiveReferenceName(propSchema)!;
       if (referencedSchemaName !== name) {
         imports.add(referencedSchemaName);
       }
       const getterCode = generateGetterCode(key, propSchema, name, isRequired);
       shape.push(getterCode);
+    } else if (isRecursive) {
+      /*
+       * Composition (allOf/anyOf/oneOf) containing a self-reference.
+       * Generate code using zodSchemaToCode but wrap in a getter to defer
+       * evaluation and avoid TypeScript "used before declaration" errors.
+       */
+      const propResult = zodSchemaToCode(propSchema, {
+        currentSchemaName: name,
+        extraProps,
+        imports: new Set(),
+        recursiveContext,
+        resolvedSchemas,
+      });
+
+      propResult.imports.forEach((imp) => {
+        if (imp !== name) {
+          imports.add(imp);
+        }
+      });
+
+      const code = isRequired
+        ? propResult.code
+        : `${propResult.code}.optional()`;
+
+      /*
+       * Use precise return type when the composition resolves to a single
+       * self-reference (e.g. allOf/anyOf/oneOf with one $ref to self).
+       * Otherwise fall back to z.ZodTypeAny.
+       */
+      const compositionItems = !isReferenceObject(propSchema)
+        ? (propSchema.allOf ?? propSchema.anyOf ?? propSchema.oneOf)
+        : undefined;
+      const singleRefTarget =
+        compositionItems?.length === 1 && isReferenceObject(compositionItems[0])
+          ? getSchemaNameFromReference(compositionItems[0].$ref)
+          : undefined;
+      const isSingleSelfReference = singleRefTarget === name;
+      const baseType = isSingleSelfReference
+        ? `typeof ${name}`
+        : "z.ZodTypeAny";
+      const returnType = isRequired ? baseType : `z.ZodOptional<${baseType}>`;
+      shape.push(
+        `get ${JSON.stringify(key)}(): ${returnType} { return ${code}; }`,
+      );
     } else {
       const propResult = zodSchemaToCode(propSchema, {
         currentSchemaName: name,
