@@ -16,7 +16,6 @@ The project is configured to publish to NPM registry with the following setup:
 The recommended way to publish is by creating a GitHub release:
 
 1. **Create a new release** on GitHub:
-
    - Go to the repository on GitHub
    - Click "Releases" → "Create a new release"
    - Create a new tag (e.g., `v1.0.0`, `v1.0.1`)

@@ -4,6 +4,7 @@
   "proseWrap": "always",
   "sortPackageJson": false,
   "ignorePatterns": [
+    ".github/agents/**",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "**/dist",

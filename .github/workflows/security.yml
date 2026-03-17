@@ -2,12 +2,12 @@ name: "Security Scan"
 
 on:
   schedule:
-    - cron: '0 8 * * 1'  # Weekly on Mondays at 8:00 UTC
+    - cron: "0 8 * * 1" # Weekly on Mondays at 8:00 UTC
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -17,7 +17,7 @@ jobs:
   dependency-scan:
     name: "Dependency Security Scan"
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,7 +35,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run npm audit
-        run: pnpm audit --audit-level moderate --json > audit-results.json || true
+        run:
+          pnpm audit --audit-level moderate --json > audit-results.json || true
 
       - name: Upload audit results
         uses: actions/upload-artifact@v4
@@ -48,7 +49,7 @@ jobs:
   license-scan:
     name: "License Compliance Scan"
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -71,7 +72,7 @@ jobs:
           # Note: This is a basic check - consider using license-checker or similar tools
           # for more comprehensive license analysis
           pnpm licenses list > licenses.txt || true
-          
+
       - name: Upload license results
         uses: actions/upload-artifact@v4
         if: always()
