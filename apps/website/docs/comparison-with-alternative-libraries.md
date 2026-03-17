@@ -25,14 +25,14 @@ popular TypeScript OpenAPI client generators.
 - ✅ Exact typings with Zod v4
 - ❌ Discriminated unions for response payloads based on status codes
 - ❌ Typed error handling / no unknown exceptions
-- ❌ Default response handling
+- 🟡 Default response handling (passthrough)
 - ❌ Modular, tree-shakable output
-- 🟡 Multiple success (2xx) responses handling (simple union)
+- 🟡 Multiple success (2xx) responses handling (undiscriminated union)
 - ❌ Multiple content types response handling
 - 🟡 Server-side validation support (via fastify plugin)
 - ✅ Integration with popular frameworks via adapters (react-query and others)
-- ❌ Wildcard status code handling (e.g., 5xx)
-- ❌ Recursive schema support
+- 🟡 Wildcard status code handling, e.g., 5xx (passthrough)
+- 🟡 Recursive schema support (to some extent, mostly typed using `any`)
 - ✅ Maintenance and active development
 - ✅ Strong Community support
 
