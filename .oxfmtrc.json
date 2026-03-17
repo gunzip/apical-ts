@@ -5,6 +5,7 @@
   "sortPackageJson": false,
   "ignorePatterns": [
     ".github/agents/**",
+    ".turbo-cache/**",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "**/dist",
