@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "proseWrap": "always",
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    ".github/agents/**",
+    ".turbo-cache/**",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "**/dist",
+    "**/generated",
+    "**/node_modules",
+    "local/",
+    ".turbo/"
+  ]
+}

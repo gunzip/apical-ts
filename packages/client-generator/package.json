@@ -16,8 +16,6 @@
   ],
   "scripts": {
     "build": "tsgo",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "typecheck": "tsgo --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest --coverage"
@@ -35,7 +33,6 @@
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "prettier": "catalog:",
     "tsup": "catalog:",
     "vitest": "catalog:"
   },

@@ -557,7 +557,6 @@ describe("zodSchemaToCode", () => {
     expect(result.code).toBe('z.enum(["PUBLISHED", "ARCHIVED", "DRAFT"])');
   });
 
-
   it("should use z.union for mixed enum types", () => {
     const schema: SchemaObject = {
       enum: ["string", 42, true],

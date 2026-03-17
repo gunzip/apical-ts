@@ -6,8 +6,8 @@
     "build": "turbo run build build:docs",
     "lint:check": "oxlint .",
     "lint": "oxlint --fix .",
-    "format": "turbo run format",
-    "format:check": "turbo run format:check",
+    "format": "oxfmt . --write",
+    "format:check": "oxfmt . --check",
     "typecheck": "turbo run typecheck:code typecheck:tests typecheck:generated",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
@@ -23,8 +23,9 @@
     "@changesets/cli": "^2.30.0",
     "@devcontainers/cli": "^0.81.1",
     "@pagopa/eslint-config": "^5.1.2",
-    "turbo": "^2.8.17",
+    "oxfmt": "catalog:",
     "oxlint": "^1.56.0",
+    "turbo": "^2.8.17",
     "vitest": "catalog:"
   },
   "packageManager": "pnpm@10.15.1"

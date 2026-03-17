@@ -31,7 +31,6 @@
     "@typescript/native-preview": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "express": "^5.2.1",
-    "prettier": "catalog:",
     "supertest": "^7.1.4",
     "vitest": "catalog:"
   },

@@ -17,8 +17,7 @@
     "@types/express": "^5.0.3",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
-    "@typescript/native-preview": "catalog:",
-    "prettier": "catalog:"
+    "@typescript/native-preview": "catalog:"
   },
   "dependencies": {
     "express": "^5.2.1",
