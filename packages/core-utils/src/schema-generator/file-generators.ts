@@ -128,9 +128,22 @@ export async function generateRecursiveSchemaFile(
       const code = isRequired
         ? propResult.code
         : `${propResult.code}.optional()`;
-      const returnType = isRequired
-        ? "z.ZodTypeAny"
-        : "z.ZodOptional<z.ZodTypeAny>";
+
+      /*
+       * Use precise return type when the composition resolves to a single
+       * self-reference (e.g. allOf/anyOf/oneOf with one $ref to self).
+       * Otherwise fall back to z.ZodTypeAny.
+       */
+      const compositionItems = !isReferenceObject(propSchema)
+        ? (propSchema.allOf ?? propSchema.anyOf ?? propSchema.oneOf)
+        : undefined;
+      const isSingleSelfReference =
+        compositionItems?.length === 1 &&
+        isReferenceObject(compositionItems[0]);
+      const baseType = isSingleSelfReference
+        ? `typeof ${name}`
+        : "z.ZodTypeAny";
+      const returnType = isRequired ? baseType : `z.ZodOptional<${baseType}>`;
       shape.push(
         `get ${JSON.stringify(key)}(): ${returnType} { return ${code}; }`,
       );
