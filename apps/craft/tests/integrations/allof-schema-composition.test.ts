@@ -199,5 +199,22 @@ describe("AllOf Schema Composition Integration", () => {
       expect(content).toContain("z.email()");
       expect(content).toContain("z.string().max(50)");
     });
+
+    it("should generate getter syntax for allOf self-referencing property", async () => {
+      const fs = await import("fs/promises");
+      const path =
+        "./tests/integrations/generated/schemas/NotificationEvent.ts";
+      const content = await fs.readFile(path, "utf-8");
+
+      // Verify it uses getter syntax for the self-referencing templateEvent
+      expect(content).toContain('get "templateEvent"()');
+      expect(content).toContain("NotificationEvent.shape");
+
+      // Verify it does NOT import itself
+      expect(content).not.toContain("import { NotificationEvent }");
+
+      // Verify it doesn't use the broken direct assignment pattern
+      expect(content).not.toMatch(/"templateEvent":\s*z\.object/);
+    });
   });
 });
