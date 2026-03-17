@@ -327,7 +327,7 @@ pnpx @apical-ts/craft generate -i <spec> -o <output> --client
 1. **Input validation**: OpenAPI spec parsing and reference resolution
 2. **Schema generation**: Concurrent Zod schema creation with type safety
 3. **Client generation**: Operation function generation with proper imports
-4. **Output validation**: File writing with OXFMT formatting
+4. **Output validation**: File writing (formatting is handled separately via `pnpm format` / Prettier)
 
 ### Common Development Workflows
 
