@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.16.0
+
+### Minor Changes
+
+- cdf09a9: Update packages
+
 ## 0.15.0
 
 ### Minor Changes
