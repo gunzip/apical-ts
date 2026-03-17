@@ -208,13 +208,15 @@ describe("AllOf Schema Composition Integration", () => {
 
       // Verify it uses getter syntax for the self-referencing templateEvent
       expect(content).toContain('get "templateEvent"()');
-      expect(content).toContain("NotificationEvent.shape");
 
       // Verify it does NOT import itself
       expect(content).not.toContain("import { NotificationEvent }");
 
       // Verify it doesn't use the broken direct assignment pattern
       expect(content).not.toMatch(/"templateEvent":\s*z\.object/);
+
+      // Verify it does NOT use .shape spread (would cause infinite recursion)
+      expect(content).not.toContain("NotificationEvent.shape");
     });
   });
 });

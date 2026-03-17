@@ -9,7 +9,7 @@ import type {
 } from "./types.js";
 import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
-import { mergeImports } from "./utils.js";
+import { mergeImports, sanitizeIdentifier } from "./utils.js";
 
 /**
  * Discriminator configuration for discriminated unions
@@ -45,26 +45,46 @@ export function handleAllOfSchema(
   const { currentSchemaName, extraProps, recursiveContext, resolvedSchemas } =
     options;
 
-  // Check if all schemas are objects, including proper reference resolution
-  const canUseObjectSpread = schemas.every((schema) => {
-    if (isReferenceObject(schema)) {
-      // It's a reference - check if it resolves to an object type
-      if (resolvedSchemas) {
+  /*
+   * Avoid object spread when allOf contains a self-reference.
+   * Spreading ...SelfSchema.shape would invoke getters on the shape object,
+   * causing infinite recursion for self-referencing properties.
+   * Fall back to the intersection approach which uses schema names directly.
+   */
+  const containsSelfReference =
+    currentSchemaName &&
+    schemas.some((schema) => {
+      if (isReferenceObject(schema)) {
         const refName = extractSchemaNameFromRef(schema.$ref);
-        if (refName) {
-          const resolvedSchema = resolvedSchemas[refName];
-          if (resolvedSchema && !("$ref" in resolvedSchema)) {
-            // Check if the resolved schema is an object type (not a reference)
-            return !resolvedSchema.type || resolvedSchema.type === "object";
+        return (
+          refName !== null && sanitizeIdentifier(refName) === currentSchemaName
+        );
+      }
+      return false;
+    });
+
+  // Check if all schemas are objects, including proper reference resolution
+  const canUseObjectSpread =
+    !containsSelfReference &&
+    schemas.every((schema) => {
+      if (isReferenceObject(schema)) {
+        // It's a reference - check if it resolves to an object type
+        if (resolvedSchemas) {
+          const refName = extractSchemaNameFromRef(schema.$ref);
+          if (refName) {
+            const resolvedSchema = resolvedSchemas[refName];
+            if (resolvedSchema && !("$ref" in resolvedSchema)) {
+              // Check if the resolved schema is an object type (not a reference)
+              return !resolvedSchema.type || resolvedSchema.type === "object";
+            }
           }
         }
+        // If we can't resolve the reference, assume it's not compatible for object spread
+        return false;
       }
-      // If we can't resolve the reference, assume it's not compatible for object spread
-      return false;
-    }
-    // Check if it's an object type in case of inline schema
-    return !schema.type || schema.type === "object";
-  });
+      // Check if it's an object type in case of inline schema
+      return !schema.type || schema.type === "object";
+    });
 
   if (canUseObjectSpread) {
     // Try object spread approach using .shape
