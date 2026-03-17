@@ -4,6 +4,8 @@ applyTo: "**/*.ts"
 
 ## Code Style Guidelines
 
+- When running locally (vscode, copilot-cli) never commit code if not asked to
+  do so.
 - Never add jsdoc comments: TypeScript typing is sufficient.
 - Use C block syntax (`/* ... */`) for method-level comments.
 - Use C++ style comments (`// ...`) for inline documentation.
