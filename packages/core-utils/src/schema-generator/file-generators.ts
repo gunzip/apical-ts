@@ -13,6 +13,7 @@ import {
   findReferencesInSchema,
 } from "./recursive-handlers.js";
 import { zodSchemaToCode } from "./schema-converter.js";
+import { sanitizeIdentifier } from "./utils.js";
 
 /**
  * Options for recursive schema file generation
@@ -92,7 +93,14 @@ export async function generateRecursiveSchemaFile(
   for (const [key, propSchema] of Object.entries(schema.properties)) {
     const isRequired = requiredFields.includes(key);
 
-    if (isRecursiveProperty(propSchema, originalSchemaName)) {
+    if (
+      isRecursiveProperty(propSchema, originalSchemaName, recursiveContext) &&
+      getRecursiveReferenceName(propSchema) !== undefined
+    ) {
+      const referencedSchemaName = getRecursiveReferenceName(propSchema)!;
+      if (referencedSchemaName !== name) {
+        imports.add(referencedSchemaName);
+      }
       const getterCode = generateGetterCode(key, propSchema, name, isRequired);
       shape.push(getterCode);
     } else {
@@ -292,6 +300,8 @@ function generateGetterCode(
   name: string,
   isRequired: boolean,
 ): string {
+  const referencedSchemaName = getRecursiveReferenceName(propSchema) ?? name;
+  const isCrossSchemaReference = referencedSchemaName !== name;
   /**
    * Generate getter with proper TypeScript return type annotation to resolve circular reference issues.
    * This follows the pattern from Zod documentation: https://zod.dev/api?id=circularity-errors
@@ -306,17 +316,24 @@ function generateGetterCode(
     propSchema.items &&
     isReferenceObject(propSchema.items)
   ) {
+    const arrayItemType = isCrossSchemaReference
+      ? "z.ZodTypeAny"
+      : `typeof ${referencedSchemaName}`;
     const returnType = isRequired
-      ? `z.ZodArray<typeof ${name}>`
-      : `z.ZodOptional<z.ZodArray<typeof ${name}>>`;
-    return baseGetter(`z.array(${name})`, returnType);
+      ? `z.ZodArray<${arrayItemType}>`
+      : `z.ZodOptional<z.ZodArray<${arrayItemType}>>`;
+    return baseGetter(`z.array(${referencedSchemaName})`, returnType);
   }
 
   /* All other cases (direct references, objects with nested references) - use schema directly */
   const returnType = isRequired
-    ? `typeof ${name}`
-    : `z.ZodOptional<typeof ${name}>`;
-  return baseGetter(name, returnType);
+    ? isCrossSchemaReference
+      ? "z.ZodTypeAny"
+      : `typeof ${referencedSchemaName}`
+    : isCrossSchemaReference
+      ? "z.ZodOptional<z.ZodTypeAny>"
+      : `z.ZodOptional<typeof ${referencedSchemaName}>`;
+  return baseGetter(referencedSchemaName, returnType);
 }
 
 /* Helper function to generate imports section */
@@ -384,20 +401,75 @@ async function generateVariantSchemaFiles(
 function isRecursiveProperty(
   propSchema: ReferenceObject | SchemaObject,
   originalSchemaName: string,
+  recursiveContext: RecursiveContext,
 ): boolean {
   /* Check for direct self-reference via $ref */
   if ("$ref" in propSchema) {
     const ref = propSchema.$ref;
+    if (!ref) {
+      return false;
+    }
     const selfRef = `#/components/schemas/${originalSchemaName}`;
     const shortSelfRef = `#/${originalSchemaName}`;
-    return ref === selfRef || ref === shortSelfRef;
+    if (ref === selfRef || ref === shortSelfRef) {
+      return true;
+    }
+    if (ref.startsWith("#/components/schemas/")) {
+      const referencedSchema = getSchemaNameFromReference(ref);
+      return !!(
+        referencedSchema &&
+        recursiveContext.recursiveSchemas.has(referencedSchema)
+      );
+    }
+    return false;
   }
 
   /* Check for indirect self-references within schema properties */
   const refs = findReferencesInSchema(propSchema);
   const selfRef = `#/components/schemas/${originalSchemaName}`;
   const shortSelfRef = `#/${originalSchemaName}`;
-  return refs.includes(selfRef) || refs.includes(shortSelfRef);
+  return refs.some((ref) => {
+    if (ref === selfRef || ref === shortSelfRef) {
+      return true;
+    }
+    const referencedSchema = getSchemaNameFromReference(ref);
+    return !!(
+      referencedSchema &&
+      recursiveContext.recursiveSchemas.has(referencedSchema)
+    );
+  });
+}
+
+function getRecursiveReferenceName(
+  propSchema: ReferenceObject | SchemaObject,
+): string | undefined {
+  if (isReferenceObject(propSchema)) {
+    return getSchemaNameFromReference(propSchema.$ref);
+  }
+
+  if (
+    propSchema.type === "array" &&
+    propSchema.items &&
+    isReferenceObject(propSchema.items)
+  ) {
+    return getSchemaNameFromReference(propSchema.items.$ref);
+  }
+
+  return undefined;
+}
+
+function getSchemaNameFromReference(ref: string): string | undefined {
+  if (ref.startsWith("#/components/schemas/")) {
+    return sanitizeIdentifier(ref.replace("#/components/schemas/", ""));
+  }
+
+  /* Handle short-form references like #/SchemaName */
+  const shortFormMatch = /^#\/([^/]+)$/.exec(ref);
+  if (shortFormMatch) {
+    return sanitizeIdentifier(shortFormMatch[1]);
+  }
+
+  return undefined;
 }
 
 // Export for testing

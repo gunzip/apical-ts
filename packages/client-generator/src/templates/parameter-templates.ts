@@ -1,6 +1,7 @@
 import type { ParameterAnalysis } from "@apical-ts/core-utils/shared";
 import type { ParameterObject } from "openapi3-ts/oas31";
 
+import { sanitizeIdentifier } from "@apical-ts/core-utils";
 import assert from "assert";
 
 /**
@@ -78,9 +79,10 @@ export function renderParameterInterface(analysis: ParameterAnalysis): string {
     "Operation ID is required for parameter interface generation",
   );
 
+  const sanitizedOperationId = sanitizeIdentifier(analysis.operationId);
   const operationName =
-    analysis.operationId.charAt(0).toUpperCase() +
-    analysis.operationId.slice(1);
+    sanitizedOperationId.charAt(0).toUpperCase() +
+    sanitizedOperationId.slice(1);
   /* Add generic type parameters only for the ones we actually use */
   const hasRequestGeneric = analysis.structure.hasRequestMap;
   const hasResponseGeneric = analysis.structure.hasResponseMap;

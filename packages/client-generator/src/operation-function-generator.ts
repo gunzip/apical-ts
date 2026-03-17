@@ -329,8 +329,10 @@ function buildParameterStructures(
   const destructuredParams = hasAnyParams ? "params" : "{}";
 
   /* Interface type name matches the type alias generated from routes */
+  const sanitizedOperationId = sanitizeIdentifier(operationId);
   const operationName =
-    operationId.charAt(0).toUpperCase() + operationId.slice(1);
+    sanitizedOperationId.charAt(0).toUpperCase() +
+    sanitizedOperationId.slice(1);
 
   let paramsInterface = `${operationName}Params`;
 

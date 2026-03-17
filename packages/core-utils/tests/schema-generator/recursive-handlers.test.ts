@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   analyzeRecursiveReference,
   createRecursiveContext,
+  findRecursiveSchemas,
   findReferencesInSchema,
 } from "../../src/schema-generator/recursive-handlers.js";
 
@@ -282,6 +283,28 @@ describe("recursive-handlers", () => {
       const refs = findReferencesInSchema(schema);
       expect(refs).toContain("#/components/schemas/TreeNode");
       expect(refs).toHaveLength(1);
+    });
+  });
+
+  describe("findRecursiveSchemas", () => {
+    it("should detect mutual recursion across component schemas", () => {
+      const recursiveSchemas = findRecursiveSchemas({
+        CompoundClause: {
+          type: "object",
+          properties: {
+            clauses: {
+              type: "array",
+              items: { $ref: "#/components/schemas/JqlQueryClause" },
+            },
+          },
+        },
+        JqlQueryClause: {
+          oneOf: [{ $ref: "#/components/schemas/CompoundClause" }],
+        },
+      });
+
+      expect(recursiveSchemas.has("CompoundClause")).toBe(true);
+      expect(recursiveSchemas.has("JqlQueryClause")).toBe(true);
     });
   });
 });

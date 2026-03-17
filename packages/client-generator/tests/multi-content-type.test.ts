@@ -232,4 +232,52 @@ describe("Multi-content-type operation function generation", () => {
     // Accept header emitted
     expect(result.functionCode).toContain("contentType?.response");
   });
+
+  it("should sanitize dotted operation IDs in generated params aliases", () => {
+    const operation: OperationObject = {
+      operationId: "addonPropertiesResource.deleteAddonProperty_delete",
+      parameters: [
+        {
+          in: "path",
+          name: "addonKey",
+          required: true,
+          schema: { type: "string" },
+        },
+      ],
+      responses: {
+        "200": {
+          description: "Success",
+          content: {
+            "application/json": {
+              schema: { type: "string" },
+            },
+          },
+        },
+      },
+    };
+
+    const doc = {
+      info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.1.0",
+      paths: {},
+    } as unknown as OpenAPIObject;
+
+    const result = generateOperationFunction(
+      "/addons/{addonKey}",
+      "get",
+      operation,
+      [],
+      doc,
+    );
+
+    expect(result.functionCode).toContain(
+      'type AddonPropertiesResourceDeleteAddonPropertyDeleteParams<TResponseContentType = "application/json">',
+    );
+    expect(result.functionCode).toContain(
+      "params: AddonPropertiesResourceDeleteAddonPropertyDeleteParams<TResponseContentType>",
+    );
+    expect(result.functionCode).not.toContain(
+      "AddonPropertiesResource.deleteAddonProperty_deleteParams",
+    );
+  });
 });

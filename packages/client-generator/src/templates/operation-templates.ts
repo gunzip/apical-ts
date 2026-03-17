@@ -160,12 +160,16 @@ export function buildTypeAliasesFromRoute(config: {
   shouldGenerateResponseMap: boolean;
 }): string {
   const sanitizedId = sanitizeIdentifier(config.operationId);
-  const requestMapName = sanitizedId + "RequestMap";
-  const responseMapName = sanitizedId + "ResponseMap";
+  const routeRequestMapName = sanitizedId + "RequestMap";
+  const routeResponseMapName = sanitizedId + "ResponseMap";
+  const requestMapName = lowerCaseFirstCharacter(routeRequestMapName);
+  const responseMapName = lowerCaseFirstCharacter(routeResponseMapName);
 
   /* Import route metadata */
   config.importManager.addRouteImport(
     sanitizedId,
+    routeRequestMapName,
+    routeResponseMapName,
     requestMapName,
     responseMapName,
   );
@@ -177,7 +181,7 @@ export function buildTypeAliasesFromRoute(config: {
     config.hasBody || config.hasRequestMap || config.hasResponseMap;
 
   let typeAliases = "";
-  const paramsTypeName = `${config.operationId.charAt(0).toUpperCase() + config.operationId.slice(1)}Params`;
+  const paramsTypeName = `${sanitizedId.charAt(0).toUpperCase()}${sanitizedId.slice(1)}Params`;
   const clientRouteName = `${sanitizedId}ClientRoute`;
   const genericParams =
     config.hasRequestMap || config.hasResponseMap
@@ -223,6 +227,10 @@ export function buildTypeAliasesFromRoute(config: {
   }
 
   return typeAliases;
+}
+
+function lowerCaseFirstCharacter(value: string): string {
+  return value.charAt(0).toLowerCase() + value.slice(1);
 }
 
 export function renderOperationFunction(
