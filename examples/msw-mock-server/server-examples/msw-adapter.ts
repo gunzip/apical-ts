@@ -141,7 +141,14 @@ export function createMswHandler<
       }
 
       if (contentType.includes("application/json")) {
-        return HttpResponse.json(result.data, {
+        /* BigInt values from z.coerce.bigint() schemas must be converted to
+           numbers for JSON serialization since JSON.stringify cannot handle BigInt */
+        const serializable = JSON.parse(
+          JSON.stringify(result.data, (_key, value) =>
+            typeof value === "bigint" ? Number(value) : value,
+          ),
+        );
+        return HttpResponse.json(serializable, {
           status: httpStatus,
           headers: {
             "Content-Type": contentType,
