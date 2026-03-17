@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.13.0
+
+### Minor Changes
+
+- ad7faec: Fix edge cases when generating client and server
+
 ## 0.12.1
 
 ### Patch Changes

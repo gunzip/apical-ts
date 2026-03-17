@@ -1,5 +1,11 @@
 # @apical-ts/test-core
 
+## 0.12.0
+
+### Minor Changes
+
+- ad7faec: Fix edge cases when generating client and server
+
 ## 0.11.1
 
 ### Patch Changes

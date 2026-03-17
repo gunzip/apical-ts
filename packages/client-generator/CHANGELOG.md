@@ -1,5 +1,16 @@
 # @apical-ts/client-generator
 
+## 0.12.0
+
+### Minor Changes
+
+- ad7faec: Fix edge cases when generating client and server
+
+### Patch Changes
+
+- Updated dependencies [ad7faec]
+  - @apical-ts/core-utils@0.13.0
+
 ## 0.11.3
 
 ### Patch Changes
