@@ -93,9 +93,12 @@ export async function generateRecursiveSchemaFile(
   for (const [key, propSchema] of Object.entries(schema.properties)) {
     const isRequired = requiredFields.includes(key);
 
-    if (isRecursiveProperty(propSchema, originalSchemaName, recursiveContext)) {
-      const referencedSchemaName = getRecursiveReferenceName(propSchema);
-      if (referencedSchemaName && referencedSchemaName !== name) {
+    if (
+      isRecursiveProperty(propSchema, originalSchemaName, recursiveContext) &&
+      getRecursiveReferenceName(propSchema) !== undefined
+    ) {
+      const referencedSchemaName = getRecursiveReferenceName(propSchema)!;
+      if (referencedSchemaName !== name) {
         imports.add(referencedSchemaName);
       }
       const getterCode = generateGetterCode(key, propSchema, name, isRequired);
@@ -456,11 +459,17 @@ function getRecursiveReferenceName(
 }
 
 function getSchemaNameFromReference(ref: string): string | undefined {
-  if (!ref.startsWith("#/components/schemas/")) {
-    return undefined;
+  if (ref.startsWith("#/components/schemas/")) {
+    return sanitizeIdentifier(ref.replace("#/components/schemas/", ""));
   }
 
-  return sanitizeIdentifier(ref.replace("#/components/schemas/", ""));
+  /* Handle short-form references like #/SchemaName */
+  const shortFormMatch = /^#\/([^/]+)$/.exec(ref);
+  if (shortFormMatch) {
+    return sanitizeIdentifier(shortFormMatch[1]);
+  }
+
+  return undefined;
 }
 
 // Export for testing

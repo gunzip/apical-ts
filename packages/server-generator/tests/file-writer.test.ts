@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 import { describe, expect, it } from "vitest";
+import type { OperationMetadata } from "@apical-ts/core-utils/shared";
 
 import {
   writeServerIndexFile,
@@ -19,14 +20,15 @@ describe("server-generator file writer", () => {
       serverDir,
     );
 
-    await writeServerIndexFile(
-      [
-        {
-          operationId: "addonPropertiesResource.deleteAddonProperty_delete",
-        } as never,
-      ],
-      serverDir,
-    );
+    const testOperation: OperationMetadata = {
+      method: "delete",
+      operation: {},
+      operationId: "addonPropertiesResource.deleteAddonProperty_delete",
+      pathKey: "/addon/properties",
+      pathLevelParameters: [],
+    };
+
+    await writeServerIndexFile([testOperation], serverDir);
 
     const filenames = await readdir(serverDir);
     const indexContent = await readFile(join(serverDir, "index.ts"), "utf8");

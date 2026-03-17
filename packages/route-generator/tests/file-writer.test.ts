@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 import { describe, expect, it } from "vitest";
+import type { OperationMetadata } from "@apical-ts/core-utils/shared";
 import { ImportManager } from "@apical-ts/core-utils";
 
 import {
@@ -21,14 +22,15 @@ describe("route-generator file writer", () => {
       routesDir,
     );
 
-    await writeRoutesIndexFile(
-      [
-        {
-          operationId: "addonPropertiesResource.deleteAddonProperty_delete",
-        } as never,
-      ],
-      routesDir,
-    );
+    const testOperation: OperationMetadata = {
+      method: "delete",
+      operation: {},
+      operationId: "addonPropertiesResource.deleteAddonProperty_delete",
+      pathKey: "/addon/properties",
+      pathLevelParameters: [],
+    };
+
+    await writeRoutesIndexFile([testOperation], routesDir);
 
     const filenames = await readdir(routesDir);
     const indexContent = await readFile(join(routesDir, "index.ts"), "utf8");
