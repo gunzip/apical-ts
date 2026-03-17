@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.14.0
+
+### Minor Changes
+
+- 9749b97: Fix recursive typings
+
 ## 0.13.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # @apical-ts/craft
 
+## 0.15.0
+
+### Minor Changes
+
+- dcf2928: Fix recursive handling in allOf
+- 9749b97: Fix recursive typings
+
 ## 0.14.0
 
 ### Minor Changes
