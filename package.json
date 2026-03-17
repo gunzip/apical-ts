@@ -23,7 +23,7 @@
     "@changesets/cli": "^2.30.0",
     "@devcontainers/cli": "^0.81.1",
     "@pagopa/eslint-config": "^5.1.2",
-    "oxfmt": "^0.41.0",
+    "oxfmt": "catalog:",
     "oxlint": "^1.56.0",
     "turbo": "^2.8.17",
     "vitest": "catalog:"
