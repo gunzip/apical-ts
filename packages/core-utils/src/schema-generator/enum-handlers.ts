@@ -43,14 +43,23 @@ export function handleExtensibleEnum(
 export function handleRegularEnum(
   enumValues: unknown[],
   defaultValue?: unknown,
+  options?: { bigint?: boolean },
 ): string {
+  const asBigInt = options?.bigint === true;
+
   // Single enum value should be a literal
   if (enumValues.length === 1) {
     const value = enumValues[0];
-    const code = `z.literal(${typeof value === "string" ? JSON.stringify(value) : value})`;
+    const literal = asBigInt
+      ? `${value}n`
+      : typeof value === "string"
+        ? JSON.stringify(value)
+        : value;
+    const code = `z.literal(${literal})`;
     return addDefaultValue(
       code,
       defaultValue === value ? defaultValue : undefined,
+      asBigInt ? { bigint: true } : undefined,
     );
   }
 
@@ -58,20 +67,25 @@ export function handleRegularEnum(
   const allStrings = enumValues.every((value) => typeof value === "string");
 
   let code: string;
-  if (allStrings) {
+  if (allStrings && !asBigInt) {
     // Use z.enum for string-only enums
     code = `z.enum([${enumValues.map((e) => JSON.stringify(e)).join(", ")}])`;
   } else {
-    // Use z.union of z.literal for mixed or non-string enums
-    const literals = enumValues.map(
-      (value) =>
-        `z.literal(${typeof value === "string" ? JSON.stringify(value) : value})`,
-    );
+    // Use z.union of z.literal for mixed, non-string, or bigint enums
+    const literals = enumValues.map((value) => {
+      const literal = asBigInt
+        ? `${value}n`
+        : typeof value === "string"
+          ? JSON.stringify(value)
+          : value;
+      return `z.literal(${literal})`;
+    });
     code = `z.union([${literals.join(", ")}])`;
   }
 
   return addDefaultValue(
     code,
     enumValues.includes(defaultValue) ? defaultValue : undefined,
+    asBigInt ? { bigint: true } : undefined,
   );
 }

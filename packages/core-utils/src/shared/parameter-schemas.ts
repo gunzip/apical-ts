@@ -108,7 +108,12 @@ export function generateParameterSchemas(
         const hasEnum = Array.isArray(schemaObj.enum);
         if (!hasEnum) {
           if (schemaObj.type === "number" || schemaObj.type === "integer") {
-            zodCode = zodCode.replace(/^z\.number\(\)/, "z.coerce.number()");
+            // int64 already uses z.coerce.bigint() which handles coercion natively
+            if (
+              !(schemaObj.type === "integer" && schemaObj.format === "int64")
+            ) {
+              zodCode = zodCode.replace(/^z\.number\(\)/, "z.coerce.number()");
+            }
           } else if (schemaObj.type === "boolean") {
             zodCode = zodCode.replace(/^z\.boolean\(\)/, "z.stringbool()");
           }
