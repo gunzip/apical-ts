@@ -1,5 +1,12 @@
 # @apical-ts/route-generator
 
+## 0.12.2
+
+### Patch Changes
+
+- Updated dependencies [67a3a53]
+  - @apical-ts/core-utils@0.15.0
+
 ## 0.12.1
 
 ### Patch Changes

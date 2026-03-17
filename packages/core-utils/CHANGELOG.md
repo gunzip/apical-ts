@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.15.0
+
+### Minor Changes
+
+- 67a3a53: Support int64 to BigInt conversion
+
 ## 0.14.0
 
 ### Minor Changes
