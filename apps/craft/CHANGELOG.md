@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.14.0
+
+### Minor Changes
+
+- Sanitize operationId
+
 ## 0.13.1
 
 ### Patch Changes
