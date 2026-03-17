@@ -24,6 +24,7 @@
     "@devcontainers/cli": "^0.81.1",
     "@pagopa/eslint-config": "^5.1.2",
     "turbo": "^2.8.17",
+    "oxlint": "^1.56.0",
     "vitest": "catalog:"
   },
   "packageManager": "pnpm@10.15.1"
