@@ -137,9 +137,11 @@ export async function generateRecursiveSchemaFile(
       const compositionItems = !isReferenceObject(propSchema)
         ? (propSchema.allOf ?? propSchema.anyOf ?? propSchema.oneOf)
         : undefined;
-      const isSingleSelfReference =
-        compositionItems?.length === 1 &&
-        isReferenceObject(compositionItems[0]);
+      const singleRefTarget =
+        compositionItems?.length === 1 && isReferenceObject(compositionItems[0])
+          ? getSchemaNameFromReference(compositionItems[0].$ref)
+          : undefined;
+      const isSingleSelfReference = singleRefTarget === name;
       const baseType = isSingleSelfReference
         ? `typeof ${name}`
         : "z.ZodTypeAny";

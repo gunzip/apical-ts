@@ -9,7 +9,7 @@ import type {
 } from "./types.js";
 import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
-import { mergeImports } from "./utils.js";
+import { mergeImports, sanitizeIdentifier } from "./utils.js";
 
 /**
  * Discriminator configuration for discriminated unions
@@ -56,7 +56,9 @@ export function handleAllOfSchema(
     schemas.some((schema) => {
       if (isReferenceObject(schema)) {
         const refName = extractSchemaNameFromRef(schema.$ref);
-        return refName === currentSchemaName;
+        return (
+          refName !== null && sanitizeIdentifier(refName) === currentSchemaName
+        );
       }
       return false;
     });
