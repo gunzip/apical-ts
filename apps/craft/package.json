@@ -22,8 +22,6 @@
     "build": "tsup",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "typecheck:code": "tsgo --noEmit",
     "typecheck:tests": "tsgo --noEmit -p tsconfig.tests.json",
     "typecheck": "pnpm typecheck:code && pnpm typecheck:tests",
@@ -58,7 +56,6 @@
     "@typescript/native-preview": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "express": "^5.2.1",
-    "prettier": "catalog:",
     "supertest": "^7.1.4",
     "tsup": "catalog:",
     "vitest": "catalog:"

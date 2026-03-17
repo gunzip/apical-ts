@@ -9,7 +9,6 @@ catalog:
   '@typescript/native-preview': ^7.0.0-dev.20260124.1
   '@vitest/coverage-v8': ^4.1.0
   embedme: ^1.22.1
-  prettier: 3.8.1
   tsup: ^8.5.1
   vitest: ^4.1.0
 

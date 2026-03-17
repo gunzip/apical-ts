@@ -22,7 +22,6 @@
     "@types/node": "catalog:",
     "@types/react": "^18.0.0",
     "@typescript/native-preview": "catalog:",
-    "p-limit": "^7.1.0",
-    "prettier": "catalog:"
+    "p-limit": "^7.1.0"
   }
 }

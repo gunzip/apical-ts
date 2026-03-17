@@ -45,8 +45,8 @@ pnpm run build
 - `pnpm run build:docs`: Generate documentation by embedding code in README.md
 - `pnpm run lint`: Run eslint with autofix on `src/`
 - `pnpm run lint:check`: Run eslint on `src/` (no autofix)
-- `pnpm run format`: Format all files using Prettier (writes changes)
-- `pnpm run format:check`: Check formatting using Prettier (no changes written)
+- `pnpm run format`: Format all files using oxfmt (writes changes)
+- `pnpm run format:check`: Check formatting using oxfmt (no changes written)
 - `pnpm run typecheck`: Run TypeScript type checking only (`tsc --noEmit`)
 - `pnpm run test`: Run all tests with Vitest
 - `pnpm run test:coverage`: Run tests with coverage report
@@ -297,7 +297,7 @@ pnpx @apical-ts/craft generate -i <spec> -o <output> --client
 
 - `typescript ^5.4.5`: TypeScript compiler
 - `vitest ^1.6.0`: Test framework
-- `prettier ^3.2.5`: Code formatting
+- `oxfmt ^0.41.0`: Code formatting
 - `@types/*`: TypeScript definitions
 
 ### Key Architectural Patterns
@@ -327,7 +327,7 @@ pnpx @apical-ts/craft generate -i <spec> -o <output> --client
 1. **Input validation**: OpenAPI spec parsing and reference resolution
 2. **Schema generation**: Concurrent Zod schema creation with type safety
 3. **Client generation**: Operation function generation with proper imports
-4. **Output validation**: File writing with Prettier formatting
+4. **Output validation**: File writing with OXFMT formatting
 
 ### Common Development Workflows
 
