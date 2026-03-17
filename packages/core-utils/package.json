@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build": "tsgo",
-    "build:docs": "embedme README.md",
+    "build:docs": "embedme README.md && oxfmt README.md",
     "typecheck:code": "tsgo --noEmit",
     "typecheck:tests": "tsgo --noEmit -p tsconfig.tests.json",
     "typecheck": "pnpm typecheck:code && pnpm typecheck:tests",
@@ -51,7 +51,8 @@
     "express": "^5.2.1",
     "supertest": "^7.1.4",
     "tsup": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "oxfmt": "catalog:"
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^15.2.2",
