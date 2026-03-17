@@ -56,6 +56,35 @@ describe("zodSchemaToCode", () => {
     expect(zodSchema.safeParse(25).success).toBe(false);
   });
 
+  it("should generate z.coerce.bigint() for integer with int64 format", () => {
+    const schema: SchemaObject = { format: "int64", type: "integer" };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.coerce.bigint()");
+  });
+
+  it("should generate z.coerce.bigint() with constraints for int64", () => {
+    const schema: SchemaObject = {
+      format: "int64",
+      maximum: 100,
+      minimum: 0,
+      type: "integer",
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.coerce.bigint().min(0n).max(100n)");
+  });
+
+  it("should generate z.number().int() for integer without format", () => {
+    const schema: SchemaObject = { type: "integer" };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.number().int()");
+  });
+
+  it("should generate z.number().int() for integer with int32 format", () => {
+    const schema: SchemaObject = { format: "int32", type: "integer" };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.number().int()");
+  });
+
   it("should generate code for a simple boolean", () => {
     const schema: SchemaObject = { type: "boolean" };
     const result = zodSchemaToCode(schema);
@@ -213,6 +242,16 @@ describe("zodSchemaToCode", () => {
     const zodSchema = evalZod(result.code);
     expect(zodSchema.parse(5)).toBe(5);
     expect(zodSchema.parse(undefined)).toBe(10); // default value
+  });
+
+  it("should handle default values for int64 schemas", () => {
+    const schema: SchemaObject = {
+      default: 42,
+      format: "int64",
+      type: "integer",
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.coerce.bigint().default(42n)");
   });
 
   it("should handle default values for array schemas", () => {

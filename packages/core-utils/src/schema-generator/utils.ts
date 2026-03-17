@@ -18,9 +18,17 @@ export type EffectiveType =
 /**
  * Add default value to zod code if present in schema
  */
-export function addDefaultValue(code: string, defaultValue: unknown): string {
+export function addDefaultValue(
+  code: string,
+  defaultValue: unknown,
+  options?: { bigint?: boolean },
+): string {
   if (defaultValue === undefined) {
     return code;
+  }
+
+  if (options?.bigint) {
+    return `${code}.default(${defaultValue}n)`;
   }
 
   const serializedDefault =

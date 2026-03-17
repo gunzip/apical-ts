@@ -90,6 +90,27 @@ export function handleNumberType(
   schema: SchemaObject,
   result: ZodSchemaResult,
 ): ZodSchemaResult {
+  /* int64 maps to BigInt to avoid precision loss beyond Number.MAX_SAFE_INTEGER.
+     z.coerce.bigint() accepts strings and numbers from JSON and coerces to BigInt. */
+  if (schema.type === "integer" && schema.format === "int64") {
+    let code = "z.coerce.bigint()";
+    if (schema.minimum !== undefined) code += `.min(${schema.minimum}n)`;
+    if (schema.maximum !== undefined) code += `.max(${schema.maximum}n)`;
+    if (schema.exclusiveMinimum !== undefined)
+      code += `.gt(${schema.exclusiveMinimum}n)`;
+    if (schema.exclusiveMaximum !== undefined)
+      code += `.lt(${schema.exclusiveMaximum}n)`;
+
+    if (schema.enum && schema.enum.length >= 1) {
+      code = handleRegularEnum(schema.enum, schema.default);
+    } else {
+      code = addDefaultValue(code, schema.default, { bigint: true });
+    }
+
+    result.code = code;
+    return result;
+  }
+
   let code = "z.number()";
 
   if (schema.minimum !== undefined) code += `.min(${schema.minimum})`;
