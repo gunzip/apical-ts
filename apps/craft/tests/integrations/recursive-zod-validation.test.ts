@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Category } from "../integrations/generated/schemas/Category.js";
+import { NotificationEvent } from "../integrations/generated/schemas/NotificationEvent.js";
 
 describe("Recursive Schema Validation", () => {
   describe("Category (regular recursive schema)", () => {
@@ -53,6 +54,50 @@ describe("Recursive Schema Validation", () => {
         extraProp: "allowed",
       };
       const result = Category.safeParse(categoryWithExtra);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("NotificationEvent (allOf self-reference)", () => {
+    it("should validate a simple event without template", () => {
+      const event = {
+        id: 1,
+        name: "Issue Created",
+        description: "Fired when an issue is created",
+      };
+      const result = NotificationEvent.safeParse(event);
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate an event with a recursive templateEvent", () => {
+      const event = {
+        id: 1,
+        name: "Custom Event",
+        description: "A custom event",
+        templateEvent: {
+          id: 2,
+          name: "Template",
+          description: "The base template",
+        },
+      };
+      const result = NotificationEvent.safeParse(event);
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate deeply nested templateEvent recursion", () => {
+      const event = {
+        id: 1,
+        name: "Level 1",
+        templateEvent: {
+          id: 2,
+          name: "Level 2",
+          templateEvent: {
+            id: 3,
+            name: "Level 3",
+          },
+        },
+      };
+      const result = NotificationEvent.safeParse(event);
       expect(result.success).toBe(true);
     });
   });

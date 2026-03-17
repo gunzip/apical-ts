@@ -1153,6 +1153,23 @@ components:
       allOf:
         - $ref: "#/components/schemas/FiscalCode" # string
 
+    NotificationEvent:
+      type: object
+      properties:
+        description:
+          type: string
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        templateEvent:
+          allOf:
+            - $ref: "#/components/schemas/NotificationEvent"
+          description:
+            "The template of the event. Only custom events configured by Jira
+            administrators have template."
+
     EmptyObject:
       type: object
       properties:
