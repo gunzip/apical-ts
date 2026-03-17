@@ -102,7 +102,7 @@ export function handleNumberType(
       code += `.lt(${schema.exclusiveMaximum}n)`;
 
     if (schema.enum && schema.enum.length >= 1) {
-      code = handleRegularEnum(schema.enum, schema.default);
+      code = handleRegularEnum(schema.enum, schema.default, { bigint: true });
     } else {
       code = addDefaultValue(code, schema.default, { bigint: true });
     }

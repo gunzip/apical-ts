@@ -20,7 +20,7 @@ async function demonstrateClient() {
     {
       body: {
         name: "Fluffy",
-        id: 1,
+        id: 1n,
         photoUrls: [
           "http://example.com/photo1.jpg",
           "http://example.com/photo2.jpg",

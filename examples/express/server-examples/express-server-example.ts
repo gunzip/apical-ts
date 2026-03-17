@@ -28,28 +28,28 @@ app.use(express.urlencoded({ extended: true }));
 /* Mock data store */
 const mockPets = [
   {
-    id: 1,
+    id: 1n,
     name: "Buddy",
     photoUrls: ["https://example.com/buddy.jpg"],
     status: "available" as const,
-    category: { id: 1, name: "Dogs" },
-    tags: [{ id: 1, name: "friendly" }],
+    category: { id: 1n, name: "Dogs" },
+    tags: [{ id: 1n, name: "friendly" }],
   },
   {
-    id: 2,
+    id: 2n,
     name: "Whiskers",
     photoUrls: ["https://example.com/whiskers.jpg"],
     status: "pending" as const,
-    category: { id: 2, name: "Cats" },
-    tags: [{ id: 2, name: "indoor" }],
+    category: { id: 2n, name: "Cats" },
+    tags: [{ id: 2n, name: "indoor" }],
   },
   {
-    id: 3,
+    id: 3n,
     name: "Max",
     photoUrls: ["https://example.com/max.jpg"],
     status: "sold" as const,
-    category: { id: 1, name: "Dogs" },
-    tags: [{ id: 3, name: "trained" }],
+    category: { id: 1n, name: "Dogs" },
+    tags: [{ id: 3n, name: "trained" }],
   },
 ];
 
@@ -164,7 +164,7 @@ app.get("/pet/findByStatus", async (req, res) => {
 
 // RAW endpoints (no validation/wrapper) for benchmark comparison
 app.get("/pet/raw/:petId", (req, res) => {
-  const petId = parseInt(req.params.petId, 10);
+  const petId = BigInt(req.params.petId);
   const pet = mockPets.find((p) => p.id === petId);
   if (!pet) {
     res.status(404).send();
