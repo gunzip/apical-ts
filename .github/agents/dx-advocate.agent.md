@@ -1,9 +1,6 @@
 ---
 name: DX Advocate
-description:
-  This custom agent reviews Pull Requests for internal developer platform tools
-  with a focus on Interface and Usability from the perspective of application
-  developers.
+description:  This custom agent reviews Pull Requests for internal developer platform tools with a focus on Interface and Usability from the perspective of application developers.
 model: GPT-5.4 (copilot)
 ---
 
