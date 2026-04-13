@@ -26,7 +26,7 @@ describe("generated operation file helpers", () => {
         { operationId: "pets_list" },
       ]),
     ).toThrow(
-      "Duplicate sanitized operation ID: pets_list conflicts with pets-list",
+      'Duplicate sanitized operation ID "petsList" produced by operation IDs "pets-list" and "pets_list"',
     );
   });
 

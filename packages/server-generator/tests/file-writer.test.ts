@@ -67,7 +67,7 @@ describe("server-generator file writer", () => {
     await expect(
       writeServerIndexFile(duplicateOperations, serverDir),
     ).rejects.toThrow(
-      "Duplicate sanitized operation ID: pets_list conflicts with pets-list",
+      'Duplicate sanitized operation ID "petsList" produced by operation IDs "pets-list" and "pets_list"',
     );
   });
 });
