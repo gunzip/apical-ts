@@ -26,6 +26,7 @@
     "oxfmt": "catalog:",
     "oxlint": "^1.59.0",
     "turbo": "^2.9.6",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "packageManager": "pnpm@10.15.1"

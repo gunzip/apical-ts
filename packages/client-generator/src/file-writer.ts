@@ -3,10 +3,13 @@ import type { OperationMetadata } from "@apical-ts/core-utils/shared";
 
 import {
   buildOperationFileContent,
-  sanitizeIdentifier,
   writeTypeScriptFile,
 } from "@apical-ts/core-utils";
-import { promises as fs } from "fs";
+import {
+  createOutputSubdirectory,
+  createSanitizedOperationEntries,
+  writeOperationModuleFile,
+} from "@apical-ts/core-utils/shared";
 import path from "path";
 
 import { generateConfigTypes } from "./config-generator.js";
@@ -17,9 +20,7 @@ import { generateConfigTypes } from "./config-generator.js";
 export async function createOperationsDirectory(
   outputDir: string,
 ): Promise<string> {
-  const operationsDir = path.join(outputDir, "client");
-  await fs.mkdir(operationsDir, { recursive: true });
-  return operationsDir;
+  return createOutputSubdirectory(outputDir, "client");
 }
 
 /**
@@ -42,25 +43,14 @@ export async function writeIndexFile(
   operations: OperationMetadata[],
   operationsDir: string,
 ): Promise<void> {
-  const operationImports: string[] = [];
-  const operationExports: string[] = [];
-  const seenOperations = new Set<string>(); // Track unique sanitized operation IDs
-
-  for (const { operationId } of operations) {
-    const sanitizedOperationId = sanitizeIdentifier(operationId);
-
-    // Fail in case of duplicate sanitized operation IDs
-    if (seenOperations.has(sanitizedOperationId)) {
-      // Should never happen, this indicates a bug in the specs or in the code
-      throw new Error(`Duplicate operation ID: ${operationId}`);
-    }
-
-    seenOperations.add(sanitizedOperationId);
-    operationImports.push(
+  const sanitizedOperations = createSanitizedOperationEntries(operations);
+  const operationImports = sanitizedOperations.map(
+    ({ sanitizedOperationId }) =>
       `import { ${sanitizedOperationId} } from './${sanitizedOperationId}.js';`,
-    );
-    operationExports.push(sanitizedOperationId);
-  }
+  );
+  const operationExports = sanitizedOperations.map(
+    ({ sanitizedOperationId }) => sanitizedOperationId,
+  );
 
   // Handle case where no valid operations exist
   if (operationExports.length === 0) {
@@ -88,11 +78,9 @@ export async function writeOperationFile(
   importManager: ImportManager,
   operationsDir: string,
 ): Promise<void> {
-  const sanitizedOperationId = sanitizeIdentifier(operationId);
   const operationContent = buildOperationFileContent(
     importManager,
     functionCode,
   );
-  const operationPath = path.join(operationsDir, `${sanitizedOperationId}.ts`);
-  await writeTypeScriptFile(operationPath, operationContent);
+  await writeOperationModuleFile(operationsDir, operationId, operationContent);
 }
