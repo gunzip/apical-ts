@@ -41,7 +41,7 @@ describe("package generator", () => {
           allowSyntheticDefaultImports: true,
           esModuleInterop: true,
           forceConsistentCasingInFileNames: true,
-          lib: ["es2022"],
+          lib: ["es2025"],
           module: "NodeNext",
           moduleResolution: "NodeNext",
           noEmitOnError: false,
@@ -50,7 +50,7 @@ describe("package generator", () => {
           rootDir: ".",
           skipLibCheck: true,
           strict: true,
-          target: "ES2022",
+          target: "es2025",
           types: ["node"],
         },
       });
