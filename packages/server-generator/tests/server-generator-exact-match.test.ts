@@ -64,7 +64,7 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify return function signature */
     expect(result.wrapperCode).toMatch(
-      /return async \(req: \{\s*query: unknown;\s*path: unknown;\s*headers: unknown;\s*body\?: unknown;\s*contentType\?: .*\s*\}\): Promise<petFindByStatusResponse>/,
+      /return async \(req: \{\s*query: unknown;\s*path: unknown;\s*headers: unknown;\s*body\?: unknown;\s*contentType\?: .*\s*\}\): Promise<petFindByStatusRouteResponse>/,
     );
 
     /* Verify validation sequence: query → path → body (no headers in this operation) */
@@ -97,13 +97,13 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify response type is imported from routes */
     expect(result.wrapperCode).toContain(
-      'import type { petFindByStatusResponse } from "../routes/petFindByStatus.js"',
+      'import type { petFindByStatusRouteResponse } from "../routes/petFindByStatus.js"',
     );
-    expect(result.wrapperCode).toContain("petFindByStatusResponse");
+    expect(result.wrapperCode).toContain("petFindByStatusRouteResponse");
 
     /* Verify handler type includes both success and error cases */
     expect(result.wrapperCode).toMatch(
-      /petFindByStatusHandler = \(\s*params: \{ isValid: true; value: petFindByStatusParsedParams \} \| petFindByStatusValidationError,?\s*\) => Promise<petFindByStatusResponse>/,
+      /petFindByStatusHandler = \(\s*params: \{ isValid: true; value: petFindByStatusParsedParams \} \| petFindByStatusValidationError,?\s*\) => Promise<petFindByStatusRouteResponse>/,
     );
   });
 

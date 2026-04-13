@@ -79,6 +79,7 @@ export function buildResponseMap(
 ): string {
   /* Create a temporary Set to collect type imports */
   const typeImports = new Set<string>();
+  const routeResponseTypeName = `${sanitizeIdentifier(metadata.operationId)}RouteResponse`;
 
   /* Generate response union type using existing logic */
   const unionResult = generateResponseUnion(
@@ -86,6 +87,8 @@ export function buildResponseMap(
     metadata.operationId,
     typeImports,
     doc,
+    undefined,
+    routeResponseTypeName,
   );
 
   /* Generate response map using shared logic */

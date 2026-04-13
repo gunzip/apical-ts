@@ -38,10 +38,11 @@ export function renderServerOperationWrapper(
   } = params;
 
   const sanitizedId = sanitizeIdentifier(operationId);
+  const routeResponseType = `${sanitizedId}RouteResponse`;
 
   /* Import request/response maps and response type from route metadata */
   const responseTypeImport = responseMapTypeName
-    ? `import type { ${sanitizedId}Response } from "../routes/${sanitizedId}.js";`
+    ? `import type { ${routeResponseType} } from "../routes/${sanitizedId}.js";`
     : "";
   /* Import runtime request/response map values; use typeof for types */
   const requestMapImport = requestMapTypeName
@@ -61,7 +62,7 @@ export function renderServerOperationWrapper(
   );
 
   /* Build handler and parsed params types */
-  const responseType = `${sanitizedId}Response`;
+  const responseType = routeResponseType;
   const bodyType = requestMapTypeName
     ? `z.infer<(typeof ${requestMapTypeName})[keyof typeof ${requestMapTypeName}]>`
     : hasBody
