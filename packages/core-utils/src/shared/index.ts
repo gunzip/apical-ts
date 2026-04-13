@@ -1,4 +1,5 @@
 export * from "./content-type-maps.js";
+export * from "./generated-operation-files.js";
 export * from "./models/parameter-models.js";
 export * from "./models/request-body-models.js";
 export * from "./models/security-models.js";

@@ -43,4 +43,31 @@ describe("server-generator file writer", () => {
       "./addonPropertiesResourceDeleteAddonPropertyDelete.js",
     );
   });
+
+  it("throws when sanitized server operation ids collide", async () => {
+    const serverDir = await mkdtemp(join(tmpdir(), "server-generator-"));
+
+    const duplicateOperations: OperationMetadata[] = [
+      {
+        method: "get",
+        operation: {},
+        operationId: "pets-list",
+        pathKey: "/pets",
+        pathLevelParameters: [],
+      },
+      {
+        method: "get",
+        operation: {},
+        operationId: "pets_list",
+        pathKey: "/pets",
+        pathLevelParameters: [],
+      },
+    ];
+
+    await expect(
+      writeServerIndexFile(duplicateOperations, serverDir),
+    ).rejects.toThrow(
+      "Duplicate sanitized operation ID: pets_list conflicts with pets-list",
+    );
+  });
 });

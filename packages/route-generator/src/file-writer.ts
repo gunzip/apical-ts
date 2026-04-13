@@ -1,9 +1,13 @@
 import type { ImportManager } from "@apical-ts/core-utils";
 import type { OperationMetadata } from "@apical-ts/core-utils/shared";
 
-import { sanitizeIdentifier } from "@apical-ts/core-utils";
-import { categorizeImportsFromManager } from "@apical-ts/core-utils/shared";
-import { promises as fs } from "fs";
+import { writeTypeScriptFile } from "@apical-ts/core-utils";
+import {
+  categorizeImportsFromManager,
+  createOutputSubdirectory,
+  createSanitizedOperationEntries,
+  writeOperationModuleFile,
+} from "@apical-ts/core-utils/shared";
 import path from "path";
 
 /**
@@ -12,9 +16,7 @@ import path from "path";
 export async function createRoutesDirectory(
   outputDir: string,
 ): Promise<string> {
-  const routesDir = path.join(outputDir, "routes");
-  await fs.mkdir(routesDir, { recursive: true });
-  return routesDir;
+  return createOutputSubdirectory(outputDir, "routes");
 }
 
 /**
@@ -26,7 +28,6 @@ export async function writeRouteMetadataFile(
   importManager: ImportManager,
   routesDir: string,
 ): Promise<void> {
-  const sanitizedId = sanitizeIdentifier(operationId);
   /* Use structured approach to categorize imports */
   const categorized = categorizeImportsFromManager(importManager);
 
@@ -46,8 +47,7 @@ export async function writeRouteMetadataFile(
   const fullCode =
     imports.length > 0 ? `${imports.join("\n")}\n\n${routeCode}` : routeCode;
 
-  const filePath = path.join(routesDir, `${sanitizedId}.ts`);
-  await fs.writeFile(filePath, fullCode);
+  await writeOperationModuleFile(routesDir, operationId, fullCode);
 }
 
 /**
@@ -57,28 +57,27 @@ export async function writeRoutesIndexFile(
   operations: OperationMetadata[],
   routesDir: string,
 ): Promise<void> {
+  const sanitizedOperations = createSanitizedOperationEntries(operations);
+
   /* Generate individual route exports for both client and server */
-  const exports = operations
-    .map(({ operationId }) => {
-      const sanitizedId = sanitizeIdentifier(operationId);
-      return `export { clientRoute as ${sanitizedId}ClientRoute, serverRoute as ${sanitizedId}ServerRoute } from "./${sanitizedId}.js";`;
+  const exports = sanitizedOperations
+    .map(({ sanitizedOperationId }) => {
+      return `export { clientRoute as ${sanitizedOperationId}ClientRoute, serverRoute as ${sanitizedOperationId}ServerRoute } from "./${sanitizedOperationId}.js";`;
     })
     .join("\n");
 
   /* Generate route imports for routes object - use server routes by default */
-  const routeImports = operations
-    .map(({ operationId }) => {
-      const sanitizedId = sanitizeIdentifier(operationId);
-      return `import { serverRoute as ${sanitizedId}Route } from "./${sanitizedId}.js";`;
+  const routeImports = sanitizedOperations
+    .map(({ sanitizedOperationId }) => {
+      return `import { serverRoute as ${sanitizedOperationId}Route } from "./${sanitizedOperationId}.js";`;
     })
     .join("\n");
 
   /* Generate routes object with all route metadata */
   const routesObject = `export const routes = {
-${operations
-  .map(({ operationId }) => {
-    const sanitizedId = sanitizeIdentifier(operationId);
-    return `  ${sanitizedId}: ${sanitizedId}Route,`;
+${sanitizedOperations
+  .map(({ sanitizedOperationId }) => {
+    return `  ${sanitizedOperationId}: ${sanitizedOperationId}Route,`;
   })
   .join("\n")}
 } as const;`;
@@ -94,5 +93,5 @@ ${routesObject}
 `;
 
   const filePath = path.join(routesDir, "index.ts");
-  await fs.writeFile(filePath, indexContent);
+  await writeTypeScriptFile(filePath, indexContent);
 }

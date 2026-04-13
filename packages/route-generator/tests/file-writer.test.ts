@@ -45,4 +45,31 @@ describe("route-generator file writer", () => {
       "./addonPropertiesResourceDeleteAddonPropertyDelete.js",
     );
   });
+
+  it("throws when sanitized route operation ids collide", async () => {
+    const routesDir = await mkdtemp(join(tmpdir(), "route-generator-"));
+
+    const duplicateOperations: OperationMetadata[] = [
+      {
+        method: "get",
+        operation: {},
+        operationId: "pets-list",
+        pathKey: "/pets",
+        pathLevelParameters: [],
+      },
+      {
+        method: "get",
+        operation: {},
+        operationId: "pets_list",
+        pathKey: "/pets",
+        pathLevelParameters: [],
+      },
+    ];
+
+    await expect(
+      writeRoutesIndexFile(duplicateOperations, routesDir),
+    ).rejects.toThrow(
+      "Duplicate sanitized operation ID: pets_list conflicts with pets-list",
+    );
+  });
 });

@@ -1,7 +1,11 @@
 import type { OperationMetadata } from "@apical-ts/core-utils/shared";
 
-import { sanitizeIdentifier } from "@apical-ts/core-utils";
-import { promises as fs } from "fs";
+import { writeTypeScriptFile } from "@apical-ts/core-utils";
+import {
+  createOutputSubdirectory,
+  createSanitizedOperationEntries,
+  writeOperationModuleFile,
+} from "@apical-ts/core-utils/shared";
 import path from "path";
 
 /**
@@ -10,9 +14,7 @@ import path from "path";
 export async function createServerOperationsDirectory(
   outputDir: string,
 ): Promise<string> {
-  const serverOperationsDir = path.join(outputDir, "server");
-  await fs.mkdir(serverOperationsDir, { recursive: true });
-  return serverOperationsDir;
+  return createOutputSubdirectory(outputDir, "server");
 }
 
 /**
@@ -22,26 +24,24 @@ export async function writeServerIndexFile(
   operations: OperationMetadata[],
   serverOperationsDir: string,
 ): Promise<void> {
-  const exports = operations
-    .map(({ operationId }) => {
-      const sanitizedId = sanitizeIdentifier(operationId);
-      return `export { ${sanitizedId}Wrapper } from "./${sanitizedId}.js";`;
+  const sanitizedOperations = createSanitizedOperationEntries(operations);
+  const exports = sanitizedOperations
+    .map(({ sanitizedOperationId }) => {
+      return `export { ${sanitizedOperationId}Wrapper } from "./${sanitizedOperationId}.js";`;
     })
     .join("\n");
 
   /* Generate routes object with all route functions properly aliased */
-  const routeImports = operations
-    .map(({ operationId }) => {
-      const sanitizedId = sanitizeIdentifier(operationId);
-      return `import { route as ${sanitizedId}Route } from "./${sanitizedId}.js";`;
+  const routeImports = sanitizedOperations
+    .map(({ sanitizedOperationId }) => {
+      return `import { route as ${sanitizedOperationId}Route } from "./${sanitizedOperationId}.js";`;
     })
     .join("\n");
 
   const routesObject = `export const routes = {
-${operations
-  .map(({ operationId }) => {
-    const sanitizedId = sanitizeIdentifier(operationId);
-    return `${sanitizedId}: ${sanitizedId}Route,`;
+${sanitizedOperations
+  .map(({ sanitizedOperationId }) => {
+    return `${sanitizedOperationId}: ${sanitizedOperationId}Route,`;
   })
   .join("\n")}
 } as const;`;
@@ -53,10 +53,9 @@ ${routeImports}
 ${exports}
 
 /* Re-export all handlers */
-  ${operations
-    .map(({ operationId }) => {
-      const sanitizedId = sanitizeIdentifier(operationId);
-      return `export type { ${sanitizedId}Handler } from "./${sanitizedId}.js";`;
+  ${sanitizedOperations
+    .map(({ sanitizedOperationId }) => {
+      return `export type { ${sanitizedOperationId}Handler } from "./${sanitizedOperationId}.js";`;
     })
     .join("\n")}
 
@@ -65,7 +64,7 @@ ${routesObject}
 `;
 
   const filePath = path.join(serverOperationsDir, "index.ts");
-  await fs.writeFile(filePath, indexContent);
+  await writeTypeScriptFile(filePath, indexContent);
 }
 
 /**
@@ -76,9 +75,5 @@ export async function writeServerOperationFile(
   wrapperCode: string,
   serverOperationsDir: string,
 ): Promise<void> {
-  const filePath = path.join(
-    serverOperationsDir,
-    `${sanitizeIdentifier(operationId)}.ts`,
-  );
-  await fs.writeFile(filePath, wrapperCode);
+  await writeOperationModuleFile(serverOperationsDir, operationId, wrapperCode);
 }
