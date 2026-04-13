@@ -237,8 +237,8 @@ function collectResponses(
 
   // Sort response codes: specific codes first (numerically), then wildcards
   responseCodes.sort((a, b) => {
-    const isAWildcard = a.includes("XX");
-    const isBWildcard = b.includes("XX");
+    const isAWildcard = /^\dXX$/iu.test(a);
+    const isBWildcard = /^\dXX$/iu.test(b);
 
     // If both are wildcards or both are specific, sort them normally
     if (isAWildcard === isBWildcard) {

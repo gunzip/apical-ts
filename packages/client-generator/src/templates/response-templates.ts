@@ -163,8 +163,8 @@ function generateStatusMatchCondition(statusCode: string): string {
     return "true"; // Default case is handled separately
   }
 
-  // Check if it's a wildcard pattern (e.g., "4XX", "5XX")
-  if (statusCode.endsWith("XX")) {
+  // Check if it's a wildcard pattern (e.g., "4XX", "4xx", "5XX", "5xx")
+  if (/^\dXX$/iu.test(statusCode)) {
     const prefix = parseInt(statusCode[0], 10);
     return `response.status >= ${prefix}00 && response.status < ${prefix + 1}00`;
   }

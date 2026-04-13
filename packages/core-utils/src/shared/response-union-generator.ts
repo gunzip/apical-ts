@@ -135,18 +135,20 @@ export function renderUnionType(
 }
 
 /**
- * Expands wildcard status codes (e.g., "4XX", "5XX") into arrays of concrete status codes.
+ * Expands wildcard status codes (e.g., "4XX", "4xx", "5XX", "5xx") into arrays of concrete status codes.
  * Returns the original code if it's not a wildcard pattern.
  *
- * @param statusCode - Status code which may be a wildcard pattern ("4XX", "5XX") or concrete code
+ * @param statusCode - Status code which may be a wildcard pattern ("4XX", "4xx", "5XX", "5xx") or concrete code
  * @returns Array of concrete status codes
  */
 function expandWildcardStatusCode(statusCode: string): string[] {
-  if (statusCode === "4XX") {
+  const normalizedStatusCode = statusCode.toUpperCase();
+
+  if (normalizedStatusCode === "4XX") {
     // Expand to all 4xx codes (400-451 covers all IANA-registered client error codes)
     return Array.from({ length: 52 }, (_, i) => String(400 + i));
   }
-  if (statusCode === "5XX") {
+  if (normalizedStatusCode === "5XX") {
     // Expand to all 5xx codes (500-511 covers all IANA-registered server error codes)
     return Array.from({ length: 12 }, (_, i) => String(500 + i));
   }
