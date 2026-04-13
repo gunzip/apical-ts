@@ -42,9 +42,9 @@ export function generateResponseUnion(
   typeImports: Set<string>,
   doc?: OpenAPIObject,
   resolvedSchemas?: Record<string, SchemaObject>,
+  responseTypeName = `${sanitizeIdentifier(operationId)}Response`,
 ): ResponseUnionResult {
   const unionMembers: ResponseUnionMember[] = [];
-  const responseTypeName = `${sanitizeIdentifier(operationId)}Response`;
 
   if (!operation.responses) {
     /* Fallback for operations without responses */

@@ -82,6 +82,19 @@ export function cloneWithoutNullable(schema: SchemaObject): SchemaObject {
 }
 
 /**
+ * Create a clone of schema without the default property
+ */
+export function cloneWithoutDefault(schema: SchemaObject): SchemaObject {
+  // Nullable handling temporarily removes defaults so they can be re-applied on
+  // the outer nullable schema in the correct order.
+  const clone = { ...schema };
+  if ("default" in clone) {
+    delete clone.default;
+  }
+  return clone;
+}
+
+/**
  * Determine the type of a schema when it's not explicitly defined
  */
 export function inferEffectiveType(schema: SchemaObject): EffectiveType {

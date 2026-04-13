@@ -131,6 +131,20 @@ describe("zodSchemaToCode", () => {
     expect(zodSchema.safeParse(undefined).success).toBe(false);
   });
 
+  it("should apply null defaults after nullable wrapping", () => {
+    const schema = {
+      default: null,
+      nullable: true as const,
+      type: "number" as const,
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("(z.number()).nullable().default(null)");
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.parse(undefined)).toBe(null);
+    expect(zodSchema.parse(null)).toBe(null);
+    expect(zodSchema.parse(5)).toBe(5);
+  });
+
   it("should handle local $ref references", () => {
     const refSchema = { $ref: "#/components/schemas/Profile" };
     const result = zodSchemaToCode(refSchema);
@@ -166,6 +180,34 @@ describe("zodSchemaToCode", () => {
     expect(result.code).toContain("Profile");
     expect(result.code).toContain("z.object({...Profile.shape");
     expect(result.imports.has("Profile")).toBe(true);
+  });
+
+  it("should preserve original ref names for lookup and sanitize identifiers for imports", () => {
+    const schema: SchemaObject = {
+      allOf: [
+        { $ref: "#/components/schemas/data_center" },
+        {
+          properties: {
+            status: { type: "string" },
+          },
+          type: "object",
+        },
+      ],
+    };
+
+    const resolvedSchemas = {
+      data_center: {
+        properties: {
+          id: { type: "string" },
+        },
+        type: "object",
+      } as SchemaObject,
+    };
+
+    const result = zodSchemaToCode(schema, { resolvedSchemas });
+    expect(result.code).toContain("...dataCenter.shape");
+    expect(result.imports.has("dataCenter")).toBe(true);
+    expect(result.imports.has("data_center")).toBe(false);
   });
 
   it("should fallback to intersection for allOf with non-object $ref references", () => {

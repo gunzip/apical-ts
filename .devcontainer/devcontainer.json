@@ -4,6 +4,10 @@
     "ghcr.io/dhoeric/features/act:1": {},
     "ghcr.io/devcontainers-extra/features/turborepo-npm:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/copilot-cli:1": {},
+    "ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
+      "packages": "ripgrep,xdg-utils"
+    },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22",
       "installYarnUsingApt": false,

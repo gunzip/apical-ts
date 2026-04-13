@@ -75,9 +75,9 @@ describe("server-generator comprehensive validation", () => {
 
     /* Verify response type is imported from routes */
     expect(result.wrapperCode).toContain(
-      'import type { petFindByStatusResponse } from "../routes/petFindByStatus.js"',
+      'import type { petFindByStatusRouteResponse } from "../routes/petFindByStatus.js"',
     );
-    expect(result.wrapperCode).toContain("petFindByStatusResponse");
+    expect(result.wrapperCode).toContain("petFindByStatusRouteResponse");
 
     /* Verify validation logic sequence */
     expect(result.wrapperCode).toContain("queryParse.success");

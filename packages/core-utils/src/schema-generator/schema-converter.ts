@@ -21,8 +21,10 @@ import {
 import { handleReferenceWithContext } from "./reference-handlers.js";
 import { handleAllOfSchema, handleUnionSchema } from "./union-types.js";
 import {
+  addDefaultValue,
   addDescription,
   analyzeTypeArray,
+  cloneWithoutDefault,
   cloneWithoutNullable,
   inferEffectiveType,
   isNullable,
@@ -151,7 +153,13 @@ function handleMultiTypeArray(
 ): ZodSchemaResult {
   const { isNullable: hasNull, nonNullTypes } = analyzeTypeArray(effectiveType);
   if (nonNullTypes.length === 1 && hasNull) {
-    const clone = { ...schema, type: nonNullTypes[0] };
+    // Strip the default before converting the non-null branch, otherwise
+    // `default: null` would be emitted on the inner schema and produce invalid
+    // Zod chains such as `z.number().default(null).nullable()`.
+    const clone = {
+      ...cloneWithoutDefault(schema),
+      type: nonNullTypes[0],
+    };
     const subResult = zodSchemaToCode(clone as SchemaObject, {
       currentSchemaName,
       extraProps,
@@ -160,7 +168,12 @@ function handleMultiTypeArray(
       resolvedSchemas,
       skipDescription: true,
     });
-    result.code = `(${subResult.code}).nullable()`;
+    // Re-apply the default only after `.nullable()` so `null` remains a valid
+    // default for nullable schemas.
+    result.code = addDefaultValue(
+      `(${subResult.code}).nullable()`,
+      schema.default,
+    );
     mergeImports(result.imports, subResult.imports);
     return result;
   }
@@ -189,7 +202,9 @@ function handleNullableSchema(
   resolvedSchemas?: ResolvedSchemas,
   extraProps?: ExtraPropsMode,
 ): ZodSchemaResult {
-  const clone = cloneWithoutNullable(schema);
+  // Same rationale as handleMultiTypeArray(): nullable defaults such as `null`
+  // must be applied to the outer nullable schema, not to the inner non-null one.
+  const clone = cloneWithoutDefault(cloneWithoutNullable(schema));
   const subResult = zodSchemaToCode(clone, {
     currentSchemaName,
     extraProps,
@@ -198,7 +213,10 @@ function handleNullableSchema(
     resolvedSchemas,
     skipDescription: true,
   });
-  result.code = `(${subResult.code}).nullable()`;
+  result.code = addDefaultValue(
+    `(${subResult.code}).nullable()`,
+    schema.default,
+  );
   mergeImports(result.imports, subResult.imports);
   return result;
 }

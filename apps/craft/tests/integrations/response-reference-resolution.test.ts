@@ -55,9 +55,10 @@ describe("core-generator response reference resolution", () => {
     const testFile = path.join(serverDir, "testResponseRefWithInlineSchema.ts");
     const testContent = await fs.readFile(testFile, "utf-8");
 
-    // Server now imports response types from routes, not directly from schemas
+    // Server imports the route-level response union, which uses the RouteResponse
+    // suffix to avoid colliding with schema response types imported in the same module.
     expect(testContent).toContain(
-      'import type { testResponseRefWithInlineSchemaResponse } from "../routes/testResponseRefWithInlineSchema.js"',
+      'import type { testResponseRefWithInlineSchemaRouteResponse } from "../routes/testResponseRefWithInlineSchema.js"',
     );
   });
 });
