@@ -57,7 +57,8 @@ export function handleAllOfSchema(
       if (isReferenceObject(schema)) {
         const refName = extractSchemaNameFromRef(schema.$ref);
         return (
-          refName !== null && sanitizeIdentifier(refName) === currentSchemaName
+          refName !== null &&
+          sanitizeIdentifier(refName.originalName) === currentSchemaName
         );
       }
       return false;
@@ -72,7 +73,10 @@ export function handleAllOfSchema(
         if (resolvedSchemas) {
           const refName = extractSchemaNameFromRef(schema.$ref);
           if (refName) {
-            const resolvedSchema = resolvedSchemas[refName];
+            // `resolvedSchemas` is keyed by the original OpenAPI component name.
+            // Keep that lookup untouched even when the generated TS identifier
+            // must be sanitized for imports/usages.
+            const resolvedSchema = resolvedSchemas[refName.originalName];
             if (resolvedSchema && !("$ref" in resolvedSchema)) {
               // Check if the resolved schema is an object type (not a reference)
               return !resolvedSchema.type || resolvedSchema.type === "object";
@@ -99,8 +103,10 @@ export function handleAllOfSchema(
         // Handle reference: extract Schema name and use .shape
         const refName = extractSchemaNameFromRef(schema.$ref);
         if (refName) {
-          allImports.add(refName);
-          shapeExpressions.push(`...${refName}.shape`);
+          // Use the sanitized identifier only in generated TypeScript; the
+          // original OpenAPI name is still preserved for schema lookup.
+          allImports.add(refName.identifierName);
+          shapeExpressions.push(`...${refName.identifierName}.shape`);
         }
       } else if (
         (!schema.type || schema.type === "object") &&
@@ -316,8 +322,21 @@ function collectRequiredFields(
  * @param ref - Reference string like "#/components/schemas/SchemaName"
  * @returns Schema name or null if extraction fails
  */
-function extractSchemaNameFromRef(ref: string | undefined): null | string {
+function extractSchemaNameFromRef(
+  ref: string | undefined,
+): null | { identifierName: string; originalName: string } {
   if (!ref) return null;
   const refMatch = ref.match(/\/([^/]+)$/);
-  return refMatch ? refMatch[1] : null;
+  if (!refMatch) {
+    return null;
+  }
+
+  const originalName = refMatch[1];
+  return {
+    // Keep both names because OpenAPI component keys and TS identifiers have
+    // different constraints: `data_center` must stay the lookup key, while
+    // `dataCenter` is the legal import/symbol name in generated code.
+    identifierName: sanitizeIdentifier(originalName),
+    originalName,
+  };
 }

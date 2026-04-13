@@ -38,6 +38,7 @@ export function renderServerOperationWrapper(
   } = params;
 
   const sanitizedId = sanitizeIdentifier(operationId);
+  // Must stay aligned with the route generator's collision-avoidance naming.
   const routeResponseType = `${sanitizedId}RouteResponse`;
 
   /* Import request/response maps and response type from route metadata */

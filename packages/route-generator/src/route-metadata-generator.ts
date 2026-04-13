@@ -79,6 +79,9 @@ export function buildResponseMap(
 ): string {
   /* Create a temporary Set to collect type imports */
   const typeImports = new Set<string>();
+  // Route files already import schema response symbols (e.g. FooResponse).
+  // Use a distinct route-level union name to avoid TS2440 collisions between
+  // imported schema types and the response union exported by the route module.
   const routeResponseTypeName = `${sanitizeIdentifier(metadata.operationId)}RouteResponse`;
 
   /* Generate response union type using existing logic */
