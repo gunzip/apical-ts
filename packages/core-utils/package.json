@@ -46,6 +46,7 @@
     "@vitest/coverage-v8": "catalog:",
     "embedme": "catalog:",
     "oxfmt": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "dependencies": {
