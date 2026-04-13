@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.17.0
+
+### Minor Changes
+
+- Fix edge cases when parsing OpenAPI
+
 ## 0.16.1
 
 ### Patch Changes
