@@ -1,8 +1,27 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+const tsConfigContent = {
+  compilerOptions: {
+    allowSyntheticDefaultImports: true,
+    esModuleInterop: true,
+    forceConsistentCasingInFileNames: true,
+    lib: ["es2025"],
+    module: "NodeNext",
+    moduleResolution: "NodeNext",
+    noEmitOnError: false,
+    outDir: "dist",
+    resolveJsonModule: true,
+    rootDir: ".",
+    skipLibCheck: true,
+    strict: true,
+    target: "es2025",
+    types: ["node"],
+  },
+};
+
 /**
- * Creates the package.json file for the generated output
+ * Creates the package metadata files for the generated output
  */
 export async function createPackageJson(output: string): Promise<void> {
   const packageJsonContent = {
@@ -11,19 +30,23 @@ export async function createPackageJson(output: string): Promise<void> {
     },
     devDependencies: {
       "@types/node": "^24.3.1",
-      typescript: "^5.4.5",
+      "@typescript/native-preview": "^7.0.0-dev",
     },
     name: "generated-client",
     scripts: {
-      build:
-        "tsc --outDir ./dist --rootDir . --moduleResolution NodeNext --module NodeNext --target ES2022 --lib es2022 --strict --esModuleInterop --skipLibCheck --allowSyntheticDefaultImports --resolveJsonModule --forceConsistentCasingInFileNames --noEmitOnError false schemas/*.ts client/*.ts server/*.ts routes/*.ts",
+      build: "tsgo",
     },
     type: "module",
     version: "0.1.0",
   };
-  const packageJsonPath = path.join(output, "package.json");
-  await fs.writeFile(
-    packageJsonPath,
-    JSON.stringify(packageJsonContent, null, 2),
-  );
+  await Promise.all([
+    fs.writeFile(
+      path.join(output, "package.json"),
+      JSON.stringify(packageJsonContent, null, 2),
+    ),
+    fs.writeFile(
+      path.join(output, "tsconfig.json"),
+      JSON.stringify(tsConfigContent, null, 2),
+    ),
+  ]);
 }
