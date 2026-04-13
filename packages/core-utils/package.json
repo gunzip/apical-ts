@@ -38,24 +38,17 @@
   "author": "gunzip",
   "license": "MIT",
   "devDependencies": {
-    "@stoplight/prism-cli": "^5.14.2",
     "@tsconfig/node22": "catalog:",
-    "@types/express": "^5.0.3",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
-    "@types/supertest": "^6.0.3",
     "@types/swagger2openapi": "^7.0.4",
     "@typescript/native-preview": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "embedme": "catalog:",
-    "express": "^5.2.1",
-    "supertest": "^7.1.4",
-    "tsup": "catalog:",
-    "vitest": "catalog:",
-    "oxfmt": "catalog:"
+    "oxfmt": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
-    "@apidevtools/json-schema-ref-parser": "^15.2.2",
     "js-yaml": "^4.1.1",
     "openapi3-ts": "^4.3.0",
     "p-limit": "^7.1.0",

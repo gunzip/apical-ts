@@ -13,10 +13,7 @@ import type {
   RequestBodyTypeInfo,
 } from "./models/request-body-models.js";
 
-import {
-  DEFAULT_CONTENT_TYPE_HANDLERS,
-  renderLegacyRequestBodyHandling,
-} from "./templates/request-body-templates.js";
+import { DEFAULT_CONTENT_TYPE_HANDLERS } from "./templates/request-body-templates.js";
 
 /* Re-export RequestBodyTypeInfo for backward compatibility */
 export type { RequestBodyTypeInfo } from "./models/request-body-models.js";
@@ -87,21 +84,6 @@ export function determineRequestBodyStructure(
     strategy,
     typeInfo,
   };
-}
-
-/**
- * Generates request body handling code for different content types
- */
-export function generateRequestBodyHandling(
-  hasBody: boolean,
-  requestContentType?: string,
-): { bodyContent: string; contentTypeHeader: string } {
-  return renderLegacyRequestBodyHandling({
-    bodyContent: "",
-    contentTypeHeader: "",
-    hasBody,
-    requestContentType,
-  });
 }
 
 /*

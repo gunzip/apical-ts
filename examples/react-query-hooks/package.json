@@ -17,7 +17,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@apical-ts/craft": "workspace:*",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "^18.0.0",

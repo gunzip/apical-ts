@@ -1,0 +1,37 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreDependencies": ["@pagopa/eslint-config"],
+  "ignoreFiles": ["eslint.config.js"],
+  "workspaces": {
+    "apps/craft": {
+      "entry": ["tests/**/*.test.ts"],
+      "ignoreDependencies": [
+        "@stoplight/prism-cli",
+        "js-yaml",
+        "p-limit",
+        "swagger2openapi",
+        "zod"
+      ]
+    },
+    "apps/website": {
+      "entry": ["src/pages/**/*.tsx"]
+    },
+    "examples/express": {
+      "entry": ["client-examples/**/*.ts", "server-examples/**/*.ts"]
+    },
+    "examples/msw-mock-server": {
+      "entry": ["server-examples/**/*.ts"]
+    },
+    "examples/react-query-hooks": {
+      "entry": ["example/**/*.tsx", "scripts/**/*.ts"],
+      "ignoreDependencies": ["@tanstack/react-query", "zod"]
+    },
+    "packages/core-utils": {
+      "entry": ["tests/**/*.test.ts"]
+    },
+    "packages/test-core": {
+      "entry": ["tests/**/*.test.ts"],
+      "ignoreDependencies": ["@stoplight/prism-cli"]
+    }
+  }
+}

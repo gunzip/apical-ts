@@ -3,7 +3,7 @@ import { sanitizeIdentifier } from "@apical-ts/core-utils";
 /**
  * Template parameters for server operation wrapper generation
  */
-export interface ServerOperationTemplateParams {
+interface ServerOperationTemplateParams {
   functionName: string;
   /** True if the operation defines a request body (even if only one content type) */
   hasBody: boolean;

@@ -17,7 +17,7 @@ import { generatePathInterpolation } from "./utils.js";
 /**
  * Options accepted by generateFunctionBody (collapsed from the previous long positional argument list).
  */
-export interface GenerateFunctionBodyOptions {
+interface GenerateFunctionBodyOptions {
   authHeaders?: string[];
   contentTypeMaps: ContentTypeMaps;
   defaultResponseHandler?: string;

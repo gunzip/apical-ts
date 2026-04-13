@@ -24,7 +24,7 @@ export type GenericParamsConfig = ContentTypeMapsConfig & {
   initialReturnType: string;
 };
 
-export interface GenericParamsResult {
+interface GenericParamsResult {
   genericParams: string;
   updatedReturnType: string;
 }

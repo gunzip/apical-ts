@@ -23,18 +23,6 @@ export interface ConfigStructure {
 }
 
 /*
- * Configuration for template rendering
- */
-export interface ConfigTemplateOptions {
-  /* Whether to include default configuration object */
-  includeDefaultConfig?: boolean;
-  /* Whether to include the full static support code */
-  includeStaticSupport?: boolean;
-  /* Whether to include type exports */
-  includeTypeExports?: boolean;
-}
-
-/*
  * Represents the analysis result of server configuration
  */
 export interface ServerConfiguration {

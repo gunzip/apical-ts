@@ -9,7 +9,7 @@ import { sanitizeIdentifier } from "./utils.js";
 /**
  * Result of parameter schema file generation
  */
-export interface ParameterSchemaFileResult {
+interface ParameterSchemaFileResult {
   content: string;
   fileName: string;
   typeImports: Set<string>;
@@ -19,7 +19,7 @@ export interface ParameterSchemaFileResult {
  * Generates Zod schema files for operation parameters.
  * Creates separate files for each operation's query, path, and headers schemas.
  */
-export async function generateParameterSchemaFile(
+async function generateParameterSchemaFile(
   operationId: string,
   parameterMetadata: OperationParameterMetadata,
   options: {

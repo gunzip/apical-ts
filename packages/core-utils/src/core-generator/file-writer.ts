@@ -14,17 +14,6 @@ export function buildOperationFileContent(
 }
 
 /**
- * Creates a directory if it doesn't exist
- */
-export async function ensureDirectory(dirPath: string): Promise<void> {
-  try {
-    await fs.mkdir(dirPath, { recursive: true });
-  } catch (error) {
-    throw new Error(`Failed to create directory ${dirPath}: ${error}`);
-  }
-}
-
-/**
  * Writes TypeScript content to a file at the specified path.
  */
 export async function writeTypeScriptFile(

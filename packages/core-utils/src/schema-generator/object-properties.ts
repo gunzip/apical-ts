@@ -7,7 +7,7 @@ import type { ResolvedSchemas } from "./types.js";
 /**
  * Result of object code generation
  */
-export interface ObjectCodeResult {
+interface ObjectCodeResult {
   code: string;
   imports: Set<string>;
 }
@@ -141,7 +141,7 @@ export function generateObjectCode(
  * Type guard to check if additionalProperties requires catchall validation
  * Returns true only if it's a schema object (not boolean or undefined)
  */
-export function requiresAdditionalSchema(
+function requiresAdditionalSchema(
   additionalProperties: SchemaObject["additionalProperties"],
 ): additionalProperties is ReferenceObject | SchemaObject {
   return (

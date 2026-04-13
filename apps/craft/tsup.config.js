@@ -4,6 +4,7 @@ export default defineConfig({
   clean: true,
   dts: false,
   entry: ["src/index.ts", "src/generate.ts"],
+  external: ["swagger2openapi"],
   format: ["esm"],
   noExternal: [
     "@apical-ts/core-utils",

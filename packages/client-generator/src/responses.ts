@@ -22,15 +22,6 @@ export interface ResponseHandlerResult {
   returnType: string;
 }
 
-/**
- * Information about response types and handlers
- */
-export interface ResponseTypeInfo {
-  responseHandlers: string[];
-  typeImports: Set<string>;
-  typeName: null | string;
-}
-
 /*
  * Generates response handling code and determines return type using discriminated unions.
  * Produces an array of switch-case handler segments and a union type of ApiResponse.

@@ -6,7 +6,7 @@ const sleep = promisify(setTimeout);
 /**
  * Mock server configuration
  */
-export interface MockServerConfig {
+interface MockServerConfig {
   host?: string;
   port: number;
   specPath: string;
@@ -149,33 +149,4 @@ export class MockServer {
  */
 export function getRandomPort(): number {
   return Math.floor(Math.random() * (65535 - 3000) + 3000);
-}
-
-/**
- * Wait for a port to be available by attempting HTTP requests
- */
-export async function waitForPort(
-  host: string,
-  port: number,
-  timeout = 10000,
-): Promise<boolean> {
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < timeout) {
-    try {
-      await fetch(`http://${host}:${port}`, {
-        method: "GET",
-        signal: AbortSignal.timeout(1000),
-      });
-
-      // If we get any response (even an error), the port is open
-      return true;
-      // eslint-disable-next-line no-unused-vars
-    } catch (_) {
-      // Port not ready yet, wait a bit
-      await sleep(100);
-    }
-  }
-
-  return false;
 }

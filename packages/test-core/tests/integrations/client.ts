@@ -7,7 +7,7 @@ import * as operations from "./generated/client/index.js";
 /**
  * Test client configuration
  */
-export interface TestClientConfig {
+interface TestClientConfig {
   authHeaders?: Record<string, string>;
   baseURL: string;
   customHeaders?: Record<string, string>;
@@ -16,7 +16,7 @@ export interface TestClientConfig {
 /**
  * Create a configured test client from generated operations
  */
-export function createTestClient(config: TestClientConfig) {
+function createTestClient(config: TestClientConfig) {
   const apiConfig: Omit<GlobalConfig, "forceValidation"> = {
     baseURL: config.baseURL,
     fetch: fetch,
@@ -34,7 +34,7 @@ export function createTestClient(config: TestClientConfig) {
 /**
  * Create authentication headers for different security schemes
  */
-export const createAuthHeaders = {
+const createAuthHeaders = {
   bearerToken: (token: string) => ({
     Authorization: `Bearer ${token}`,
   }),
@@ -55,7 +55,7 @@ export const createAuthHeaders = {
 /**
  * Default test tokens for different security schemes
  */
-export const defaultTestTokens = {
+const defaultTestTokens = {
   bearerToken: "test-bearer-token-123",
   bearerTokenHttp: "test-bearer-http-token-456",
   customToken: "test-custom-token-abc",

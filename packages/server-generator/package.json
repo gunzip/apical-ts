@@ -33,14 +33,12 @@
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "tsup": "catalog:",
     "vitest": "catalog:"
   },
   "dependencies": {
     "@apical-ts/core-utils": "workspace:*",
     "openapi3-ts": "^4.3.0",
-    "p-limit": "^7.1.0",
-    "zod": "^4.3.6"
+    "p-limit": "^7.1.0"
   },
   "engines": {
     "node": ">=20.0.0"

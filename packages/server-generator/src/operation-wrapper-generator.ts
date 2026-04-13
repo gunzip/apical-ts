@@ -13,7 +13,7 @@ import assert from "assert";
 import { renderServerOperationWrapper } from "./templates/server-operation-templates.js";
 
 /* Result of generating a server wrapper function */
-export interface GeneratedServerWrapper {
+interface GeneratedServerWrapper {
   wrapperCode: string;
 }
 
