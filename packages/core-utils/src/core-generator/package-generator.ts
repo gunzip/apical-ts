@@ -23,7 +23,7 @@ const tsConfigContent = {
 /**
  * Creates the package metadata files for the generated output
  */
-export async function createPackageJson(output: string): Promise<void> {
+export async function createPackageFiles(output: string): Promise<void> {
   const packageJsonContent = {
     dependencies: {
       zod: "^4.0.0",
