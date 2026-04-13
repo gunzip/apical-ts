@@ -3,4 +3,4 @@
 "@apical-ts/craft": minor
 ---
 
-Generate Typescript configuration file
+Fix method name

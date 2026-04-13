@@ -4,14 +4,14 @@ import { tmpdir } from "node:os";
 
 import { describe, expect, it } from "vitest";
 
-import { createPackageJson } from "../src/core-generator/package-generator.js";
+import { createPackageFiles } from "../src/core-generator/package-generator.js";
 
 describe("package generator", () => {
   it("writes package.json and tsconfig.json for generated output", async () => {
     const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
 
     try {
-      await createPackageJson(outputDir);
+      await createPackageFiles(outputDir);
 
       const packageJson = JSON.parse(
         await readFile(join(outputDir, "package.json"), "utf8"),

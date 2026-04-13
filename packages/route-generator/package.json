@@ -1,6 +1,6 @@
 {
   "name": "@apical-ts/route-generator",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "private": true,
   "description": "OpenAPI route generator for apical-ts",
   "main": "dist/index.js",

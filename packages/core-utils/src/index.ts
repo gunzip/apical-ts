@@ -13,7 +13,7 @@ export {
 } from "./core-generator/file-writer.js";
 export { ImportManager } from "./core-generator/import-types.js";
 export { resolveResponseReference } from "./core-generator/openapi-utils.js";
-export { createPackageJson } from "./core-generator/package-generator.js";
+export { createPackageFiles } from "./core-generator/package-generator.js";
 export { parseOpenAPI } from "./core-generator/parser.js";
 export { Profiler } from "./core-generator/profiler.js";
 export { resolveRequestBodies } from "./core-generator/request-body-resolver.js";

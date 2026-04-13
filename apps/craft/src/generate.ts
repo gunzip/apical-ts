@@ -6,7 +6,7 @@ import { generateOperations } from "@apical-ts/client-generator";
 import {
   applyGeneratedOperationIds,
   convertToOpenAPI31,
-  createPackageJson,
+  createPackageFiles,
   generateSchemas,
   parseOpenAPI,
   Profiler,
@@ -123,7 +123,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
   );
 
   profiler?.start("package-json");
-  await createPackageJson(output);
+  await createPackageFiles(output);
   profiler?.end("package-json");
 
   profiler?.printSummary?.("Generation timing (ms)");

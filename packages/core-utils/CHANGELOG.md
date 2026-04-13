@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.17.0
+
+### Minor Changes
+
+- 59c77ea: Generate Typescript configuration file
+
 ## 0.16.0
 
 ### Minor Changes
