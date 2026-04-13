@@ -1,5 +1,16 @@
 # @apical-ts/route-generator
 
+## 0.13.0
+
+### Minor Changes
+
+- 135a1af: Fix import collision and nullable default
+
+### Patch Changes
+
+- Updated dependencies [135a1af]
+  - @apical-ts/core-utils@0.16.0
+
 ## 0.12.4
 
 ### Patch Changes

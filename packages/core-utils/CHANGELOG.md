@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.16.0
+
+### Minor Changes
+
+- 135a1af: Fix import collision and nullable default
+
 ## 0.15.2
 
 ### Patch Changes
