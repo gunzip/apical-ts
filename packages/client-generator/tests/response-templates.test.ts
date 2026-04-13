@@ -51,6 +51,29 @@ describe("response-templates", () => {
         'return { isValid: true as const, status: "200" as const, data, response };',
       );
     });
+
+    it("should render lowercase wildcard handlers as numeric ranges", () => {
+      const responseInfo: ResponseInfo = {
+        statusCode: "4xx",
+        typeName: null,
+        contentType: null,
+        hasSchema: false,
+        parsingStrategy: {
+          useValidation: false,
+          isJsonLike: false,
+          requiresRuntimeContentTypeCheck: false,
+        },
+      };
+
+      const result = renderResponseHandler(responseInfo, "undefined");
+
+      expect(result).toContain(
+        "if (response.status >= 400 && response.status < 500)",
+      );
+      expect(result).toContain(
+        'return { isValid: true as const, status: "4xx" as const, data: undefined, response };',
+      );
+    });
   });
 
   describe("renderResponseHandlers", () => {

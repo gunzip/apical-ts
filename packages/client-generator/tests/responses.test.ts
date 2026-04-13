@@ -223,6 +223,34 @@ describe("client-generator responses", () => {
       );
     });
 
+    it("should generate range checks for lowercase wildcard response codes", () => {
+      const operation: OperationObject = {
+        operationId: "testOperation",
+        responses: {
+          "404": { description: "Not found" },
+          "4xx": { description: "Client error" },
+          "5xx": { description: "Server error" },
+        },
+      };
+
+      const typeImports = new Set<string>();
+      const result = generateResponseHandlers(operation, typeImports);
+
+      expect(result.returnType).toBe(
+        'ApiResponse<"404", void> | ApiResponse<"4xx", void> | ApiResponse<"5xx", void> | ApiResponseError',
+      );
+      expect(result.responseHandlers).toHaveLength(3);
+      expect(result.responseHandlers[0]).toContain(
+        "if (response.status === 404)",
+      );
+      expect(result.responseHandlers[1]).toContain(
+        "if (response.status >= 400 && response.status < 500)",
+      );
+      expect(result.responseHandlers[2]).toContain(
+        "if (response.status >= 500 && response.status < 600)",
+      );
+    });
+
     it("should ignore default response", () => {
       const operation: OperationObject = {
         operationId: "testOperation",
