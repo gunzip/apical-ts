@@ -5,7 +5,7 @@ import { isReservedKeyword } from "../shared/reserved-keywords.js";
 /**
  * Effective type after resolving union types and inference
  */
-export type EffectiveType =
+type EffectiveType =
   | "array"
   | "boolean"
   | "integer"

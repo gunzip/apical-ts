@@ -7,7 +7,7 @@ import { sanitizeIdentifier } from "./utils.js";
 /**
  * Result of recursive reference analysis
  */
-export interface RecursiveAnalysisResult {
+interface RecursiveAnalysisResult {
   cyclePath?: string[];
   isDirectSelfReference?: boolean;
   isRecursive: boolean;
@@ -24,14 +24,6 @@ export interface RecursiveContext {
   recursiveSchemas: Set<string>;
   /* Stack of currently processing schema references to detect cycles */
   referenceStack: string[];
-}
-
-/**
- * Options for recursive schema generation
- */
-export interface RecursiveSchemaOptions {
-  currentSchemaName?: string;
-  propertyName?: string;
 }
 
 /**

@@ -8,10 +8,10 @@ import type {
 
 import {
   renderConfigImplementation,
-  renderConfigImports,
   renderConfigInterface,
-  renderConfigSupport,
-} from "./templates/config/index.js";
+} from "./templates/config/config-structure.template.js";
+import { renderConfigSupport } from "./templates/config/index.js";
+import { renderZodImportStatement as renderConfigImports } from "./templates/config/template-utils.js";
 
 /*
  * Analyzes authentication configuration from auth headers

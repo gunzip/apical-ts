@@ -5,7 +5,7 @@ import { addDefaultValue } from "./utils.js";
 /**
  * Result of handling extensible enum
  */
-export interface ExtensibleEnumResult {
+interface ExtensibleEnumResult {
   code: string;
   enumValues: unknown[];
 }

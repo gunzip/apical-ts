@@ -20,8 +20,6 @@
   },
   "scripts": {
     "build": "tsup",
-    "lint": "eslint --fix src",
-    "lint:check": "eslint src",
     "typecheck:code": "tsgo --noEmit",
     "typecheck:tests": "tsgo --noEmit -p tsconfig.tests.json",
     "typecheck": "pnpm typecheck:code && pnpm typecheck:tests",
@@ -58,16 +56,16 @@
     "express": "^5.2.1",
     "supertest": "^7.1.4",
     "tsup": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "zod": "^4.3.6"
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^15.2.2",
     "commander": "^14.0.2",
     "js-yaml": "^4.1.1",
     "openapi3-ts": "^4.3.0",
-    "p-limit": "^7.1.0",
-    "swagger2openapi": "^7.0.8",
-    "zod": "^4.3.6"
+    "p-limit": "^7.1.1",
+    "swagger2openapi": "^7.0.8"
   },
   "engines": {
     "node": ">=20.0.0"

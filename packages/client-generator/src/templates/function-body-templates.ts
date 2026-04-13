@@ -2,7 +2,7 @@ import type { ContentTypeMaps } from "../responses.js";
 
 /* Function body structure analysis and template rendering */
 
-export interface FunctionBodyStructure {
+interface FunctionBodyStructure {
   acceptHeaderLogic: string;
   bodyContentCode: string;
   contentTypeHeaderCode: string;

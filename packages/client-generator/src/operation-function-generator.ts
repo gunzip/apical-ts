@@ -31,7 +31,7 @@ import {
 import { renderDefaultResponseHandler } from "./templates/response-templates.js";
 
 /* Result of generating a function with imports */
-export interface GeneratedFunction {
+interface GeneratedFunction {
   functionCode: string;
   importManager: ImportManager;
 }

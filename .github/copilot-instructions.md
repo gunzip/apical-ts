@@ -43,8 +43,8 @@ pnpm run build
 - `pnpm run build`: Build the project using tsup (compiles TypeScript to dist/
   without type checking)
 - `pnpm run build:docs`: Generate documentation by embedding code in README.md
-- `pnpm run lint`: Run eslint with autofix on `src/`
-- `pnpm run lint:check`: Run eslint on `src/` (no autofix)
+- `pnpm run lint`: Run oxlint with autofix on `src/`
+- `pnpm run lint:check`: Run oxlint on `src/` (no autofix)
 - `pnpm run format`: Format all files using oxfmt (writes changes)
 - `pnpm run format:check`: Check formatting using oxfmt (no changes written)
 - `pnpm run typecheck`: Run TypeScript type checking only (`tsc --noEmit`)

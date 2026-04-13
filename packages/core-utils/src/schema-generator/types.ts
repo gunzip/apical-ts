@@ -1,16 +1,7 @@
-import type {
-  OpenAPIObject,
-  ReferenceObject,
-  SchemaObject,
-} from "openapi3-ts/oas31";
+import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
-
-/**
- * Union type for OpenAPI schema types
- */
-export type OpenAPISchema = ReferenceObject | SchemaObject;
 
 /**
  * Type for resolved schemas from OpenAPI components

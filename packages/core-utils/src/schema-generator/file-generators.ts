@@ -18,7 +18,7 @@ import { sanitizeIdentifier } from "./utils.js";
 /**
  * Options for recursive schema file generation
  */
-export interface RecursiveSchemaFileOptions {
+interface RecursiveSchemaFileOptions {
   description?: string;
   extraProps?: ExtraPropsMode;
   name: string;
@@ -31,7 +31,7 @@ export interface RecursiveSchemaFileOptions {
 /**
  * Schema file generation result
  */
-export interface SchemaFileResult {
+interface SchemaFileResult {
   content: string;
   fileName: string;
   /** Additional schema variant files (complete schema files, not re-exports) */
@@ -41,7 +41,7 @@ export interface SchemaFileResult {
 /**
  * Options for schema file generation
  */
-export interface SchemaGenerationOptions {
+interface SchemaGenerationOptions {
   extraProps?: ExtraPropsMode;
   originalSchemaName?: string;
   recursiveContext?: RecursiveContext;

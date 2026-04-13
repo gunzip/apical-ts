@@ -2,7 +2,7 @@
  * Type definitions for structured import management
  */
 
-export interface ImportInfo {
+interface ImportInfo {
   readonly alias?: string; // For aliased imports (e.g., clientRoute as testParameterWithDashClientRoute)
   readonly filePath?: string; // For explicit file paths
   readonly isSchema?: boolean; // Whether it's a schema (e.g., QuerySchema) vs type (e.g., Query)
@@ -14,12 +14,12 @@ export interface ImportInfo {
   readonly type: "config" | "parameter" | "route" | "schema" | "zod";
 }
 
-export interface ParameterImportGroup {
+interface ParameterImportGroup {
   readonly imports: string[];
   readonly operationId: string;
 }
 
-export type ParameterType = "Headers" | "Path" | "Query";
+type ParameterType = "Headers" | "Path" | "Query";
 
 export class ImportManager {
   private importKeys = new Set<string>();

@@ -14,7 +14,7 @@ import { mergeImports, sanitizeIdentifier } from "./utils.js";
 /**
  * Discriminator configuration for discriminated unions
  */
-export interface DiscriminatorConfig {
+interface DiscriminatorConfig {
   mapping?: Record<string, string>;
   propertyName: string;
 }
@@ -22,7 +22,7 @@ export interface DiscriminatorConfig {
 /**
  * Union handling types
  */
-export type UnionType = "anyOf" | "oneOf";
+type UnionType = "anyOf" | "oneOf";
 
 /**
  * Handle allOf schema composition

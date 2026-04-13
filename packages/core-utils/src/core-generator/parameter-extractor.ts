@@ -5,7 +5,6 @@ import assert from "assert";
 import type { ParameterGroups } from "../shared/models/parameter-models.js";
 import type { SecurityHeader } from "../shared/models/security-models.js";
 
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { extractParameterGroups } from "../shared/parameter-utils.js";
 import { getOperationSecuritySchemes } from "../shared/security-utils.js";
 
@@ -80,27 +79,4 @@ export function extractOperationParameters(
   }
 
   return operationParameters;
-}
-
-/**
- * Gets the schema names that will be generated for operation parameters
- */
-export function getParameterSchemaNames(operationId: string): {
-  headersSchemaName: string;
-  headersTypeName: string;
-  pathSchemaName: string;
-  pathTypeName: string;
-  querySchemaName: string;
-  queryTypeName: string;
-} {
-  const sanitizedId = sanitizeIdentifier(operationId);
-
-  return {
-    headersSchemaName: `${sanitizedId}HeadersSchema`,
-    headersTypeName: `${sanitizedId}HeadersSchema`,
-    pathSchemaName: `${sanitizedId}PathSchema`,
-    pathTypeName: `${sanitizedId}PathSchema`,
-    querySchemaName: `${sanitizedId}QuerySchema`,
-    queryTypeName: `${sanitizedId}QuerySchema`,
-  };
 }

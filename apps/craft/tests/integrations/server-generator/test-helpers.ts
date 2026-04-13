@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request } from "express";
 import { Person } from "../generated/schemas/Person.js";
 import { Message } from "../generated/schemas/Message.js";
 import { NewModel } from "../generated/schemas/NewModel.js";
@@ -7,7 +7,7 @@ import { TestDeserUser } from "../generated/schemas/TestDeserUser.js";
 /**
  * Helper function to create a test Express app
  */
-export function createTestApp(): express.Application {
+function createTestApp(): express.Application {
   const app = express();
 
   // Middleware for parsing JSON bodies
@@ -131,7 +131,7 @@ export const mockData = {
  * Helper to extract parameters from Express request for wrapper consumption
  * Handles parameter name transformation from kebab-case to camelCase
  */
-export function extractRequestParams(req: Request) {
+function extractRequestParams(req: Request) {
   // Transform query parameters from kebab-case to camelCase
   const transformedQuery: Record<string, any> = {};
   for (const [key, value] of Object.entries(req.query)) {
@@ -193,14 +193,4 @@ function transformParameterName(name: string): string {
 
   // Transform kebab-case to camelCase: foo-bar -> fooBar, path-param -> pathParam
   return name.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-}
-
-/**
- * Helper to send response from wrapper result
- */
-export function sendWrapperResponse(
-  res: Response,
-  result: { status: number; contentType: string; data: any },
-) {
-  res.status(result.status).type(result.contentType).send(result.data);
 }

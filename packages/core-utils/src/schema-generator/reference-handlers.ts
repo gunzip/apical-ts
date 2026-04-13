@@ -8,7 +8,7 @@ import { sanitizeIdentifier } from "./utils.js";
 /**
  * Options for reference handling
  */
-export interface ReferenceHandlerOptions {
+interface ReferenceHandlerOptions {
   currentSchemaName?: string;
   propertyName?: string;
   recursiveContext?: RecursiveContext;
@@ -24,7 +24,7 @@ interface ZodSchemaResult {
 /**
  * Handle $ref references with support for recursive references
  */
-export function handleReference(
+function handleReference(
   schema: ReferenceObject,
   result: ZodSchemaResult,
   options: ReferenceHandlerOptions = {},

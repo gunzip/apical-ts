@@ -1,7 +1,6 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import type {
-  OpenAPISchema,
   ResolvedSchemas,
   ZodSchemaCodeOptions,
   ZodSchemaResult,
@@ -9,13 +8,6 @@ import type {
 import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 
-// Re-export types for backward compatibility
-export type {
-  OpenAPISchema,
-  ResolvedSchemas,
-  ZodSchemaCodeOptions,
-  ZodSchemaResult,
-} from "./types.js";
 import { isSchemaObject } from "openapi3-ts/oas31";
 
 import { handleRegularEnum } from "./enum-handlers.js";
