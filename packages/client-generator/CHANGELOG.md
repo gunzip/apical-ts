@@ -1,5 +1,13 @@
 # @apical-ts/client-generator
 
+## 0.12.4
+
+### Patch Changes
+
+- 4040acc: Fix lowercase widlcards
+- Updated dependencies [4040acc]
+  - @apical-ts/core-utils@0.15.2
+
 ## 0.12.3
 
 ### Patch Changes
