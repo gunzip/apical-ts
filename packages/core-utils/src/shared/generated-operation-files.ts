@@ -30,7 +30,7 @@ export function createSanitizedOperationEntries<
 
     if (conflictingOperationId !== null) {
       throw new Error(
-        `Duplicate sanitized operation ID: ${operation.operationId} conflicts with ${conflictingOperationId}`,
+        `Duplicate sanitized operation ID "${sanitizedOperationId}" produced by operation IDs "${conflictingOperationId}" and "${operation.operationId}"`,
       );
     }
 
