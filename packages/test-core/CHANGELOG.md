@@ -1,5 +1,12 @@
 # @apical-ts/test-core
 
+## 0.12.1
+
+### Patch Changes
+
+- 41cce07: Refactored code to remove unused exports
+- 48f3218: Remove duplicated code and upgraded packages
+
 ## 0.12.0
 
 ### Minor Changes

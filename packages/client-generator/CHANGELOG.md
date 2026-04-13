@@ -1,5 +1,15 @@
 # @apical-ts/client-generator
 
+## 0.12.3
+
+### Patch Changes
+
+- 41cce07: Refactored code to remove unused exports
+- 48f3218: Remove duplicated code and upgraded packages
+- Updated dependencies [41cce07]
+- Updated dependencies [48f3218]
+  - @apical-ts/core-utils@0.15.1
+
 ## 0.12.2
 
 ### Patch Changes

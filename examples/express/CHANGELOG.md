@@ -1,5 +1,11 @@
 # @apical-ts/examples
 
+## 0.0.6
+
+### Patch Changes
+
+- 41cce07: Refactored code to remove unused exports
+
 ## 0.0.5
 
 ### Patch Changes

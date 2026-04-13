@@ -1,5 +1,12 @@
 # @apical-ts/core-utils
 
+## 0.15.1
+
+### Patch Changes
+
+- 41cce07: Refactored code to remove unused exports
+- 48f3218: Remove duplicated code and upgraded packages
+
 ## 0.15.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+### Patch Changes
+
+- 48f3218: Remove duplicated code and upgraded packages
+
 ## 0.1.1
 
 ### Patch Changes
