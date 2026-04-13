@@ -260,6 +260,9 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
+      '@apical-ts/craft':
+        specifier: workspace:*
+        version: link:../../apps/craft
       '@tsconfig/node22':
         specifier: 'catalog:'
         version: 22.0.5
