@@ -101,7 +101,7 @@ as the project evolves.
 Explore the live demo to see @apical-ts/craft in action:
 
 <iframe style={{ width: "100%", minHeight: "600px", height: "600px" }}
-src="https://stackblitz.com/edit/vitejs-vite-bls6sznb?ctl=1&embed=1&file=src%2Fclient.ts&view=editor&theme=dark"></iframe>
+src="https://stackblitz.com/edit/apical-craft-example?ctl=1&embed=1&file=src%2Fclient.ts&view=editor&theme=dark"></iframe>
 
 <!-- ![Demo of OpenAPI TypeScript Generator](../static/img/demo.gif) -->
 
