@@ -270,7 +270,7 @@ const response = await findPetsByStatus(
   localConfig,
 );
 
-if (response.isValid && response.status === 200) {
+if (response.status === "200") {
   const data = response.parse();
   if (isParsed(data)) {
     console.log("Pets:", data.parsed);

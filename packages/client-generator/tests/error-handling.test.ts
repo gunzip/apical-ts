@@ -139,6 +139,7 @@ describe("error handling in client generator", () => {
       expect(responseHandler).toContain('if ("parsed" in parseResult)');
       expect(responseHandler).toContain("if (parseResult.kind");
       expect(responseHandler).toContain("isValid: false");
+      expect(responseHandler).toContain("status: undefined");
       /* Force validation should directly return parsed result or error, not provide a parse method */
     });
   });

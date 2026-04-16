@@ -13,7 +13,7 @@ export default function Usage() {
       body: { name: "Rex", photoUrls: [] },
     });
     // API always returns 405 for this operation in the example spec
-    if (result.isValid && result.status === "405") {
+    if (result.status === "405") {
       console.log("Validation errors:");
     }
   }

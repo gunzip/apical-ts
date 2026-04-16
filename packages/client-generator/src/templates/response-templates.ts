@@ -32,6 +32,7 @@ export function renderDefaultResponseHandler(
             const errorResult = {
               ...parseResult,
               isValid: false as const,
+              status: undefined,
               result: { data, status: response.status.toString(), response },
             } satisfies ApiResponseError;
             return errorResult;
@@ -53,6 +54,7 @@ export function renderDefaultResponseHandler(
         return {
           kind: "unexpected-response",
           isValid: false,
+          status: undefined,
           result: {
             data,
             status: response.status.toString(),
@@ -107,6 +109,7 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
           const errorResult = {
             ...parseResult,
             isValid: false as const,
+            status: undefined,
             result: { data, status: "${statusCode}", response },
           } satisfies ApiResponseError;
           return errorResult;

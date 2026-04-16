@@ -46,7 +46,7 @@ describe("forceValidation type narrowing", () => {
       { ...mockConfig, forceValidation: true },
     );
 
-    if (response.isValid && response.status === "200") {
+    if (response.status === "200") {
       // The data should be directly available without calling parse()
       expect(response.data).toBeDefined();
 
@@ -71,7 +71,7 @@ describe("forceValidation type narrowing", () => {
       { ...mockConfig, forceValidation: false },
     );
 
-    if (response.isValid && response.status === "200") {
+    if (response.status === "200") {
       // The parse() method should be available
       const parseResult = response.parse();
       expect(parseResult).toBeDefined();
@@ -88,7 +88,7 @@ describe("forceValidation type narrowing", () => {
       mockConfig, // No forceValidation specified
     );
 
-    if (response.isValid && response.status === "200") {
+    if (response.status === "200") {
       // The parse() method should not be available by default
       // @ts-expect-error
       const parseResult = response.parse();
@@ -113,7 +113,7 @@ describe("forceValidation type narrowing", () => {
     );
 
     // Type guard on status should narrow the response type
-    if (response.isValid && response.status === "200") {
+    if (response.status === "200") {
       // TypeScript knows this is a 200 response with Document schema
       expect(response.status).toBe("200");
       expect(response.data).toBeDefined();

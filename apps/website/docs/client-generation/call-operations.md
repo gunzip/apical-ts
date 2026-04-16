@@ -29,7 +29,7 @@ const result = await getPetById({ path: { petId: "123" } }, apiConfig);
 // You must check for status code since
 // different status codes may have different response shapes
 // TypeScript will narrow the type based on the status code
-if (result.isValid && result.status === "200") {
+if (result.status === "200") {
   const { data, contentType } = result.parsed;
   // Different content types may have different schemas
   console.log("Content type:", contentType);
@@ -120,7 +120,7 @@ or error object.
 ```typescript
 type SuccessResponse = {
   isValid: true;
-  status: number; // HTTP status code
+  status: string; // HTTP status code as string literal, e.g. "200"
   data: unknown; // Raw response data
   response: Response; // Original fetch Response object
   parse: () => ParseResult | { parsed: <parsed payload> }; // Parse method for validation
@@ -136,11 +136,14 @@ on the value of `forceValidation` flag. See
 ```typescript
 type ErrorResponse = {
   isValid: false;
+  status: undefined;
   kind: string; // Error type discriminator
   error: unknown; // Error details
-  status?: number; // HTTP status (if available)
-  data?: unknown; // Response data (if available)
-  response?: Response; // Original Response (if available)
+  result?: {
+    status: string; // Real HTTP status when a response exists
+    data: unknown; // Response data
+    response: Response; // Original Response
+  };
 };
 ```
 
@@ -151,17 +154,11 @@ type ErrorResponse = {
 ```typescript
 const result = await getPetById({ path: { petId: "123" } });
 
-if (result.isValid) {
-  // TypeScript knows this is a compliant response
-  // but you still have to check for status
-  console.log("Status:", result.status);
-  if (result.status === "200") {
-    const { data, contentType } = result.parsed;
-    console.log("Content type:", contentType);
-    console.log("Data:", data);
-  }
-} else {
-  // TypeScript knows this is an error response
+if (result.status === "200") {
+  const { data, contentType } = result.parsed;
+  console.log("Content type:", contentType);
+  console.log("Data:", data);
+} else if (!result.isValid) {
   console.error("Error kind:", result.kind);
   console.error("Error details:", result.error);
 }
@@ -178,7 +175,7 @@ if (!result.isValid) {
   const { data, contentType } = result.parsed;
   console.log("Content type:", contentType);
   console.log("Pet found:", data);
-} else if (result.status === 404) {
+} else if (result.status === "404") {
   console.warn("Pet not found");
 } else {
   console.error("Unexpected status:", result.status);
@@ -228,11 +225,12 @@ The generated client automatically handles content type detection:
 ```typescript
 const result = await getPetById({ path: { petId: "123" } });
 
-if (result.isValid) {
+if (result.status === "200") {
   // Response content type may only be known at runtime
-  if (result.contentType == "application/xml" && result.status == 200) {
+  const { contentType, data } = result.parsed;
+  if (contentType === "application/xml") {
     // Handle XML response
-    const xmlData = result.data;
+    const xmlData = data;
   }
 }
 ```
@@ -268,23 +266,20 @@ if (!result.isValid && result.kind === "unexpected-response") {
 ```typescript
 const response = await getPetById({ path: { petId: "123" } });
 
-if (!response.isValid) {
-  // handle errors and early return
-  console.error("Error:", response.error);
-  return response.error;
-}
-
 // Switch on status codes
 switch (response.status) {
-  case 200:
+  case "200":
     const { data, contentType } = response.parsed;
     // Validation succeeded
     console.log("Content type:", contentType);
     console.log("Typed validated data:", data[0].name);
     break;
-  case 404:
+  case "404":
     console.warn("Pet not found");
     break;
+  case undefined:
+    console.error("Error:", response.error);
+    return response.error;
 }
 ```
 
@@ -293,7 +288,7 @@ switch (response.status) {
 ```typescript
 const response = await getPetById({ path: { petId: "123" } });
 
-if (response.isValid) {
+if (response.status === "200") {
   // Assume forceValidation=false
   const parseResult = response.parse();
   if (parseResult.kind === "parse-error") {
@@ -309,8 +304,7 @@ if (response.isValid) {
 
 ## Best Practices
 
-1. **Always check `result.isValid`** before accessing success-specific
-   properties
+1. **Use `result.status`** to discriminate documented responses
 1. **Handle different status codes** explicitly rather than assuming success
    means 200
 

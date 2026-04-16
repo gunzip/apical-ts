@@ -56,6 +56,7 @@ describe("Fetch Error Handling", () => {
     /* Verify fetch-error is returned in inner catch */
     expect(result.functionCode).toContain(`return {
         isValid: false,
+        status: undefined,
         kind: "fetch-error",
         error,
       } as const;`);
@@ -63,6 +64,7 @@ describe("Fetch Error Handling", () => {
     /* Verify outer try/catch still exists for unexpected errors */
     expect(result.functionCode).toContain(`return {
       isValid: false,
+      status: undefined,
       kind: "unexpected-error",
       error,
     } as const;`);

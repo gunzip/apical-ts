@@ -2,8 +2,8 @@
 
 Each operation returns a discriminated union: either a compliant API response
 (`isValid: true` with a `status` code as **string**, e.g. `'200'`, `'404'`,
-`'422'`, or a range like `'4XX'`, `'5XX'`) or an error object (`isValid: false`)
-with a `kind` discriminator.
+`'422'`, or a range like `'4XX'`, `'5XX'`) or an error object (`isValid: false`,
+`status: undefined`) with a `kind` discriminator.
 
 Validation is opt-out by default (compliant responses expose a `parsed` field).
 You can disable automatic validation at runtime by providing
@@ -15,18 +15,21 @@ You can disable automatic validation at runtime by providing
 ```ts
 const result = await getPetById({ path: { petId: "123" } });
 
-if (result.isValid === false) {
-  console.error("Operation failed:", result.kind, result.error);
-} else if (result.status === "200") {
-  console.log("Pet (raw):", result.data);
-} else if (result.status === "404") {
-  console.warn("Pet not found");
-} else if (result.status === "4XX") {
-  console.warn("Client error (4XX):", result.data);
-} else if (result.status === "5XX") {
-  console.error("Server error (5XX):", result.data);
-} else {
-  console.error("Unexpected documented status", result.status);
+switch (result.status) {
+  case "200":
+    console.log("Pet (raw):", result.data);
+    break;
+  case "404":
+    console.warn("Pet not found");
+    break;
+  case "4XX":
+    console.warn("Client error (4XX):", result.data);
+    break;
+  case "5XX":
+    console.error("Server error (5XX):", result.data);
+    break;
+  default:
+    console.error("Unexpected response", result.status);
 }
 ```
 
@@ -50,8 +53,11 @@ When an operation succeeds, the response object includes:
 When an operation fails, the response object includes:
 
 - **`isValid: false`**: Indicates the operation failed
+- **`status: undefined`**: Lets you discriminate success vs error using only
+  `status`
 - **`kind`**: The type of error that occurred
 - **`error`**: Detailed error information specific to the error type
+- **`result.status`**: The real HTTP status code when an HTTP response exists
 
 ## Validation Modes
 
@@ -63,7 +69,7 @@ are validated against the OpenAPI schema and the `parsed` field is populated.
 ```ts
 const result = await getPetById({ path: { petId: "123" } });
 
-if (result.isValid && result.status === "200") {
+if (result.status === "200") {
   // Data is automatically validated and includes content type
   const { data, contentType } = result.parsed;
   console.log("Content type:", contentType);
@@ -83,7 +89,7 @@ you can call when needed:
 ```ts
 const result = await getPetById({ path: { petId: "123" } });
 
-if (result.isValid && result.status === "200") {
+if (result.status === "200") {
   const outcome = result.parse();
   if (isParsed(outcome)) {
     console.log("Pet:", outcome.parsed);
@@ -100,13 +106,6 @@ type-safely:
 
 ```ts
 const result = await getPetById({ path: { petId: "123" } });
-
-if (!result.isValid) {
-  console.error("Operation failed:", result.error);
-  return;
-}
-
-// result.data is untyped raw data here
 
 switch (result.status) {
   case "200":
@@ -125,13 +124,13 @@ switch (result.status) {
     console.log("Server error (5XX):", result.data);
     break;
   default:
-    console.log("Unexpected status:", result.status);
+    console.log("Unexpected response:", result.status);
 }
 ```
 
 ## Best Practices
 
-1. **Always check `isValid`** before accessing response data
+1. **Use `status` as the primary discriminator** for documented responses
 2. **Handle all expected status codes** explicitly
 3. **Use automatic validation** for trusted APIs where performance isn't
    critical

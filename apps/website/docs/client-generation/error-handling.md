@@ -2,8 +2,8 @@
 
 Client calls never throw exceptions. Instead, all errors are returned as part of
 the response union, providing a consistent and type-safe error handling
-experience. You can branch on either `result.isValid === false` or the presence
-of the `kind` field; both are valid.
+experience. You can branch on `result.status === undefined` or the presence of
+the `kind` field; both are valid.
 
 ## Error Types
 
@@ -11,7 +11,10 @@ All operations return a union that includes `ApiResponseError`, which is a
 discriminated union covering all possible error scenarios:
 
 ```ts
-type ApiResponseError =
+type ApiResponseError = {
+  readonly isValid: false;
+  readonly status: undefined;
+} & (
   | {
       readonly kind: "unexpected-error";
       readonly error: unknown;
@@ -22,32 +25,41 @@ type ApiResponseError =
     }
   | {
       readonly kind: "unexpected-response";
-      readonly data: unknown;
-      readonly status: string; // status code as string, e.g. '404', '4XX', '5XX'
-      readonly response: Response;
+      readonly result: {
+        readonly data: unknown;
+        readonly status: string;
+        readonly response: Response;
+      };
       readonly error: string;
     }
   | {
       readonly kind: "parse-error";
-      readonly data: unknown;
-      readonly status: string;
-      readonly response: Response;
+      readonly result: {
+        readonly data: unknown;
+        readonly status: string;
+        readonly response: Response;
+      };
       readonly error: z.ZodError;
     }
   | {
       readonly kind: "deserialization-error";
-      readonly data: unknown;
-      readonly status: string;
-      readonly response: Response;
+      readonly result: {
+        readonly data: unknown;
+        readonly status: string;
+        readonly response: Response;
+      };
       readonly error: unknown;
     }
   | {
       readonly kind: "missing-schema";
-      readonly data: unknown;
-      readonly status: string;
-      readonly response: Response;
+      readonly result: {
+        readonly data: unknown;
+        readonly status: string;
+        readonly response: Response;
+      };
       readonly error: string;
-    };
+    }
+);
 ```
 
 ## Error Handling Patterns
@@ -59,7 +71,7 @@ if (!r.isValid) {
   // You don't have to handle all errors like this, but you can.
   switch (r.kind) {
     case "unexpected-response":
-      console.error("Unexpected status:", r.status, r.error);
+      console.error("Unexpected status:", r.result.status, r.error);
       break;
     case "deserialization-error":
       console.error("Deserialization failed:", r.error);
@@ -111,12 +123,12 @@ Different error types provide different context:
 ### unexpected-error
 
 - **When it occurs**: Unexpected failures and connection issues.
-- **Available data**: No `status`, `data`, or `response` fields a
+- **Available data**: top-level `status` is `undefined`; no `result` payload
 - **Use case**: Handle network connectivity issues, timeouts, or other
   infrastructure problems
 
 ```ts
-if (result.kind === "unexpected-error") {
+if (!result.isValid && result.kind === "unexpected-error") {
   console.error("Unexpected error:", result.error);
 }
 ```
@@ -125,11 +137,11 @@ if (result.kind === "unexpected-error") {
 
 - **When it occurs**: Errors during the HTTP fetch request (network timeouts,
   DNS failures, connection refused, etc.)
-- **Available data**: No `status`, `data`, or `response` fields
+- **Available data**: top-level `status` is `undefined`; no `result` payload
 - **Use case**: Handle recoverable network errors that may succeed on retry
 
 ```ts
-if (result.kind === "fetch-error") {
+if (!result.isValid && result.kind === "fetch-error") {
   console.error("Fetch request failed:", result.error);
   // Implement retry logic for recoverable network errors
   // Show "Connection failed, retrying..." message to user
@@ -139,13 +151,14 @@ if (result.kind === "fetch-error") {
 ### unexpected-response
 
 - **When it occurs**: HTTP status codes not defined in OpenAPI spec
-- **Available data**: Includes `status`, `data`, `response`
+- **Available data**: top-level `status` is `undefined`; HTTP details are under
+  `result`
 - **Use case**: Handle undocumented API responses or API changes
 
 ```ts
-if (result.kind === "unexpected-response") {
-  console.error(`Undocumented status ${result.status}:`, result.error);
-  console.log("Response data:", result.data);
+if (!result.isValid && result.kind === "unexpected-response") {
+  console.error(`Undocumented status ${result.result.status}:`, result.error);
+  console.log("Response data:", result.result.data);
   // Log for debugging or handle gracefully
 }
 ```
@@ -154,11 +167,12 @@ if (result.kind === "unexpected-response") {
 
 - **When it occurs**: Zod validation failures when using `parse()` or automatic
   runtime validation
-- **Available data**: Includes parsing details via `z.ZodError`
+- **Available data**: Includes parsing details via `z.ZodError`; HTTP details
+  are under `result`
 - **Use case**: Handle schema validation failures
 
 ```ts
-if (result.kind === "parse-error") {
+if (!result.isValid && result.kind === "parse-error") {
   console.error("Response validation failed:");
   console.error(z.prettifyError(result.error)); // Detailed validation errors
   // Show validation error to user or log for debugging
@@ -168,13 +182,14 @@ if (result.kind === "parse-error") {
 ### deserialization-error
 
 - **When it occurs**: Custom deserializer failures
-- **Available data**: Includes original error from deserializer
+- **Available data**: Includes original error from deserializer; HTTP details
+  are under `result`
 - **Use case**: Handle custom content type parsing failures
 
 ```ts
-if (result.kind === "deserialization-error") {
+if (!result.isValid && result.kind === "deserialization-error") {
   console.error("Custom deserializer failed:", result.error);
-  console.log("Raw data:", result.data);
+  console.log("Raw data:", result.result.data);
   // Fall back to raw data handling
 }
 ```
@@ -182,13 +197,14 @@ if (result.kind === "deserialization-error") {
 ### missing-schema
 
 - **When it occurs**: No schema available for content type
-- **Available data**: Includes attempted deserialization details
+- **Available data**: Includes attempted deserialization details; HTTP details
+  are under `result`
 - **Use case**: Handle content types without defined schemas
 
 ```ts
-if (result.kind === "missing-schema") {
+if (!result.isValid && result.kind === "missing-schema") {
   console.warn("No schema for content type:", result.error);
-  console.log("Raw data:", result.data);
+  console.log("Raw data:", result.result.data);
   // Use raw data without validation
 }
 ```
@@ -222,7 +238,8 @@ async function getPetWithRetry(petId: string, maxRetries = 3) {
 
 ## Best Practices
 
-1. **Never ignore errors** - Always check `isValid` before proceeding
+1. **Never ignore errors** - Handle `status === undefined`, `!isValid` and/or
+   branch on `kind`
 1. **Handle errors appropriately** - Different error types require different
    handling strategies
 1. **Retry fetch errors** - Network errors (`fetch-error`) are often recoverable

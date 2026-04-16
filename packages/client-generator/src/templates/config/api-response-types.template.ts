@@ -141,6 +141,7 @@ type ApiResponseErrorResult = {
  */
 export type ApiResponseError = {
   readonly isValid: false;
+  readonly status: undefined;
 } & (
   | {
       readonly kind: "unexpected-error";
