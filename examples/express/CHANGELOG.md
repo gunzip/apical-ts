@@ -1,5 +1,12 @@
 # @apical-ts/examples
 
+## 0.1.0
+
+### Minor Changes
+
+- 43b094d: Use response status as primary discriminator improving developer
+  experience.
+
 ## 0.0.6
 
 ### Patch Changes

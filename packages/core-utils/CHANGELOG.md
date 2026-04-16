@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.18.0
+
+### Minor Changes
+
+- aa76151: Fix method name
+
 ## 0.17.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@apical-ts/examples",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "private": true,
   "description": "Examples for using the apical-ts TypeScript library.",
   "type": "module",

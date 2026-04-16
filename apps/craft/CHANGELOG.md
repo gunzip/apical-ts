@@ -1,5 +1,13 @@
 # @apical-ts/craft
 
+## 0.19.0
+
+### Minor Changes
+
+- aa76151: Fix method name
+- 43b094d: Use response status as primary discriminator improving developer
+  experience.
+
 ## 0.18.0
 
 ### Minor Changes

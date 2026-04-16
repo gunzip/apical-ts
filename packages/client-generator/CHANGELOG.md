@@ -1,5 +1,17 @@
 # @apical-ts/client-generator
 
+## 0.13.0
+
+### Minor Changes
+
+- 43b094d: Use response status as primary discriminator improving developer
+  experience.
+
+### Patch Changes
+
+- Updated dependencies [aa76151]
+  - @apical-ts/core-utils@0.18.0
+
 ## 0.12.6
 
 ### Patch Changes
