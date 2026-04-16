@@ -169,7 +169,7 @@ The result of `parse()` is a discriminated object you can pattern match on:
 ```ts
 const result = await getDocument({ path: { docId: "123" } });
 
-if (result.isValid && result.status === "200") {
+if (result.status === "200") {
   const outcome = result.parse();
 
   if (isParsed(outcome)) {

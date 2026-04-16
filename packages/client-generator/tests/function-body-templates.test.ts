@@ -251,6 +251,7 @@ describe("function-body-templates", () => {
       expect(result).toContain(
         "/* Handle default response or unexpected status codes */",
       );
+      expect(result).toContain("status: undefined");
       expect(result).toContain('kind: "unexpected-response"');
     });
 

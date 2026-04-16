@@ -21,13 +21,16 @@ const getAvailablePets = async () =>
       );
     })
     .mapErr((err) => {
-      if ("status" in err) {
+      if ("result" in err) {
         // here we have a server response but something went wrong
-        console.error(`Failed to get pets with status: ${err.status}`);
-      } else {
+        console.error(`Failed to get pets with status: ${err.result.status}`);
+      } else if ("error" in err) {
         // here we can access some other error occurred before server response
         // (e.g. network errors, timeouts, etc.)
         console.error("Failed to get pets:", err.error);
+      } else {
+        // here we have a documented non-2xx response without an error payload
+        console.error(`Failed to get pets with status: ${err.status}`);
       }
     });
 })();

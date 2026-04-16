@@ -133,6 +133,7 @@ ${headersContent}
     } catch (error) {
       return {
         isValid: false,
+        status: undefined,
         kind: "fetch-error",
         error,
       } as const;
@@ -150,6 +151,7 @@ ${defaultResponseHandler}`
     return {
       kind: "unexpected-response",
       isValid: false,
+      status: undefined,
       result: {
         data,
         status: response.status.toString(),
@@ -161,6 +163,7 @@ ${defaultResponseHandler}`
   } catch (error) {
     return {
       isValid: false,
+      status: undefined,
       kind: "unexpected-error",
       error,
     } as const;

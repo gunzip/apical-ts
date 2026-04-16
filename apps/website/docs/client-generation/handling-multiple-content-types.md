@@ -170,7 +170,7 @@ const result = await updatePet({
   contentType: { response: "application/xml" },
 });
 
-if (result.isValid && result.status === "200") {
+if (result.status === "200") {
   // With forceValidation=true (default)
   // parsed field contains both data and contentType
   const { data, contentType } = result.parsed;

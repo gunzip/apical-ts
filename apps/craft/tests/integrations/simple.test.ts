@@ -189,6 +189,7 @@ describe("Working Integration Test Demo", () => {
     if ("kind" in result) {
       expect(result.kind).toBe("unexpected-response");
       expect(result.isValid).toBe(false);
+      expect(result.status).toBeUndefined();
       if ("result" in result) {
         expect(result.result.status).toBe("401");
         expect(result.error).toContain("Unexpected response status: 401");

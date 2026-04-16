@@ -72,7 +72,7 @@ function HomepageHeader() {
             <div className={styles.codeBlockLabel}>TypeScript</div>
             <CodeBlock
               className={styles.codeBlock}
-              code={`import { findPetsByStatus } from './generated/client/findPetsByStatus.js';\n\nconst r = await findPetsByStatus({\n  query: { status: "available" },\n});\nif (r.isValid === true && r.status === "200") {\n  // Zod v4 parsed payload\n  console.log(r.parsed.data[0].name);\n}`}
+              code={`import { findPetsByStatus } from './generated/client/findPetsByStatus.js';\n\nconst r = await findPetsByStatus({\n  query: { status: "available" },\n});\nif (r.status === "200") {\n  // Zod v4 parsed payload\n  console.log(r.parsed.data[0].name);\n}`}
               language="typescript"
             />
           </div>
