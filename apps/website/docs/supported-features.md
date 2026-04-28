@@ -33,8 +33,8 @@ experience.
   automatically or call `response.parse()` as needed
 - ⚙️ **Configurable validation modes**: Control how schemas handle additional
   properties with `--extra-props` flag (strip, loose, or strict validation)
-- 🧬 **Custom string format overrides**: Replace specific OpenAPI string
-  formats with imported Zod schemas via `--format`, with type propagation across
+- 🧬 **Custom string format overrides**: Replace specific OpenAPI string formats
+  with imported Zod schemas via `--format`, with type propagation across
   generated schemas, routes, client, and server code
 - 📦 **Small footprint**: Generates each operation and schema/type in its own
   file for maximum tree-shaking and modularity

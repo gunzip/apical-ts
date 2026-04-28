@@ -19,9 +19,9 @@ keywords:
 `@apical-ts/craft` can replace the built-in handling of an OpenAPI
 `type: string` + `format` combination with your own Zod schema.
 
-This is useful when a format in your API represents a domain-specific value
-such as a tax code, customer ID, slug, or branded UUID that should be validated
-by a custom schema instead of the default string-format mapping.
+This is useful when a format in your API represents a domain-specific value such
+as a tax code, customer ID, slug, or branded UUID that should be validated by a
+custom schema instead of the default string-format mapping.
 
 ## CLI Syntax
 
@@ -50,8 +50,8 @@ npx @apical-ts/craft generate \
 
 - `<format>` must match the OpenAPI `format` value exactly
 - `<module-or-path>` accepts package specifiers and explicit project paths
-- `#<export>` is optional; when omitted, `craft` infers the export name from
-  the last module or path segment
+- `#<export>` is optional; when omitted, `craft` infers the export name from the
+  last module or path segment
 - `--format` can be provided multiple times
 
 ## Example
@@ -109,8 +109,8 @@ npx @apical-ts/craft generate \
 When a field or parameter matches the configured format:
 
 1. The generated schema file imports your custom Zod schema.
-2. The matching property or parameter reuses that schema instead of the
-   built-in string-format logic.
+2. The matching property or parameter reuses that schema instead of the built-in
+   string-format logic.
 3. The resulting type flows through generated schemas, routes, client
    operations, and server wrappers.
 
