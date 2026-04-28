@@ -4,6 +4,10 @@ export {
   generateResponseSchemaFile,
   generateSchemaFile,
 } from "./file-generators.js";
+export {
+  createStringFormatOverrideRegistry,
+  type StringFormatOverride,
+} from "./format-overrides.js";
 export { writeParameterSchemaFile } from "./parameter-file-generator.js";
 export {
   analyzeSchemaForRecursion,

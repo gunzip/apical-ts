@@ -5,6 +5,7 @@ import type { ExtraPropsMode } from "@apical-ts/core-utils";
 
 import { Command } from "commander";
 
+import { parseFormatOverrideArguments } from "./format-overrides.js";
 import { generate } from "./generate.js";
 
 const program = new Command();
@@ -35,6 +36,12 @@ program
   .option("--generate-routes, --routes", "Generate route metadata.", false)
   .option("--profile", "Print timing breakdown for generation phases.", false)
   .option(
+    "--format <mapping>",
+    "Override an OpenAPI string format with <format>=<module-or-path>#<export>. Repeatable.",
+    collectOption,
+    [],
+  )
+  .option(
     "--extra-props <mode>",
     "Control how additional properties are handled in object schemas. Options: strip (default), loose, strict",
     "strip",
@@ -44,6 +51,11 @@ program
       const started = process.hrtime.bigint();
       const generationOptions = {
         extraProps: String(options.extraProps) as ExtraPropsMode,
+        formatOverrides: parseFormatOverrideArguments(
+          Array.isArray(options.format)
+            ? options.format.map((value) => String(value))
+            : [],
+        ),
         generateClient: Boolean(options.client),
         generateRoutes: Boolean(options.routes),
         generateServer: Boolean(options.server),
@@ -65,3 +77,8 @@ program
   });
 
 program.parse(process.argv);
+
+function collectOption(value: string, previous: string[]): string[] {
+  previous.push(value);
+  return previous;
+}

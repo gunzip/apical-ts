@@ -1,6 +1,7 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import type { ExtraPropsMode } from "../shared/types.js";
+import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { ResolvedSchemas } from "./types.js";
 
@@ -19,6 +20,7 @@ export interface ObjectPropertyOptions {
   currentSchemaName?: string;
   extraProps?: ExtraPropsMode;
   formatShape?: boolean;
+  formatOverrides?: StringFormatOverrideRegistry;
   imports?: Set<string>;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
@@ -53,7 +55,10 @@ export function generateObjectCode(
   zodSchemaToCode: (
     schema: ReferenceObject | SchemaObject,
     options?: ObjectPropertyOptions,
-  ) => { code: string; imports: Set<string> },
+  ) => {
+    code: string;
+    imports: Set<string>;
+  },
   options: ObjectPropertyOptions = {},
 ): ObjectCodeResult {
   const imports = options.imports || new Set<string>();
@@ -99,6 +104,7 @@ export function generateObjectCode(
     const additionalResult = zodSchemaToCode(additionalProperties, {
       currentSchemaName: options.currentSchemaName,
       imports,
+      formatOverrides: options.formatOverrides,
       recursiveContext: options.recursiveContext,
       resolvedSchemas: options.resolvedSchemas,
     });

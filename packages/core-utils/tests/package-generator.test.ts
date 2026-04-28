@@ -2,6 +2,8 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
+import type { StringFormatOverride } from "../src/schema-generator/format-overrides.js";
+
 import { describe, expect, it } from "vitest";
 
 import { createPackageFiles } from "../src/core-generator/package-generator.js";
@@ -41,7 +43,7 @@ describe("package generator", () => {
           allowSyntheticDefaultImports: true,
           esModuleInterop: true,
           forceConsistentCasingInFileNames: true,
-          lib: ["es2025"],
+          lib: ["es2024"],
           module: "NodeNext",
           moduleResolution: "NodeNext",
           noEmitOnError: false,
@@ -50,7 +52,49 @@ describe("package generator", () => {
           rootDir: ".",
           skipLibCheck: true,
           strict: true,
-          target: "es2025",
+          target: "es2024",
+          types: ["node"],
+        },
+      });
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
+  });
+
+  it("omits rootDir when path-based format overrides are present", async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
+    const formatOverrides: StringFormatOverride[] = [
+      {
+        format: "tax-code",
+        import: {
+          kind: "path",
+          path: "/tmp/TaxCode.ts",
+        },
+        importName: "TaxCode",
+      },
+    ];
+
+    try {
+      await createPackageFiles(outputDir, formatOverrides);
+
+      const tsConfig = JSON.parse(
+        await readFile(join(outputDir, "tsconfig.json"), "utf8"),
+      );
+
+      expect(tsConfig).toEqual({
+        compilerOptions: {
+          allowSyntheticDefaultImports: true,
+          esModuleInterop: true,
+          forceConsistentCasingInFileNames: true,
+          lib: ["es2024"],
+          module: "NodeNext",
+          moduleResolution: "NodeNext",
+          noEmitOnError: false,
+          outDir: "dist",
+          resolveJsonModule: true,
+          skipLibCheck: true,
+          strict: true,
+          target: "es2024",
           types: ["node"],
         },
       });

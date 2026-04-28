@@ -41,6 +41,7 @@ export {
   generateSchemaVariants,
   type SchemaVariantsResult,
 } from "./schema-generator/file-generators.js";
+export type { StringFormatOverride } from "./schema-generator/format-overrides.js";
 export {
   determineObjectMethod,
   generateObjectCode,

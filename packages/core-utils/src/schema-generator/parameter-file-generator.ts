@@ -2,7 +2,12 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import type { OperationParameterMetadata } from "../core-generator/parameter-extractor.js";
+import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 
+import {
+  findStringFormatOverrideByReferenceName,
+  renderStringFormatOverrideImports,
+} from "./format-overrides.js";
 import { generateParameterSchemas } from "../shared/parameter-schemas.js";
 import { sanitizeIdentifier } from "./utils.js";
 
@@ -12,7 +17,6 @@ import { sanitizeIdentifier } from "./utils.js";
 interface ParameterSchemaFileResult {
   content: string;
   fileName: string;
-  typeImports: Set<string>;
 }
 
 /**
@@ -20,11 +24,13 @@ interface ParameterSchemaFileResult {
  * Creates separate files for each operation's query, path, and headers schemas.
  */
 async function generateParameterSchemaFile(
+  schemasDir: string,
   operationId: string,
   parameterMetadata: OperationParameterMetadata,
   options: {
     /* Use client defaults for parameter schema generation */
     coercePrimitives?: boolean;
+    formatOverrides?: StringFormatOverrideRegistry;
     lowercaseHeaderKeys?: boolean;
   } = {},
 ): Promise<ParameterSchemaFileResult> {
@@ -49,6 +55,7 @@ async function generateParameterSchemaFile(
     parameterMetadata.parameterGroups,
     {
       coercePrimitives: true,
+      formatOverrides: options.formatOverrides,
       lowercaseHeaderKeys: true,
       securityHeaders,
     },
@@ -72,12 +79,29 @@ async function generateParameterSchemaFile(
 
   /* Add other type imports */
   if (result.typeImports.size > 0) {
-    const typeImportsList = Array.from(result.typeImports).sort();
+    const typeImportsList = Array.from(result.typeImports)
+      .filter(
+        (typeImport) =>
+          typeImport !== "z" &&
+          !findStringFormatOverrideByReferenceName(
+            typeImport,
+            options.formatOverrides,
+          ),
+      )
+      .sort();
     for (const typeImport of typeImportsList) {
-      if (typeImport !== "z") {
-        imports.push(`import { ${typeImport} } from "./${typeImport}.js";`);
-      }
+      imports.push(`import { ${typeImport} } from "./${typeImport}.js";`);
     }
+  }
+
+  const filePath = path.join(schemasDir, fileName);
+  const externalImportLines = renderStringFormatOverrideImports(
+    new Set([...result.typeImports, ...serverResult.typeImports]),
+    options.formatOverrides,
+    filePath,
+  );
+  if (externalImportLines.length > 0) {
+    imports.push(...externalImportLines);
   }
 
   /* Calculate optionality for parameters */
@@ -205,7 +229,6 @@ async function generateParameterSchemaFile(
   return {
     content,
     fileName,
-    typeImports: result.typeImports,
   };
 }
 
@@ -218,10 +241,12 @@ export async function writeParameterSchemaFile(
   parameterMetadata: OperationParameterMetadata,
   options: {
     coercePrimitives?: boolean;
+    formatOverrides?: StringFormatOverrideRegistry;
     lowercaseHeaderKeys?: boolean;
   } = {},
 ): Promise<void> {
   const result = await generateParameterSchemaFile(
+    schemasDir,
     operationId,
     parameterMetadata,
     options,

@@ -1,12 +1,18 @@
 import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { isReferenceObject } from "openapi3-ts/oas31";
+import path from "node:path";
 
 import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
+import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { ResolvedSchemas } from "./types.js";
 
 import { analyzeReadWriteProperties } from "../shared/types.js";
+import {
+  findStringFormatOverrideByReferenceName,
+  renderStringFormatOverrideImports,
+} from "./format-overrides.js";
 import { generateObjectCode } from "./object-properties.js";
 import {
   createRecursiveContext,
@@ -21,10 +27,12 @@ import { sanitizeIdentifier } from "./utils.js";
 interface RecursiveSchemaFileOptions {
   description?: string;
   extraProps?: ExtraPropsMode;
+  formatOverrides?: StringFormatOverrideRegistry;
   name: string;
   originalSchemaName: string;
   recursiveContext: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
+  schemaDirectory?: string;
   schema: SchemaObject;
 }
 
@@ -43,9 +51,11 @@ interface SchemaFileResult {
  */
 interface SchemaGenerationOptions {
   extraProps?: ExtraPropsMode;
+  formatOverrides?: StringFormatOverrideRegistry;
   originalSchemaName?: string;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
+  schemaDirectory?: string;
   schemaContext?: SchemaContext;
 }
 
@@ -66,10 +76,12 @@ export async function generateRecursiveSchemaFile(
   const {
     description,
     extraProps,
+    formatOverrides,
     name,
     originalSchemaName,
     recursiveContext,
     resolvedSchemas,
+    schemaDirectory = ".",
     schema,
   } = options;
 
@@ -114,6 +126,7 @@ export async function generateRecursiveSchemaFile(
       const propResult = zodSchemaToCode(propSchema, {
         currentSchemaName: name,
         extraProps,
+        formatOverrides,
         imports: new Set(),
         recursiveContext,
         resolvedSchemas,
@@ -153,6 +166,7 @@ export async function generateRecursiveSchemaFile(
       const propResult = zodSchemaToCode(propSchema, {
         currentSchemaName: name,
         extraProps,
+        formatOverrides,
         imports: new Set(),
         recursiveContext,
         resolvedSchemas,
@@ -172,8 +186,6 @@ export async function generateRecursiveSchemaFile(
     }
   }
 
-  const importsSection = generateImportsSection(imports, name);
-
   /*
    * Use additionalProperties to determine object type and generate code using common function
    */
@@ -185,6 +197,7 @@ export async function generateRecursiveSchemaFile(
       currentSchemaName: name,
       extraProps,
       formatShape: true,
+      formatOverrides,
       imports,
       recursiveContext,
       resolvedSchemas,
@@ -198,6 +211,12 @@ export async function generateRecursiveSchemaFile(
   });
 
   const schemaCode = objectCodeResult.code;
+  const importsSection = generateImportsSection(
+    imports,
+    name,
+    path.join(schemaDirectory, `${name}.ts`),
+    formatOverrides,
+  );
 
   const content = assembleFileContent(
     name,
@@ -248,14 +267,20 @@ export async function generateSchemaFile(
   description?: string,
   options: SchemaGenerationOptions = {},
 ): Promise<SchemaFileResult> {
-  const { extraProps, recursiveContext, resolvedSchemas, schemaContext } =
-    options;
+  const {
+    extraProps,
+    recursiveContext,
+    resolvedSchemas,
+    schemaContext,
+    schemaDirectory,
+  } = options;
 
   const context = recursiveContext || createRecursiveContext();
 
   const schemaResult = zodSchemaToCode(schema, {
     currentSchemaName: name,
     extraProps,
+    formatOverrides: options.formatOverrides,
     isTopLevel: true,
     recursiveContext: context,
     resolvedSchemas,
@@ -263,7 +288,12 @@ export async function generateSchemaFile(
   });
 
   const commentSection = generateCommentSection(description);
-  const importsSection = generateImportsSection(schemaResult.imports, name);
+  const importsSection = generateImportsSection(
+    schemaResult.imports,
+    name,
+    path.join(schemaDirectory || ".", `${name}.ts`),
+    options.formatOverrides,
+  );
 
   const content = assembleFileContent(
     name,
@@ -279,8 +309,10 @@ export async function generateSchemaFile(
     const variants = generateSchemaVariants(schema);
     variantFiles = await generateVariantSchemaFiles(name, schema, variants, {
       extraProps,
+      formatOverrides: options.formatOverrides,
       recursiveContext,
       resolvedSchemas,
+      schemaDirectory,
     });
   }
 
@@ -386,10 +418,25 @@ function generateGetterCode(
 function generateImportsSection(
   imports: Set<string>,
   currentSchemaName: string,
+  filePath: string,
+  formatOverrides?: StringFormatOverrideRegistry,
 ): string {
-  const importStatements = Array.from(imports)
-    .filter((importName) => importName !== currentSchemaName) // Don't import self
+  const localImportStatements = Array.from(imports)
+    .filter(
+      (importName) =>
+        importName !== currentSchemaName &&
+        !findStringFormatOverrideByReferenceName(importName, formatOverrides),
+    )
+    .sort()
     .map((importName) => `import { ${importName} } from "./${importName}.js";`)
+    .join("\n");
+  const externalImportStatements = renderStringFormatOverrideImports(
+    imports,
+    formatOverrides,
+    filePath,
+  ).join("\n");
+  const importStatements = [externalImportStatements, localImportStatements]
+    .filter(Boolean)
     .join("\n");
   return importStatements ? `${importStatements}\n` : "";
 }

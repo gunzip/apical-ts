@@ -1,29 +1,32 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-const tsConfigContent = {
-  compilerOptions: {
-    allowSyntheticDefaultImports: true,
-    esModuleInterop: true,
-    forceConsistentCasingInFileNames: true,
-    lib: ["es2025"],
-    module: "NodeNext",
-    moduleResolution: "NodeNext",
-    noEmitOnError: false,
-    outDir: "dist",
-    resolveJsonModule: true,
-    rootDir: ".",
-    skipLibCheck: true,
-    strict: true,
-    target: "es2025",
-    types: ["node"],
-  },
+import type { StringFormatOverride } from "../schema-generator/format-overrides.js";
+
+const baseCompilerOptions: Record<string, unknown> = {
+  allowSyntheticDefaultImports: true,
+  esModuleInterop: true,
+  forceConsistentCasingInFileNames: true,
+  lib: ["es2024"],
+  module: "NodeNext",
+  moduleResolution: "NodeNext",
+  noEmitOnError: false,
+  outDir: "dist",
+  resolveJsonModule: true,
+  skipLibCheck: true,
+  strict: true,
+  target: "es2024",
+  types: ["node"],
 };
 
-/**
- * Creates the package metadata files for the generated output
- */
-export async function createPackageFiles(output: string): Promise<void> {
+export async function createPackageFiles(
+  output: string,
+  formatOverrides: readonly StringFormatOverride[] = [],
+): Promise<void> {
+  const compilerOptions = { ...baseCompilerOptions };
+  if (!formatOverrides.some((override) => override.import.kind === "path")) {
+    compilerOptions.rootDir = ".";
+  }
   const packageJsonContent = {
     dependencies: {
       zod: "^4.0.0",
@@ -46,7 +49,7 @@ export async function createPackageFiles(output: string): Promise<void> {
     ),
     fs.writeFile(
       path.join(output, "tsconfig.json"),
-      JSON.stringify(tsConfigContent, null, 2),
+      JSON.stringify({ compilerOptions }, null, 2),
     ),
   ]);
 }

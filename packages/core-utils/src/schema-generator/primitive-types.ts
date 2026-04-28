@@ -5,6 +5,11 @@ import type { ExtraPropsMode } from "../shared/types.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { SchemaContext } from "../shared/types.js";
 import type { ResolvedSchemas } from "./types.js";
+
+import {
+  findStringFormatOverride,
+  getStringFormatOverrideReferenceName,
+} from "./format-overrides.js";
 import { handleExtensibleEnum, handleRegularEnum } from "./enum-handlers.js";
 import { addDefaultValue } from "./utils.js";
 
@@ -21,6 +26,7 @@ export function handleArrayType(
   options: {
     currentSchemaName?: string;
     extraProps?: ExtraPropsMode;
+    formatOverrides?: ZodSchemaCodeOptions["formatOverrides"];
     recursiveContext?: RecursiveContext;
     resolvedSchemas?: ResolvedSchemas;
     schemaContext?: SchemaContext;
@@ -29,6 +35,7 @@ export function handleArrayType(
   const {
     currentSchemaName,
     extraProps,
+    formatOverrides,
     recursiveContext,
     resolvedSchemas,
     schemaContext,
@@ -43,6 +50,7 @@ export function handleArrayType(
   const itemsResult = zodSchemaToCode(schema.items, {
     currentSchemaName,
     extraProps,
+    formatOverrides,
     imports: result.imports,
     recursiveContext,
     resolvedSchemas,
@@ -139,12 +147,26 @@ export function handleNumberType(
 export function handleStringType(
   schema: SchemaObject,
   result: ZodSchemaResult,
+  formatOverrides?: ZodSchemaCodeOptions["formatOverrides"],
 ): ZodSchemaResult {
   // Handle x-extensible-enum first, as it takes precedence over regular enum
   const extensibleEnumResult = handleExtensibleEnum(schema);
   if (extensibleEnumResult) {
     result.code = extensibleEnumResult.code;
     result.extensibleEnumValues = extensibleEnumResult.enumValues;
+    return result;
+  }
+
+  if (schema.enum && schema.enum.length >= 1) {
+    result.code = handleRegularEnum(schema.enum, schema.default);
+    return result;
+  }
+
+  const override = findStringFormatOverride(schema.format, formatOverrides);
+  if (override) {
+    const referenceName = getStringFormatOverrideReferenceName(override.format);
+    result.imports.add(referenceName);
+    result.code = addDefaultValue(referenceName, schema.default);
     return result;
   }
 
@@ -175,13 +197,8 @@ export function handleStringType(
   // while in Node.js, fetch returns a Blob instance.
   if (schema.format === "binary") code = "z.instanceof(Blob)";
 
-  // Handle enums for strings (both single and multi-value)
-  if (schema.enum && schema.enum.length >= 1) {
-    code = handleRegularEnum(schema.enum, schema.default);
-  } else {
-    // Add default value if present and no enum
-    code = addDefaultValue(code, schema.default);
-  }
+  // Add default value if present and no enum
+  code = addDefaultValue(code, schema.default);
 
   result.code = code;
   return result;

@@ -38,6 +38,7 @@ export function handleObjectType(
       const propResult = zodSchemaToCode(propSchema, {
         currentSchemaName,
         imports: result.imports,
+        formatOverrides: options.formatOverrides,
         recursiveContext,
         resolvedSchemas,
         schemaContext,
@@ -68,6 +69,7 @@ export function handleObjectType(
     {
       currentSchemaName,
       extraProps,
+      formatOverrides: options.formatOverrides,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
