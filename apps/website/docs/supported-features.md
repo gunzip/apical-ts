@@ -33,6 +33,9 @@ experience.
   automatically or call `response.parse()` as needed
 - ⚙️ **Configurable validation modes**: Control how schemas handle additional
   properties with `--extra-props` flag (strip, loose, or strict validation)
+- 🧬 **Custom string format overrides**: Replace specific OpenAPI string
+  formats with imported Zod schemas via `--format`, with type propagation across
+  generated schemas, routes, client, and server code
 - 📦 **Small footprint**: Generates each operation and schema/type in its own
   file for maximum tree-shaking and modularity
 - 🚀 **Fast code generation**: Optimized for quick generation times, even with
@@ -90,6 +93,8 @@ experience.
 - Comprehensive error types with context
 - Validation error details with field-level information
 - Configurable additional properties handling (strip/loose/strict modes)
+- Custom domain validation for OpenAPI string formats through imported Zod
+  schemas
 - Respect for explicit OpenAPI `additionalProperties` settings
 - **ReadOnly and WriteOnly property handling**: Automatic variant generation for
   schemas with `readOnly` and `writeOnly` properties, ensuring type-safe request

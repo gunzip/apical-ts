@@ -41,7 +41,10 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       type: "category",
       label: "Schema Generation",
-      items: ["schema-generation/readonly-writeonly-properties"],
+      items: [
+        "schema-generation/string-format-overrides",
+        "schema-generation/readonly-writeonly-properties",
+      ],
     },
     "server-routes-wrappers-generation",
     "supported-input-formats",
