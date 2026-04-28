@@ -26,12 +26,74 @@ export function createStringFormatOverrideRegistry(
   overrides: readonly StringFormatOverride[] = [],
 ): StringFormatOverrideRegistry {
   const registry = new Map<string, StringFormatOverride>();
+  const referenceNames = new Set<string>();
 
   for (const override of overrides) {
+    const referenceName = validateStringFormatOverride(
+      override,
+      registry,
+      referenceNames,
+    );
+
     registry.set(override.format, override);
+    referenceNames.add(referenceName);
   }
 
   return registry;
+}
+
+function validateStringFormatOverride(
+  override: StringFormatOverride,
+  registry: ReadonlyMap<string, StringFormatOverride>,
+  referenceNames: ReadonlySet<string>,
+): string {
+  assertNonEmptyFormat(override.format);
+  assertValidImportName(override.importName, override.format);
+
+  if (registry.has(override.format)) {
+    throw new Error(
+      `Duplicate string format override for format "${override.format}".`,
+    );
+  }
+
+  const referenceName = getStringFormatOverrideReferenceName(override.format);
+  if (referenceNames.has(referenceName)) {
+    throw new Error(
+      `Duplicate string format override reference name "${referenceName}" derived from format "${override.format}".`,
+    );
+  }
+
+  return referenceName;
+}
+
+function assertNonEmptyFormat(format: string): void {
+  if (format.trim().length === 0) {
+    throw new Error(
+      "String format override format must be a non-empty string.",
+    );
+  }
+}
+
+function assertValidImportName(importName: string, format: string): void {
+  const trimmedImportName = importName.trim();
+  if (trimmedImportName.length === 0) {
+    throw new Error(
+      `String format override "${format}" must specify a non-empty importName.`,
+    );
+  }
+
+  try {
+    if (
+      trimmedImportName !== importName ||
+      sanitizeIdentifier(trimmedImportName) !== trimmedImportName
+    ) {
+      throw new Error("Invalid import name.");
+    }
+  } catch {
+    throw new Error(
+      `String format override "${format}" has an invalid importName "${importName}".`,
+    );
+  }
 }
 
 /*

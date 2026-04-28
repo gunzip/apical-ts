@@ -34,7 +34,7 @@ export function parseFormatOverrideArguments(
 
 /*
  * Parses a single `--format` value of the form
- * `<format>=<module-or-path>#<export>`.
+ * `<format>=<module-or-path>[#<export>]`.
  * It validates the user-facing contract up front so downstream generators only
  * receive a normalized `{ format, import, importName }` shape.
  */
@@ -46,7 +46,7 @@ export function parseFormatOverrideArgument(
   const separatorIndex = mapping.indexOf("=");
   if (separatorIndex <= 0 || separatorIndex === mapping.length - 1) {
     throw new Error(
-      `Invalid --format value "${mapping}". Expected <format>=<module-or-path>#<export>.`,
+      `Invalid --format value "${mapping}". Expected <format>=<module-or-path>[#<export>].`,
     );
   }
 
@@ -88,12 +88,18 @@ function inferImportName(importTarget: string): string {
 
   if (!inferredBaseName) {
     throw new Error(
-      `Unable to infer an export name from "${importTarget}". Use --format <format>=<module-or-path>#<export>.`,
+      `Unable to infer an export name from "${importTarget}". Use --format <format>=<module-or-path> or include #<export> when it cannot be inferred.`,
     );
   }
 
-  const identifier = sanitizeIdentifier(inferredBaseName);
-  return identifier.charAt(0).toUpperCase() + identifier.slice(1);
+  try {
+    const identifier = sanitizeIdentifier(inferredBaseName);
+    return identifier.charAt(0).toUpperCase() + identifier.slice(1);
+  } catch {
+    throw new Error(
+      `Unable to infer an export name from "${importTarget}". Use --format <format>=<module-or-path> or include #<export> when it cannot be inferred.`,
+    );
+  }
 }
 
 /*
@@ -125,16 +131,22 @@ function parseImportTarget(
 } {
   // Use the last `#` so only the trailing segment is treated as the export name.
   const exportSeparatorIndex = importTarget.lastIndexOf("#");
-  const hasExplicitExport =
-    exportSeparatorIndex > -1 && exportSeparatorIndex < importTarget.length - 1;
+  const hasExportSeparator = exportSeparatorIndex > -1;
+  const explicitImportName = hasExportSeparator
+    ? importTarget.slice(exportSeparatorIndex + 1).trim()
+    : undefined;
+
+  if (hasExportSeparator && !explicitImportName) {
+    throw new Error(
+      `Invalid --format value "${importTarget}". The import target contains "#" but no export name follows it.`,
+    );
+  }
+
   const rawSource = (
-    hasExplicitExport
+    hasExportSeparator
       ? importTarget.slice(0, exportSeparatorIndex)
       : importTarget
   ).trim();
-  const explicitImportName = hasExplicitExport
-    ? importTarget.slice(exportSeparatorIndex + 1).trim()
-    : undefined;
 
   if (!rawSource) {
     throw new Error(

@@ -37,7 +37,7 @@ program
   .option("--profile", "Print timing breakdown for generation phases.", false)
   .option(
     "--format <mapping>",
-    "Override an OpenAPI string format with <format>=<module-or-path>#<export>. Repeatable.",
+    "Override an OpenAPI string format with <format>=<module-or-path>[#<export>]. Repeatable.",
     collectOption,
     [],
   )

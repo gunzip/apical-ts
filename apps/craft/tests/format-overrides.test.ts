@@ -57,6 +57,12 @@ describe("format overrides parser", () => {
     ).toThrow(/Duplicate --format override/);
   });
 
+  it("uses the optional export syntax in malformed mapping errors", () => {
+    expect(() => parseFormatOverrideArgument("tax-code", craftRoot)).toThrow(
+      'Invalid --format value "tax-code". Expected <format>=<module-or-path>[#<export>].',
+    );
+  });
+
   it("rejects malformed export names", () => {
     expect(() =>
       parseFormatOverrideArgument(
@@ -64,5 +70,19 @@ describe("format overrides parser", () => {
         craftRoot,
       ),
     ).toThrow(/Invalid export name/);
+  });
+
+  it("rejects trailing export separators without an export name", () => {
+    expect(() =>
+      parseFormatOverrideArgument("tax-code=@acme/domain#", craftRoot),
+    ).toThrow(/contains "#" but no export name follows it/);
+  });
+
+  it("uses optional export guidance when the export name cannot be inferred", () => {
+    expect(() =>
+      parseFormatOverrideArgument("tax-code=@@@", craftRoot),
+    ).toThrow(
+      'Unable to infer an export name from "@@@". Use --format <format>=<module-or-path> or include #<export> when it cannot be inferred.',
+    );
   });
 });
