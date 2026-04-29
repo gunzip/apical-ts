@@ -11,7 +11,7 @@ import {
   getStringFormatOverrideReferenceName,
 } from "./format-overrides.js";
 import { handleExtensibleEnum, handleRegularEnum } from "./enum-handlers.js";
-import { addDefaultValue } from "./utils.js";
+import { addDefaultValue, toSchemaType } from "./utils.js";
 
 /**
  * Handle array type conversion
@@ -63,8 +63,16 @@ export function handleArrayType(
   if (schema.maxItems !== undefined) code += `.max(${schema.maxItems})`;
   // uniqueItems not representable in code string
 
-  // Add default value if present
-  code = addDefaultValue(code, schema.default, { schemaType: "array" });
+  // Resolve item schema type for default-value coercion
+  const itemType =
+    schema.items && "type" in schema.items
+      ? toSchemaType(schema.items.type as string)
+      : undefined;
+
+  code = addDefaultValue(code, schema.default, {
+    itemSchemaType: itemType,
+    schemaType: "array",
+  });
 
   result.code = code;
   return result;

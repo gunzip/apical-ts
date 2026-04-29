@@ -60,11 +60,20 @@ describe("addDefaultValue coercion", () => {
     });
 
     it("keeps array default as-is for string arrays", () => {
-      // ["true"] stays ["true"] — no boolean coercion for arrays
+      // ["true"] stays ["true"] — no boolean coercion for string item type
       const result = addDefaultValue("z.array(z.string())", ["true"], {
+        itemSchemaType: "string",
         schemaType: "array",
       });
       expect(result).toBe('z.array(z.string()).default(["true"])');
+    });
+
+    it("coerces string elements to booleans for boolean arrays", () => {
+      const result = addDefaultValue("z.array(z.boolean())", ["true"], {
+        itemSchemaType: "boolean",
+        schemaType: "array",
+      });
+      expect(result).toBe("z.array(z.boolean()).default([true])");
     });
 
     it("keeps valid array defaults unchanged", () => {
@@ -72,6 +81,20 @@ describe("addDefaultValue coercion", () => {
         schemaType: "array",
       });
       expect(result).toBe("z.array(z.number()).default([1,2,3])");
+    });
+  });
+
+  describe("bigint schema", () => {
+    it("emits bigint default for valid numeric value", () => {
+      const result = addDefaultValue("z.coerce.bigint()", 0, { bigint: true });
+      expect(result).toBe("z.coerce.bigint().default(0n)");
+    });
+
+    it("drops default for invalid bigint string", () => {
+      const result = addDefaultValue("z.coerce.bigint()", "abc", {
+        bigint: true,
+      });
+      expect(result).toBe("z.coerce.bigint()");
     });
   });
 });

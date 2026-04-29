@@ -36,13 +36,22 @@ export function toSchemaType(type: string | undefined): SchemaType | undefined {
 export function addDefaultValue(
   code: string,
   defaultValue: unknown,
-  options?: { bigint?: boolean; schemaType?: SchemaType },
+  options?: {
+    bigint?: boolean;
+    itemSchemaType?: SchemaType;
+    schemaType?: SchemaType;
+  },
 ): string {
   if (defaultValue === undefined) {
     return code;
   }
 
   if (options?.bigint) {
+    // Validate that the default can be represented as a bigint literal
+    const n = Number(defaultValue);
+    if (typeof defaultValue === "string" && Number.isNaN(n)) {
+      return code;
+    }
     return `${code}.default(${defaultValue}n)`;
   }
 
@@ -76,6 +85,22 @@ export function addDefaultValue(
   /* Drop invalid scalar defaults for array types */
   if (options?.schemaType === "array" && !Array.isArray(defaultValue)) {
     return code;
+  }
+
+  // Coerce string elements to booleans only when the array item type is boolean
+  if (
+    options?.schemaType === "array" &&
+    options.itemSchemaType === "boolean" &&
+    Array.isArray(defaultValue)
+  ) {
+    coerced = defaultValue.map((el) => {
+      if (typeof el === "string") {
+        const lower = el.toLowerCase();
+        if (lower === "true") return true;
+        if (lower === "false") return false;
+      }
+      return el;
+    });
   }
 
   /* Drop invalid string defaults for object types */
