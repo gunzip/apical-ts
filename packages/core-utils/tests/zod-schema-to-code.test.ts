@@ -316,7 +316,7 @@ describe("zodSchemaToCode", () => {
     expect(result.code).not.toContain(".shape");
   });
 
-  it("should use full z.intersection for allOf with nested allOf $ref (no .shape)", () => {
+  it("should keep object-only nested allOf refs flattenable", () => {
     const schema: SchemaObject = {
       allOf: [
         { $ref: "#/components/schemas/BaseObject" },
@@ -338,9 +338,38 @@ describe("zodSchemaToCode", () => {
     };
 
     const result = zodSchemaToCode(schema, { resolvedSchemas });
+    expect(result.code).toContain("z.object({...BaseObject.shape");
+    expect(result.code).toContain("...Composed.shape");
+    expect(result.code).not.toContain("z.intersection(");
+    expect(result.imports.has("BaseObject")).toBe(true);
+    expect(result.imports.has("Composed")).toBe(true);
+  });
+
+  it("should use full z.intersection for allOf with mixed nested allOf $ref", () => {
+    const schema: SchemaObject = {
+      allOf: [
+        { $ref: "#/components/schemas/BaseObject" },
+        { $ref: "#/components/schemas/MixedComposed" },
+      ],
+    };
+
+    const resolvedSchemas = {
+      BaseObject: {
+        type: "object",
+        properties: { id: { type: "string" } },
+      } as SchemaObject,
+      MixedComposed: {
+        allOf: [
+          { type: "object", properties: { x: { type: "string" } } },
+          { type: "string" },
+        ],
+      } as SchemaObject,
+    };
+
+    const result = zodSchemaToCode(schema, { resolvedSchemas });
     expect(result.code).toContain("z.intersection(");
     expect(result.code).toContain("BaseObject");
-    expect(result.code).toContain("Composed");
+    expect(result.code).toContain("MixedComposed");
     expect(result.code).not.toContain(".shape");
   });
 

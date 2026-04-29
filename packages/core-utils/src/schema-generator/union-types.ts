@@ -323,37 +323,45 @@ function collectRequiredFields(
 }
 
 /*
- * Check whether a resolved OpenAPI schema maps to a plain ZodObject.
- * Schemas with enum, const, oneOf, anyOf, or allOf produce non-object Zod
- * types (ZodEnum, ZodLiteral, ZodUnion, ZodDiscriminatedUnion,
- * ZodIntersection) that lack .shape.
+ * Check whether a schema is safe to treat as object-like for .shape spreads.
+ * Object-only allOf compositions still flatten to z.object(...), while enums,
+ * literals, unions, and mixed allOf compositions must avoid .shape.
  */
-function isPlainObjectSchema(schema: SchemaObject): boolean {
-  if (
-    schema.enum ||
-    schema.const !== undefined ||
-    schema.oneOf ||
-    schema.anyOf ||
-    schema.allOf
-  ) {
-    return false;
-  }
-  return !schema.type || schema.type === "object";
-}
-
 function isObjectSchemaType(
   schema: ReferenceObject | SchemaObject,
   resolvedSchemas?: ResolvedSchemas,
+  seenRefs = new Set<string>(),
 ): boolean {
   if (isReferenceObject(schema)) {
     if (!resolvedSchemas) return false;
     const refName = extractSchemaNameFromRef(schema.$ref);
     if (!refName) return false;
+    if (seenRefs.has(refName.originalName)) return false;
     const resolved = resolvedSchemas[refName.originalName];
-    if (!resolved || "$ref" in resolved) return false;
-    return isPlainObjectSchema(resolved as SchemaObject);
+    if (!resolved) return false;
+    return isObjectSchemaType(
+      resolved,
+      resolvedSchemas,
+      new Set(seenRefs).add(refName.originalName),
+    );
   }
-  return isPlainObjectSchema(schema);
+
+  if (
+    schema.enum ||
+    schema.const !== undefined ||
+    schema.oneOf ||
+    schema.anyOf
+  ) {
+    return false;
+  }
+
+  if (schema.allOf) {
+    return schema.allOf.every((member) =>
+      isObjectSchemaType(member, resolvedSchemas, seenRefs),
+    );
+  }
+
+  return !schema.type || schema.type === "object";
 }
 
 function extractSchemaNameFromRef(
