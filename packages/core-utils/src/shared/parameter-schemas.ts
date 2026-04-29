@@ -9,6 +9,7 @@ import type {
 import { isReferenceObject } from "openapi3-ts/oas31";
 
 import type { ParameterGroups } from "./models/parameter-models.js";
+import type { StringFormatOverrideRegistry } from "../schema-generator/format-overrides.js";
 
 import { zodSchemaToCode } from "../schema-generator/index.js";
 import {
@@ -23,6 +24,7 @@ import {
 export interface ParameterSchemaOptions {
   /* Apply coercion transformations for primitive types */
   coercePrimitives?: boolean;
+  formatOverrides?: StringFormatOverrideRegistry;
   lowercaseHeaderKeys?: boolean;
   /* Security headers to include in the headers schema */
   securityHeaders?: {
@@ -51,7 +53,7 @@ export interface ParameterSchemaResult {
     pathSchema: string;
     querySchema: string;
   };
-  /* Type imports needed */
+  /* Dependency identifiers needed by generated parameter schemas */
   typeImports: Set<string>;
   /* Type names for external reference */
   typeNames: {
@@ -71,6 +73,7 @@ export function generateParameterSchemas(
 ): ParameterSchemaResult {
   const {
     coercePrimitives = false,
+    formatOverrides,
     lowercaseHeaderKeys = false,
     securityHeaders = [],
   } = options;
@@ -100,6 +103,7 @@ export function generateParameterSchemas(
     let zodCode: string;
     if (schema) {
       const result = zodSchemaToCode(schema, {
+        formatOverrides,
         imports: typeImports,
       });
       zodCode = result.code;

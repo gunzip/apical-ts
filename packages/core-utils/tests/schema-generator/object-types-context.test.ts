@@ -17,7 +17,10 @@ describe("object-types with schemaContext", () => {
         },
       };
 
-      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = {
+        code: "",
+        imports: new Set<string>(),
+      };
       handleObjectType(schema, result, zodSchemaToCode, {
         schemaContext: "base",
       });
@@ -37,7 +40,10 @@ describe("object-types with schemaContext", () => {
         },
       };
 
-      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = {
+        code: "",
+        imports: new Set<string>(),
+      };
       handleObjectType(schema, result, zodSchemaToCode, {
         schemaContext: "request",
       });
@@ -57,7 +63,10 @@ describe("object-types with schemaContext", () => {
         },
       };
 
-      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = {
+        code: "",
+        imports: new Set<string>(),
+      };
       handleObjectType(schema, result, zodSchemaToCode, {
         schemaContext: "response",
       });
@@ -76,7 +85,10 @@ describe("object-types with schemaContext", () => {
         },
       };
 
-      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = {
+        code: "",
+        imports: new Set<string>(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toContain('"id"');
@@ -93,7 +105,10 @@ describe("object-types with schemaContext", () => {
         required: ["id", "name"],
       };
 
-      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = {
+        code: "",
+        imports: new Set<string>(),
+      };
       handleObjectType(schema, result, zodSchemaToCode, {
         schemaContext: "request",
       });
@@ -112,7 +127,10 @@ describe("object-types with schemaContext", () => {
         },
       };
 
-      const result: ZodSchemaResult = { code: "", imports: new Set<string>() };
+      const result: ZodSchemaResult = {
+        code: "",
+        imports: new Set<string>(),
+      };
       handleObjectType(schema, result, zodSchemaToCode, {
         schemaContext: "request",
       });

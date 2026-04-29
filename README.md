@@ -11,4 +11,37 @@ Need to **validate server requests and return typed responses**? 🛡️ We've g
 you covered with built-in support for request and response validation using Zod
 schemas.
 
+## CLI
+
+```bash
+pnpm start generate -i ./openapi.yaml -o ./generated --client --server
+```
+
+### Overriding OpenAPI string formats
+
+Use `--format` to replace a `type: string` + `format` mapping with your own Zod
+schema:
+
+```bash
+pnpm start generate \
+  -i ./openapi.yaml \
+  -o ./generated \
+  --client \
+  --server \
+  --format tax-code=./src/zod/TaxCode.ts \
+  --format uuid=@acme/domain-schemas#Uuid
+```
+
+- `--format` is repeatable
+- `<format>` must match the OpenAPI `format` value exactly
+- `<module-or-path>` accepts both package/module specifiers and explicit project
+  paths (`./` or `../`)
+- `#<export>` is optional; when omitted, `craft` infers the export name from the
+  last path or module segment
+
+When a mapping matches, the generator imports your Zod schema into generated
+`schemas` files and reuses it through generated routes, client, and server
+types. The matched string field stops using the built-in OpenAPI string
+constraints and delegates validation to your custom schema.
+
 See https://gunzip.github.io/apical-ts/ for more information.

@@ -8,6 +8,7 @@ import type {
   ResolvedSchemas,
 } from "./types.js";
 import type { ExtraPropsMode } from "../shared/types.js";
+import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import { mergeImports, sanitizeIdentifier } from "./utils.js";
 
@@ -37,13 +38,19 @@ export function handleAllOfSchema(
   options: {
     currentSchemaName?: string;
     extraProps?: ExtraPropsMode;
+    formatOverrides?: StringFormatOverrideRegistry;
     recursiveContext?: RecursiveContext;
     resolvedSchemas?: ResolvedSchemas;
     strictValidation?: boolean;
   } = {},
 ): ZodSchemaResult {
-  const { currentSchemaName, extraProps, recursiveContext, resolvedSchemas } =
-    options;
+  const {
+    currentSchemaName,
+    extraProps,
+    formatOverrides,
+    recursiveContext,
+    resolvedSchemas,
+  } = options;
 
   /*
    * Avoid object spread when allOf contains a self-reference.
@@ -120,6 +127,7 @@ export function handleAllOfSchema(
         const subResult = zodSchemaToCode(modifiedSchema, {
           currentSchemaName,
           extraProps,
+          formatOverrides,
           imports: new Set(),
           recursiveContext,
           resolvedSchemas,
@@ -144,6 +152,7 @@ export function handleAllOfSchema(
     zodSchemaToCode(s, {
       currentSchemaName,
       extraProps,
+      formatOverrides,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
@@ -185,12 +194,18 @@ export function handleUnionSchema(
   options: {
     currentSchemaName?: string;
     extraProps?: ExtraPropsMode;
+    formatOverrides?: StringFormatOverrideRegistry;
     recursiveContext?: RecursiveContext;
     resolvedSchemas?: ResolvedSchemas;
   } = {},
 ): ZodSchemaResult {
-  const { currentSchemaName, extraProps, recursiveContext, resolvedSchemas } =
-    options;
+  const {
+    currentSchemaName,
+    extraProps,
+    formatOverrides,
+    recursiveContext,
+    resolvedSchemas,
+  } = options;
   // Check if discriminator is present for discriminated unions
   if (discriminator && discriminator.propertyName) {
     const discriminatorProperty = discriminator.propertyName;
@@ -198,6 +213,7 @@ export function handleUnionSchema(
       zodSchemaToCode(s, {
         currentSchemaName,
         extraProps,
+        formatOverrides,
         imports: result.imports,
         recursiveContext,
         resolvedSchemas,
@@ -227,6 +243,7 @@ export function handleUnionSchema(
     zodSchemaToCode(s, {
       currentSchemaName,
       extraProps,
+      formatOverrides,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,

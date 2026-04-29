@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info:
+  title: Format Override Test API
+  version: 1.0.0
+paths:
+  /profiles:
+    post:
+      operationId: createProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Profile"
+      responses:
+        "201":
+          description: Created profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+  /profiles/{taxCode}:
+    get:
+      operationId: getProfileByTaxCode
+      parameters:
+        - in: path
+          name: taxCode
+          required: true
+          schema:
+            type: string
+            format: tax-code
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+components:
+  schemas:
+    Profile:
+      type: object
+      properties:
+        fiscalCode:
+          type: string
+          format: tax-code
+      required:
+        - fiscalCode

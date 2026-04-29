@@ -5,8 +5,10 @@ import pLimit from "p-limit";
 import path from "path";
 
 import type { Profiler } from "./profiler.js";
+import type { StringFormatOverride } from "../schema-generator/format-overrides.js";
 
 import {
+  createStringFormatOverrideRegistry,
   analyzeSchemaForRecursion,
   createRecursiveContext,
   findRecursiveSchemas,
@@ -41,6 +43,7 @@ interface ComponentSchemaOptions {
 
 interface SchemaGenerationContext {
   extraProps: ExtraPropsMode;
+  formatOverrides: ReturnType<typeof createStringFormatOverrideRegistry>;
   generateServer: boolean;
   limit: ReturnType<typeof pLimit>;
   openApiDoc: OpenAPIObject;
@@ -63,6 +66,7 @@ export async function generateSchemas(
   generateServer: boolean,
   extraProps: ExtraPropsMode,
   profiler?: Profiler,
+  formatOverrides: readonly StringFormatOverride[] = [],
 ): Promise<void> {
   const schemasDir = path.join(output, "schemas");
   await fs.mkdir(schemasDir, { recursive: true });
@@ -70,6 +74,7 @@ export async function generateSchemas(
   const limit = pLimit(concurrency);
   const context: SchemaGenerationContext = {
     extraProps,
+    formatOverrides: createStringFormatOverrideRegistry(formatOverrides),
     generateServer,
     limit,
     openApiDoc,
@@ -85,13 +90,25 @@ export async function generateSchemas(
       ...createSchemaGenerationPromises(
         extractRequestSchemas(openApiDoc),
         context,
-        generateRequestSchemaFile,
+        (name, schema) =>
+          generateRequestSchemaFile(name, schema, {
+            extraProps: context.extraProps,
+            formatOverrides: context.formatOverrides,
+            resolvedSchemas: context.resolvedSchemas,
+            schemaDirectory: context.schemasDir,
+          }),
       ),
       // Generate response schemas from operations
       ...createSchemaGenerationPromises(
         extractResponseSchemas(openApiDoc),
         context,
-        generateResponseSchemaFile,
+        (name, schema) =>
+          generateResponseSchemaFile(name, schema, {
+            extraProps: context.extraProps,
+            formatOverrides: context.formatOverrides,
+            resolvedSchemas: context.resolvedSchemas,
+            schemaDirectory: context.schemasDir,
+          }),
       ),
       // Generate parameter schemas from operations
       ...generateParameterSchemas(openApiDoc, context),
@@ -113,7 +130,13 @@ export async function generateSchemas(
       createSchemaGenerationPromises(
         extractRequestSchemas(openApiDoc),
         context,
-        generateRequestSchemaFile,
+        (name, schema) =>
+          generateRequestSchemaFile(name, schema, {
+            extraProps: context.extraProps,
+            formatOverrides: context.formatOverrides,
+            resolvedSchemas: context.resolvedSchemas,
+            schemaDirectory: context.schemasDir,
+          }),
       ),
     );
     profiler.end("schemas:requests");
@@ -123,7 +146,13 @@ export async function generateSchemas(
       createSchemaGenerationPromises(
         extractResponseSchemas(openApiDoc),
         context,
-        generateResponseSchemaFile,
+        (name, schema) =>
+          generateResponseSchemaFile(name, schema, {
+            extraProps: context.extraProps,
+            formatOverrides: context.formatOverrides,
+            resolvedSchemas: context.resolvedSchemas,
+            schemaDirectory: context.schemasDir,
+          }),
       ),
     );
     profiler.end("schemas:responses");
@@ -167,17 +196,21 @@ function createComponentSchemaPromise(
         ? generateRecursiveSchemaFile({
             description,
             extraProps: context.extraProps,
+            formatOverrides: context.formatOverrides,
             name: schemaName,
             originalSchemaName: originalSchemaName || schemaName,
             recursiveContext,
             resolvedSchemas: context.resolvedSchemas,
+            schemaDirectory: context.schemasDir,
             schema,
           })
         : generateSchemaFile(schemaName, schema, description, {
             extraProps: context.extraProps,
+            formatOverrides: context.formatOverrides,
             originalSchemaName,
             recursiveContext,
             resolvedSchemas: context.resolvedSchemas,
+            schemaDirectory: context.schemasDir,
           });
 
     const schemaFile = await generationPromise;
@@ -307,6 +340,7 @@ function generateParameterSchemas(
         {
           /* Client defaults - no coercion or special handling */
           coercePrimitives: false,
+          formatOverrides: context.formatOverrides,
           lowercaseHeaderKeys: false,
         },
       ),

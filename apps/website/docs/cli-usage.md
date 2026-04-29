@@ -86,6 +86,10 @@ specification.
 - `--routes`: Generate route metadata only (default: false). Useful when you
   want to generate your own type-safe client or server implementation while
   leveraging the generated schemas and route definitions.
+- `--format <mapping>`: Override an OpenAPI `type: string` + `format` mapping
+  with a custom imported Zod schema. Syntax:
+  `<format>=<module-or-path>[#<export>]`. Repeatable. See
+  [String Format Overrides](./schema-generation/string-format-overrides.md).
 - `--extra-props <mode>`: Control how Zod schemas handle additional properties.
   Options: `strip` (default), `loose`, `strict`. See
   [Schema Validation Modes](./schema-validation-modes.md) for details.
@@ -93,6 +97,31 @@ specification.
 > **Note**: The long-form flags `--generate-client`, `--generate-server`, and
 > `--generate-routes` are deprecated in favor of the shorter `--client`,
 > `--server`, and `--routes` aliases.
+
+## Overriding OpenAPI String Formats
+
+Use `--format` when a string format in your OpenAPI specification should map to
+your own Zod schema instead of the built-in handling.
+
+```bash
+npx @apical-ts/craft generate \
+  --client \
+  --server \
+  -i openapi.yaml \
+  -o generated \
+  --format tax-code=./src/zod/TaxCode.ts \
+  --format uuid=@acme/domain-schemas#Uuid
+```
+
+This makes the generated schemas import your custom validators and propagates
+their types through generated routes, client operations, and server wrappers.
+
+- `--format` is repeatable
+- `#<export>` is optional
+- project paths must be explicit (`./` or `../`)
+
+For a complete walkthrough, see
+[String Format Overrides](./schema-generation/string-format-overrides.md).
 
 ## Output Structure
 

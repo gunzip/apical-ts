@@ -1,5 +1,8 @@
 /* eslint-disable no-console */
-import type { ExtraPropsMode } from "@apical-ts/core-utils";
+import type {
+  ExtraPropsMode,
+  StringFormatOverride,
+} from "@apical-ts/core-utils";
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import { generateOperations } from "@apical-ts/client-generator";
@@ -49,6 +52,7 @@ export interface GenerationOptions {
    * @default "strip"
    */
   extraProps?: ExtraPropsMode;
+  formatOverrides?: StringFormatOverride[];
   generateClient: boolean;
   generateRoutes?: boolean;
   generateServer?: boolean;
@@ -85,6 +89,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
   const {
     concurrency = DEFAULT_CONCURRENCY,
     extraProps = "strip",
+    formatOverrides = [],
     generateClient: genClient,
     generateRoutes: genRoutes = false,
     generateServer: genServer = false,
@@ -109,6 +114,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
     genServer,
     extraProps,
     profiler,
+    formatOverrides,
   );
   profiler?.end("schemas:all");
 
@@ -123,7 +129,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
   );
 
   profiler?.start("package-json");
-  await createPackageFiles(output);
+  await createPackageFiles(output, formatOverrides);
   profiler?.end("package-json");
 
   profiler?.printSummary?.("Generation timing (ms)");

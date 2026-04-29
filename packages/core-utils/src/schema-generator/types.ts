@@ -1,6 +1,7 @@
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
+import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 
 /**
@@ -16,6 +17,10 @@ export type ResolvedSchemas = NonNullable<
  * These options control how OpenAPI schemas are converted to Zod validation schemas.
  */
 export interface ZodSchemaCodeOptions {
+  /**
+   * Override registry for OpenAPI string formats
+   */
+  formatOverrides?: StringFormatOverrideRegistry;
   /**
    * Name of the schema being converted (used for recursive detection and naming)
    */
@@ -71,7 +76,9 @@ export interface ZodSchemaResult {
    */
   extensibleEnumValues?: unknown[];
   /**
-   * Set of schema names that need to be imported for this code to work
+   * Set of dependency identifiers that need to be imported for this code to work.
+   * This includes generated schema names and reserved aliases for string-format
+   * overrides.
    */
   imports: Set<string>;
 }

@@ -29,10 +29,12 @@ describe("schema-generator file-generators", () => {
         type: "object",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.object({ name: z.string() })",
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ name: z.string() })",
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateSchemaFile("User", schema);
 
@@ -47,10 +49,12 @@ describe("schema-generator file-generators", () => {
         type: "string",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.string()",
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.string()",
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateSchemaFile(
         "User",
@@ -66,10 +70,12 @@ describe("schema-generator file-generators", () => {
         type: "string",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.string()",
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.string()",
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateSchemaFile(
         "User",
@@ -87,10 +93,12 @@ describe("schema-generator file-generators", () => {
         type: "string",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.string()",
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.string()",
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateSchemaFile(
         "User",
@@ -109,10 +117,12 @@ describe("schema-generator file-generators", () => {
         type: "object",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.object({ user: User })",
-        imports: new Set(["User"]),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ user: User })",
+          imports: new Set(["User"]),
+        }),
+      );
 
       const result = await generateSchemaFile("Profile", schema);
 
@@ -127,10 +137,12 @@ describe("schema-generator file-generators", () => {
         type: "object",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.object({ self: User })",
-        imports: new Set(["Profile", "User"]),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ self: User })",
+          imports: new Set(["Profile", "User"]),
+        }),
+      );
 
       const result = await generateSchemaFile("User", schema);
 
@@ -144,11 +156,13 @@ describe("schema-generator file-generators", () => {
         type: "string",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.union([z.literal('value1'), z.literal('value2'), z.string()])",
-        extensibleEnumValues: ["value1", "value2"],
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.union([z.literal('value1'), z.literal('value2'), z.string()])",
+          extensibleEnumValues: ["value1", "value2"],
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateSchemaFile("Status", schema);
 
@@ -163,11 +177,13 @@ describe("schema-generator file-generators", () => {
         type: "string",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.union([z.literal('complex-value'), z.literal('another_value'), z.literal('123'), z.string()])",
-        extensibleEnumValues: ["complex-value", "another_value", "123"],
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.union([z.literal('complex-value'), z.literal('another_value'), z.literal('123'), z.string()])",
+          extensibleEnumValues: ["complex-value", "another_value", "123"],
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateSchemaFile("Type", schema);
 
@@ -185,10 +201,12 @@ describe("schema-generator file-generators", () => {
         type: "object",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.object({ user: User, role: Role })",
-        imports: new Set(["Role", "User"]),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ user: User, role: Role })",
+          imports: new Set(["Role", "User"]),
+        }),
+      );
 
       const result = await generateSchemaFile("Profile", schema);
 
@@ -206,10 +224,12 @@ describe("schema-generator file-generators", () => {
         type: "object",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.object({ email: z.string() })",
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ email: z.string() })",
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateRequestSchemaFile(
         "createUserRequest",
@@ -227,10 +247,12 @@ describe("schema-generator file-generators", () => {
         type: "string",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.string()",
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.string()",
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateRequestSchemaFile("testRequest", schema);
 
@@ -247,10 +269,12 @@ describe("schema-generator file-generators", () => {
         type: "object",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.object({ id: z.string() })",
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ id: z.string() })",
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateResponseSchemaFile(
         "CreateUser200Response",
@@ -266,10 +290,12 @@ describe("schema-generator file-generators", () => {
         type: "string",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.string()",
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.string()",
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateResponseSchemaFile("User", schema);
 
@@ -281,10 +307,12 @@ describe("schema-generator file-generators", () => {
         type: "string",
       };
 
-      vi.mocked(zodSchemaToCode).mockReturnValue({
-        code: "z.string()",
-        imports: new Set(),
-      });
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.string()",
+          imports: new Set(),
+        }),
+      );
 
       const result = await generateResponseSchemaFile(
         "GetUser404Response",
@@ -351,3 +379,23 @@ describe("schema-generator file-generators", () => {
     });
   });
 });
+
+function mockSchemaResult(
+  overrides: Partial<{
+    code: string;
+    extensibleEnumValues: string[];
+    imports: Set<string>;
+  }>,
+) {
+  return {
+    ...createMockSchemaResult(),
+    ...overrides,
+  };
+}
+
+function createMockSchemaResult() {
+  return {
+    code: "z.unknown()",
+    imports: new Set<string>(),
+  };
+}

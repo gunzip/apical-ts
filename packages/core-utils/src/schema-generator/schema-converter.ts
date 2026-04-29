@@ -41,6 +41,7 @@ export function zodSchemaToCode(
   const {
     currentSchemaName,
     extraProps,
+    formatOverrides,
     imports,
     recursiveContext,
     resolvedSchemas,
@@ -77,6 +78,7 @@ export function zodSchemaToCode(
         currentSchemaName,
         resolvedSchemas,
         extraProps,
+        formatOverrides,
       ),
     );
   }
@@ -103,6 +105,7 @@ export function zodSchemaToCode(
         currentSchemaName,
         resolvedSchemas,
         extraProps,
+        formatOverrides,
       ),
     );
   }
@@ -115,6 +118,7 @@ export function zodSchemaToCode(
     currentSchemaName,
     resolvedSchemas,
     extraProps,
+    formatOverrides,
   );
   if (composition) return applyDesc(composition);
 
@@ -128,6 +132,7 @@ export function zodSchemaToCode(
     resolvedSchemas,
     extraProps,
     schemaContext,
+    formatOverrides,
   );
   if (primitiveHandled) return applyDesc(primitiveHandled);
 
@@ -138,7 +143,10 @@ export function zodSchemaToCode(
 
 /* Internal helper: creates an empty ZodSchemaResult reusing provided imports set when present */
 function createResult(imports?: Set<string>): ZodSchemaResult {
-  return { code: "", imports: imports || new Set<string>() };
+  return {
+    code: "",
+    imports: imports || new Set<string>(),
+  };
 }
 
 /* Internal helper: handles OpenAPI 3.1 multi-type (array) declarations like ["string","null"] */
@@ -150,6 +158,7 @@ function handleMultiTypeArray(
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
   extraProps?: ExtraPropsMode,
+  formatOverrides?: ZodSchemaCodeOptions["formatOverrides"],
 ): ZodSchemaResult {
   const { isNullable: hasNull, nonNullTypes } = analyzeTypeArray(effectiveType);
   if (nonNullTypes.length === 1 && hasNull) {
@@ -163,6 +172,7 @@ function handleMultiTypeArray(
     const subResult = zodSchemaToCode(clone as SchemaObject, {
       currentSchemaName,
       extraProps,
+      formatOverrides,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
@@ -181,6 +191,7 @@ function handleMultiTypeArray(
     zodSchemaToCode({ ...schema, type: t } as SchemaObject, {
       currentSchemaName,
       extraProps,
+      formatOverrides,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
@@ -201,6 +212,7 @@ function handleNullableSchema(
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
   extraProps?: ExtraPropsMode,
+  formatOverrides?: ZodSchemaCodeOptions["formatOverrides"],
 ): ZodSchemaResult {
   // Same rationale as handleMultiTypeArray(): nullable defaults such as `null`
   // must be applied to the outer nullable schema, not to the inner non-null one.
@@ -208,6 +220,7 @@ function handleNullableSchema(
   const subResult = zodSchemaToCode(clone, {
     currentSchemaName,
     extraProps,
+    formatOverrides,
     imports: result.imports,
     recursiveContext,
     resolvedSchemas,
@@ -231,8 +244,11 @@ function handlePrimitive(
   resolvedSchemas?: ResolvedSchemas,
   extraProps?: ExtraPropsMode,
   schemaContext?: SchemaContext,
+  formatOverrides?: ZodSchemaCodeOptions["formatOverrides"],
 ): undefined | ZodSchemaResult {
-  if (effectiveType === "string") return handleStringType(schema, result);
+  if (effectiveType === "string") {
+    return handleStringType(schema, result, formatOverrides);
+  }
   if (effectiveType === "number" || effectiveType === "integer") {
     return handleNumberType(schema, result);
   }
@@ -241,6 +257,7 @@ function handlePrimitive(
     return handleArrayType(schema, result, zodSchemaToCode, {
       currentSchemaName,
       extraProps,
+      formatOverrides,
       recursiveContext,
       resolvedSchemas,
       schemaContext,
@@ -250,6 +267,7 @@ function handlePrimitive(
     return handleObjectType(schema, result, zodSchemaToCode, {
       currentSchemaName,
       extraProps,
+      formatOverrides,
       recursiveContext,
       resolvedSchemas,
       schemaContext,
@@ -266,11 +284,13 @@ function tryHandleCompositions(
   currentSchemaName?: string,
   resolvedSchemas?: ResolvedSchemas,
   extraProps?: ExtraPropsMode,
+  formatOverrides?: ZodSchemaCodeOptions["formatOverrides"],
 ): undefined | ZodSchemaResult {
   if (schema.allOf) {
     return handleAllOfSchema(schema.allOf, result, zodSchemaToCode, {
       currentSchemaName,
       extraProps,
+      formatOverrides,
       recursiveContext,
       resolvedSchemas,
     });
@@ -285,6 +305,7 @@ function tryHandleCompositions(
       {
         currentSchemaName,
         extraProps,
+        formatOverrides,
         recursiveContext,
         resolvedSchemas,
       },
@@ -300,6 +321,7 @@ function tryHandleCompositions(
       {
         currentSchemaName,
         extraProps,
+        formatOverrides,
         recursiveContext,
         resolvedSchemas,
       },
