@@ -28,32 +28,46 @@ export function renderSecurityHeaderHandling(
 ): string {
   if (operationSecurityHeaders.length === 0) return "";
 
-  /* Deduplicate by computed variable name to prevent TS2451 from colliding names */
+  /* Deduplicate exact duplicate headers while preserving distinct header names. */
   const uniqueHeaders = new Map<string, SecurityHeader>();
   for (const header of operationSecurityHeaders) {
-    const varName = toValidVariableName(header.headerName);
-    const existing = uniqueHeaders.get(varName);
+    const existing = uniqueHeaders.get(header.headerName);
     if (!existing || (header.isRequired && !existing.isRequired)) {
-      uniqueHeaders.set(varName, header);
+      uniqueHeaders.set(header.headerName, header);
     }
   }
   const deduplicatedHeaders = [...uniqueHeaders.values()];
+  const usedVariableNames = new Set<string>();
+
+  const getUniqueSecurityVariableName = (headerName: string): string => {
+    const baseName = `_sec_${toValidVariableName(headerName)}`;
+    let candidateName = baseName;
+    let suffix = 2;
+
+    while (usedVariableNames.has(candidateName)) {
+      candidateName = `${baseName}_${suffix}`;
+      suffix++;
+    }
+
+    usedVariableNames.add(candidateName);
+    return candidateName;
+  };
 
   /* Helper to generate security header handling code */
   const generateHeaderCode = (header: SecurityHeader): string => {
-    const varName = toValidVariableName(header.headerName);
+    const varName = getUniqueSecurityVariableName(header.headerName);
     const source = header.isOverride ? "params.headers" : "config.headers";
     const useOptionalChaining = !(header.isOverride && header.isRequired);
     const optionalChain = useOptionalChaining ? "?." : "";
     const accessExpression = `${source}${optionalChain}['${header.headerName}']`;
 
     if (header.isRequired) {
-      return `const _sec_${varName} = ${accessExpression};
-    if (_sec_${varName} === undefined) throw new Error('Missing required security header: ${header.headerName}');
-    finalHeaders['${header.headerName}'] = _sec_${varName};`;
+      return `const ${varName} = ${accessExpression};
+    if (${varName} === undefined) throw new Error('Missing required security header: ${header.headerName}');
+    finalHeaders['${header.headerName}'] = ${varName};`;
     } else {
-      return `const _sec_${varName} = ${accessExpression};
-    if (_sec_${varName} !== undefined) finalHeaders['${header.headerName}'] = _sec_${varName};`;
+      return `const ${varName} = ${accessExpression};
+    if (${varName} !== undefined) finalHeaders['${header.headerName}'] = ${varName};`;
     }
   };
 

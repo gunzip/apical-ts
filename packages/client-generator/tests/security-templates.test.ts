@@ -135,7 +135,7 @@ describe("client-generator security templates", () => {
       );
     });
 
-    it("should deduplicate headers whose names collide after normalization", () => {
+    it("should preserve distinct headers whose names collide after normalization", () => {
       const headers: SecurityHeader[] = [
         {
           headerName: "X-Auth-Email",
@@ -153,13 +153,20 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityHeaderHandling(headers);
 
-      // Both header names normalize to XAuthEmail – only one const should be emitted
-      const emailOccurrences = result.split("const _sec_XAuthEmail").length - 1;
-      expect(emailOccurrences).toBe(1);
-
-      // The required variant should win
+      expect(result).toContain(
+        "const _sec_XAuthEmail = params.headers['X-Auth-Email'];",
+      );
       expect(result).toContain(
         "if (_sec_XAuthEmail === undefined) throw new Error",
+      );
+      expect(result).toContain(
+        "finalHeaders['X-Auth-Email'] = _sec_XAuthEmail;",
+      );
+      expect(result).toContain(
+        "const _sec_XAuthEmail_2 = params.headers?.['X_Auth_Email'];",
+      );
+      expect(result).toContain(
+        "if (_sec_XAuthEmail_2 !== undefined) finalHeaders['X_Auth_Email'] = _sec_XAuthEmail_2;",
       );
     });
 
@@ -186,6 +193,41 @@ describe("client-generator security templates", () => {
       expect(result).toContain(
         "if (_sec_XAuthEmail !== undefined) finalHeaders",
       );
+    });
+
+    it("should generate unique local variable names for colliding header names", () => {
+      const headers: SecurityHeader[] = [
+        {
+          headerName: "X-Auth-Email",
+          isOverride: true,
+          isRequired: true,
+          schemeName: "api_email",
+        },
+        {
+          headerName: "X_Auth_Email",
+          isOverride: true,
+          isRequired: false,
+          schemeName: "api_email_alt",
+        },
+        {
+          headerName: "X Auth Email",
+          isOverride: true,
+          isRequired: false,
+          schemeName: "api_email_space",
+        },
+      ];
+
+      const result = renderSecurityHeaderHandling(headers);
+      const variableNames = [...result.matchAll(/const (\S+) =/g)].map(
+        ([, variableName]) => variableName,
+      );
+
+      expect(variableNames).toEqual([
+        "_sec_XAuthEmail",
+        "_sec_XAuthEmail_2",
+        "_sec_XAuthEmail_3",
+      ]);
+      expect(new Set(variableNames).size).toBe(variableNames.length);
     });
   });
 
