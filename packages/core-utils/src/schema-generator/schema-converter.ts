@@ -29,6 +29,7 @@ import {
   inferEffectiveType,
   isNullable,
   mergeImports,
+  toSchemaType,
 } from "./utils.js";
 
 /**
@@ -183,6 +184,7 @@ function handleMultiTypeArray(
     result.code = addDefaultValue(
       `(${subResult.code}).nullable()`,
       schema.default,
+      { schemaType: toSchemaType(nonNullTypes[0]) },
     );
     mergeImports(result.imports, subResult.imports);
     return result;
@@ -226,9 +228,15 @@ function handleNullableSchema(
     resolvedSchemas,
     skipDescription: true,
   });
+  const innerType = inferEffectiveType(clone);
   result.code = addDefaultValue(
     `(${subResult.code}).nullable()`,
     schema.default,
+    {
+      schemaType: Array.isArray(innerType)
+        ? undefined
+        : toSchemaType(innerType),
+    },
   );
   mergeImports(result.imports, subResult.imports);
   return result;

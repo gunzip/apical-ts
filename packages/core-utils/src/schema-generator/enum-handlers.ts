@@ -29,7 +29,7 @@ export function handleExtensibleEnum(
   let code = `z.enum([${enumValues}]).or(z.string())`;
 
   // Add default value if present
-  code = addDefaultValue(code, schema.default);
+  code = addDefaultValue(code, schema.default, { schemaType: "string" });
 
   return {
     code,

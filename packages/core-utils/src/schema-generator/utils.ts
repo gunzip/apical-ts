@@ -15,13 +15,28 @@ type EffectiveType =
   | string[]
   | undefined;
 
-/**
- * Add default value to zod code if present in schema
- */
+export type SchemaType = "array" | "boolean" | "number" | "object" | "string";
+
+/* Map an effective OpenAPI type to a SchemaType, normalising "integer" to "number" */
+export function toSchemaType(type: string | undefined): SchemaType | undefined {
+  if (type === "integer") return "number";
+  if (
+    type === "boolean" ||
+    type === "number" ||
+    type === "string" ||
+    type === "array" ||
+    type === "object"
+  ) {
+    return type;
+  }
+  return undefined;
+}
+
+/* Add default value to zod code if present in schema, coercing mismatched types */
 export function addDefaultValue(
   code: string,
   defaultValue: unknown,
-  options?: { bigint?: boolean },
+  options?: { bigint?: boolean; schemaType?: SchemaType },
 ): string {
   if (defaultValue === undefined) {
     return code;
@@ -31,11 +46,44 @@ export function addDefaultValue(
     return `${code}.default(${defaultValue}n)`;
   }
 
-  const serializedDefault =
-    typeof defaultValue === "string"
-      ? JSON.stringify(defaultValue)
-      : JSON.stringify(defaultValue);
+  /* null is always valid (nullable schemas) — emit directly */
+  if (defaultValue === null) {
+    return `${code}.default(null)`;
+  }
 
+  let coerced: unknown = defaultValue;
+
+  if (options?.schemaType === "boolean" && typeof defaultValue === "string") {
+    const normalizedDefault = defaultValue.toLowerCase();
+
+    if (normalizedDefault === "true") {
+      coerced = true;
+    } else if (normalizedDefault === "false") {
+      coerced = false;
+    } else {
+      return code;
+    }
+  }
+
+  if (options?.schemaType === "number" && typeof defaultValue === "string") {
+    const parsed = Number(defaultValue);
+    if (Number.isNaN(parsed)) {
+      return code;
+    }
+    coerced = parsed;
+  }
+
+  /* Drop invalid scalar defaults for array types */
+  if (options?.schemaType === "array" && !Array.isArray(defaultValue)) {
+    return code;
+  }
+
+  /* Drop invalid string defaults for object types */
+  if (options?.schemaType === "object" && typeof defaultValue === "string") {
+    return code;
+  }
+
+  const serializedDefault = JSON.stringify(coerced);
   return `${code}.default(${serializedDefault})`;
 }
 
