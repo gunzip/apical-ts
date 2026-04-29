@@ -237,6 +237,164 @@ describe("zodSchemaToCode", () => {
     expect(result.imports.has("UserId")).toBe(true);
   });
 
+  it("should use full z.intersection for allOf with enum $ref (no .shape)", () => {
+    const schema: SchemaObject = {
+      allOf: [
+        { $ref: "#/components/schemas/BaseObject" },
+        { $ref: "#/components/schemas/ActionEnum" },
+      ],
+    };
+
+    const resolvedSchemas = {
+      BaseObject: {
+        type: "object",
+        properties: { id: { type: "string" } },
+      } as SchemaObject,
+      ActionEnum: {
+        enum: ["block", "challenge", "allow"],
+      } as SchemaObject,
+    };
+
+    const result = zodSchemaToCode(schema, { resolvedSchemas });
+    expect(result.code).toContain("z.intersection(");
+    expect(result.code).toContain("BaseObject");
+    expect(result.code).toContain("ActionEnum");
+    expect(result.code).not.toContain(".shape");
+    expect(result.imports.has("BaseObject")).toBe(true);
+    expect(result.imports.has("ActionEnum")).toBe(true);
+  });
+
+  it("should use full z.intersection for allOf with oneOf $ref (no .shape)", () => {
+    const schema: SchemaObject = {
+      allOf: [
+        { $ref: "#/components/schemas/BaseObject" },
+        { $ref: "#/components/schemas/RecordUnion" },
+      ],
+    };
+
+    const resolvedSchemas = {
+      BaseObject: {
+        type: "object",
+        properties: { id: { type: "string" } },
+      } as SchemaObject,
+      RecordUnion: {
+        oneOf: [
+          { type: "object", properties: { a: { type: "string" } } },
+          { type: "object", properties: { b: { type: "number" } } },
+        ],
+      } as SchemaObject,
+    };
+
+    const result = zodSchemaToCode(schema, { resolvedSchemas });
+    expect(result.code).toContain("z.intersection(");
+    expect(result.code).toContain("BaseObject");
+    expect(result.code).toContain("RecordUnion");
+    expect(result.code).not.toContain(".shape");
+  });
+
+  it("should use full z.intersection for allOf with anyOf $ref (no .shape)", () => {
+    const schema: SchemaObject = {
+      allOf: [
+        { $ref: "#/components/schemas/BaseObject" },
+        { $ref: "#/components/schemas/MixedUnion" },
+      ],
+    };
+
+    const resolvedSchemas = {
+      BaseObject: {
+        type: "object",
+        properties: { name: { type: "string" } },
+      } as SchemaObject,
+      MixedUnion: {
+        anyOf: [{ type: "string" }, { type: "number" }],
+      } as SchemaObject,
+    };
+
+    const result = zodSchemaToCode(schema, { resolvedSchemas });
+    expect(result.code).toContain("z.intersection(");
+    expect(result.code).toContain("BaseObject");
+    expect(result.code).not.toContain(".shape");
+  });
+
+  it("should use full z.intersection for allOf with nested allOf $ref (no .shape)", () => {
+    const schema: SchemaObject = {
+      allOf: [
+        { $ref: "#/components/schemas/BaseObject" },
+        { $ref: "#/components/schemas/Composed" },
+      ],
+    };
+
+    const resolvedSchemas = {
+      BaseObject: {
+        type: "object",
+        properties: { id: { type: "string" } },
+      } as SchemaObject,
+      Composed: {
+        allOf: [
+          { type: "object", properties: { x: { type: "string" } } },
+          { type: "object", properties: { y: { type: "number" } } },
+        ],
+      } as SchemaObject,
+    };
+
+    const result = zodSchemaToCode(schema, { resolvedSchemas });
+    expect(result.code).toContain("z.intersection(");
+    expect(result.code).toContain("BaseObject");
+    expect(result.code).toContain("Composed");
+    expect(result.code).not.toContain(".shape");
+  });
+
+  it("should use full z.intersection for allOf with const $ref (no .shape)", () => {
+    const schema: SchemaObject = {
+      allOf: [
+        { $ref: "#/components/schemas/BaseObject" },
+        { $ref: "#/components/schemas/ConstValue" },
+      ],
+    };
+
+    const resolvedSchemas = {
+      BaseObject: {
+        type: "object",
+        properties: { id: { type: "string" } },
+      } as SchemaObject,
+      ConstValue: {
+        const: "fixed",
+      } as SchemaObject,
+    };
+
+    const result = zodSchemaToCode(schema, { resolvedSchemas });
+    expect(result.code).toContain("z.intersection(");
+    expect(result.code).toContain("BaseObject");
+    expect(result.code).toContain("ConstValue");
+    expect(result.code).not.toContain(".shape");
+    expect(result.imports.has("BaseObject")).toBe(true);
+    expect(result.imports.has("ConstValue")).toBe(true);
+  });
+
+  it("should fallback to full intersection when all refs are non-objects", () => {
+    const schema: SchemaObject = {
+      allOf: [
+        { $ref: "#/components/schemas/EnumA" },
+        { $ref: "#/components/schemas/UnionB" },
+      ],
+    };
+
+    const resolvedSchemas = {
+      EnumA: {
+        enum: ["x", "y"],
+      } as SchemaObject,
+      UnionB: {
+        oneOf: [{ type: "string" }, { type: "number" }],
+      } as SchemaObject,
+    };
+
+    const result = zodSchemaToCode(schema, { resolvedSchemas });
+    expect(result.code).toContain("z.intersection(");
+    expect(result.code).not.toContain(".shape");
+    expect(result.imports.has("EnumA")).toBe(true);
+    expect(result.imports.has("UnionB")).toBe(true);
+  });
+
   it("should handle default values for boolean schemas", () => {
     const schema: SchemaObject = {
       default: false,
