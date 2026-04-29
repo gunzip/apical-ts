@@ -16,17 +16,25 @@ type EffectiveType =
   | undefined;
 
 /*
- * Convert a value to its Zod literal code representation.
- * Returns `z.null()` for null, `z.unknown()` for non-primitive values
- * (arrays, objects), and properly serialised `z.literal(...)` for
- * strings, numbers, booleans, and bigints.
+ * Convert a JSON-like literal value to its Zod schema code representation.
+ * Arrays and objects are rendered structurally so generated schemas preserve
+ * exact-value semantics without relying on `z.literal()` for non-primitives.
  */
 export function toLiteralCode(value: unknown): string {
   if (value === null) {
     return "z.null()";
   }
-  if (value === undefined || typeof value === "object") {
-    return "z.unknown()";
+  if (Array.isArray(value)) {
+    return `z.tuple([${value.map((item) => toLiteralCode(item)).join(", ")}])`;
+  }
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value).map(
+      ([key, item]) => `${JSON.stringify(key)}: ${toLiteralCode(item)}`,
+    );
+    return `z.strictObject({${entries.join(", ")}})`;
+  }
+  if (value === undefined) {
+    return "z.undefined()";
   }
   if (typeof value === "string") {
     return `z.literal(${JSON.stringify(value)})`;
@@ -36,6 +44,44 @@ export function toLiteralCode(value: unknown): string {
   }
   // number | boolean
   return `z.literal(${String(value)})`;
+}
+
+/*
+ * Compare JSON-like literal values structurally so enum defaults are preserved
+ * even when arrays or objects are not referentially equal.
+ */
+export function literalValuesEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) {
+    return true;
+  }
+
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (!Array.isArray(left) || !Array.isArray(right)) {
+      return false;
+    }
+    return (
+      left.length === right.length &&
+      left.every((value, index) => literalValuesEqual(value, right[index]))
+    );
+  }
+
+  if (left && right && typeof left === "object" && typeof right === "object") {
+    const leftRecord = left as Record<string, unknown>;
+    const rightRecord = right as Record<string, unknown>;
+    const leftKeys = Object.keys(leftRecord);
+    const rightKeys = Object.keys(rightRecord);
+
+    return (
+      leftKeys.length === rightKeys.length &&
+      leftKeys.every(
+        (key) =>
+          Object.hasOwn(rightRecord, key) &&
+          literalValuesEqual(leftRecord[key], rightRecord[key]),
+      )
+    );
+  }
+
+  return false;
 }
 
 /**

@@ -1,6 +1,6 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
 
-import { addDefaultValue, toLiteralCode } from "./utils.js";
+import { addDefaultValue, literalValuesEqual, toLiteralCode } from "./utils.js";
 
 /**
  * Result of handling extensible enum
@@ -53,7 +53,7 @@ export function handleRegularEnum(
     const code = asBigInt ? `z.literal(${value}n)` : toLiteralCode(value);
     return addDefaultValue(
       code,
-      defaultValue === value ? defaultValue : undefined,
+      literalValuesEqual(defaultValue, value) ? defaultValue : undefined,
       asBigInt ? { bigint: true } : undefined,
     );
   }
@@ -75,7 +75,7 @@ export function handleRegularEnum(
 
   return addDefaultValue(
     code,
-    enumValues.includes(defaultValue) ? defaultValue : undefined,
+    enumValues.find((value) => literalValuesEqual(value, defaultValue)),
     asBigInt ? { bigint: true } : undefined,
   );
 }
