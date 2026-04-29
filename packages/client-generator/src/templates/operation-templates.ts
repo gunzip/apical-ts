@@ -294,9 +294,11 @@ function buildAdditionalProperties(config: {
   /* Add body if present */
   if (config.hasBody) {
     const bodyOptional = config.isBodyOptional ? "?" : "";
-    let bodyType = config.bodyTypeName || "any";
-    if (config.requestMapTypeName) {
+    let bodyType: string;
+    if (config.hasRequestMap && config.requestMapTypeName) {
       bodyType = `import('zod').infer<${config.requestMapTypeName}[TRequestContentType]>`;
+    } else {
+      bodyType = config.bodyTypeName || "unknown";
     }
     props.push(`body${bodyOptional}: ${bodyType}`);
   }

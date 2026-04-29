@@ -65,19 +65,22 @@ export function extractOperationMetadata(
     pathLevelParameters,
     doc,
   );
-  const hasBody = !!operation.requestBody;
+  const hasRequestBody = !!operation.requestBody;
   const operationSecurityHeaders = getOperationSecuritySchemes(operation, doc);
 
   /* Body & content type meta */
   /* Collect body related type info + request/response content-type maps (if any) */
   const bodyInfo = collectBodyAndContentTypes(
-    hasBody,
+    hasRequestBody,
     operation,
     functionName,
     importManager,
     operationName,
     doc,
   );
+
+  /* Refine: body is only present when request body has actual content types */
+  const hasBody = hasRequestBody && bodyInfo.requestContentTypes.length > 0;
 
   /* Build parameter shapes */
   /* Build the "first parameter" surface: destructured runtime parameter object + its TS interface */
