@@ -71,47 +71,39 @@ export function handleAllOfSchema(
       return false;
     });
 
-  // Check if all schemas are objects, including proper reference resolution
-  const canUseObjectSpread =
-    !containsSelfReference &&
-    schemas.every((schema) => {
-      if (isReferenceObject(schema)) {
-        // It's a reference - check if it resolves to an object type
-        if (resolvedSchemas) {
-          const refName = extractSchemaNameFromRef(schema.$ref);
-          if (refName) {
-            // `resolvedSchemas` is keyed by the original OpenAPI component name.
-            // Keep that lookup untouched even when the generated TS identifier
-            // must be sanitized for imports/usages.
-            const resolvedSchema = resolvedSchemas[refName.originalName];
-            if (resolvedSchema && !("$ref" in resolvedSchema)) {
-              // Check if the resolved schema is an object type (not a reference)
-              return !resolvedSchema.type || resolvedSchema.type === "object";
-            }
-          }
-        }
-        // If we can't resolve the reference, assume it's not compatible for object spread
-        return false;
-      }
-      // Check if it's an object type in case of inline schema
-      return !schema.type || schema.type === "object";
-    });
+  /*
+   * Partition allOf members into object-spreadable and non-object schemas.
+   * Object schemas can be merged via .shape spread; non-object schemas (enum,
+   * union, discriminated union, intersection) must use z.intersection().
+   */
+  const objectSchemas: (ReferenceObject | SchemaObject)[] = [];
+  const nonObjectSchemas: (ReferenceObject | SchemaObject)[] = [];
 
-  if (canUseObjectSpread) {
-    // Try object spread approach using .shape
+  if (!containsSelfReference) {
+    for (const schema of schemas) {
+      if (isObjectSchemaType(schema, resolvedSchemas)) {
+        objectSchemas.push(schema);
+      } else {
+        nonObjectSchemas.push(schema);
+      }
+    }
+  }
+
+  /*
+   * Use .shape spread optimization only when ALL allOf members are plain
+   * objects. When non-object schemas are present (mixed case), fall through
+   * to the full intersection approach which preserves object-level behaviors
+   * like .catchall(), strict mode, etc.
+   */
+  if (objectSchemas.length > 0 && nonObjectSchemas.length === 0) {
     const shapeExpressions: string[] = [];
     const allImports = new Set<string>();
-
-    // Collect all required fields from all schemas
     const allRequiredFields = collectRequiredFields(schemas);
 
-    for (const schema of schemas) {
+    for (const schema of objectSchemas) {
       if (isReferenceObject(schema)) {
-        // Handle reference: extract Schema name and use .shape
         const refName = extractSchemaNameFromRef(schema.$ref);
         if (refName) {
-          // Use the sanitized identifier only in generated TypeScript; the
-          // original OpenAPI name is still preserved for schema lookup.
           allImports.add(refName.identifierName);
           shapeExpressions.push(`...${refName.identifierName}.shape`);
         }
@@ -119,7 +111,6 @@ export function handleAllOfSchema(
         (!schema.type || schema.type === "object") &&
         schema.properties
       ) {
-        // Generate inline object for spread, applying required constraints
         const modifiedSchema = applyRequiredConstraints(
           schema,
           allRequiredFields,
@@ -135,8 +126,6 @@ export function handleAllOfSchema(
         subResult.imports.forEach((imp) => allImports.add(imp));
         shapeExpressions.push(`...${subResult.code}.shape`);
       }
-      // Empty objects with only required (no properties)
-      // are handled by the required collection above
     }
 
     if (shapeExpressions.length > 0) {
@@ -146,8 +135,8 @@ export function handleAllOfSchema(
     }
   }
 
-  // Fallback to intersection approach
-  // ie. in case of non-object types
+  // Fallback to full intersection approach
+  // (self-references, all non-object types, or no shape expressions generated)
   const subResults = schemas.map((s) =>
     zodSchemaToCode(s, {
       currentSchemaName,
@@ -172,7 +161,6 @@ export function handleAllOfSchema(
     return result;
   }
 
-  // Generate nested intersections
   result.code = schemaCodes.reduce(
     (acc, curr) => `z.intersection(${acc}, ${curr})`,
   );
@@ -334,11 +322,48 @@ function collectRequiredFields(
   return allRequiredFields;
 }
 
-/**
- * Extract schema name from OpenAPI reference string
- * @param ref - Reference string like "#/components/schemas/SchemaName"
- * @returns Schema name or null if extraction fails
+/*
+ * Check whether a schema is safe to treat as object-like for .shape spreads.
+ * Object-only allOf compositions still flatten to z.object(...), while enums,
+ * literals, unions, and mixed allOf compositions must avoid .shape.
  */
+function isObjectSchemaType(
+  schema: ReferenceObject | SchemaObject,
+  resolvedSchemas?: ResolvedSchemas,
+  seenRefs = new Set<string>(),
+): boolean {
+  if (isReferenceObject(schema)) {
+    if (!resolvedSchemas) return false;
+    const refName = extractSchemaNameFromRef(schema.$ref);
+    if (!refName) return false;
+    if (seenRefs.has(refName.originalName)) return false;
+    const resolved = resolvedSchemas[refName.originalName];
+    if (!resolved) return false;
+    return isObjectSchemaType(
+      resolved,
+      resolvedSchemas,
+      new Set(seenRefs).add(refName.originalName),
+    );
+  }
+
+  if (
+    schema.enum ||
+    schema.const !== undefined ||
+    schema.oneOf ||
+    schema.anyOf
+  ) {
+    return false;
+  }
+
+  if (schema.allOf) {
+    return schema.allOf.every((member) =>
+      isObjectSchemaType(member, resolvedSchemas, seenRefs),
+    );
+  }
+
+  return !schema.type || schema.type === "object";
+}
+
 function extractSchemaNameFromRef(
   ref: string | undefined,
 ): null | { identifierName: string; originalName: string } {
