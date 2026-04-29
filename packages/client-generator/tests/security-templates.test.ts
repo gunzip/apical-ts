@@ -21,7 +21,7 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "const _sec_XAPIKey = params.headers['X-API-Key'];\n    if (_sec_XAPIKey === undefined) throw new Error('Missing required security header: X-API-Key');\n    finalHeaders['X-API-Key'] = _sec_XAPIKey;",
+        'const _sec_XAPIKey = params.headers["X-API-Key"];\n    if (_sec_XAPIKey === undefined) throw new Error("Missing required security header: X-API-Key");\n    finalHeaders["X-API-Key"] = _sec_XAPIKey;',
       );
     });
 
@@ -37,7 +37,7 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "const _sec_XAPIKey = params.headers?.['X-API-Key'];\n    if (_sec_XAPIKey !== undefined) finalHeaders['X-API-Key'] = _sec_XAPIKey;",
+        'const _sec_XAPIKey = params.headers?.["X-API-Key"];\n    if (_sec_XAPIKey !== undefined) finalHeaders["X-API-Key"] = _sec_XAPIKey;',
       );
     });
 
@@ -59,8 +59,8 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "const _sec_XAPIKey = params.headers['X-API-Key'];\n    if (_sec_XAPIKey === undefined) throw new Error('Missing required security header: X-API-Key');\n    finalHeaders['X-API-Key'] = _sec_XAPIKey;\n" +
-          "    const _sec_Authorization = params.headers?.['Authorization'];\n    if (_sec_Authorization !== undefined) finalHeaders['Authorization'] = _sec_Authorization;",
+        'const _sec_XAPIKey = params.headers["X-API-Key"];\n    if (_sec_XAPIKey === undefined) throw new Error("Missing required security header: X-API-Key");\n    finalHeaders["X-API-Key"] = _sec_XAPIKey;\n' +
+          '    const _sec_Authorization = params.headers?.["Authorization"];\n    if (_sec_Authorization !== undefined) finalHeaders["Authorization"] = _sec_Authorization;',
       );
     });
 
@@ -76,7 +76,7 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "const _sec_XCustomAuthToken = params.headers['X-Custom-Auth-Token'];\n    if (_sec_XCustomAuthToken === undefined) throw new Error('Missing required security header: X-Custom-Auth-Token');\n    finalHeaders['X-Custom-Auth-Token'] = _sec_XCustomAuthToken;",
+        'const _sec_XCustomAuthToken = params.headers["X-Custom-Auth-Token"];\n    if (_sec_XCustomAuthToken === undefined) throw new Error("Missing required security header: X-Custom-Auth-Token");\n    finalHeaders["X-Custom-Auth-Token"] = _sec_XCustomAuthToken;',
       );
     });
 
@@ -97,7 +97,7 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityHeaderHandling(headers);
       expect(result).toBe(
-        "const _sec_XSpecialHeader = params.headers['X-Special@Header'];\n    if (_sec_XSpecialHeader === undefined) throw new Error('Missing required security header: X-Special@Header');\n    finalHeaders['X-Special@Header'] = _sec_XSpecialHeader;",
+        'const _sec_XSpecialHeader = params.headers["X-Special@Header"];\n    if (_sec_XSpecialHeader === undefined) throw new Error("Missing required security header: X-Special@Header");\n    finalHeaders["X-Special@Header"] = _sec_XSpecialHeader;',
       );
     });
 
@@ -135,7 +135,7 @@ describe("client-generator security templates", () => {
       );
     });
 
-    it("should deduplicate headers whose names collide after normalization", () => {
+    it("should preserve distinct headers whose names collide after normalization", () => {
       const headers: SecurityHeader[] = [
         {
           headerName: "X-Auth-Email",
@@ -153,13 +153,20 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityHeaderHandling(headers);
 
-      // Both header names normalize to XAuthEmail – only one const should be emitted
-      const emailOccurrences = result.split("const _sec_XAuthEmail").length - 1;
-      expect(emailOccurrences).toBe(1);
-
-      // The required variant should win
+      expect(result).toContain(
+        'const _sec_XAuthEmail = params.headers["X-Auth-Email"];',
+      );
       expect(result).toContain(
         "if (_sec_XAuthEmail === undefined) throw new Error",
+      );
+      expect(result).toContain(
+        'finalHeaders["X-Auth-Email"] = _sec_XAuthEmail;',
+      );
+      expect(result).toContain(
+        'const _sec_XAuthEmail_2 = params.headers?.["X_Auth_Email"];',
+      );
+      expect(result).toContain(
+        'if (_sec_XAuthEmail_2 !== undefined) finalHeaders["X_Auth_Email"] = _sec_XAuthEmail_2;',
       );
     });
 
@@ -187,6 +194,64 @@ describe("client-generator security templates", () => {
         "if (_sec_XAuthEmail !== undefined) finalHeaders",
       );
     });
+
+    it("should generate unique local variable names for colliding header names", () => {
+      const headers: SecurityHeader[] = [
+        {
+          headerName: "X-Auth-Email",
+          isOverride: true,
+          isRequired: true,
+          schemeName: "api_email",
+        },
+        {
+          headerName: "X_Auth_Email",
+          isOverride: true,
+          isRequired: false,
+          schemeName: "api_email_alt",
+        },
+        {
+          headerName: "X Auth Email",
+          isOverride: true,
+          isRequired: false,
+          schemeName: "api_email_space",
+        },
+      ];
+
+      const result = renderSecurityHeaderHandling(headers);
+      const variableNames = [...result.matchAll(/const (\S+) =/g)].map(
+        ([, variableName]) => variableName,
+      );
+
+      expect(variableNames).toEqual([
+        "_sec_XAuthEmail",
+        "_sec_XAuthEmail_2",
+        "_sec_XAuthEmail_3",
+      ]);
+      expect(new Set(variableNames).size).toBe(variableNames.length);
+    });
+
+    it("should escape generated string literals for header names", () => {
+      const headers: SecurityHeader[] = [
+        {
+          headerName: 'X-"Quoted"\\Header\nName',
+          isOverride: true,
+          isRequired: true,
+          schemeName: "quoted",
+        },
+      ];
+
+      const result = renderSecurityHeaderHandling(headers);
+
+      expect(result).toContain(
+        'params.headers["X-\\"Quoted\\"\\\\Header\\nName"]',
+      );
+      expect(result).toContain(
+        'throw new Error("Missing required security header: X-\\"Quoted\\"\\\\Header\\nName")',
+      );
+      expect(result).toContain(
+        'finalHeaders["X-\\"Quoted\\"\\\\Header\\nName"] = _sec_XQuotedHeaderName;',
+      );
+    });
   });
 
   describe("renderAuthHeaderValidation", () => {
@@ -195,7 +260,7 @@ describe("client-generator security templates", () => {
 
       const result = renderAuthHeaderValidation(authHeaders);
       expect(result).toBe(
-        "if (!XAPIKey) throw new Error('Missing required auth header: X-API-Key');",
+        'if (!XAPIKey) throw new Error("Missing required auth header: X-API-Key");',
       );
     });
 
@@ -204,8 +269,8 @@ describe("client-generator security templates", () => {
 
       const result = renderAuthHeaderValidation(authHeaders);
       expect(result).toBe(
-        "if (!XAPIKey) throw new Error('Missing required auth header: X-API-Key');\n" +
-          "  if (!Authorization) throw new Error('Missing required auth header: Authorization');",
+        'if (!XAPIKey) throw new Error("Missing required auth header: X-API-Key");\n' +
+          '  if (!Authorization) throw new Error("Missing required auth header: Authorization");',
       );
     });
 
@@ -214,7 +279,7 @@ describe("client-generator security templates", () => {
 
       const result = renderAuthHeaderValidation(authHeaders);
       expect(result).toBe(
-        "if (!XCustomAuthToken) throw new Error('Missing required auth header: X-Custom-Auth-Token');",
+        'if (!XCustomAuthToken) throw new Error("Missing required auth header: X-Custom-Auth-Token");',
       );
     });
 
@@ -236,7 +301,7 @@ describe("client-generator security templates", () => {
       ];
 
       const result = renderSecurityParameterExtraction(headers);
-      expect(result).toBe("const XAPIKey = config.headers?.['X-API-Key'];");
+      expect(result).toBe('const XAPIKey = config.headers?.["X-API-Key"];');
     });
 
     it("should render extraction for multiple headers", () => {
@@ -257,8 +322,8 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityParameterExtraction(headers);
       expect(result).toBe(
-        "const XAPIKey = config.headers?.['X-API-Key'];\n" +
-          "  const Authorization = config.headers?.['Authorization'];",
+        'const XAPIKey = config.headers?.["X-API-Key"];\n' +
+          '  const Authorization = config.headers?.["Authorization"];',
       );
     });
 
@@ -274,7 +339,7 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityParameterExtraction(headers);
       expect(result).toBe(
-        "const XCustomAuthToken = config.headers?.['X-Custom-Auth-Token'];",
+        'const XCustomAuthToken = config.headers?.["X-Custom-Auth-Token"];',
       );
     });
 
@@ -295,7 +360,24 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityParameterExtraction(headers);
       expect(result).toBe(
-        "const XSpecialHeader = config.headers?.['X-Special@Header'];",
+        'const XSpecialHeader = config.headers?.["X-Special@Header"];',
+      );
+    });
+
+    it("should escape header names during extraction", () => {
+      const headers: SecurityHeader[] = [
+        {
+          headerName: 'X-"Quoted"\\Header\nName',
+          isOverride: false,
+          isRequired: true,
+          schemeName: "quoted",
+        },
+      ];
+
+      const result = renderSecurityParameterExtraction(headers);
+
+      expect(result).toBe(
+        'const XQuotedHeaderName = config.headers?.["X-\\"Quoted\\"\\\\Header\\nName"];',
       );
     });
   });
