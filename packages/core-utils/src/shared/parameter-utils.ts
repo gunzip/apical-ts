@@ -87,10 +87,15 @@ export function extractParameterGroups(
   const resolvedOperationParams = (operation.parameters || []).map((p) =>
     resolveParameterReference(p, doc),
   );
-  const allParameters = [
-    ...resolvedPathLevelParams,
-    ...resolvedOperationParams,
-  ];
+  /* Deduplicate by name+location: operation-level params override path-level per OpenAPI spec */
+  const parameterMap = new Map<string, ParameterObject>();
+  for (const p of resolvedPathLevelParams) {
+    parameterMap.set(`${p.in}:${p.name}`, p);
+  }
+  for (const p of resolvedOperationParams) {
+    parameterMap.set(`${p.in}:${p.name}`, p);
+  }
+  const allParameters = [...parameterMap.values()];
 
   return {
     headerParams: allParameters.filter((p) => p.in === "header"),
