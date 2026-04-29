@@ -277,21 +277,12 @@ export async function generateSchemaFile(
 
   const context = recursiveContext || createRecursiveContext();
 
-  /*
-   * For non-object recursive schemas that can't use the getter-based approach,
-   * enable z.lazy() wrapping so self-references don't cause TS7022/TS2448.
-   */
-  const isSelfRecursive = context.recursiveSchemas.has(name);
-  const effectiveContext = isSelfRecursive
-    ? { ...context, useLazyWrapping: true }
-    : context;
-
   const schemaResult = zodSchemaToCode(schema, {
     currentSchemaName: name,
     extraProps,
     formatOverrides: options.formatOverrides,
     isTopLevel: true,
-    recursiveContext: effectiveContext,
+    recursiveContext: context,
     resolvedSchemas,
     schemaContext,
   });
@@ -303,10 +294,9 @@ export async function generateSchemaFile(
     path.join(schemaDirectory || ".", `${name}.ts`),
     options.formatOverrides,
   );
-  const recursiveTypeAlias =
-    isSelfRecursive && hasDirectSelfReference(schema, name)
-      ? renderSchemaType(schema)
-      : undefined;
+  const recursiveTypeAlias = hasDirectSelfReference(schema, name)
+    ? renderSchemaType(schema)
+    : undefined;
 
   const content = assembleFileContent(
     name,

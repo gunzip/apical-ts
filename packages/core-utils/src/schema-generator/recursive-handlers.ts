@@ -24,8 +24,6 @@ export interface RecursiveContext {
   recursiveSchemas: Set<string>;
   /* Stack of currently processing schema references to detect cycles */
   referenceStack: string[];
-  /* When true, direct self-references emit z.lazy(() => name) instead of bare name */
-  useLazyWrapping?: boolean;
 }
 
 /**

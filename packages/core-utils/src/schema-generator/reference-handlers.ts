@@ -36,6 +36,11 @@ function handleReference(
       const originalSchemaName = ref.replace("#/components/schemas/", "");
       const schemaName: string = sanitizeIdentifier(originalSchemaName);
 
+      if (options.currentSchemaName === schemaName) {
+        result.code = `z.lazy(() => ${schemaName})`;
+        return result;
+      }
+
       /* Check for recursive references if context is available */
       if (options.recursiveContext) {
         const analysis = analyzeRecursiveReference(
@@ -45,14 +50,6 @@ function handleReference(
         );
 
         if (analysis.isRecursive) {
-          /* For direct self-references with lazy wrapping enabled, emit z.lazy() */
-          if (
-            analysis.isDirectSelfReference &&
-            options.recursiveContext.useLazyWrapping
-          ) {
-            result.code = `z.lazy(() => ${schemaName})`;
-            return result;
-          }
           /* For recursive references, we don't add imports here as they'll be handled
              by the recursive schema generation */
           result.code = schemaName;
