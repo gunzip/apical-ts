@@ -293,11 +293,11 @@ function generateComponentSchemas(
     if (!isPlainSchemaObject(schema)) {
       /* eslint-disable-next-line no-console */
       console.warn(
-        `⚠️ ${name}: not a plain schema object, generating z.unknown() fallback`,
+        `⚠️ ${name}: not a plain schema object, generating fallback`,
       );
       const sanitizedName = sanitizeIdentifier(name);
       const promise = context.limit(async () => {
-        const content = generateFallbackSchemaContent(sanitizedName);
+        const content = generateFallbackSchemaContent(sanitizedName, schema);
         const filePath = path.join(context.schemasDir, `${sanitizedName}.ts`);
         await fs.writeFile(filePath, content);
       });
@@ -357,7 +357,13 @@ function generateParameterSchemas(
   return promises;
 }
 
-/* Generates a minimal z.unknown() fallback file for schemas that are not plain OpenAPI objects */
-function generateFallbackSchemaContent(name: string): string {
-  return `import * as z from 'zod';\n\nexport const ${name} = z.unknown();\nexport type ${name} = z.infer<typeof ${name}>;\n`;
+/* Generates a minimal fallback file for schemas that are not plain OpenAPI objects */
+export function generateFallbackSchemaContent(
+  name: string,
+  schema: unknown,
+): string {
+  // OpenAPI 3.1 boolean schemas preserve allow-anything vs allow-nothing.
+  const fallbackSchema = schema === false ? "z.never()" : "z.unknown()";
+
+  return `import * as z from 'zod';\n\nexport const ${name} = ${fallbackSchema};\nexport type ${name} = z.infer<typeof ${name}>;\n`;
 }
