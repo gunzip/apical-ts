@@ -883,6 +883,52 @@ describe("zodSchemaToCode", () => {
     expect(zodSchema.safeParse("enum-value1").success).toBe(false);
   });
 
+  it("should generate z.null() for const: null", () => {
+    const schema: SchemaObject = { const: null };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.null()");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(null).success).toBe(true);
+    expect(zodSchema.safeParse("hello").success).toBe(false);
+  });
+
+  it("should generate z.unknown() for const with non-primitive value", () => {
+    const schema = { const: [] } as unknown as SchemaObject;
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.unknown()");
+  });
+
+  it("should generate z.literal(false) for const: false", () => {
+    const schema: SchemaObject = { const: false };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.literal(false)");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(false).success).toBe(true);
+    expect(zodSchema.safeParse(true).success).toBe(false);
+  });
+
+  it("should generate z.literal(0) for const: 0", () => {
+    const schema: SchemaObject = { const: 0 };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.literal(0)");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(0).success).toBe(true);
+    expect(zodSchema.safeParse(1).success).toBe(false);
+  });
+
+  it('should generate z.literal("") for const: empty string', () => {
+    const schema: SchemaObject = { const: "" };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe('z.literal("")');
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse("").success).toBe(true);
+    expect(zodSchema.safeParse("x").success).toBe(false);
+  });
+
   describe("additionalProperties handling", () => {
     it("should allow additional properties when additionalProperties is not specified", () => {
       const schema: SchemaObject = {

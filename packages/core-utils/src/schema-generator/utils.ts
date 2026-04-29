@@ -15,6 +15,26 @@ type EffectiveType =
   | string[]
   | undefined;
 
+/*
+ * Convert a value to its Zod literal code representation.
+ * Returns `z.null()` for null, `z.unknown()` for non-primitive values
+ * (arrays, objects), and properly serialised `z.literal(...)` for
+ * strings, numbers, and booleans.
+ */
+export function toLiteralCode(value: unknown): string {
+  if (value === null) {
+    return "z.null()";
+  }
+  if (value === undefined || typeof value === "object") {
+    return "z.unknown()";
+  }
+  if (typeof value === "string") {
+    return `z.literal(${JSON.stringify(value)})`;
+  }
+  // number | boolean
+  return `z.literal(${String(value)})`;
+}
+
 /**
  * Add default value to zod code if present in schema
  */
