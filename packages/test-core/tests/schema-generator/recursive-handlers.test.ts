@@ -110,7 +110,6 @@ describe("recursive-handlers", () => {
       context.recursiveSchemas.add("RecursiveSchema");
       expect(context.recursiveSchemas.has("RecursiveSchema")).toBe(true);
     });
-
   });
 
   describe("edge cases", () => {
