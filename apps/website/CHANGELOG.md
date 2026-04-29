@@ -1,5 +1,11 @@
 # @apical-ts/website
 
+## 0.5.0
+
+### Minor Changes
+
+- Added support for custom string formats via user provided zod schemas.
+
 ## 0.4.0
 
 ### Minor Changes

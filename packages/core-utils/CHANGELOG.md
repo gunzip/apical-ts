@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.19.0
+
+### Minor Changes
+
+- Added support for custom string formats via user provided zod schemas.
+
 ## 0.18.0
 
 ### Minor Changes

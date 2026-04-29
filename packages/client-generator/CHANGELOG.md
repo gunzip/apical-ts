@@ -1,5 +1,16 @@
 # @apical-ts/client-generator
 
+## 0.14.0
+
+### Minor Changes
+
+- Added support for custom string formats via user provided zod schemas.
+
+### Patch Changes
+
+- Updated dependencies
+  - @apical-ts/core-utils@0.19.0
+
 ## 0.13.0
 
 ### Minor Changes

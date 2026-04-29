@@ -1,5 +1,32 @@
 # @apical-ts/craft
 
+## 0.20.0
+
+### Minor Changes
+
+- Added support for custom string formats via user provided zod schemas.
+
+  Deduplication of generated security headers to eliminate TS2451 errors in
+  clients with overlapping security schemes.
+
+  Generation of z.unknown() fallback schemas for non-plain OpenAPI schemas,
+  ensuring imports no longer point to missing files
+
+  Fix for allOf with non-object members via z.intersection(), preventing .shape
+  access on enums, unions, and intersections.
+
+  Maintains distinct but colliding headers (e.g., X-Auth-Email and X_Auth_Email)
+  and generates unique local variables.
+
+  z.literal() always receives a valid argument; added handling for null, false,
+  0, empty strings, and fallbacks for arrays/objects.
+
+  Stabilization of discriminated unions with nullable() members: nullability is
+  now hoisted externally or falls back to z.union() in mixed cases.
+
+  Validation and normalization of default values based on schema type, fixing
+  TypeScript mismatches for booleans, numbers, arrays, objects, and nullables.
+
 ## 0.19.0
 
 ### Minor Changes
