@@ -156,7 +156,7 @@ export async function generateRecursiveSchemaFile(
           : undefined;
       const isSingleSelfReference = singleRefTarget === name;
       const baseType = isSingleSelfReference
-        ? `typeof ${name}`
+        ? `z.ZodLazy<typeof ${name}>`
         : "z.ZodTypeAny";
       const returnType = isRequired ? baseType : `z.ZodOptional<${baseType}>`;
       shape.push(

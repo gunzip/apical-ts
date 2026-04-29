@@ -437,6 +437,47 @@ void parentValue;
       }),
     ).resolves.toBeUndefined();
   });
+
+  it("should keep single-self-reference compositions compiling", async () => {
+    const recursiveContext = createRecursiveContext();
+    recursiveContext.recursiveSchemas.add("NotificationEvent");
+
+    const notificationEvent = await generateRecursiveSchemaFile({
+      description: "Notification event",
+      name: "NotificationEvent",
+      originalSchemaName: "NotificationEvent",
+      recursiveContext,
+      schema: {
+        properties: {
+          templateEvent: {
+            allOf: [{ $ref: "#/components/schemas/NotificationEvent" }],
+            description:
+              "The template of the event. Only custom events configured by Jira administrators have template.",
+          },
+        },
+        type: "object",
+      },
+    });
+
+    expect(notificationEvent.content).toContain(
+      'get "templateEvent"(): z.ZodOptional<z.ZodLazy<typeof NotificationEvent>>',
+    );
+
+    await expect(
+      typecheckGeneratedSchemas({
+        "NotificationEvent.ts": notificationEvent.content,
+        "notification-event.ts": `
+import type { NotificationEvent } from "./NotificationEvent.js";
+import { NotificationEvent as NotificationEventSchema } from "./NotificationEvent.js";
+
+const value: NotificationEvent = {};
+const parsedValue: NotificationEvent = NotificationEventSchema.parse(value);
+
+void parsedValue;
+`,
+      }),
+    ).resolves.toBeUndefined();
+  });
 });
 
 const execFileAsync = promisify(execFile);
