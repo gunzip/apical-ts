@@ -17,6 +17,12 @@ type EffectiveType =
 
 export type SchemaType = "array" | "boolean" | "number" | "object" | "string";
 
+export interface DefaultValueOptions {
+  bigint?: boolean;
+  itemSchemaType?: SchemaType;
+  schemaType?: SchemaType;
+}
+
 /* Map an effective OpenAPI type to a SchemaType, normalising "integer" to "number" */
 export function toSchemaType(type: string | undefined): SchemaType | undefined {
   if (type === "integer") return "number";
@@ -36,23 +42,18 @@ export function toSchemaType(type: string | undefined): SchemaType | undefined {
 export function addDefaultValue(
   code: string,
   defaultValue: unknown,
-  options?: {
-    bigint?: boolean;
-    itemSchemaType?: SchemaType;
-    schemaType?: SchemaType;
-  },
+  options?: DefaultValueOptions,
 ): string {
   if (defaultValue === undefined) {
     return code;
   }
 
   if (options?.bigint) {
-    // Validate that the default can be represented as a bigint literal
-    const n = Number(defaultValue);
-    if (typeof defaultValue === "string" && Number.isNaN(n)) {
+    const literal = toBigIntLiteral(defaultValue);
+    if (!literal) {
       return code;
     }
-    return `${code}.default(${defaultValue}n)`;
+    return `${code}.default(${literal})`;
   }
 
   /* null is always valid (nullable schemas) — emit directly */
@@ -110,6 +111,51 @@ export function addDefaultValue(
 
   const serializedDefault = JSON.stringify(coerced);
   return `${code}.default(${serializedDefault})`;
+}
+
+export function getDefaultValueOptions(
+  schema: SchemaObject,
+): DefaultValueOptions {
+  const effectiveType = inferEffectiveType(schema);
+  const schemaType = Array.isArray(effectiveType)
+    ? undefined
+    : toSchemaType(effectiveType);
+
+  if (schema.type === "integer" && schema.format === "int64") {
+    return { bigint: true, schemaType };
+  }
+
+  const itemSchemaType =
+    schemaType === "array" && schema.items && "type" in schema.items
+      ? toSchemaType(schema.items.type as string)
+      : undefined;
+
+  return {
+    itemSchemaType,
+    schemaType,
+  };
+}
+
+function toBigIntLiteral(defaultValue: unknown): string | undefined {
+  if (typeof defaultValue === "bigint") {
+    return `${defaultValue}n`;
+  }
+
+  if (typeof defaultValue === "number") {
+    if (!Number.isSafeInteger(defaultValue)) {
+      return undefined;
+    }
+    return `${BigInt(defaultValue)}n`;
+  }
+
+  if (typeof defaultValue === "string") {
+    if (!/^[+-]?\d+$/.test(defaultValue)) {
+      return undefined;
+    }
+    return `${BigInt(defaultValue)}n`;
+  }
+
+  return undefined;
 }
 
 /**

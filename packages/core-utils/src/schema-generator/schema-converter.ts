@@ -26,10 +26,10 @@ import {
   analyzeTypeArray,
   cloneWithoutDefault,
   cloneWithoutNullable,
+  getDefaultValueOptions,
   inferEffectiveType,
   isNullable,
   mergeImports,
-  toSchemaType,
 } from "./utils.js";
 
 /**
@@ -166,11 +166,11 @@ function handleMultiTypeArray(
     // Strip the default before converting the non-null branch, otherwise
     // `default: null` would be emitted on the inner schema and produce invalid
     // Zod chains such as `z.number().default(null).nullable()`.
-    const clone = {
+    const clone: SchemaObject = {
       ...cloneWithoutDefault(schema),
-      type: nonNullTypes[0],
+      type: nonNullTypes[0] as SchemaObject["type"],
     };
-    const subResult = zodSchemaToCode(clone as SchemaObject, {
+    const subResult = zodSchemaToCode(clone, {
       currentSchemaName,
       extraProps,
       formatOverrides,
@@ -184,7 +184,7 @@ function handleMultiTypeArray(
     result.code = addDefaultValue(
       `(${subResult.code}).nullable()`,
       schema.default,
-      { schemaType: toSchemaType(nonNullTypes[0]) },
+      getDefaultValueOptions(clone),
     );
     mergeImports(result.imports, subResult.imports);
     return result;
@@ -228,15 +228,10 @@ function handleNullableSchema(
     resolvedSchemas,
     skipDescription: true,
   });
-  const innerType = inferEffectiveType(clone);
   result.code = addDefaultValue(
     `(${subResult.code}).nullable()`,
     schema.default,
-    {
-      schemaType: Array.isArray(innerType)
-        ? undefined
-        : toSchemaType(innerType),
-    },
+    getDefaultValueOptions(clone),
   );
   mergeImports(result.imports, subResult.imports);
   return result;

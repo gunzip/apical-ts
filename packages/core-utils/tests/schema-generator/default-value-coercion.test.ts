@@ -90,11 +90,28 @@ describe("addDefaultValue coercion", () => {
       expect(result).toBe("z.coerce.bigint().default(0n)");
     });
 
+    it("emits bigint default for valid integer string", () => {
+      const result = addDefaultValue("z.coerce.bigint()", "42", {
+        bigint: true,
+      });
+      expect(result).toBe("z.coerce.bigint().default(42n)");
+    });
+
     it("drops default for invalid bigint string", () => {
       const result = addDefaultValue("z.coerce.bigint()", "abc", {
         bigint: true,
       });
       expect(result).toBe("z.coerce.bigint()");
     });
+
+    it.each(["1.5", "1e3"])(
+      "drops non-integer bigint string default %s",
+      (defaultValue) => {
+        const result = addDefaultValue("z.coerce.bigint()", defaultValue, {
+          bigint: true,
+        });
+        expect(result).toBe("z.coerce.bigint()");
+      },
+    );
   });
 });
