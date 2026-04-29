@@ -641,6 +641,144 @@ describe("zodSchemaToCode", () => {
     expect(result.imports.has("Square")).toBe(true);
   });
 
+  it("should hoist nullable $ref members in discriminated unions", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "kind",
+      },
+      oneOf: [
+        { $ref: "#/components/schemas/Dog" },
+        { $ref: "#/components/schemas/Cat" },
+      ],
+    };
+    const result = zodSchemaToCode(schema, {
+      resolvedSchemas: {
+        Cat: {
+          properties: {
+            color: { type: "string" },
+            kind: { enum: ["cat"], type: "string" },
+          },
+          required: ["kind"],
+          type: ["object", "null"],
+        },
+        Dog: {
+          description: "A dog",
+          properties: {
+            bark: { type: "boolean" },
+            kind: { enum: ["dog"], type: "string" },
+          },
+          required: ["kind"],
+          type: ["object", "null"],
+        },
+      },
+    });
+
+    expect(result.code).toBe(
+      'z.discriminatedUnion("kind", [Dog.unwrap(), Cat.unwrap()]).nullable()',
+    );
+  });
+
+  it("should fall back to z.union when only some discriminated union members are nullable", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "type",
+      },
+      oneOf: [
+        { $ref: "#/components/schemas/NullableMember" },
+        { $ref: "#/components/schemas/NonNullableMember" },
+      ],
+    };
+    const result = zodSchemaToCode(schema, {
+      resolvedSchemas: {
+        NonNullableMember: {
+          properties: {
+            type: { enum: ["b"], type: "string" },
+          },
+          required: ["type"],
+          type: "object",
+        },
+        NullableMember: {
+          properties: {
+            type: { enum: ["a"], type: "string" },
+          },
+          required: ["type"],
+          type: ["object", "null"],
+        },
+      },
+    });
+
+    expect(result.code).toBe("z.union([NullableMember, NonNullableMember])");
+  });
+
+  it("should keep inline nullable discriminated union members with descriptions discriminable", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "type",
+      },
+      oneOf: [
+        {
+          description: "A circle shape",
+          properties: {
+            radius: { type: "number" },
+            type: { enum: ["circle"], type: "string" },
+          },
+          required: ["type", "radius"],
+          type: ["object", "null"],
+        },
+        {
+          description: "A square shape",
+          properties: {
+            size: { type: "number" },
+            type: { enum: ["square"], type: "string" },
+          },
+          required: ["type", "size"],
+          type: ["object", "null"],
+        },
+      ],
+    };
+    const result = zodSchemaToCode(schema);
+
+    expect(result.code).toContain('z.discriminatedUnion("type"');
+    expect(result.code).toContain(".nullable()");
+    expect(result.code).toContain('.describe("A circle shape")');
+    expect(result.code).toContain('.describe("A square shape")');
+    expect(result.code).not.toContain("z.union([");
+  });
+
+  it("should fall back to z.union for nullable $ref discriminated union members with defaults", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "kind",
+      },
+      oneOf: [
+        { $ref: "#/components/schemas/Dog" },
+        { $ref: "#/components/schemas/Cat" },
+      ],
+    };
+    const result = zodSchemaToCode(schema, {
+      resolvedSchemas: {
+        Cat: {
+          default: { kind: "cat" },
+          properties: {
+            kind: { enum: ["cat"], type: "string" },
+          },
+          required: ["kind"],
+          type: ["object", "null"],
+        },
+        Dog: {
+          default: { kind: "dog" },
+          properties: {
+            kind: { enum: ["dog"], type: "string" },
+          },
+          required: ["kind"],
+          type: ["object", "null"],
+        },
+      },
+    });
+
+    expect(result.code).toBe("z.union([Dog, Cat])");
+  });
+
   it("should use superRefine for oneOf when no discriminator is present", () => {
     const schema: SchemaObject = {
       oneOf: [{ type: "string" }, { type: "number" }],

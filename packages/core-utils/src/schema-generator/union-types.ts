@@ -10,6 +10,7 @@ import type {
 import type { ExtraPropsMode } from "../shared/types.js";
 import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
+import { buildDiscriminatedUnionCode } from "./discriminated-union.js";
 import { mergeImports, sanitizeIdentifier } from "./utils.js";
 
 /**
@@ -221,8 +222,14 @@ export function handleUnionSchema(
       return result;
     }
 
-    // Generate discriminated union - works for both anyOf and oneOf with discriminator
-    result.code = `z.discriminatedUnion("${discriminatorProperty}", [${schemasCodes.join(", ")}])`;
+    result.code = buildDiscriminatedUnionCode({
+      discriminatorProperty,
+      members: schemas.map((schema, index) => ({
+        code: schemasCodes[index],
+        schema,
+      })),
+      resolvedSchemas,
+    });
     return result;
   }
 
