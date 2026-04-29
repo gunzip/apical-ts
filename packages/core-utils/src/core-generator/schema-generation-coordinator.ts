@@ -293,9 +293,15 @@ function generateComponentSchemas(
     if (!isPlainSchemaObject(schema)) {
       /* eslint-disable-next-line no-console */
       console.warn(
-        `⚠️ Skipping ${name}: not a plain OpenAPI schema object. Value:`,
-        schema,
+        `⚠️ ${name}: not a plain schema object, generating z.unknown() fallback`,
       );
+      const sanitizedName = sanitizeIdentifier(name);
+      const promise = context.limit(async () => {
+        const content = generateFallbackSchemaContent(sanitizedName);
+        const filePath = path.join(context.schemasDir, `${sanitizedName}.ts`);
+        await fs.writeFile(filePath, content);
+      });
+      promises.push(promise);
       continue;
     }
 
@@ -349,4 +355,9 @@ function generateParameterSchemas(
   }
 
   return promises;
+}
+
+/* Generates a minimal z.unknown() fallback file for schemas that are not plain OpenAPI objects */
+function generateFallbackSchemaContent(name: string): string {
+  return `import * as z from 'zod';\n\nexport const ${name} = z.unknown();\nexport type ${name} = z.infer<typeof ${name}>;\n`;
 }
