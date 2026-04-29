@@ -15,8 +15,6 @@ describe("recursive-handlers", () => {
 
       expect(context.recursiveSchemas).toBeInstanceOf(Set);
       expect(context.recursiveSchemas.size).toBe(0);
-      expect(context.recursiveProperties).toBeInstanceOf(Map);
-      expect(context.recursiveProperties.size).toBe(0);
       expect(context.referenceStack).toEqual([]);
     });
   });
@@ -111,18 +109,6 @@ describe("recursive-handlers", () => {
 
       context.recursiveSchemas.add("RecursiveSchema");
       expect(context.recursiveSchemas.has("RecursiveSchema")).toBe(true);
-    });
-
-    it("should track recursive properties within schemas", () => {
-      const context = createRecursiveContext();
-
-      expect(context.recursiveProperties.has("TreeNode")).toBe(false);
-
-      context.recursiveProperties.set("TreeNode", new Set(["children"]));
-      expect(context.recursiveProperties.has("TreeNode")).toBe(true);
-      expect(context.recursiveProperties.get("TreeNode")?.has("children")).toBe(
-        true,
-      );
     });
   });
 

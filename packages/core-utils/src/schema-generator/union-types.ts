@@ -11,6 +11,7 @@ import type { ExtraPropsMode } from "../shared/types.js";
 import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import { buildDiscriminatedUnionCode } from "./discriminated-union.js";
+import { parseSchemaReference } from "./schema-references.js";
 import { mergeImports, sanitizeIdentifier } from "./utils.js";
 
 /**
@@ -63,9 +64,9 @@ export function handleAllOfSchema(
     currentSchemaName &&
     schemas.some((schema) => {
       if (isReferenceObject(schema)) {
-        const refName = extractSchemaNameFromRef(schema.$ref);
+        const refName = parseSchemaReference(schema.$ref);
         return (
-          refName !== null &&
+          refName !== undefined &&
           sanitizeIdentifier(refName.originalName) === currentSchemaName
         );
       }
@@ -103,7 +104,7 @@ export function handleAllOfSchema(
 
     for (const schema of objectSchemas) {
       if (isReferenceObject(schema)) {
-        const refName = extractSchemaNameFromRef(schema.$ref);
+        const refName = parseSchemaReference(schema.$ref);
         if (refName) {
           allImports.add(refName.identifierName);
           shapeExpressions.push(`...${refName.identifierName}.shape`);
@@ -341,7 +342,7 @@ function isObjectSchemaType(
 ): boolean {
   if (isReferenceObject(schema)) {
     if (!resolvedSchemas) return false;
-    const refName = extractSchemaNameFromRef(schema.$ref);
+    const refName = parseSchemaReference(schema.$ref);
     if (!refName) return false;
     if (seenRefs.has(refName.originalName)) return false;
     const resolved = resolvedSchemas[refName.originalName];
@@ -369,23 +370,4 @@ function isObjectSchemaType(
   }
 
   return !schema.type || schema.type === "object";
-}
-
-function extractSchemaNameFromRef(
-  ref: string | undefined,
-): null | { identifierName: string; originalName: string } {
-  if (!ref) return null;
-  const refMatch = ref.match(/\/([^/]+)$/);
-  if (!refMatch) {
-    return null;
-  }
-
-  const originalName = refMatch[1];
-  return {
-    // Keep both names because OpenAPI component keys and TS identifiers have
-    // different constraints: `data_center` must stay the lookup key, while
-    // `dataCenter` is the legal import/symbol name in generated code.
-    identifierName: sanitizeIdentifier(originalName),
-    originalName,
-  };
 }

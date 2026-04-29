@@ -2,6 +2,7 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { isReferenceObject } from "openapi3-ts/oas31";
 
+import { parseSchemaReference } from "./schema-references.js";
 import { sanitizeIdentifier } from "./utils.js";
 
 /**
@@ -18,8 +19,6 @@ interface RecursiveAnalysisResult {
  * Context for tracking recursive references during schema generation
  */
 export interface RecursiveContext {
-  /* Map of recursive properties within schemas */
-  recursiveProperties: Map<string, Set<string>>;
   /* Set of schemas that have been identified as recursive */
   recursiveSchemas: Set<string>;
   /* Stack of currently processing schema references to detect cycles */
@@ -38,8 +37,12 @@ export function analyzeRecursiveReference(
     return { isRecursive: false };
   }
 
-  const referenceName = ref.replace("#/components/schemas/", "");
-  const sanitizedReferenceName = sanitizeIdentifier(referenceName);
+  const schemaReference = parseSchemaReference(ref);
+  if (!schemaReference) {
+    return { isRecursive: false };
+  }
+
+  const sanitizedReferenceName = schemaReference.identifierName;
 
   /* Direct self-reference */
   if (currentSchemaName && sanitizedReferenceName === currentSchemaName) {
@@ -158,7 +161,6 @@ export function findRecursiveSchemas(
  */
 export function createRecursiveContext(): RecursiveContext {
   return {
-    recursiveProperties: new Map(),
     recursiveSchemas: new Set(),
     referenceStack: [],
   };

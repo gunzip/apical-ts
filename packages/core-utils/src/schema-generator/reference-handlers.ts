@@ -3,7 +3,7 @@ import type { ReferenceObject } from "openapi3-ts/oas31";
 import type { RecursiveContext } from "./recursive-handlers.js";
 
 import { analyzeRecursiveReference } from "./recursive-handlers.js";
-import { sanitizeIdentifier } from "./utils.js";
+import { parseSchemaReference } from "./schema-references.js";
 
 /**
  * Options for reference handling
@@ -31,10 +31,14 @@ function handleReference(
 ): ZodSchemaResult {
   if ("$ref" in schema && schema.$ref) {
     const ref = schema.$ref;
-    // Check if it's a local reference to components/schemas
-    if (ref.startsWith("#/components/schemas/")) {
-      const originalSchemaName = ref.replace("#/components/schemas/", "");
-      const schemaName: string = sanitizeIdentifier(originalSchemaName);
+    const schemaReference = parseSchemaReference(ref);
+    if (schemaReference) {
+      const { identifierName: schemaName } = schemaReference;
+
+      if (options.currentSchemaName === schemaName) {
+        result.code = `z.lazy(() => ${schemaName})`;
+        return result;
+      }
 
       /* Check for recursive references if context is available */
       if (options.recursiveContext) {

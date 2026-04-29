@@ -1,6 +1,4 @@
-import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
-
-import { isReferenceObject } from "openapi3-ts/oas31";
+import type { SchemaObject } from "openapi3-ts/oas31";
 import path from "node:path";
 
 import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
@@ -14,12 +12,10 @@ import {
   renderStringFormatOverrideImports,
 } from "./format-overrides.js";
 import { generateObjectCode } from "./object-properties.js";
-import {
-  createRecursiveContext,
-  findReferencesInSchema,
-} from "./recursive-handlers.js";
+import { buildRecursiveShape } from "./recursive-schema-properties.js";
+import { createRecursiveContext } from "./recursive-handlers.js";
+import { renderRecursiveTypeAlias } from "./recursive-type-renderer.js";
 import { zodSchemaToCode } from "./schema-converter.js";
-import { sanitizeIdentifier } from "./utils.js";
 
 /**
  * Options for recursive schema file generation
@@ -97,94 +93,15 @@ export async function generateRecursiveSchemaFile(
   }
 
   const commentSection = generateCommentSection(description);
-  const shape: string[] = [];
-  const requiredFields = schema.required || [];
-  const imports = new Set<string>();
-
-  /* Process each property to generate the correct Zod code */
-  for (const [key, propSchema] of Object.entries(schema.properties)) {
-    const isRequired = requiredFields.includes(key);
-    const isRecursive = isRecursiveProperty(
-      propSchema,
-      originalSchemaName,
-      recursiveContext,
-    );
-
-    if (isRecursive && getRecursiveReferenceName(propSchema) !== undefined) {
-      const referencedSchemaName = getRecursiveReferenceName(propSchema)!;
-      if (referencedSchemaName !== name) {
-        imports.add(referencedSchemaName);
-      }
-      const getterCode = generateGetterCode(key, propSchema, name, isRequired);
-      shape.push(getterCode);
-    } else if (isRecursive) {
-      /*
-       * Composition (allOf/anyOf/oneOf) containing a self-reference.
-       * Generate code using zodSchemaToCode but wrap in a getter to defer
-       * evaluation and avoid TypeScript "used before declaration" errors.
-       */
-      const propResult = zodSchemaToCode(propSchema, {
-        currentSchemaName: name,
-        extraProps,
-        formatOverrides,
-        imports: new Set(),
-        recursiveContext,
-        resolvedSchemas,
-      });
-
-      propResult.imports.forEach((imp) => {
-        if (imp !== name) {
-          imports.add(imp);
-        }
-      });
-
-      const code = isRequired
-        ? propResult.code
-        : `${propResult.code}.optional()`;
-
-      /*
-       * Use precise return type when the composition resolves to a single
-       * self-reference (e.g. allOf/anyOf/oneOf with one $ref to self).
-       * Otherwise fall back to z.ZodTypeAny.
-       */
-      const compositionItems = !isReferenceObject(propSchema)
-        ? (propSchema.allOf ?? propSchema.anyOf ?? propSchema.oneOf)
-        : undefined;
-      const singleRefTarget =
-        compositionItems?.length === 1 && isReferenceObject(compositionItems[0])
-          ? getSchemaNameFromReference(compositionItems[0].$ref)
-          : undefined;
-      const isSingleSelfReference = singleRefTarget === name;
-      const baseType = isSingleSelfReference
-        ? `typeof ${name}`
-        : "z.ZodTypeAny";
-      const returnType = isRequired ? baseType : `z.ZodOptional<${baseType}>`;
-      shape.push(
-        `get ${JSON.stringify(key)}(): ${returnType} { return ${code}; }`,
-      );
-    } else {
-      const propResult = zodSchemaToCode(propSchema, {
-        currentSchemaName: name,
-        extraProps,
-        formatOverrides,
-        imports: new Set(),
-        recursiveContext,
-        resolvedSchemas,
-      });
-
-      propResult.imports.forEach((imp) => {
-        if (imp !== name) {
-          imports.add(imp);
-        }
-      });
-
-      const propCode = isRequired
-        ? propResult.code
-        : `${propResult.code}.optional()`;
-
-      shape.push(`${JSON.stringify(key)}: ${propCode}`);
-    }
-  }
+  const { imports, shape } = buildRecursiveShape({
+    extraProps,
+    formatOverrides,
+    name,
+    originalSchemaName,
+    recursiveContext,
+    resolvedSchemas,
+    schema,
+  });
 
   /*
    * Use additionalProperties to determine object type and generate code using common function
@@ -294,6 +211,7 @@ export async function generateSchemaFile(
     path.join(schemaDirectory || ".", `${name}.ts`),
     options.formatOverrides,
   );
+  const recursiveTypeAlias = renderRecursiveTypeAlias(schema, name);
 
   const content = assembleFileContent(
     name,
@@ -301,6 +219,7 @@ export async function generateSchemaFile(
     importsSection,
     schemaResult.code,
     schemaResult.extensibleEnumValues,
+    recursiveTypeAlias,
   );
 
   /* Generate complete variant schema files if this is a base schema (no schemaContext) */
@@ -345,6 +264,7 @@ function assembleFileContent(
   importsSection: string,
   schemaCode: string,
   extensibleEnumValues?: unknown[],
+  recursiveTypeAlias?: string,
 ): string {
   if (extensibleEnumValues) {
     const enumValues = extensibleEnumValues
@@ -354,9 +274,13 @@ function assembleFileContent(
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
     return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
   } else {
-    const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
-    const typeContent = `export type ${name} = z.infer<typeof ${name}>;`;
-    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
+    const schemaContent = recursiveTypeAlias
+      ? `${commentSection}export const ${name}: z.ZodType<${name}> = ${schemaCode};`
+      : `${commentSection}export const ${name} = ${schemaCode};`;
+    const typeContent = recursiveTypeAlias
+      ? `export type ${name} = ${recursiveTypeAlias};`
+      : `export type ${name} = z.infer<typeof ${name}>;`;
+    return `import * as z from 'zod';\n${importsSection}\n${typeContent}\n${schemaContent}`;
   }
 }
 
@@ -369,49 +293,6 @@ function generateCommentSection(description?: string): string {
     .split("\n")
     .map((line) => line.trim())
     .join("\n * ")}\n */\n`;
-}
-
-/* Helper function to generate getter code for recursive properties */
-function generateGetterCode(
-  key: string,
-  propSchema: ReferenceObject | SchemaObject,
-  name: string,
-  isRequired: boolean,
-): string {
-  const referencedSchemaName = getRecursiveReferenceName(propSchema) ?? name;
-  const isCrossSchemaReference = referencedSchemaName !== name;
-  /**
-   * Generate getter with proper TypeScript return type annotation to resolve circular reference issues.
-   * This follows the pattern from Zod documentation: https://zod.dev/api?id=circularity-errors
-   */
-  const baseGetter = (code: string, returnType: string) =>
-    `get ${JSON.stringify(key)}(): ${returnType} { return ${code}${isRequired ? "" : ".optional()"}; }`;
-
-  /* Array with reference items - wrap in z.array() */
-  if (
-    !isReferenceObject(propSchema) &&
-    propSchema.type === "array" &&
-    propSchema.items &&
-    isReferenceObject(propSchema.items)
-  ) {
-    const arrayItemType = isCrossSchemaReference
-      ? "z.ZodTypeAny"
-      : `typeof ${referencedSchemaName}`;
-    const returnType = isRequired
-      ? `z.ZodArray<${arrayItemType}>`
-      : `z.ZodOptional<z.ZodArray<${arrayItemType}>>`;
-    return baseGetter(`z.array(${referencedSchemaName})`, returnType);
-  }
-
-  /* All other cases (direct references, objects with nested references) - use schema directly */
-  const returnType = isRequired
-    ? isCrossSchemaReference
-      ? "z.ZodTypeAny"
-      : `typeof ${referencedSchemaName}`
-    : isCrossSchemaReference
-      ? "z.ZodOptional<z.ZodTypeAny>"
-      : `z.ZodOptional<typeof ${referencedSchemaName}>`;
-  return baseGetter(referencedSchemaName, returnType);
 }
 
 /* Helper function to generate imports section */
@@ -490,80 +371,5 @@ async function generateVariantSchemaFiles(
   return files.length > 0 ? files : undefined;
 }
 
-/* Helper function to check if a property is recursive */
-function isRecursiveProperty(
-  propSchema: ReferenceObject | SchemaObject,
-  originalSchemaName: string,
-  recursiveContext: RecursiveContext,
-): boolean {
-  /* Check for direct self-reference via $ref */
-  if ("$ref" in propSchema) {
-    const ref = propSchema.$ref;
-    if (!ref) {
-      return false;
-    }
-    const selfRef = `#/components/schemas/${originalSchemaName}`;
-    const shortSelfRef = `#/${originalSchemaName}`;
-    if (ref === selfRef || ref === shortSelfRef) {
-      return true;
-    }
-    if (ref.startsWith("#/components/schemas/")) {
-      const referencedSchema = getSchemaNameFromReference(ref);
-      return !!(
-        referencedSchema &&
-        recursiveContext.recursiveSchemas.has(referencedSchema)
-      );
-    }
-    return false;
-  }
-
-  /* Check for indirect self-references within schema properties */
-  const refs = findReferencesInSchema(propSchema);
-  const selfRef = `#/components/schemas/${originalSchemaName}`;
-  const shortSelfRef = `#/${originalSchemaName}`;
-  return refs.some((ref) => {
-    if (ref === selfRef || ref === shortSelfRef) {
-      return true;
-    }
-    const referencedSchema = getSchemaNameFromReference(ref);
-    return !!(
-      referencedSchema &&
-      recursiveContext.recursiveSchemas.has(referencedSchema)
-    );
-  });
-}
-
-function getRecursiveReferenceName(
-  propSchema: ReferenceObject | SchemaObject,
-): string | undefined {
-  if (isReferenceObject(propSchema)) {
-    return getSchemaNameFromReference(propSchema.$ref);
-  }
-
-  if (
-    propSchema.type === "array" &&
-    propSchema.items &&
-    isReferenceObject(propSchema.items)
-  ) {
-    return getSchemaNameFromReference(propSchema.items.$ref);
-  }
-
-  return undefined;
-}
-
-function getSchemaNameFromReference(ref: string): string | undefined {
-  if (ref.startsWith("#/components/schemas/")) {
-    return sanitizeIdentifier(ref.replace("#/components/schemas/", ""));
-  }
-
-  /* Handle short-form references like #/SchemaName */
-  const shortFormMatch = /^#\/([^/]+)$/.exec(ref);
-  if (shortFormMatch) {
-    return sanitizeIdentifier(shortFormMatch[1]);
-  }
-
-  return undefined;
-}
-
 // Export for testing
-export { generateGetterCode };
+export { generateGetterCode } from "./recursive-schema-properties.js";

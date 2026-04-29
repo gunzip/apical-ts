@@ -1,8 +1,16 @@
+import { execFile } from "node:child_process";
+import fs from "node:fs/promises";
+import { promisify } from "node:util";
+import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import type { SchemaObject } from "openapi3-ts/oas31";
 
-import { generateRecursiveSchemaFile } from "../../src/schema-generator/file-generators.js";
+import {
+  generateRecursiveSchemaFile,
+  generateSchemaFile,
+} from "../../src/schema-generator/file-generators.js";
 import { createRecursiveContext } from "../../src/schema-generator/recursive-handlers.js";
 
 describe("file-generators - direct $ref recursive properties", () => {
@@ -173,3 +181,353 @@ describe("file-generators - direct $ref recursive properties", () => {
     expect(result.content).not.toContain('"value": z.number().optional()');
   });
 });
+
+describe("file-generators - z.lazy() for non-object recursive schemas", () => {
+  it("should use z.lazy() for array schemas that self-reference", async () => {
+    const recursiveContext = createRecursiveContext();
+    recursiveContext.recursiveSchemas.add("requestTracerTrace");
+
+    /* Array schema where items contain a self-reference */
+    const traceSchema: SchemaObject = {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          trace: {
+            $ref: "#/components/schemas/requestTracerTrace",
+          },
+        },
+      },
+    };
+
+    const result = await generateSchemaFile(
+      "requestTracerTrace",
+      traceSchema,
+      undefined,
+      { recursiveContext },
+    );
+
+    /* Should wrap self-reference in z.lazy() */
+    expect(result.content).toContain("z.lazy(() => requestTracerTrace)");
+    /* Should add an explicit recursive public type instead of widening to unknown */
+    expect(result.content).toContain(
+      'export type requestTracerTrace = Array<{ "trace"?: requestTracerTrace }>;',
+    );
+    expect(result.content).toContain(
+      "export const requestTracerTrace: z.ZodType<requestTracerTrace> =",
+    );
+  });
+
+  it("should use z.lazy() for circular self-referencing schemas", async () => {
+    const recursiveContext = createRecursiveContext();
+    recursiveContext.recursiveSchemas.add("workersKvAny");
+
+    /* Schema that references itself */
+    const kvSchema: SchemaObject = {
+      anyOf: [
+        { type: "string" },
+        { type: "number" },
+        { type: "boolean" },
+        {
+          type: "array",
+          items: { $ref: "#/components/schemas/workersKvAny" },
+        },
+        {
+          type: "object",
+          additionalProperties: {
+            $ref: "#/components/schemas/workersKvAny",
+          },
+        },
+      ],
+    };
+
+    const result = await generateSchemaFile(
+      "workersKvAny",
+      kvSchema,
+      undefined,
+      {
+        recursiveContext,
+      },
+    );
+
+    /* Should wrap self-references in z.lazy() */
+    expect(result.content).toContain("z.lazy(() => workersKvAny)");
+    expect(result.content).toContain(
+      "export type workersKvAny = string | number | boolean | Array<workersKvAny> | { [key: string]: workersKvAny };",
+    );
+    expect(result.content).toContain(
+      "export const workersKvAny: z.ZodType<workersKvAny> =",
+    );
+  });
+
+  it("should NOT add z.ZodType annotation for non-recursive schemas", async () => {
+    const recursiveContext = createRecursiveContext();
+
+    const simpleSchema: SchemaObject = {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+      },
+    };
+
+    const result = await generateSchemaFile(
+      "SimpleSchema",
+      simpleSchema,
+      undefined,
+      { recursiveContext },
+    );
+
+    /* Should NOT have type annotation */
+    expect(result.content).toContain("export const SimpleSchema =");
+    expect(result.content).not.toContain(": z.ZodType<");
+  });
+
+  it("should NOT add z.ZodType annotation for schemas in recursive set without direct self-reference", async () => {
+    const recursiveContext = createRecursiveContext();
+    // Mark IndirectNode as recursive (part of a cycle) but its code won't reference itself
+    recursiveContext.recursiveSchemas.add("IndirectNode");
+
+    const schema: SchemaObject = {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        related: { $ref: "#/components/schemas/OtherNode" },
+      },
+    };
+
+    const result = await generateSchemaFile("IndirectNode", schema, undefined, {
+      recursiveContext,
+    });
+
+    /* Should NOT have z.ZodType annotation since code doesn't reference IndirectNode */
+    expect(result.content).toContain("export const IndirectNode =");
+    expect(result.content).not.toContain(": z.ZodType<");
+  });
+});
+
+describe("file-generators - recursive generated types compile", () => {
+  it("should preserve exported types for direct self-recursive non-object schemas", async () => {
+    const recursiveContext = createRecursiveContext();
+    recursiveContext.recursiveSchemas.add("workersKvAny");
+    recursiveContext.recursiveSchemas.add("requestTracerTrace");
+
+    const workersKvAny = await generateSchemaFile(
+      "workersKvAny",
+      {
+        anyOf: [
+          { type: "string" },
+          { type: "number" },
+          { type: "boolean" },
+          {
+            type: "array",
+            items: { $ref: "#/components/schemas/workersKvAny" },
+          },
+          {
+            type: "object",
+            additionalProperties: {
+              $ref: "#/components/schemas/workersKvAny",
+            },
+          },
+        ],
+      },
+      undefined,
+      { recursiveContext },
+    );
+
+    const requestTracerTrace = await generateSchemaFile(
+      "requestTracerTrace",
+      {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            trace: {
+              $ref: "#/components/schemas/requestTracerTrace",
+            },
+          },
+        },
+      },
+      undefined,
+      { recursiveContext },
+    );
+
+    await expect(
+      typecheckGeneratedSchemas({
+        "requestTracerTrace.ts": requestTracerTrace.content,
+        "workersKvAny.ts": workersKvAny.content,
+        "recursive-types.ts": `
+import type { requestTracerTrace as RequestTracerTrace } from "./requestTracerTrace.js";
+import { requestTracerTrace } from "./requestTracerTrace.js";
+import type { workersKvAny as WorkersKvAny } from "./workersKvAny.js";
+import { workersKvAny } from "./workersKvAny.js";
+
+type IsUnknown<T> = unknown extends T ? ([T] extends [unknown] ? true : false) : false;
+
+const traceValue: RequestTracerTrace = [{ trace: [] }];
+const kvValue: WorkersKvAny = [{ nested: ["value", 1, false] }];
+const parsedTrace: RequestTracerTrace = requestTracerTrace.parse(traceValue);
+const parsedKv: WorkersKvAny = workersKvAny.parse(kvValue);
+const traceIsUnknown: IsUnknown<RequestTracerTrace> = false;
+const kvIsUnknown: IsUnknown<WorkersKvAny> = false;
+
+void parsedTrace;
+void parsedKv;
+void traceIsUnknown;
+void kvIsUnknown;
+
+// @ts-expect-error requestTracerTrace should stay an array type
+const invalidTrace: RequestTracerTrace = { trace: [] };
+// @ts-expect-error workersKvAny should reject null
+const invalidKv: WorkersKvAny = null;
+
+void invalidTrace;
+void invalidKv;
+`,
+      }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("should keep indirect recursive object cycles compiling without direct-self annotations", async () => {
+    const recursiveContext = createRecursiveContext();
+    recursiveContext.recursiveSchemas.add("Category");
+    recursiveContext.recursiveSchemas.add("CategoryParent");
+
+    const category = await generateRecursiveSchemaFile({
+      description: "Category node",
+      name: "Category",
+      originalSchemaName: "Category",
+      recursiveContext,
+      schema: {
+        properties: {
+          parent: { $ref: "#/components/schemas/CategoryParent" },
+        },
+        type: "object",
+      },
+    });
+    const categoryParent = await generateRecursiveSchemaFile({
+      description: "Category parent node",
+      name: "CategoryParent",
+      originalSchemaName: "CategoryParent",
+      recursiveContext,
+      schema: {
+        properties: {
+          child: { $ref: "#/components/schemas/Category" },
+        },
+        type: "object",
+      },
+    });
+
+    expect(category.content).not.toContain(": z.ZodType<");
+    expect(categoryParent.content).not.toContain(": z.ZodType<");
+
+    await expect(
+      typecheckGeneratedSchemas({
+        "Category.ts": category.content,
+        "CategoryParent.ts": categoryParent.content,
+        "indirect-cycle.ts": `
+import type { Category } from "./Category.js";
+import type { CategoryParent } from "./CategoryParent.js";
+
+const categoryValue: Category = {};
+const parentValue: CategoryParent = { child: categoryValue };
+
+void categoryValue;
+void parentValue;
+`,
+      }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("should keep single-self-reference compositions compiling", async () => {
+    const recursiveContext = createRecursiveContext();
+    recursiveContext.recursiveSchemas.add("NotificationEvent");
+
+    const notificationEvent = await generateRecursiveSchemaFile({
+      description: "Notification event",
+      name: "NotificationEvent",
+      originalSchemaName: "NotificationEvent",
+      recursiveContext,
+      schema: {
+        properties: {
+          templateEvent: {
+            allOf: [{ $ref: "#/components/schemas/NotificationEvent" }],
+            description:
+              "The template of the event. Only custom events configured by Jira administrators have template.",
+          },
+        },
+        type: "object",
+      },
+    });
+
+    expect(notificationEvent.content).toContain(
+      'get "templateEvent"(): z.ZodOptional<z.ZodLazy<typeof NotificationEvent>>',
+    );
+
+    await expect(
+      typecheckGeneratedSchemas({
+        "NotificationEvent.ts": notificationEvent.content,
+        "notification-event.ts": `
+import type { NotificationEvent } from "./NotificationEvent.js";
+import { NotificationEvent as NotificationEventSchema } from "./NotificationEvent.js";
+
+const value: NotificationEvent = {};
+const parsedValue: NotificationEvent = NotificationEventSchema.parse(value);
+
+void parsedValue;
+`,
+      }),
+    ).resolves.toBeUndefined();
+  });
+});
+
+const execFileAsync = promisify(execFile);
+
+async function typecheckGeneratedSchemas(
+  files: Record<string, string>,
+): Promise<void> {
+  const workspaceDir = path.join(
+    process.cwd(),
+    "tests",
+    ".recursive-schema-typecheck",
+  );
+
+  await fs.rm(workspaceDir, { force: true, recursive: true });
+  await fs.mkdir(workspaceDir, { recursive: true });
+
+  try {
+    await Promise.all(
+      Object.entries(files).map(async ([fileName, content]) => {
+        await fs.writeFile(path.join(workspaceDir, fileName), content);
+      }),
+    );
+
+    await fs.writeFile(
+      path.join(workspaceDir, "tsconfig.json"),
+      JSON.stringify({
+        compilerOptions: {
+          module: "ESNext",
+          moduleResolution: "bundler",
+          noEmit: true,
+          skipLibCheck: true,
+          strict: true,
+          target: "ES2022",
+        },
+        include: ["./**/*.ts"],
+      }),
+    );
+
+    await execFileAsync(
+      "pnpm",
+      [
+        "exec",
+        "tsgo",
+        "--noEmit",
+        "-p",
+        path.join(workspaceDir, "tsconfig.json"),
+      ],
+      { cwd: process.cwd() },
+    );
+  } finally {
+    await fs.rm(workspaceDir, { force: true, recursive: true });
+  }
+}
