@@ -145,6 +145,55 @@ describe("zodSchemaToCode", () => {
     expect(zodSchema.parse(5)).toBe(5);
   });
 
+  it("should preserve boolean-array default coercion after nullable wrapping", () => {
+    const schema = {
+      default: ["true", "false"],
+      items: { type: "boolean" as const },
+      nullable: true as const,
+      type: "array" as const,
+    } as const;
+
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe(
+      "(z.array(z.boolean())).nullable().default([true,false])",
+    );
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.parse(undefined)).toEqual([true, false]);
+    expect(zodSchema.parse(null)).toBe(null);
+  });
+
+  it("should preserve bigint defaults after nullable wrapping", () => {
+    const schema = {
+      default: "42",
+      format: "int64" as const,
+      nullable: true as const,
+      type: "integer" as const,
+    } as const;
+
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("(z.coerce.bigint()).nullable().default(42n)");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.parse(undefined)).toBe(42n);
+    expect(zodSchema.parse(null)).toBe(null);
+  });
+
+  it("should preserve bigint defaults for nullable multi-type schemas", () => {
+    const schema: SchemaObject = {
+      default: "42",
+      format: "int64",
+      type: ["integer", "null"],
+    };
+
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("(z.coerce.bigint()).nullable().default(42n)");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.parse(undefined)).toBe(42n);
+    expect(zodSchema.parse(null)).toBe(null);
+  });
+
   it("should handle local $ref references", () => {
     const refSchema = { $ref: "#/components/schemas/Profile" };
     const result = zodSchemaToCode(refSchema);

@@ -15,6 +15,29 @@ type EffectiveType =
   | string[]
   | undefined;
 
+export type SchemaType = "array" | "boolean" | "number" | "object" | "string";
+
+export interface DefaultValueOptions {
+  bigint?: boolean;
+  itemSchemaType?: SchemaType;
+  schemaType?: SchemaType;
+}
+
+/* Map an effective OpenAPI type to a SchemaType, normalising "integer" to "number" */
+export function toSchemaType(type: string | undefined): SchemaType | undefined {
+  if (type === "integer") return "number";
+  if (
+    type === "boolean" ||
+    type === "number" ||
+    type === "string" ||
+    type === "array" ||
+    type === "object"
+  ) {
+    return type;
+  }
+  return undefined;
+}
+
 /*
  * Convert a JSON-like literal value to its Zod schema code representation.
  * Arrays and objects are rendered structurally so generated schemas preserve
@@ -84,28 +107,124 @@ export function literalValuesEqual(left: unknown, right: unknown): boolean {
   return false;
 }
 
-/**
- * Add default value to zod code if present in schema
- */
+/* Add default value to zod code if present in schema, coercing mismatched types */
 export function addDefaultValue(
   code: string,
   defaultValue: unknown,
-  options?: { bigint?: boolean },
+  options?: DefaultValueOptions,
 ): string {
   if (defaultValue === undefined) {
     return code;
   }
 
   if (options?.bigint) {
-    return `${code}.default(${defaultValue}n)`;
+    const literal = toBigIntLiteral(defaultValue);
+    if (!literal) {
+      return code;
+    }
+    return `${code}.default(${literal})`;
   }
 
-  const serializedDefault =
-    typeof defaultValue === "string"
-      ? JSON.stringify(defaultValue)
-      : JSON.stringify(defaultValue);
+  /* null is always valid (nullable schemas) — emit directly */
+  if (defaultValue === null) {
+    return `${code}.default(null)`;
+  }
 
+  let coerced: unknown = defaultValue;
+
+  if (options?.schemaType === "boolean" && typeof defaultValue === "string") {
+    const normalizedDefault = defaultValue.toLowerCase();
+
+    if (normalizedDefault === "true") {
+      coerced = true;
+    } else if (normalizedDefault === "false") {
+      coerced = false;
+    } else {
+      return code;
+    }
+  }
+
+  if (options?.schemaType === "number" && typeof defaultValue === "string") {
+    const parsed = Number(defaultValue);
+    if (Number.isNaN(parsed)) {
+      return code;
+    }
+    coerced = parsed;
+  }
+
+  /* Drop invalid scalar defaults for array types */
+  if (options?.schemaType === "array" && !Array.isArray(defaultValue)) {
+    return code;
+  }
+
+  // Coerce string elements to booleans only when the array item type is boolean
+  if (
+    options?.schemaType === "array" &&
+    options.itemSchemaType === "boolean" &&
+    Array.isArray(defaultValue)
+  ) {
+    coerced = defaultValue.map((el) => {
+      if (typeof el === "string") {
+        const lower = el.toLowerCase();
+        if (lower === "true") return true;
+        if (lower === "false") return false;
+      }
+      return el;
+    });
+  }
+
+  /* Drop invalid string defaults for object types */
+  if (options?.schemaType === "object" && typeof defaultValue === "string") {
+    return code;
+  }
+
+  const serializedDefault = JSON.stringify(coerced);
   return `${code}.default(${serializedDefault})`;
+}
+
+export function getDefaultValueOptions(
+  schema: SchemaObject,
+): DefaultValueOptions {
+  const effectiveType = inferEffectiveType(schema);
+  const schemaType = Array.isArray(effectiveType)
+    ? undefined
+    : toSchemaType(effectiveType);
+
+  if (schema.type === "integer" && schema.format === "int64") {
+    return { bigint: true, schemaType };
+  }
+
+  const itemSchemaType =
+    schemaType === "array" && schema.items && "type" in schema.items
+      ? toSchemaType(schema.items.type as string)
+      : undefined;
+
+  return {
+    itemSchemaType,
+    schemaType,
+  };
+}
+
+function toBigIntLiteral(defaultValue: unknown): string | undefined {
+  if (typeof defaultValue === "bigint") {
+    return `${defaultValue}n`;
+  }
+
+  if (typeof defaultValue === "number") {
+    if (!Number.isSafeInteger(defaultValue)) {
+      return undefined;
+    }
+    return `${BigInt(defaultValue)}n`;
+  }
+
+  if (typeof defaultValue === "string") {
+    if (!/^[+-]?\d+$/.test(defaultValue)) {
+      return undefined;
+    }
+    return `${BigInt(defaultValue)}n`;
+  }
+
+  return undefined;
 }
 
 /**

@@ -11,7 +11,7 @@ import {
   getStringFormatOverrideReferenceName,
 } from "./format-overrides.js";
 import { handleExtensibleEnum, handleRegularEnum } from "./enum-handlers.js";
-import { addDefaultValue } from "./utils.js";
+import { addDefaultValue, toSchemaType } from "./utils.js";
 
 /**
  * Handle array type conversion
@@ -42,7 +42,7 @@ export function handleArrayType(
   } = options;
   if (!schema.items) {
     let code = "z.array(z.unknown())";
-    code = addDefaultValue(code, schema.default);
+    code = addDefaultValue(code, schema.default, { schemaType: "array" });
     result.code = code;
     return result;
   }
@@ -63,8 +63,16 @@ export function handleArrayType(
   if (schema.maxItems !== undefined) code += `.max(${schema.maxItems})`;
   // uniqueItems not representable in code string
 
-  // Add default value if present
-  code = addDefaultValue(code, schema.default);
+  // Resolve item schema type for default-value coercion
+  const itemType =
+    schema.items && "type" in schema.items
+      ? toSchemaType(schema.items.type as string)
+      : undefined;
+
+  code = addDefaultValue(code, schema.default, {
+    itemSchemaType: itemType,
+    schemaType: "array",
+  });
 
   result.code = code;
   return result;
@@ -84,7 +92,7 @@ export function handleBooleanType(
     code = handleRegularEnum(schema.enum, schema.default);
   } else {
     // Add default value if present and no enum
-    code = addDefaultValue(code, schema.default);
+    code = addDefaultValue(code, schema.default, { schemaType: "boolean" });
   }
 
   result.code = code;
@@ -112,7 +120,9 @@ export function handleNumberType(
     if (schema.enum && schema.enum.length >= 1) {
       code = handleRegularEnum(schema.enum, schema.default, { bigint: true });
     } else {
-      code = addDefaultValue(code, schema.default, { bigint: true });
+      code = addDefaultValue(code, schema.default, {
+        bigint: true,
+      });
     }
 
     result.code = code;
@@ -134,7 +144,7 @@ export function handleNumberType(
     code = handleRegularEnum(schema.enum, schema.default);
   } else {
     // Add default value if present and no enum
-    code = addDefaultValue(code, schema.default);
+    code = addDefaultValue(code, schema.default, { schemaType: "number" });
   }
 
   result.code = code;
@@ -166,7 +176,9 @@ export function handleStringType(
   if (override) {
     const referenceName = getStringFormatOverrideReferenceName(override.format);
     result.imports.add(referenceName);
-    result.code = addDefaultValue(referenceName, schema.default);
+    result.code = addDefaultValue(referenceName, schema.default, {
+      schemaType: "string",
+    });
     return result;
   }
 
@@ -198,7 +210,7 @@ export function handleStringType(
   if (schema.format === "binary") code = "z.instanceof(Blob)";
 
   // Add default value if present and no enum
-  code = addDefaultValue(code, schema.default);
+  code = addDefaultValue(code, schema.default, { schemaType: "string" });
 
   result.code = code;
   return result;

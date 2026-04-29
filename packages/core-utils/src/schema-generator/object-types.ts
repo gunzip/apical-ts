@@ -80,7 +80,7 @@ export function handleObjectType(
   let code = objectCodeResult.code;
 
   // Add default value if present
-  code = addDefaultValue(code, schema.default);
+  code = addDefaultValue(code, schema.default, { schemaType: "object" });
 
   result.code = code;
   return result;
