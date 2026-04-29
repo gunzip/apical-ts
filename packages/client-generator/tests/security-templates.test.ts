@@ -100,6 +100,93 @@ describe("client-generator security templates", () => {
         "const _sec_XSpecialHeader = params.headers['X-Special@Header'];\n    if (_sec_XSpecialHeader === undefined) throw new Error('Missing required security header: X-Special@Header');\n    finalHeaders['X-Special@Header'] = _sec_XSpecialHeader;",
       );
     });
+
+    it("should deduplicate headers with same headerName, preferring isRequired", () => {
+      const headers: SecurityHeader[] = [
+        {
+          headerName: "X-Auth-Email",
+          isOverride: true,
+          isRequired: true,
+          schemeName: "api_email",
+        },
+        {
+          headerName: "X-Auth-Key",
+          isOverride: true,
+          isRequired: true,
+          schemeName: "api_key",
+        },
+        {
+          headerName: "X-Auth-Email",
+          isOverride: true,
+          isRequired: false,
+          schemeName: "api_email_2",
+        },
+      ];
+
+      const result = renderSecurityHeaderHandling(headers);
+      expect(result).toContain("_sec_XAuthEmail");
+      expect(result).toContain("_sec_XAuthKey");
+
+      const emailOccurrences = result.split("const _sec_XAuthEmail").length - 1;
+      expect(emailOccurrences).toBe(1);
+
+      expect(result).toContain(
+        "if (_sec_XAuthEmail === undefined) throw new Error",
+      );
+    });
+
+    it("should deduplicate headers whose names collide after normalization", () => {
+      const headers: SecurityHeader[] = [
+        {
+          headerName: "X-Auth-Email",
+          isOverride: true,
+          isRequired: true,
+          schemeName: "api_email",
+        },
+        {
+          headerName: "X_Auth_Email",
+          isOverride: true,
+          isRequired: false,
+          schemeName: "api_email_alt",
+        },
+      ];
+
+      const result = renderSecurityHeaderHandling(headers);
+
+      // Both header names normalize to XAuthEmail – only one const should be emitted
+      const emailOccurrences = result.split("const _sec_XAuthEmail").length - 1;
+      expect(emailOccurrences).toBe(1);
+
+      // The required variant should win
+      expect(result).toContain(
+        "if (_sec_XAuthEmail === undefined) throw new Error",
+      );
+    });
+
+    it("should deduplicate headers keeping optional when no required exists", () => {
+      const headers: SecurityHeader[] = [
+        {
+          headerName: "X-Auth-Email",
+          isOverride: true,
+          isRequired: false,
+          schemeName: "api_email",
+        },
+        {
+          headerName: "X-Auth-Email",
+          isOverride: true,
+          isRequired: false,
+          schemeName: "api_email_2",
+        },
+      ];
+
+      const result = renderSecurityHeaderHandling(headers);
+      const emailOccurrences = result.split("const _sec_XAuthEmail").length - 1;
+      expect(emailOccurrences).toBe(1);
+
+      expect(result).toContain(
+        "if (_sec_XAuthEmail !== undefined) finalHeaders",
+      );
+    });
   });
 
   describe("renderAuthHeaderValidation", () => {
