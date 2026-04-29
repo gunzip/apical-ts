@@ -7,6 +7,7 @@ import { isReferenceObject, isSchemaObject } from "openapi3-ts/oas31";
 
 import type { ContentTypeMapping } from "./types.js";
 
+import { parseSchemaReference } from "../schema-generator/schema-references.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import { analyzeReadWriteProperties } from "./types.js";
 
@@ -34,13 +35,13 @@ export function resolveSchemaTypeName(
   resolvedSchemas?: Record<string, ReferenceObject | SchemaObject>,
 ): string {
   if (isReferenceObject(schema)) {
-    const originalSchemaName = schema.$ref.split("/").pop();
-    assert(originalSchemaName, "Invalid $ref in schema");
-    const baseName = sanitizeIdentifier(originalSchemaName as string);
+    const schemaReference = parseSchemaReference(schema.$ref);
+    assert(schemaReference, "Invalid $ref in schema");
+    const { identifierName: baseName, originalName } = schemaReference;
 
     /* Check for readOnly/writeOnly variants when context and resolved schemas are provided */
     if (context && resolvedSchemas) {
-      const referencedSchema = resolvedSchemas[originalSchemaName];
+      const referencedSchema = resolvedSchemas[originalName];
       if (referencedSchema && isSchemaObject(referencedSchema)) {
         const analysis = analyzeReadWriteProperties(referencedSchema);
 

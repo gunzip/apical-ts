@@ -3,6 +3,7 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 import { isReferenceObject, isSchemaObject } from "openapi3-ts/oas31";
 
 import type { ResolvedSchemas } from "./types.js";
+import { parseSchemaReference } from "./schema-references.js";
 import { isNullable } from "./utils.js";
 
 interface DiscriminatedUnionMember {
@@ -107,12 +108,12 @@ function resolveReferencedSchema(
     return null;
   }
 
-  const refName = extractSchemaNameFromRef(schema.$ref);
+  const refName = parseSchemaReference(schema.$ref);
   if (!refName) {
     return null;
   }
 
-  const resolvedSchema = resolvedSchemas[refName];
+  const resolvedSchema = resolvedSchemas[refName.originalName];
   return resolvedSchema && isSchemaObject(resolvedSchema)
     ? resolvedSchema
     : null;
@@ -246,13 +247,4 @@ function stripEnclosingParens(code: string): string {
   }
 
   return code.slice(1, -1);
-}
-
-function extractSchemaNameFromRef(ref: string | undefined): null | string {
-  if (!ref) {
-    return null;
-  }
-
-  const refMatch = ref.match(/\/([^/]+)$/);
-  return refMatch ? refMatch[1] : null;
 }
