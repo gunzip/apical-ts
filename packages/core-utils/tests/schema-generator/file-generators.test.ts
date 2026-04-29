@@ -8,6 +8,7 @@ import {
   generateSchemaFile,
   generateGetterCode,
 } from "../../src/schema-generator/file-generators.js";
+import { createRecursiveContext } from "../../src/schema-generator/recursive-handlers.js";
 import { zodSchemaToCode } from "../../src/schema-generator/schema-converter.js";
 
 // Mock schema-converter
@@ -320,6 +321,66 @@ describe("schema-generator file-generators", () => {
       );
 
       expect(result.content).toContain("Response schema for GetUser404");
+    });
+  });
+
+  describe("recursive type annotation", () => {
+    it("should add z.ZodType annotation when schema code directly self-references", async () => {
+      const schema: SchemaObject = {
+        properties: {
+          children: {
+            type: "array",
+            items: { $ref: "#/components/schemas/TreeNode" },
+          },
+        },
+        type: "object",
+      };
+
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ children: z.lazy(() => z.array(TreeNode)) })",
+          imports: new Set(),
+        }),
+      );
+
+      const recursiveContext = createRecursiveContext();
+      recursiveContext.recursiveSchemas.add("TreeNode");
+
+      const result = await generateSchemaFile("TreeNode", schema, undefined, {
+        recursiveContext,
+      });
+
+      expect(result.content).toContain("export const TreeNode: z.ZodType =");
+    });
+
+    it("should NOT add z.ZodType annotation when schema is in recursive set but code does not self-reference", async () => {
+      const schema: SchemaObject = {
+        properties: {
+          name: { type: "string" },
+        },
+        type: "object",
+      };
+
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ name: z.string() })",
+          imports: new Set(),
+        }),
+      );
+
+      /* Schema is part of an indirect cycle but its own code doesn't reference itself */
+      const recursiveContext = createRecursiveContext();
+      recursiveContext.recursiveSchemas.add("IndirectNode");
+
+      const result = await generateSchemaFile(
+        "IndirectNode",
+        schema,
+        undefined,
+        { recursiveContext },
+      );
+
+      expect(result.content).toContain("export const IndirectNode =");
+      expect(result.content).not.toContain(": z.ZodType");
     });
   });
 
