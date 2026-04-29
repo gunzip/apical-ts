@@ -45,6 +45,14 @@ function handleReference(
         );
 
         if (analysis.isRecursive) {
+          /* For direct self-references with lazy wrapping enabled, emit z.lazy() */
+          if (
+            analysis.isDirectSelfReference &&
+            options.recursiveContext.useLazyWrapping
+          ) {
+            result.code = `z.lazy(() => ${schemaName})`;
+            return result;
+          }
           /* For recursive references, we don't add imports here as they'll be handled
              by the recursive schema generation */
           result.code = schemaName;

@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import type { SchemaObject } from "openapi3-ts/oas31";
 
-import { generateRecursiveSchemaFile } from "../../src/schema-generator/file-generators.js";
+import {
+  generateRecursiveSchemaFile,
+  generateSchemaFile,
+} from "../../src/schema-generator/file-generators.js";
 import { createRecursiveContext } from "../../src/schema-generator/recursive-handlers.js";
 
 describe("file-generators - direct $ref recursive properties", () => {
@@ -171,5 +174,125 @@ describe("file-generators - direct $ref recursive properties", () => {
     /* Required property doesn't have .optional() */
     expect(result.content).toContain('"value": z.number()');
     expect(result.content).not.toContain('"value": z.number().optional()');
+  });
+});
+
+describe("file-generators - z.lazy() for non-object recursive schemas", () => {
+  it("should use z.lazy() for array schemas that self-reference", async () => {
+    const recursiveContext = createRecursiveContext();
+    recursiveContext.recursiveSchemas.add("requestTracerTrace");
+
+    /* Array schema where items contain a self-reference */
+    const traceSchema: SchemaObject = {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          trace: {
+            $ref: "#/components/schemas/requestTracerTrace",
+          },
+        },
+      },
+    };
+
+    const result = await generateSchemaFile(
+      "requestTracerTrace",
+      traceSchema,
+      undefined,
+      { recursiveContext },
+    );
+
+    /* Should wrap self-reference in z.lazy() */
+    expect(result.content).toContain("z.lazy(() => requestTracerTrace)");
+    /* Should add explicit z.ZodType annotation */
+    expect(result.content).toContain(
+      "export const requestTracerTrace: z.ZodType =",
+    );
+    /* Should still export the type alias */
+    expect(result.content).toContain(
+      "export type requestTracerTrace = z.infer<typeof requestTracerTrace>;",
+    );
+  });
+
+  it("should use z.lazy() for circular self-referencing schemas", async () => {
+    const recursiveContext = createRecursiveContext();
+    recursiveContext.recursiveSchemas.add("workersKvAny");
+
+    /* Schema that references itself */
+    const kvSchema: SchemaObject = {
+      anyOf: [
+        { type: "string" },
+        { type: "number" },
+        { type: "boolean" },
+        {
+          type: "array",
+          items: { $ref: "#/components/schemas/workersKvAny" },
+        },
+        {
+          type: "object",
+          additionalProperties: {
+            $ref: "#/components/schemas/workersKvAny",
+          },
+        },
+      ],
+    };
+
+    const result = await generateSchemaFile(
+      "workersKvAny",
+      kvSchema,
+      undefined,
+      {
+        recursiveContext,
+      },
+    );
+
+    /* Should wrap self-references in z.lazy() */
+    expect(result.content).toContain("z.lazy(() => workersKvAny)");
+    /* Should add explicit z.ZodType annotation */
+    expect(result.content).toContain("export const workersKvAny: z.ZodType =");
+  });
+
+  it("should NOT add z.ZodType annotation for non-recursive schemas", async () => {
+    const recursiveContext = createRecursiveContext();
+
+    const simpleSchema: SchemaObject = {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+      },
+    };
+
+    const result = await generateSchemaFile(
+      "SimpleSchema",
+      simpleSchema,
+      undefined,
+      { recursiveContext },
+    );
+
+    /* Should NOT have type annotation */
+    expect(result.content).toContain("export const SimpleSchema =");
+    expect(result.content).not.toContain(": z.ZodType");
+  });
+
+  it("should NOT add z.ZodType annotation for schemas in recursive set without direct self-reference", async () => {
+    const recursiveContext = createRecursiveContext();
+    // Mark IndirectNode as recursive (part of a cycle) but its code won't reference itself
+    recursiveContext.recursiveSchemas.add("IndirectNode");
+
+    const schema: SchemaObject = {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        related: { $ref: "#/components/schemas/OtherNode" },
+      },
+    };
+
+    const result = await generateSchemaFile("IndirectNode", schema, undefined, {
+      recursiveContext,
+    });
+
+    /* Should NOT have z.ZodType annotation since code doesn't reference IndirectNode */
+    expect(result.content).toContain("export const IndirectNode =");
+    expect(result.content).not.toContain(": z.ZodType");
   });
 });

@@ -277,12 +277,21 @@ export async function generateSchemaFile(
 
   const context = recursiveContext || createRecursiveContext();
 
+  /*
+   * For non-object recursive schemas that can't use the getter-based approach,
+   * enable z.lazy() wrapping so self-references don't cause TS7022/TS2448.
+   */
+  const isSelfRecursive = context.recursiveSchemas.has(name);
+  const effectiveContext = isSelfRecursive
+    ? { ...context, useLazyWrapping: true }
+    : context;
+
   const schemaResult = zodSchemaToCode(schema, {
     currentSchemaName: name,
     extraProps,
     formatOverrides: options.formatOverrides,
     isTopLevel: true,
-    recursiveContext: context,
+    recursiveContext: effectiveContext,
     resolvedSchemas,
     schemaContext,
   });
@@ -301,6 +310,7 @@ export async function generateSchemaFile(
     importsSection,
     schemaResult.code,
     schemaResult.extensibleEnumValues,
+    isSelfRecursive,
   );
 
   /* Generate complete variant schema files if this is a base schema (no schemaContext) */
@@ -345,6 +355,7 @@ function assembleFileContent(
   importsSection: string,
   schemaCode: string,
   extensibleEnumValues?: unknown[],
+  isRecursive?: boolean,
 ): string {
   if (extensibleEnumValues) {
     const enumValues = extensibleEnumValues
@@ -354,7 +365,18 @@ function assembleFileContent(
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
     return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
   } else {
-    const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
+    /*
+     * Only add the broad ZodType annotation when the generated schema code
+     * directly references its own exported identifier. Wider recursive graph
+     * membership alone should not discard the precise inferred schema type.
+     */
+    const directSelfReferencePattern = new RegExp(`\\b${name}\\b`);
+    const needsExplicitRecursiveAnnotation =
+      Boolean(isRecursive) && directSelfReferencePattern.test(schemaCode);
+    const typeAnnotation = needsExplicitRecursiveAnnotation
+      ? ": z.ZodType"
+      : "";
+    const schemaContent = `${commentSection}export const ${name}${typeAnnotation} = ${schemaCode};`;
     const typeContent = `export type ${name} = z.infer<typeof ${name}>;`;
     return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
   }
