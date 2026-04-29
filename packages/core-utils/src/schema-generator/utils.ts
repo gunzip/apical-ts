@@ -19,7 +19,7 @@ type EffectiveType =
  * Convert a value to its Zod literal code representation.
  * Returns `z.null()` for null, `z.unknown()` for non-primitive values
  * (arrays, objects), and properly serialised `z.literal(...)` for
- * strings, numbers, and booleans.
+ * strings, numbers, booleans, and bigints.
  */
 export function toLiteralCode(value: unknown): string {
   if (value === null) {
@@ -30,6 +30,9 @@ export function toLiteralCode(value: unknown): string {
   }
   if (typeof value === "string") {
     return `z.literal(${JSON.stringify(value)})`;
+  }
+  if (typeof value === "bigint") {
+    return `z.literal(${String(value)}n)`;
   }
   // number | boolean
   return `z.literal(${String(value)})`;
