@@ -28,6 +28,17 @@ export function renderSecurityHeaderHandling(
 ): string {
   if (operationSecurityHeaders.length === 0) return "";
 
+  /* Deduplicate by computed variable name to prevent TS2451 from colliding names */
+  const uniqueHeaders = new Map<string, SecurityHeader>();
+  for (const header of operationSecurityHeaders) {
+    const varName = toValidVariableName(header.headerName);
+    const existing = uniqueHeaders.get(varName);
+    if (!existing || (header.isRequired && !existing.isRequired)) {
+      uniqueHeaders.set(varName, header);
+    }
+  }
+  const deduplicatedHeaders = [...uniqueHeaders.values()];
+
   /* Helper to generate security header handling code */
   const generateHeaderCode = (header: SecurityHeader): string => {
     const varName = toValidVariableName(header.headerName);
@@ -46,7 +57,7 @@ export function renderSecurityHeaderHandling(
     }
   };
 
-  return operationSecurityHeaders.map(generateHeaderCode).join("\n    ");
+  return deduplicatedHeaders.map(generateHeaderCode).join("\n    ");
 }
 
 /**
