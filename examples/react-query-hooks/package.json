@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "generate:client": "node ../../apps/craft/dist/index.js generate --client -i https://petstore.swagger.io/v2/swagger.json -o generated",
+    "generate:client": "node ../../apps/craft/dist/index.js generate --client -i swagger.json -o generated",
     "generate:hooks": "tsx ./scripts/generate-hooks.ts",
     "generate": "pnpm run generate:client && pnpm run generate:hooks",
     "build": "tsgo -p tsconfig.json",
