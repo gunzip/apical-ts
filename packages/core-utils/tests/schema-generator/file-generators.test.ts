@@ -325,7 +325,7 @@ describe("schema-generator file-generators", () => {
   });
 
   describe("recursive type annotation", () => {
-    it("should add z.ZodType annotation when schema code directly self-references", async () => {
+    it("should generate an explicit recursive type alias for direct self-references", async () => {
       const schema: SchemaObject = {
         properties: {
           children: {
@@ -350,10 +350,15 @@ describe("schema-generator file-generators", () => {
         recursiveContext,
       });
 
-      expect(result.content).toContain("export const TreeNode: z.ZodType =");
+      expect(result.content).toContain(
+        'export type TreeNode = { "children"?: Array<TreeNode> };',
+      );
+      expect(result.content).toContain(
+        "export const TreeNode: z.ZodType<TreeNode> =",
+      );
     });
 
-    it("should NOT add z.ZodType annotation when schema is in recursive set but code does not self-reference", async () => {
+    it("should NOT add an explicit recursive type alias when schema is in recursive set but does not self-reference", async () => {
       const schema: SchemaObject = {
         properties: {
           name: { type: "string" },
@@ -380,7 +385,10 @@ describe("schema-generator file-generators", () => {
       );
 
       expect(result.content).toContain("export const IndirectNode =");
-      expect(result.content).not.toContain(": z.ZodType");
+      expect(result.content).not.toContain(": z.ZodType<");
+      expect(result.content).toContain(
+        "export type IndirectNode = z.infer<typeof IndirectNode>;",
+      );
     });
   });
 

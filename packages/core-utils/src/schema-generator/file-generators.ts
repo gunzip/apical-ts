@@ -303,6 +303,10 @@ export async function generateSchemaFile(
     path.join(schemaDirectory || ".", `${name}.ts`),
     options.formatOverrides,
   );
+  const recursiveTypeAlias =
+    isSelfRecursive && hasDirectSelfReference(schema, name)
+      ? renderSchemaType(schema)
+      : undefined;
 
   const content = assembleFileContent(
     name,
@@ -310,7 +314,7 @@ export async function generateSchemaFile(
     importsSection,
     schemaResult.code,
     schemaResult.extensibleEnumValues,
-    isSelfRecursive,
+    recursiveTypeAlias,
   );
 
   /* Generate complete variant schema files if this is a base schema (no schemaContext) */
@@ -355,7 +359,7 @@ function assembleFileContent(
   importsSection: string,
   schemaCode: string,
   extensibleEnumValues?: unknown[],
-  isRecursive?: boolean,
+  recursiveTypeAlias?: string,
 ): string {
   if (extensibleEnumValues) {
     const enumValues = extensibleEnumValues
@@ -365,20 +369,13 @@ function assembleFileContent(
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
     return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
   } else {
-    /*
-     * Only add the broad ZodType annotation when the generated schema code
-     * directly references its own exported identifier. Wider recursive graph
-     * membership alone should not discard the precise inferred schema type.
-     */
-    const directSelfReferencePattern = new RegExp(`\\b${name}\\b`);
-    const needsExplicitRecursiveAnnotation =
-      Boolean(isRecursive) && directSelfReferencePattern.test(schemaCode);
-    const typeAnnotation = needsExplicitRecursiveAnnotation
-      ? ": z.ZodType"
-      : "";
-    const schemaContent = `${commentSection}export const ${name}${typeAnnotation} = ${schemaCode};`;
-    const typeContent = `export type ${name} = z.infer<typeof ${name}>;`;
-    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
+    const schemaContent = recursiveTypeAlias
+      ? `${commentSection}export const ${name}: z.ZodType<${name}> = ${schemaCode};`
+      : `${commentSection}export const ${name} = ${schemaCode};`;
+    const typeContent = recursiveTypeAlias
+      ? `export type ${name} = ${recursiveTypeAlias};`
+      : `export type ${name} = z.infer<typeof ${name}>;`;
+    return `import * as z from 'zod';\n${importsSection}\n${typeContent}\n${schemaContent}`;
   }
 }
 
@@ -585,6 +582,128 @@ function getSchemaNameFromReference(ref: string): string | undefined {
   }
 
   return undefined;
+}
+
+function hasDirectSelfReference(
+  schema: SchemaObject,
+  schemaName: string,
+): boolean {
+  return findReferencesInSchema(schema).some(
+    (ref) => getSchemaNameFromReference(ref) === schemaName,
+  );
+}
+
+function renderSchemaType(schema: ReferenceObject | SchemaObject): string {
+  if (isReferenceObject(schema)) {
+    return getSchemaNameFromReference(schema.$ref) ?? "unknown";
+  }
+
+  if (schema.enum?.length) {
+    return schema.enum.map((value) => JSON.stringify(value)).join(" | ");
+  }
+
+  if ("const" in schema && schema.const !== undefined) {
+    return JSON.stringify(schema.const);
+  }
+
+  const compositionType = renderCompositionType(schema);
+  const baseType = compositionType ?? renderSimpleSchemaType(schema);
+  const isNullable = "nullable" in schema && schema.nullable === true;
+
+  return isNullable ? `${baseType} | null` : baseType;
+}
+
+function renderCompositionType(schema: SchemaObject): string | undefined {
+  if (schema.allOf?.length) {
+    return schema.allOf.map(renderSchemaType).join(" & ");
+  }
+
+  if (schema.anyOf?.length) {
+    return schema.anyOf.map(renderSchemaType).join(" | ");
+  }
+
+  if (schema.oneOf?.length) {
+    return schema.oneOf.map(renderSchemaType).join(" | ");
+  }
+
+  return undefined;
+}
+
+function renderSimpleSchemaType(schema: SchemaObject): string {
+  if (schema.type === "array" || schema.items) {
+    return `Array<${renderSchemaType(schema.items ?? {})}>`;
+  }
+
+  if (
+    schema.type === "object" ||
+    schema.properties ||
+    schema.additionalProperties !== undefined
+  ) {
+    return renderObjectSchemaType(schema);
+  }
+
+  if (Array.isArray(schema.type)) {
+    return schema.type.map(renderPrimitiveType).join(" | ");
+  }
+
+  if (schema.type) {
+    return renderPrimitiveType(schema.type);
+  }
+
+  return "unknown";
+}
+
+function renderObjectSchemaType(schema: SchemaObject): string {
+  const requiredProperties = new Set(schema.required ?? []);
+  const propertyEntries = Object.entries(schema.properties ?? {}).map(
+    ([propertyName, propertySchema]) =>
+      `${JSON.stringify(propertyName)}${requiredProperties.has(propertyName) ? "" : "?"}: ${renderSchemaType(propertySchema)}`,
+  );
+  const propertyType =
+    propertyEntries.length > 0 ? `{ ${propertyEntries.join("; ")} }` : "{}";
+  const additionalPropertiesType = renderAdditionalPropertiesType(
+    schema.additionalProperties,
+  );
+
+  if (!additionalPropertiesType) {
+    return propertyType;
+  }
+
+  return propertyEntries.length > 0
+    ? `${propertyType} & ${additionalPropertiesType}`
+    : additionalPropertiesType;
+}
+
+function renderAdditionalPropertiesType(
+  additionalProperties: SchemaObject["additionalProperties"],
+): string | undefined {
+  if (additionalProperties === undefined || additionalProperties === false) {
+    return undefined;
+  }
+
+  if (additionalProperties === true) {
+    return "{ [key: string]: unknown }";
+  }
+
+  return `{ [key: string]: ${renderSchemaType(additionalProperties)} }`;
+}
+
+function renderPrimitiveType(
+  type: Exclude<SchemaObject["type"], readonly string[] | undefined>,
+): string {
+  switch (type) {
+    case "boolean":
+      return "boolean";
+    case "integer":
+    case "number":
+      return "number";
+    case "null":
+      return "null";
+    case "string":
+      return "string";
+    default:
+      return "unknown";
+  }
 }
 
 // Export for testing
