@@ -4,6 +4,8 @@ import { toValidVariableName } from "../utils.js";
 
 /* Security code generation templates and rendering functions */
 
+const renderStringLiteral = (value: string): string => JSON.stringify(value);
+
 /**
  * Renders auth header validation code
  */
@@ -12,7 +14,7 @@ export function renderAuthHeaderValidation(authHeaders: string[]): string {
 
   const validationChecks = authHeaders.map((headerName) => {
     const varName = toValidVariableName(headerName);
-    return `if (!${varName}) throw new Error('Missing required auth header: ${headerName}');`;
+    return `if (!${varName}) throw new Error(${renderStringLiteral(`Missing required auth header: ${headerName}`)});`;
   });
 
   return validationChecks.join("\n  ");
@@ -56,18 +58,22 @@ export function renderSecurityHeaderHandling(
   /* Helper to generate security header handling code */
   const generateHeaderCode = (header: SecurityHeader): string => {
     const varName = getUniqueSecurityVariableName(header.headerName);
+    const headerNameLiteral = renderStringLiteral(header.headerName);
+    const missingHeaderMessageLiteral = renderStringLiteral(
+      `Missing required security header: ${header.headerName}`,
+    );
     const source = header.isOverride ? "params.headers" : "config.headers";
     const useOptionalChaining = !(header.isOverride && header.isRequired);
     const optionalChain = useOptionalChaining ? "?." : "";
-    const accessExpression = `${source}${optionalChain}['${header.headerName}']`;
+    const accessExpression = `${source}${optionalChain}[${headerNameLiteral}]`;
 
     if (header.isRequired) {
       return `const ${varName} = ${accessExpression};
-    if (${varName} === undefined) throw new Error('Missing required security header: ${header.headerName}');
-    finalHeaders['${header.headerName}'] = ${varName};`;
+    if (${varName} === undefined) throw new Error(${missingHeaderMessageLiteral});
+    finalHeaders[${headerNameLiteral}] = ${varName};`;
     } else {
       return `const ${varName} = ${accessExpression};
-    if (${varName} !== undefined) finalHeaders['${header.headerName}'] = ${varName};`;
+    if (${varName} !== undefined) finalHeaders[${headerNameLiteral}] = ${varName};`;
     }
   };
 
@@ -87,7 +93,7 @@ export function renderSecurityParameterExtraction(
     .filter((h) => !h.isOverride) // Only global security
     .map((header) => {
       const varName = toValidVariableName(header.headerName);
-      return `const ${varName} = config.headers?.['${header.headerName}'];`;
+      return `const ${varName} = config.headers?.[${renderStringLiteral(header.headerName)}];`;
     });
 
   return extractions.join("\n  ");
