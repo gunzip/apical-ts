@@ -30,6 +30,7 @@ import {
   inferEffectiveType,
   isNullable,
   mergeImports,
+  toLiteralCode,
 } from "./utils.js";
 
 /**
@@ -86,7 +87,7 @@ export function zodSchemaToCode(
 
   /* const values should be treated as literals */
   if (schema.const !== undefined) {
-    result.code = `z.literal(${typeof schema.const === "string" ? JSON.stringify(schema.const) : schema.const})`;
+    result.code = toLiteralCode(schema.const);
     return applyDesc(result);
   }
 

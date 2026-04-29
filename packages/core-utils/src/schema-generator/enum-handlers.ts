@@ -1,6 +1,6 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
 
-import { addDefaultValue } from "./utils.js";
+import { addDefaultValue, literalValuesEqual, toLiteralCode } from "./utils.js";
 
 /**
  * Result of handling extensible enum
@@ -50,15 +50,10 @@ export function handleRegularEnum(
   // Single enum value should be a literal
   if (enumValues.length === 1) {
     const value = enumValues[0];
-    const literal = asBigInt
-      ? `${value}n`
-      : typeof value === "string"
-        ? JSON.stringify(value)
-        : value;
-    const code = `z.literal(${literal})`;
+    const code = asBigInt ? `z.literal(${value}n)` : toLiteralCode(value);
     return addDefaultValue(
       code,
-      defaultValue === value ? defaultValue : undefined,
+      literalValuesEqual(defaultValue, value) ? defaultValue : undefined,
       asBigInt ? { bigint: true } : undefined,
     );
   }
@@ -73,19 +68,14 @@ export function handleRegularEnum(
   } else {
     // Use z.union of z.literal for mixed, non-string, or bigint enums
     const literals = enumValues.map((value) => {
-      const literal = asBigInt
-        ? `${value}n`
-        : typeof value === "string"
-          ? JSON.stringify(value)
-          : value;
-      return `z.literal(${literal})`;
+      return asBigInt ? `z.literal(${value}n)` : toLiteralCode(value);
     });
     code = `z.union([${literals.join(", ")}])`;
   }
 
   return addDefaultValue(
     code,
-    enumValues.includes(defaultValue) ? defaultValue : undefined,
+    enumValues.find((value) => literalValuesEqual(value, defaultValue)),
     asBigInt ? { bigint: true } : undefined,
   );
 }

@@ -690,6 +690,144 @@ describe("zodSchemaToCode", () => {
     expect(result.imports.has("Square")).toBe(true);
   });
 
+  it("should hoist nullable $ref members in discriminated unions", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "kind",
+      },
+      oneOf: [
+        { $ref: "#/components/schemas/Dog" },
+        { $ref: "#/components/schemas/Cat" },
+      ],
+    };
+    const result = zodSchemaToCode(schema, {
+      resolvedSchemas: {
+        Cat: {
+          properties: {
+            color: { type: "string" },
+            kind: { enum: ["cat"], type: "string" },
+          },
+          required: ["kind"],
+          type: ["object", "null"],
+        },
+        Dog: {
+          description: "A dog",
+          properties: {
+            bark: { type: "boolean" },
+            kind: { enum: ["dog"], type: "string" },
+          },
+          required: ["kind"],
+          type: ["object", "null"],
+        },
+      },
+    });
+
+    expect(result.code).toBe(
+      'z.discriminatedUnion("kind", [Dog.unwrap(), Cat.unwrap()]).nullable()',
+    );
+  });
+
+  it("should fall back to z.union when only some discriminated union members are nullable", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "type",
+      },
+      oneOf: [
+        { $ref: "#/components/schemas/NullableMember" },
+        { $ref: "#/components/schemas/NonNullableMember" },
+      ],
+    };
+    const result = zodSchemaToCode(schema, {
+      resolvedSchemas: {
+        NonNullableMember: {
+          properties: {
+            type: { enum: ["b"], type: "string" },
+          },
+          required: ["type"],
+          type: "object",
+        },
+        NullableMember: {
+          properties: {
+            type: { enum: ["a"], type: "string" },
+          },
+          required: ["type"],
+          type: ["object", "null"],
+        },
+      },
+    });
+
+    expect(result.code).toBe("z.union([NullableMember, NonNullableMember])");
+  });
+
+  it("should keep inline nullable discriminated union members with descriptions discriminable", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "type",
+      },
+      oneOf: [
+        {
+          description: "A circle shape",
+          properties: {
+            radius: { type: "number" },
+            type: { enum: ["circle"], type: "string" },
+          },
+          required: ["type", "radius"],
+          type: ["object", "null"],
+        },
+        {
+          description: "A square shape",
+          properties: {
+            size: { type: "number" },
+            type: { enum: ["square"], type: "string" },
+          },
+          required: ["type", "size"],
+          type: ["object", "null"],
+        },
+      ],
+    };
+    const result = zodSchemaToCode(schema);
+
+    expect(result.code).toContain('z.discriminatedUnion("type"');
+    expect(result.code).toContain(".nullable()");
+    expect(result.code).toContain('.describe("A circle shape")');
+    expect(result.code).toContain('.describe("A square shape")');
+    expect(result.code).not.toContain("z.union([");
+  });
+
+  it("should fall back to z.union for nullable $ref discriminated union members with defaults", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "kind",
+      },
+      oneOf: [
+        { $ref: "#/components/schemas/Dog" },
+        { $ref: "#/components/schemas/Cat" },
+      ],
+    };
+    const result = zodSchemaToCode(schema, {
+      resolvedSchemas: {
+        Cat: {
+          default: { kind: "cat" },
+          properties: {
+            kind: { enum: ["cat"], type: "string" },
+          },
+          required: ["kind"],
+          type: ["object", "null"],
+        },
+        Dog: {
+          default: { kind: "dog" },
+          properties: {
+            kind: { enum: ["dog"], type: "string" },
+          },
+          required: ["kind"],
+          type: ["object", "null"],
+        },
+      },
+    });
+
+    expect(result.code).toBe("z.union([Dog, Cat])");
+  });
+
   it("should use superRefine for oneOf when no discriminator is present", () => {
     const schema: SchemaObject = {
       oneOf: [{ type: "string" }, { type: "number" }],
@@ -930,6 +1068,137 @@ describe("zodSchemaToCode", () => {
     const zodSchema = evalZod(result.code);
     expect(zodSchema.safeParse("const-value").success).toBe(true);
     expect(zodSchema.safeParse("enum-value1").success).toBe(false);
+  });
+
+  it("should generate z.null() for const: null", () => {
+    const schema: SchemaObject = { const: null };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.null()");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(null).success).toBe(true);
+    expect(zodSchema.safeParse("hello").success).toBe(false);
+  });
+
+  it("should preserve exact array const values", () => {
+    const schema = {
+      const: [1, { enabled: true }, null],
+    } as unknown as SchemaObject;
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe(
+      'z.tuple([z.literal(1), z.strictObject({"enabled": z.literal(true)}), z.null()])',
+    );
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse([1, { enabled: true }, null]).success).toBe(
+      true,
+    );
+    expect(zodSchema.safeParse([1, { enabled: false }, null]).success).toBe(
+      false,
+    );
+    expect(zodSchema.safeParse([1, { enabled: true }]).success).toBe(false);
+  });
+
+  it("should preserve exact object const values", () => {
+    const schema = {
+      const: {
+        items: ["a", 2],
+        nested: { ok: false },
+      },
+    } as unknown as SchemaObject;
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe(
+      'z.strictObject({"items": z.tuple([z.literal("a"), z.literal(2)]), "nested": z.strictObject({"ok": z.literal(false)})})',
+    );
+
+    const zodSchema = evalZod(result.code);
+    expect(
+      zodSchema.safeParse({
+        items: ["a", 2],
+        nested: { ok: false },
+      }).success,
+    ).toBe(true);
+    expect(
+      zodSchema.safeParse({
+        extra: true,
+        items: ["a", 2],
+        nested: { ok: false },
+      }).success,
+    ).toBe(false);
+    expect(
+      zodSchema.safeParse({
+        items: ["a", 3],
+        nested: { ok: false },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("should generate z.literal(false) for const: false", () => {
+    const schema: SchemaObject = { const: false };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.literal(false)");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(false).success).toBe(true);
+    expect(zodSchema.safeParse(true).success).toBe(false);
+  });
+
+  it("should generate z.literal(0) for const: 0", () => {
+    const schema: SchemaObject = { const: 0 };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.literal(0)");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(0).success).toBe(true);
+    expect(zodSchema.safeParse(1).success).toBe(false);
+  });
+
+  it('should generate z.literal("") for const: empty string', () => {
+    const schema: SchemaObject = { const: "" };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe('z.literal("")');
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse("").success).toBe(true);
+    expect(zodSchema.safeParse("x").success).toBe(false);
+  });
+
+  it("should preserve non-primitive enum members without widening", () => {
+    const schema = {
+      enum: [[1, 2], { kind: "ok", meta: { version: 1 } }, "fallback"],
+    } as unknown as SchemaObject;
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe(
+      'z.union([z.tuple([z.literal(1), z.literal(2)]), z.strictObject({"kind": z.literal("ok"), "meta": z.strictObject({"version": z.literal(1)})}), z.literal("fallback")])',
+    );
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse([1, 2]).success).toBe(true);
+    expect(
+      zodSchema.safeParse({ kind: "ok", meta: { version: 1 } }).success,
+    ).toBe(true);
+    expect(zodSchema.safeParse("fallback").success).toBe(true);
+    expect(zodSchema.safeParse([1, 3]).success).toBe(false);
+    expect(zodSchema.safeParse({ kind: "ok" }).success).toBe(false);
+    expect(zodSchema.safeParse({ anything: "goes" }).success).toBe(false);
+  });
+
+  it("should match non-primitive enum defaults structurally", () => {
+    const schema = {
+      default: { mode: "safe", retries: [1, 2] },
+      enum: [
+        { mode: "safe", retries: [1, 2] },
+        { mode: "fast", retries: [] },
+      ],
+    } as unknown as SchemaObject;
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toContain('.default({"mode":"safe","retries":[1,2]})');
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.parse(undefined)).toEqual({
+      mode: "safe",
+      retries: [1, 2],
+    });
   });
 
   describe("additionalProperties handling", () => {
