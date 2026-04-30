@@ -50,10 +50,18 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
        */
       const client = createUnauthenticatedClient(baseURL);
 
+      void ({
+        body: {
+          // @ts-expect-error readOnly properties are excluded from request bodies
+          id: "test-id",
+          username: "testuser",
+          email: "test@example.com",
+        },
+      } satisfies Parameters<typeof client.createUserReadOnly>[0]);
+
       /* Act - call with only non-readOnly properties */
       const response = await client.createUserReadOnly({
         body: {
-          id: "test-id",
           username: "testuser",
           email: "test@example.com",
         },
@@ -120,10 +128,20 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
        */
       const client = createUnauthenticatedClient(baseURL);
 
+      void ({
+        body: {
+          // @ts-expect-error readOnly properties are excluded from request bodies
+          id: "test-id",
+          username: "testuser",
+          email: "test@example.com",
+          password: "secret123",
+          secretToken: "token-abc-123",
+        },
+      } satisfies Parameters<typeof client.createUserBoth>[0]);
+
       /* Act - call with only request-valid properties */
       const response = await client.createUserBoth({
         body: {
-          id: "test-id",
           username: "testuser",
           email: "test@example.com",
           password: "secret123",
@@ -139,10 +157,19 @@ describe("ReadOnly/WriteOnly Integration Tests", () => {
       /* Arrange */
       const client = createUnauthenticatedClient(baseURL);
 
+      void ({
+        body: {
+          // @ts-expect-error readOnly properties are excluded from request bodies
+          id: "test-id",
+          username: "updateduser",
+          email: "updated@example.com",
+          password: "newpassword123",
+        },
+      } satisfies Parameters<typeof client.updateUserBoth>[0]);
+
       /* Act */
       const response = await client.updateUserBoth({
         body: {
-          id: "test-id",
           username: "updateduser",
           email: "updated@example.com",
           password: "newpassword123",

@@ -1,7 +1,8 @@
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import {
-  extractAllOperations,
+  extractAllOperationGenerationMetadata,
+  type OperationGenerationMetadata,
   type OperationMetadata,
 } from "@apical-ts/core-utils/shared";
 import pLimit from "p-limit";
@@ -11,7 +12,7 @@ import {
   writeRouteMetadataFile,
   writeRoutesIndexFile,
 } from "./file-writer.js";
-import { generateRouteMetadata } from "./route-metadata-generator.js";
+import { generateRouteMetadataFromMetadata } from "./route-metadata-generator.js";
 
 /**
  * Generates route metadata for all operations
@@ -20,10 +21,16 @@ export async function generateRoutes(
   doc: OpenAPIObject,
   outputDir: string,
   concurrency: number,
+  operationMetadata = extractAllOperationGenerationMetadata(doc),
 ): Promise<void> {
   const routesDir = await createRoutesDirectory(outputDir);
 
-  const operations = await processRoutes(doc, routesDir, concurrency);
+  const operations = await processRoutes(
+    doc,
+    routesDir,
+    concurrency,
+    operationMetadata,
+  );
 
   await writeRoutesIndexFile(operations, routesDir);
 }
@@ -35,29 +42,20 @@ async function processRoutes(
   doc: OpenAPIObject,
   routesDir: string,
   concurrency: number,
+  operationMetadata: OperationGenerationMetadata[],
 ): Promise<OperationMetadata[]> {
-  const operations = extractAllOperations(doc);
   const limit = pLimit(concurrency);
   const operationPromises: Promise<void>[] = [];
 
-  for (const {
-    method,
-    operation,
-    operationId,
-    pathKey,
-    pathLevelParameters,
-  } of operations) {
+  for (const metadata of operationMetadata) {
     const promise = limit(async () => {
-      const { importManager, routeCode } = generateRouteMetadata(
-        pathKey,
-        method,
-        operation,
-        pathLevelParameters,
+      const { importManager, routeCode } = generateRouteMetadataFromMetadata(
+        metadata,
         doc,
       );
 
       await writeRouteMetadataFile(
-        operationId,
+        metadata.operationId,
         routeCode,
         importManager,
         routesDir,
@@ -67,7 +65,7 @@ async function processRoutes(
   }
 
   await Promise.all(operationPromises);
-  return operations;
+  return operationMetadata;
 }
 
 export {

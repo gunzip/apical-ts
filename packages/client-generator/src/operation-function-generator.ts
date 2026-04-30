@@ -5,16 +5,14 @@ import type {
   ReferenceObject,
 } from "openapi3-ts/oas31";
 
-import { ImportManager } from "@apical-ts/core-utils";
-import { sanitizeIdentifier } from "@apical-ts/core-utils";
-import { generateContentTypeMaps } from "@apical-ts/core-utils/shared";
-import { extractParameterGroups } from "@apical-ts/core-utils/shared";
+import { ImportManager, sanitizeIdentifier } from "@apical-ts/core-utils";
 import {
   extractAuthHeaders,
-  getOperationSecuritySchemes,
-  hasSecurityOverride,
+  extractOperationGenerationMetadata,
+  type OperationGenerationMetadata,
+  type ParameterGroups,
+  type SecurityHeader,
 } from "@apical-ts/core-utils/shared";
-import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
 import type { OperationMetadata } from "./templates/operation-templates.js";
@@ -36,6 +34,14 @@ interface GeneratedFunction {
   importManager: ImportManager;
 }
 
+interface BodyAndContentTypesConfig {
+  doc: OpenAPIObject;
+  functionName: string;
+  operation: OperationObject;
+  operationName: string;
+  sharedBodyInfo: OperationGenerationMetadata["bodyInfo"];
+}
+
 /**
  * extractOperationMetadata
  * Pure function that extracts and assembles all metadata needed for generating an operation function.
@@ -49,69 +55,128 @@ export function extractOperationMetadata(
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
   doc: OpenAPIObject,
 ): OperationMetadata {
-  assert(operation.operationId, "Operation ID is required");
-  const functionName: string = sanitizeIdentifier(operation.operationId);
-  const operationName =
-    functionName.charAt(0).toUpperCase() + functionName.slice(1);
+  const sharedMetadata = extractOperationGenerationMetadata({
+    doc,
+    method,
+    operation,
+    pathKey,
+    pathLevelParameters,
+  });
+
+  return createOperationMetadata(sharedMetadata, doc);
+}
+
+export function generateOperationFunctionFromMetadata(
+  sharedMetadata: OperationGenerationMetadata,
+  doc: OpenAPIObject,
+): GeneratedFunction {
+  const metadata = createOperationMetadata(sharedMetadata, doc);
+
+  /* Render using template functions */
+  const parameterDeclaration = buildParameterDeclaration({
+    destructuredParams: metadata.parameterStructures.destructuredParams,
+    paramsInterface: metadata.parameterStructures.paramsInterface,
+    shouldDefaultParams: metadata.shouldDefaultParams,
+  });
+
+  /* Compute generic parameters and adjust return type if response map present */
+  const { genericParams, updatedReturnType } = buildGenericParams({
+    contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+    initialReturnType: metadata.responseHandlers.returnType,
+    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
+    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+    shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
+    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
+  });
+
+  /* Emit request/response map type aliases (only when non-empty / applicable) */
+  const typeAliases = buildTypeAliasesFromRoute({
+    bodyTypeName: metadata.bodyInfo.bodyTypeInfo?.typeName ?? undefined,
+    contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+    hasBody: metadata.hasBody,
+    hasHeaderParams:
+      metadata.parameterGroups.headerParams.length > 0 ||
+      metadata.operationSecurityHeaders.length > 0,
+    hasPathParams: metadata.parameterGroups.pathParams.length > 0,
+    hasQueryParams: metadata.parameterGroups.queryParams.length > 0,
+    hasRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
+    hasResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
+    importManager: metadata.importManager,
+    isBodyOptional:
+      !metadata.hasBody || !metadata.bodyInfo.bodyTypeInfo?.isRequired,
+    isHeadersOptional: metadata.isHeadersOptional,
+    isQueryOptional: metadata.isQueryOptional,
+    operationId: sharedMetadata.operationId,
+    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
+    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+    shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
+    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
+  });
+
+  /* Render the complete function */
+  const functionStr = renderOperationFunction({
+    canOmitParams: metadata.shouldDefaultParams,
+    functionBodyCode: metadata.functionBodyCode,
+    functionName: metadata.functionName,
+    genericParams,
+    parameterDeclaration,
+    parameterInterface: metadata.parameterStructures.paramsInterface,
+    responseMapTypeName: metadata.bodyInfo.shouldGenerateResponseMap
+      ? metadata.bodyInfo.responseMapTypeName
+      : undefined,
+    summary: metadata.summary,
+    typeAliases,
+    updatedReturnType,
+  });
+
+  return {
+    functionCode: functionStr,
+    importManager: metadata.importManager,
+  };
+}
+
+function createOperationMetadata(
+  sharedMetadata: OperationGenerationMetadata,
+  doc: OpenAPIObject,
+): OperationMetadata {
+  const {
+    bodyInfo: sharedBodyInfo,
+    functionName,
+    method,
+    operation,
+    operationId,
+    operationName,
+    operationSecurityHeaders,
+    overridesSecurity,
+    parameterGroups,
+    parameterInfo,
+    pathKey,
+  } = sharedMetadata;
 
   const summary = operation.summary ? `/** ${operation.summary} */\n` : "";
   const importManager = new ImportManager();
-  // Create a temporary Set for legacy response functions
   const responseTypeImports = new Set<string>();
 
-  /* Extract parameters & security */
-  const parameterGroups = extractParameterGroups(
-    operation,
-    pathLevelParameters,
+  const bodyInfo = collectBodyAndContentTypes({
     doc,
-  );
-  const hasRequestBody = !!operation.requestBody;
-  const operationSecurityHeaders = getOperationSecuritySchemes(operation, doc);
-
-  /* Body & content type meta */
-  /* Collect body related type info + request/response content-type maps (if any) */
-  const bodyInfo = collectBodyAndContentTypes(
-    hasRequestBody,
-    operation,
     functionName,
-    importManager,
+    operation,
     operationName,
-    doc,
-  );
+    sharedBodyInfo,
+  });
+  const hasBody =
+    sharedBodyInfo.hasRequestBody && bodyInfo.requestContentTypes.length > 0;
 
-  /* Refine: body is only present when request body has actual content types */
-  const hasBody = hasRequestBody && bodyInfo.requestContentTypes.length > 0;
-
-  /* Build parameter shapes */
-  /* Build the "first parameter" surface: destructured runtime parameter object + its TS interface */
   const parameterStructures = buildParameterStructures(
     parameterGroups,
     hasBody,
     bodyInfo.bodyTypeInfo,
     operationSecurityHeaders,
     bodyInfo.shouldGenerateRequestMap,
-    bodyInfo.shouldGenerateResponseMap, // This controls generic params, keep as false for unknown mode
+    bodyInfo.shouldGenerateResponseMap,
     bodyInfo.requestMapTypeName,
     bodyInfo.responseMapTypeName,
-    operation.operationId,
-  );
-
-  /*
-   * Calculate if headers are optional for TypeScript types
-   * Headers are optional only if ALL explicit header params AND security headers are optional.
-   * If any header is required, the headers object must be provided in params OR config.
-   * Runtime code merges from both sources, but types enforce presence.
-   */
-  const hasRequiredSecurityHeader = operationSecurityHeaders.some(
-    (sh) => sh.isRequired,
-  );
-  const isHeadersOptional =
-    parameterGroups.headerParams.every((p) => p.required !== true) &&
-    !hasRequiredSecurityHeader;
-
-  /* Calculate if query is optional */
-  const isQueryOptional = parameterGroups.queryParams.every(
-    (p) => p.required !== true,
+    operationId,
   );
 
   const hasSurfaceParams =
@@ -125,19 +190,13 @@ export function extractOperationMetadata(
   const shouldDefaultParams =
     hasSurfaceParams &&
     parameterGroups.pathParams.length === 0 &&
-    isQueryOptional &&
-    isHeadersOptional &&
+    parameterInfo.isQueryOptional &&
+    parameterInfo.isHeadersOptional &&
     !isBodyRequired;
 
-  /* Parameter schemas removed: parameters are available through clientRoute.params from routes */
-
-  /* Responses & union return type */
-  /* Build response handlers + discriminated union return type (ApiResponse<code, data>) */
-  /* Pass camelCase runtime value name for response map access */
   const responseMapRuntimeName = bodyInfo.shouldExportResponseMap
-    ? sanitizeIdentifier(operation.operationId) + "ResponseMap"
+    ? `${functionName}ResponseMap`
     : undefined;
-
   const responseHandlers = generateResponseHandlers(
     operation,
     responseTypeImports,
@@ -146,13 +205,7 @@ export function extractOperationMetadata(
     doc,
   );
 
-  // Schema imports removed: schemas are available through route imports
-
-  /* Security overrides/auth headers */
-  const overridesSecurity = hasSecurityOverride(operation);
   const authHeaders = extractAuthHeaders(doc);
-
-  /* Generate default response handler if there is a default response */
   const defaultResponseHandler = responseHandlers.defaultResponseInfo
     ? renderDefaultResponseHandler(
         responseHandlers.defaultResponseInfo,
@@ -162,8 +215,6 @@ export function extractOperationMetadata(
       )
     : undefined;
 
-  /* Function internal body code */
-  /* Assemble the inner imperative body (headers, fetch call, switch over request content-type, parsing) */
   const functionBodyCode = generateFunctionBody({
     authHeaders,
     contentTypeMaps: bodyInfo.contentTypeMaps,
@@ -187,8 +238,8 @@ export function extractOperationMetadata(
     functionName,
     hasBody,
     importManager,
-    isHeadersOptional,
-    isQueryOptional,
+    isHeadersOptional: parameterInfo.isHeadersOptional,
+    isQueryOptional: parameterInfo.isQueryOptional,
     operationName,
     operationSecurityHeaders,
     overridesSecurity,
@@ -228,76 +279,15 @@ export function generateOperationFunction(
     );
   }
 
-  /* Extract all metadata using pure logic function */
-  const metadata = extractOperationMetadata(
-    pathKey,
+  const sharedMetadata = extractOperationGenerationMetadata({
+    doc,
     method,
     operation,
+    pathKey,
     pathLevelParameters,
-    doc,
-  );
-
-  /* Render using template functions */
-  const parameterDeclaration = buildParameterDeclaration({
-    destructuredParams: metadata.parameterStructures.destructuredParams,
-    paramsInterface: metadata.parameterStructures.paramsInterface,
-    shouldDefaultParams: metadata.shouldDefaultParams,
   });
 
-  /* Compute generic parameters and adjust return type if response map present */
-  const { genericParams, updatedReturnType } = buildGenericParams({
-    contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
-    initialReturnType: metadata.responseHandlers.returnType,
-    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
-    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
-    shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
-    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
-  });
-
-  /* Emit request/response map type aliases (only when non-empty / applicable) */
-  const typeAliases = buildTypeAliasesFromRoute({
-    bodyTypeName: metadata.bodyInfo.bodyTypeInfo?.typeName ?? undefined,
-    contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
-    hasBody: metadata.hasBody,
-    hasHeaderParams:
-      metadata.parameterGroups.headerParams.length > 0 ||
-      metadata.operationSecurityHeaders.length > 0,
-    hasPathParams: metadata.parameterGroups.pathParams.length > 0,
-    hasQueryParams: metadata.parameterGroups.queryParams.length > 0,
-    hasRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
-    hasResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
-    importManager: metadata.importManager,
-    isBodyOptional:
-      !metadata.hasBody || !metadata.bodyInfo.bodyTypeInfo?.isRequired,
-    isHeadersOptional: metadata.isHeadersOptional,
-    isQueryOptional: metadata.isQueryOptional,
-    operationId: operation.operationId,
-    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
-    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
-    shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
-    shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
-  });
-
-  /* Render the complete function */
-  const functionStr = renderOperationFunction({
-    canOmitParams: metadata.shouldDefaultParams,
-    functionBodyCode: metadata.functionBodyCode,
-    functionName: metadata.functionName,
-    genericParams,
-    parameterDeclaration,
-    parameterInterface: metadata.parameterStructures.paramsInterface,
-    responseMapTypeName: metadata.bodyInfo.shouldGenerateResponseMap
-      ? metadata.bodyInfo.responseMapTypeName
-      : undefined,
-    summary: metadata.summary,
-    typeAliases,
-    updatedReturnType,
-  });
-
-  return {
-    functionCode: functionStr,
-    importManager: metadata.importManager,
-  };
+  return generateOperationFunctionFromMetadata(sharedMetadata, doc);
 }
 
 /* ---------------- Helper extraction functions (kept local to module) ---------------- */
@@ -308,10 +298,10 @@ export function generateOperationFunction(
  * The interface type name is derived from the operation ID and matches the type alias generated in routes.
  */
 function buildParameterStructures(
-  parameterGroups: ReturnType<typeof extractParameterGroups>,
+  parameterGroups: ParameterGroups,
   hasBody: boolean,
   bodyTypeInfo: ReturnType<typeof resolveRequestBodyType> | undefined,
-  operationSecurityHeaders: ReturnType<typeof getOperationSecuritySchemes>,
+  operationSecurityHeaders: SecurityHeader[],
   shouldGenerateRequestMap: boolean,
   shouldGenerateResponseMap: boolean,
   requestMapTypeName: string,
@@ -362,78 +352,38 @@ function buildParameterStructures(
  * shouldGenerateResponseMap: true when response map has entries (non-empty {}).
  * Returns an object with everything needed downstream (maps, defaults, flags, imports augmented).
  */
-function collectBodyAndContentTypes(
-  hasBody: boolean,
-  operation: OperationObject,
-  functionName: string,
-  importManager: ImportManager,
-  operationName: string,
-  doc: OpenAPIObject,
-) {
+function collectBodyAndContentTypes({
+  doc,
+  functionName,
+  operation,
+  operationName,
+  sharedBodyInfo,
+}: BodyAndContentTypesConfig) {
   let bodyTypeInfo: ReturnType<typeof resolveRequestBodyType> | undefined;
   let requestContentType: string | undefined;
 
   if (
-    hasBody &&
+    sharedBodyInfo.hasRequestBody &&
     operation.requestBody &&
     !isReferenceObject(operation.requestBody)
   ) {
-    const requestBody = operation.requestBody;
     bodyTypeInfo = resolveRequestBodyType(
-      requestBody,
+      operation.requestBody,
       functionName,
       doc.components?.schemas,
     );
     requestContentType = bodyTypeInfo.contentType;
-    /* Schema imports removed: available through route imports */
   }
-
-  const requestMapTypeName = `${operationName}RequestMap`;
-  const responseMapTypeName = `${operationName}ResponseMap`;
-
-  const contentTypeMaps = generateContentTypeMaps(operation, doc);
-  /* Schema imports removed: available through route imports */
-
-  let requestContentTypes: string[] = [];
-  if (
-    hasBody &&
-    operation.requestBody &&
-    !isReferenceObject(operation.requestBody)
-  ) {
-    const requestBody = operation.requestBody;
-    if (requestBody.content) {
-      requestContentTypes = Object.keys(requestBody.content);
-    }
-  }
-
-  // Request map only meaningful when there is a body and at least one content-type mapping generated.
-  const shouldGenerateRequestMap =
-    hasBody &&
-    !!contentTypeMaps.requestMapType &&
-    contentTypeMaps.requestMapType !== "{}";
-  // A response map of '{}' means the operation has no concrete response content-type mappings.
-  // In that case we must NOT generate response content-type generics or attempt indexed lookup.
-  // (Previously this produced: TResponseContentType extends keyof {} = "application/json" -> error)
-  // Generate response map generics when we actually have concrete mappings.
-  // We still operate in "unknown" validation mode (parsing occurs lazily or via parse())
-  // but we need the ability to negotiate content types via Accept header for integration tests
-  // (e.g., multi-content-types selecting vendor or xml responses).
-  const shouldGenerateResponseMap = !!(
-    contentTypeMaps.responseMapType && contentTypeMaps.responseMapType !== "{}"
-  );
-  const shouldExportResponseMap =
-    !!contentTypeMaps.responseMapType &&
-    contentTypeMaps.responseMapType !== "{}";
 
   return {
     bodyTypeInfo,
-    contentTypeMaps,
+    contentTypeMaps: sharedBodyInfo.contentTypeMaps,
     requestContentType,
-    requestContentTypes,
-    requestMapTypeName,
-    responseMapTypeName,
-    shouldExportResponseMap,
-    shouldGenerateRequestMap,
-    shouldGenerateResponseMap,
+    requestContentTypes: sharedBodyInfo.requestContentTypes,
+    requestMapTypeName: `${operationName}RequestMap`,
+    responseMapTypeName: `${operationName}ResponseMap`,
+    shouldExportResponseMap: sharedBodyInfo.shouldGenerateResponseMap,
+    shouldGenerateRequestMap: sharedBodyInfo.shouldGenerateRequestMap,
+    shouldGenerateResponseMap: sharedBodyInfo.shouldGenerateResponseMap,
   };
 }
