@@ -18,9 +18,85 @@ import {
 export async function parseOpenAPI(
   filePathOrUrl: string,
 ): Promise<OpenAPIObject> {
-  const fileContent = await fetchContent(filePathOrUrl);
-  const extension = getFileExtension(filePathOrUrl);
+  const parsed = await parseOpenAPIDocument(filePathOrUrl);
+  return await convertParsedOpenAPI(parsed);
+}
 
+export async function parseOpenAPIDocument(
+  filePathOrUrl: string,
+): Promise<unknown> {
+  const fileContent = await fetchContent(filePathOrUrl);
+  return parseOpenAPIContent(fileContent, filePathOrUrl);
+}
+
+export async function convertParsedOpenAPI(
+  parsed: unknown,
+): Promise<OpenAPIObject> {
+  if (isOpenAPI20(parsed)) {
+    console.log(
+      "🔄 Detected OpenAPI 2.0 (Swagger) specification, converting to 3.1.0...",
+    );
+    const converted = await convertToOpenAPI31(parsed);
+    console.log("✅ Successfully converted from OpenAPI 2.0 to 3.1.0");
+    return converted;
+  }
+
+  if (isOpenAPI30(parsed)) {
+    console.log(
+      "🔄 Detected OpenAPI 3.0.x specification, converting to 3.1.0...",
+    );
+    const converted = convertOpenAPI30to31(parsed);
+    console.log("✅ Successfully converted to OpenAPI 3.1.0");
+    return converted;
+  }
+
+  if (isOpenAPI31(parsed)) {
+    console.log(
+      "✅ OpenAPI 3.1.x specification detected, no conversion needed",
+    );
+    return parsed;
+  }
+
+  console.warn("⚠️ Unknown OpenAPI version, proceeding without conversion");
+  return parsed as OpenAPIObject;
+}
+
+export function hasExternalRefPointers(document: unknown): boolean {
+  const stack: unknown[] = [document];
+  const visited = new Set<object>();
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || typeof current !== "object") {
+      continue;
+    }
+    if (visited.has(current)) {
+      continue;
+    }
+
+    visited.add(current);
+
+    if (Array.isArray(current)) {
+      stack.push(...current);
+      continue;
+    }
+
+    const ref = Reflect.get(current, "$ref");
+    if (typeof ref === "string" && isExternalRefPointer(ref)) {
+      return true;
+    }
+
+    stack.push(...Object.values(current));
+  }
+
+  return false;
+}
+
+function parseOpenAPIContent(
+  fileContent: string,
+  filePathOrUrl: string,
+): unknown {
+  const extension = getFileExtension(filePathOrUrl);
   let parsed: unknown;
 
   if (extension === "yaml" || extension === "yml") {
@@ -46,28 +122,11 @@ export async function parseOpenAPI(
     }
   }
 
-  // Automatically convert to OpenAPI 3.1 regardless of input version
-  if (isOpenAPI20(parsed)) {
-    console.log(
-      "🔄 Detected OpenAPI 2.0 (Swagger) specification, converting to 3.1.0...",
-    );
-    parsed = await convertToOpenAPI31(parsed);
-    console.log("✅ Successfully converted from OpenAPI 2.0 to 3.1.0");
-  } else if (isOpenAPI30(parsed)) {
-    console.log(
-      "🔄 Detected OpenAPI 3.0.x specification, converting to 3.1.0...",
-    );
-    parsed = convertOpenAPI30to31(parsed);
-    console.log("✅ Successfully converted to OpenAPI 3.1.0");
-  } else if (isOpenAPI31(parsed)) {
-    console.log(
-      "✅ OpenAPI 3.1.x specification detected, no conversion needed",
-    );
-  } else {
-    console.warn("⚠️ Unknown OpenAPI version, proceeding without conversion");
-  }
+  return parsed;
+}
 
-  return parsed as OpenAPIObject;
+function isExternalRefPointer(ref: string): boolean {
+  return ref !== "" && !ref.startsWith("#");
 }
 
 /**

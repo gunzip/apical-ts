@@ -22,12 +22,20 @@ import type { ResolvedSchemas } from "../schema-generator/types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import type { ExtraPropsMode } from "../shared/types.js";
 import { isPlainSchemaObject } from "./openapi-utils.js";
-import { extractOperationParameters } from "./parameter-extractor.js";
+import {
+  extractOperationParameters,
+  type OperationParameterMetadata,
+} from "./parameter-extractor.js";
 import {
   extractRequestSchemas,
   extractResponseSchemas,
 } from "./schema-extractor.js";
-import { generateSchemaIndex } from "./schema-index-generator.js";
+import {
+  buildParameterSchemaIndexEntry,
+  buildSchemaFileIndexEntry,
+  generateSchemaIndex,
+  type SchemaIndexEntry,
+} from "./schema-index-generator.js";
 
 /**
  * Options for component schema promise creation
@@ -54,7 +62,13 @@ interface SchemaGenerationContext {
 type SchemaGeneratorFunction<T = SchemaObject> = (
   name: string,
   schema: T,
-) => Promise<{ content: string; fileName: string }>;
+) => Promise<GeneratedSchemaFile>;
+
+interface GeneratedSchemaFile {
+  content: string;
+  fileName: string;
+  variantFiles?: GeneratedSchemaFile[];
+}
 
 /**
  * Generates all schemas (component, request, response, and parameter schemas)
@@ -82,8 +96,14 @@ export async function generateSchemas(
     schemasDir,
   };
 
+  if (profiler) {
+    profiler.start("schemas:parameter-metadata");
+  }
+  const operationParameters = extractOperationParameters(openApiDoc);
+  profiler?.end("schemas:parameter-metadata");
+
   if (!profiler) {
-    const schemaGenerationPromises: Promise<void>[] = [
+    const schemaGenerationPromises: Promise<SchemaIndexEntry[]>[] = [
       // Generate schemas from components/schemas
       ...generateComponentSchemas(context),
       // Generate request schemas from operations
@@ -111,59 +131,75 @@ export async function generateSchemas(
           }),
       ),
       // Generate parameter schemas from operations
-      ...generateParameterSchemas(openApiDoc, context),
+      ...generateParameterSchemas(operationParameters, context),
     ];
 
-    await Promise.all(schemaGenerationPromises);
-
-    /* Generate the schema index barrel file */
-    const operationParameters = extractOperationParameters(openApiDoc);
-    await generateSchemaIndex(context.schemasDir, operationParameters);
+    const schemaIndexEntries = (
+      await Promise.all(schemaGenerationPromises)
+    ).flat();
+    await generateSchemaIndex(context.schemasDir, schemaIndexEntries);
   } else {
+    const schemaIndexEntries: SchemaIndexEntry[] = [];
+
     // Profiled path: run phases sequentially to get isolated timings
     profiler.start("schemas:components");
-    await Promise.all(generateComponentSchemas(context));
+    schemaIndexEntries.push(
+      ...(await Promise.all(generateComponentSchemas(context))).flat(),
+    );
     profiler.end("schemas:components");
 
     profiler.start("schemas:requests");
-    await Promise.all(
-      createSchemaGenerationPromises(
-        extractRequestSchemas(openApiDoc),
-        context,
-        (name, schema) =>
-          generateRequestSchemaFile(name, schema, {
-            extraProps: context.extraProps,
-            formatOverrides: context.formatOverrides,
-            resolvedSchemas: context.resolvedSchemas,
-            schemaDirectory: context.schemasDir,
-          }),
-      ),
+    schemaIndexEntries.push(
+      ...(
+        await Promise.all(
+          createSchemaGenerationPromises(
+            extractRequestSchemas(openApiDoc),
+            context,
+            (name, schema) =>
+              generateRequestSchemaFile(name, schema, {
+                extraProps: context.extraProps,
+                formatOverrides: context.formatOverrides,
+                resolvedSchemas: context.resolvedSchemas,
+                schemaDirectory: context.schemasDir,
+              }),
+          ),
+        )
+      ).flat(),
     );
     profiler.end("schemas:requests");
 
     profiler.start("schemas:responses");
-    await Promise.all(
-      createSchemaGenerationPromises(
-        extractResponseSchemas(openApiDoc),
-        context,
-        (name, schema) =>
-          generateResponseSchemaFile(name, schema, {
-            extraProps: context.extraProps,
-            formatOverrides: context.formatOverrides,
-            resolvedSchemas: context.resolvedSchemas,
-            schemaDirectory: context.schemasDir,
-          }),
-      ),
+    schemaIndexEntries.push(
+      ...(
+        await Promise.all(
+          createSchemaGenerationPromises(
+            extractResponseSchemas(openApiDoc),
+            context,
+            (name, schema) =>
+              generateResponseSchemaFile(name, schema, {
+                extraProps: context.extraProps,
+                formatOverrides: context.formatOverrides,
+                resolvedSchemas: context.resolvedSchemas,
+                schemaDirectory: context.schemasDir,
+              }),
+          ),
+        )
+      ).flat(),
     );
     profiler.end("schemas:responses");
 
     profiler.start("schemas:parameters");
-    await Promise.all(generateParameterSchemas(openApiDoc, context));
+    schemaIndexEntries.push(
+      ...(
+        await Promise.all(
+          generateParameterSchemas(operationParameters, context),
+        )
+      ).flat(),
+    );
     profiler.end("schemas:parameters");
 
     profiler.start("schemas:index");
-    const operationParameters = extractOperationParameters(openApiDoc);
-    await generateSchemaIndex(context.schemasDir, operationParameters);
+    await generateSchemaIndex(context.schemasDir, schemaIndexEntries);
     profiler.end("schemas:index");
   }
   /* eslint-disable-next-line no-console */
@@ -175,7 +211,7 @@ export async function generateSchemas(
  */
 function createComponentSchemaPromise(
   options: ComponentSchemaOptions,
-): Promise<void> {
+): Promise<SchemaIndexEntry[]> {
   const {
     context,
     description,
@@ -224,6 +260,8 @@ function createComponentSchemaPromise(
         await fs.writeFile(variantPath, variantFile.content);
       }
     }
+
+    return buildSchemaIndexEntries(schemaFile);
   });
 }
 
@@ -234,17 +272,17 @@ function createSchemaGenerationPromises<T = SchemaObject>(
   schemaMap: Map<string, T>,
   context: SchemaGenerationContext,
   generatorFn: SchemaGeneratorFunction<T>,
-): Promise<void>[] {
-  const promises: Promise<void>[] = [];
+): Promise<SchemaIndexEntry[]>[] {
+  const promises: Promise<SchemaIndexEntry[]>[] = [];
 
   for (const [name, schema] of schemaMap) {
     // Generate schema (used by both client and server)
-    const promise = context.limit(() =>
-      generatorFn(name, schema).then((schemaFile) => {
-        const filePath = path.join(context.schemasDir, schemaFile.fileName);
-        return fs.writeFile(filePath, schemaFile.content);
-      }),
-    );
+    const promise = context.limit(async () => {
+      const schemaFile = await generatorFn(name, schema);
+      const filePath = path.join(context.schemasDir, schemaFile.fileName);
+      await fs.writeFile(filePath, schemaFile.content);
+      return [buildSchemaFileIndexEntry(schemaFile.fileName)];
+    });
     promises.push(promise);
   }
 
@@ -256,8 +294,8 @@ function createSchemaGenerationPromises<T = SchemaObject>(
  */
 function generateComponentSchemas(
   context: SchemaGenerationContext,
-): Promise<void>[] {
-  const promises: Promise<void>[] = [];
+): Promise<SchemaIndexEntry[]>[] {
+  const promises: Promise<SchemaIndexEntry[]>[] = [];
 
   if (!context.openApiDoc.components?.schemas) {
     return promises;
@@ -298,8 +336,10 @@ function generateComponentSchemas(
       const sanitizedName = sanitizeIdentifier(name);
       const promise = context.limit(async () => {
         const content = generateFallbackSchemaContent(sanitizedName, schema);
-        const filePath = path.join(context.schemasDir, `${sanitizedName}.ts`);
+        const fileName = `${sanitizedName}.ts`;
+        const filePath = path.join(context.schemasDir, fileName);
         await fs.writeFile(filePath, content);
+        return [buildSchemaFileIndexEntry(fileName)];
       });
       promises.push(promise);
       continue;
@@ -328,18 +368,15 @@ function generateComponentSchemas(
  * Generates parameter schemas for all operations
  */
 function generateParameterSchemas(
-  openApiDoc: OpenAPIObject,
+  operationParameters: readonly OperationParameterMetadata[],
   context: SchemaGenerationContext,
-): Promise<void>[] {
-  const promises: Promise<void>[] = [];
-
-  /* Extract all operation parameters */
-  const operationParameters = extractOperationParameters(openApiDoc);
+): Promise<SchemaIndexEntry[]>[] {
+  const promises: Promise<SchemaIndexEntry[]>[] = [];
 
   /* Generate parameter schema files for each operation */
   for (const parameterMetadata of operationParameters) {
-    const promise = context.limit(() =>
-      writeParameterSchemaFile(
+    const promise = context.limit(async () => {
+      await writeParameterSchemaFile(
         context.schemasDir,
         parameterMetadata.operationId,
         parameterMetadata,
@@ -349,12 +386,27 @@ function generateParameterSchemas(
           formatOverrides: context.formatOverrides,
           lowercaseHeaderKeys: false,
         },
-      ),
-    );
+      );
+      return [buildParameterSchemaIndexEntry(parameterMetadata)];
+    });
     promises.push(promise);
   }
 
   return promises;
+}
+
+function buildSchemaIndexEntries(
+  schemaFile: GeneratedSchemaFile,
+): SchemaIndexEntry[] {
+  const entries = [buildSchemaFileIndexEntry(schemaFile.fileName)];
+
+  if (schemaFile.variantFiles) {
+    for (const variantFile of schemaFile.variantFiles) {
+      entries.push(...buildSchemaIndexEntries(variantFile));
+    }
+  }
+
+  return entries;
 }
 
 /* Generates a minimal fallback file for schemas that are not plain OpenAPI objects */
