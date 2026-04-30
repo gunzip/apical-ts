@@ -5,97 +5,96 @@ import type { OperationParameterMetadata } from "../core-generator/parameter-ext
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 
-/**
- * Generates the schema index barrel file that exports all schemas including parameter schemas
- */
-export async function generateSchemaIndex(
-  schemasDir: string,
-  operationParameters: OperationParameterMetadata[],
-): Promise<void> {
-  /* Read all .ts files in schemas directory */
-  const files = await fs.readdir(schemasDir);
-  const schemaFiles = files.filter(
-    (file) => file.endsWith(".ts") && file !== "index.ts",
-  );
+export interface SchemaIndexEntry {
+  exportNames: string[];
+  fileName: string;
+}
 
+export function buildSchemaFileIndexEntry(fileName: string): SchemaIndexEntry {
+  return {
+    exportNames: [path.basename(fileName, ".ts")],
+    fileName,
+  };
+}
+
+export function buildParameterSchemaIndexEntry(
+  parameterMetadata: OperationParameterMetadata,
+): SchemaIndexEntry {
+  const sanitizedId = sanitizeIdentifier(parameterMetadata.operationId);
+  const exportNames: string[] = [];
+
+  if (parameterMetadata.parameterGroups.queryParams.length > 0) {
+    exportNames.push(`${sanitizedId}QuerySchema`);
+  }
+  if (parameterMetadata.parameterGroups.pathParams.length > 0) {
+    exportNames.push(`${sanitizedId}PathSchema`);
+  }
+
+  const hasHeaders =
+    parameterMetadata.parameterGroups.headerParams.length > 0 ||
+    (parameterMetadata.securityHeaders?.length ?? 0) > 0;
+  if (hasHeaders) {
+    exportNames.push(`${sanitizedId}HeadersSchema`);
+  }
+
+  return {
+    exportNames,
+    fileName: `${sanitizedId}Parameters.ts`,
+  };
+}
+
+export function buildSchemaIndexContent(
+  entries: readonly SchemaIndexEntry[],
+): string {
   const imports: string[] = [];
-  const exports: string[] = [];
+  const exports = new Set<string>();
 
-  /* Add imports and exports for regular schema files */
-  for (const file of schemaFiles) {
-    const baseName = path.basename(file, ".ts");
+  const sortedEntries = [...entries]
+    .filter((entry) => entry.exportNames.length > 0)
+    .sort((left, right) => left.fileName.localeCompare(right.fileName));
 
-    /* Skip parameter files - they will be handled separately */
-    if (file.includes("Parameters.ts")) {
-      continue;
-    }
+  for (const entry of sortedEntries) {
+    imports.push(...buildImportLines(entry));
 
-    imports.push(`import { ${baseName} } from "./${baseName}.js";`);
-    exports.push(baseName);
-  }
-
-  /* Add imports and exports for parameter schemas */
-  for (const parameterMetadata of operationParameters) {
-    const sanitizedId = sanitizeIdentifier(parameterMetadata.operationId);
-    const parameterFileName = `${sanitizedId}Parameters`;
-
-    /* Check if the parameter file exists */
-    const parameterFilePath = path.join(schemasDir, `${parameterFileName}.ts`);
-    try {
-      await fs.access(parameterFilePath);
-
-      /* Read the parameter file to check which schemas actually exist */
-      const parameterFileContent = await fs.readFile(
-        parameterFilePath,
-        "utf-8",
-      );
-
-      /* Collect available schema exports from the file */
-      const availableExports: string[] = [];
-
-      /* Check for both client and server schema exports */
-      const querySchemaName = `${sanitizedId}QuerySchema`;
-      const pathSchemaName = `${sanitizedId}PathSchema`;
-      const headersSchemaName = `${sanitizedId}HeadersSchema`;
-
-      if (parameterFileContent.includes(`export { ${querySchemaName} }`)) {
-        availableExports.push(querySchemaName);
-      }
-      if (parameterFileContent.includes(`export { ${pathSchemaName} }`)) {
-        availableExports.push(pathSchemaName);
-      }
-      if (parameterFileContent.includes(`export { ${headersSchemaName} }`)) {
-        availableExports.push(headersSchemaName);
-      }
-
-      /* Only add imports if there are any exports */
-      if (availableExports.length > 0) {
-        imports.push(`import {`);
-        imports.push(...availableExports.map((exp) => `  ${exp},`));
-        imports.push(`} from "./${parameterFileName}.js";`);
-
-        /* Add to exports */
-        exports.push(...availableExports);
-      }
-    } catch {
-      /* Parameter file doesn't exist - skip */
+    for (const exportName of entry.exportNames) {
+      exports.add(exportName);
     }
   }
 
-  /* Sort exports for consistency */
-  exports.sort();
+  const sortedExports = [...exports].sort();
 
-  /* Generate the index file content */
-  const content = [
+  return [
     ...imports,
     "",
     "export {",
-    ...exports.map((exp) => `  ${exp},`),
+    ...sortedExports.map((exportName) => `  ${exportName},`),
     "};",
     "",
   ].join("\n");
+}
 
-  /* Write the index file */
+export async function generateSchemaIndex(
+  schemasDir: string,
+  entries: readonly SchemaIndexEntry[],
+): Promise<void> {
+  const content = buildSchemaIndexContent(entries);
   const indexPath = path.join(schemasDir, "index.ts");
   await fs.writeFile(indexPath, content, "utf-8");
+}
+
+function buildImportLines(entry: SchemaIndexEntry): string[] {
+  const fileBaseName = path.basename(entry.fileName, ".ts");
+
+  if (
+    entry.exportNames.length === 1 &&
+    !entry.fileName.includes("Parameters.ts")
+  ) {
+    return [`import { ${entry.exportNames[0]} } from "./${fileBaseName}.js";`];
+  }
+
+  return [
+    "import {",
+    ...entry.exportNames.map((exportName) => `  ${exportName},`),
+    `} from "./${fileBaseName}.js";`,
+  ];
 }
