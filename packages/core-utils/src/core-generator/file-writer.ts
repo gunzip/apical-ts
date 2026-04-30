@@ -109,6 +109,10 @@ function getConfigImports(functionCode?: string): {
     configValueImports.push("buildFormData");
   }
 
+  if (functionCode?.includes("normalizeRequestBody(")) {
+    configValueImports.push("normalizeRequestBody");
+  }
+
   if (functionCode?.includes("serializeQueryParam(")) {
     configValueImports.push("serializeQueryParam");
   }

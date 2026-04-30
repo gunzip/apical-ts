@@ -87,6 +87,28 @@ export function analyzeSecurityScheme(
   };
 }
 
+function dedupeSecurityHeaders(headers: SecurityHeader[]): SecurityHeader[] {
+  const uniqueHeaders = new Map<string, SecurityHeader>();
+
+  for (const header of headers) {
+    const key = header.headerName.toLowerCase();
+    const existing = uniqueHeaders.get(key);
+
+    if (!existing) {
+      uniqueHeaders.set(key, header);
+      continue;
+    }
+
+    uniqueHeaders.set(key, {
+      ...existing,
+      isOverride: existing.isOverride || header.isOverride,
+      isRequired: existing.isRequired || header.isRequired,
+    });
+  }
+
+  return [...uniqueHeaders.values()];
+}
+
 /**
  * Determines auth header requirements for an operation
  */
@@ -144,7 +166,7 @@ export function getOperationSecuritySchemes(
       schemeName: s.schemeName,
     }));
 
-  return globalHeaders;
+  return dedupeSecurityHeaders(globalHeaders);
 }
 
 /**
@@ -196,6 +218,6 @@ export function processOperationSecurity(
   return {
     analyzedSchemes,
     hasOverride,
-    operationHeaders,
+    operationHeaders: dedupeSecurityHeaders(operationHeaders),
   };
 }

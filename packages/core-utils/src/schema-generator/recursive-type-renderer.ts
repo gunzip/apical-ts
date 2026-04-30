@@ -4,6 +4,7 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 
 import { findReferencesInSchema } from "./recursive-handlers.js";
 import { getSchemaNameFromReference } from "./schema-references.js";
+import { analyzeTypeArray } from "./utils.js";
 
 export function renderRecursiveTypeAlias(
   schema: SchemaObject,
@@ -36,11 +37,39 @@ function renderSchemaType(schema: ReferenceObject | SchemaObject): string {
     return JSON.stringify(schema.const);
   }
 
+  if (Array.isArray(schema.type)) {
+    return renderMultiTypeSchema(schema);
+  }
+
   const compositionType = renderCompositionType(schema);
   const baseType = compositionType ?? renderSimpleSchemaType(schema);
-  const isNullable = "nullable" in schema && schema.nullable === true;
+  const isNullable = hasNullableFlag(schema);
 
   return isNullable ? `${baseType} | null` : baseType;
+}
+
+function renderMultiTypeSchema(schema: SchemaObject): string {
+  const schemaTypes = Array.isArray(schema.type) ? schema.type : [];
+  const { isNullable, nonNullTypes } = analyzeTypeArray(schemaTypes);
+  const baseTypes = [
+    ...new Set(
+      nonNullTypes.map((type) =>
+        renderSchemaTypeForSpecificType(
+          schema,
+          type as Exclude<SchemaObject["type"], readonly string[] | undefined>,
+        ),
+      ),
+    ),
+  ];
+
+  if (baseTypes.length === 0) {
+    return "null";
+  }
+
+  const baseType = baseTypes.join(" | ");
+  return isNullable || hasNullableFlag(schema)
+    ? `${baseType} | null`
+    : baseType;
 }
 
 function renderCompositionType(schema: SchemaObject): string | undefined {
@@ -81,6 +110,20 @@ function renderSimpleSchemaType(schema: SchemaObject): string {
   }
 
   return "unknown";
+}
+
+function renderSchemaTypeForSpecificType(
+  schema: SchemaObject,
+  type: Exclude<SchemaObject["type"], readonly string[] | undefined>,
+): string {
+  switch (type) {
+    case "array":
+      return `Array<${renderSchemaType(schema.items ?? {})}>`;
+    case "object":
+      return renderObjectSchemaType(schema);
+    default:
+      return renderPrimitiveType(type);
+  }
 }
 
 function renderObjectSchemaType(schema: SchemaObject): string {
@@ -134,4 +177,8 @@ function renderPrimitiveType(
     default:
       return "unknown";
   }
+}
+
+function hasNullableFlag(schema: SchemaObject): boolean {
+  return "nullable" in schema && schema.nullable === true;
 }

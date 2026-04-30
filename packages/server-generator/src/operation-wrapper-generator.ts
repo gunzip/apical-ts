@@ -6,8 +6,11 @@ import type {
 } from "openapi3-ts/oas31";
 
 import { sanitizeIdentifier } from "@apical-ts/core-utils";
-import { extractParameterGroups } from "@apical-ts/core-utils/shared";
-import { getOperationSecuritySchemes } from "@apical-ts/core-utils/shared";
+import {
+  extractParameterGroups,
+  generateContentTypeMaps,
+  getOperationSecuritySchemes,
+} from "@apical-ts/core-utils/shared";
 import assert from "assert";
 
 import { renderServerOperationWrapper } from "./templates/server-operation-templates.js";
@@ -88,7 +91,8 @@ function extractServerWrapperMetadata(
   assert(operation.operationId, "Operation ID is required");
   const operationId = operation.operationId;
   const sanitizedId = sanitizeIdentifier(operationId);
-  const hasBody = !!operation.requestBody;
+  const contentTypeMaps = generateContentTypeMaps(operation, doc);
+  const hasBody = contentTypeMaps.requestContentTypeCount > 0;
 
   /* Extract parameter groups to determine which parameter types exist */
   const parameterGroups = extractParameterGroups(
@@ -110,7 +114,7 @@ function extractServerWrapperMetadata(
     method: method.toLowerCase(),
     operationId,
     pathKey,
-    /* Request map is always generated in routes (even if empty) */
+    /* Keep wrapper body handling aligned with the generated route request map. */
     requestMapTypeName: hasBody ? `${sanitizedId}RequestMap` : undefined,
     responseMapTypeName: `${sanitizedId}ResponseMap`,
     summary: operation.summary?.trim(),

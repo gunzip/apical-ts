@@ -299,5 +299,15 @@ describe("Request Body Template Functions", () => {
       expect(result).toContain("FormData");
       expect(result).toContain("contentTypeHeader = {};");
     });
+
+    it("should normalize octet-stream bodies to RequestBody-compatible values", () => {
+      const result = renderContentTypeSwitch([
+        "application/octet-stream",
+        "multipart/form-data",
+      ]);
+
+      expect(result).toContain('case "application/octet-stream":');
+      expect(result).toContain("normalizeRequestBody(params.body)");
+    });
   });
 });
