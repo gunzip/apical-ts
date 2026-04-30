@@ -4,14 +4,22 @@ import type * as Preset from "@docusaurus/preset-classic";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
+const siteTitle = "@apical-ts/craft";
+const siteTagline = "OpenAPI to a typed TypeScript stack.";
+const siteDescription =
+  "Generate Zod v4 schemas, typed clients, and server wrappers from one OpenAPI specification.";
+const siteUrl = "https://gunzip.github.io";
+const siteBaseUrl = "/apical-ts/";
+const siteBasePath = `${siteUrl}${siteBaseUrl}`;
+const socialCard = `${siteBasePath}img/demo.gif`;
+
 const config: Config = {
-  title: "@apical-ts/craft",
-  tagline:
-    "Strictly-typed client and server from OpenAPI to Typescript with Zod v4 validation",
+  title: siteTitle,
+  tagline: siteTagline,
   favicon: "img/favicon.svg",
 
   stylesheets: [
-    "https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap",
+    "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap",
   ],
 
   headTags: [
@@ -20,7 +28,7 @@ const config: Config = {
       attributes: {
         rel: "icon",
         type: "image/svg+xml",
-        href: "/img/favicon.svg",
+        href: `${siteBaseUrl}img/favicon.svg`,
       },
     },
     {
@@ -29,7 +37,7 @@ const config: Config = {
         rel: "icon",
         type: "image/png",
         sizes: "32x32",
-        href: "/img/favicon-32x32.png",
+        href: `${siteBaseUrl}img/favicon-32x32.png`,
       },
     },
     {
@@ -38,7 +46,7 @@ const config: Config = {
         rel: "icon",
         type: "image/png",
         sizes: "16x16",
-        href: "/img/favicon-16x16.png",
+        href: `${siteBaseUrl}img/favicon-16x16.png`,
       },
     },
     {
@@ -46,15 +54,14 @@ const config: Config = {
       attributes: {
         rel: "apple-touch-icon",
         sizes: "180x180",
-        href: "/img/apple-touch-icon.png",
+        href: `${siteBaseUrl}img/apple-touch-icon.png`,
       },
     },
     {
       tagName: "meta",
       attributes: {
         name: "description",
-        content:
-          "Generate fully-typed Zod v4 schemas and type-safe REST API clients from OpenAPI specifications. Supports OpenAPI 2.0, 3.0.x, and 3.1.x with comprehensive validation and error handling.",
+        content: siteDescription,
       },
     },
     {
@@ -69,15 +76,14 @@ const config: Config = {
       tagName: "meta",
       attributes: {
         property: "og:title",
-        content: "@apical-ts/craft - OpenAPI to TypeScript Generator",
+        content: `${siteTitle} - ${siteTagline}`,
       },
     },
     {
       tagName: "meta",
       attributes: {
         property: "og:description",
-        content:
-          "Generate fully-typed Zod v4 schemas and type-safe REST API clients from OpenAPI specifications. Supports comprehensive validation and error handling.",
+        content: siteDescription,
       },
     },
     {
@@ -91,14 +97,14 @@ const config: Config = {
       tagName: "meta",
       attributes: {
         property: "og:url",
-        content: "https://gunzip.github.io/apical-ts/",
+        content: siteBasePath,
       },
     },
     {
       tagName: "meta",
       attributes: {
         property: "og:image",
-        content: "https://gunzip.github.io/apical-ts/img/demo.gif",
+        content: socialCard,
       },
     },
     {
@@ -120,22 +126,21 @@ const config: Config = {
       tagName: "meta",
       attributes: {
         name: "twitter:title",
-        content: "@apical-ts/craft - OpenAPI to TypeScript Generator",
+        content: `${siteTitle} - ${siteTagline}`,
       },
     },
     {
       tagName: "meta",
       attributes: {
         name: "twitter:description",
-        content:
-          "Generate fully-typed Zod v4 schemas and type-safe REST API clients from OpenAPI specifications.",
+        content: siteDescription,
       },
     },
     {
       tagName: "meta",
       attributes: {
         name: "twitter:image",
-        content: "https://gunzip.github.io/apical-ts/img/demo.gif",
+        content: socialCard,
       },
     },
     {
@@ -156,7 +161,7 @@ const config: Config = {
       tagName: "link",
       attributes: {
         rel: "canonical",
-        href: "https://gunzip.github.io/apical-ts/",
+        href: siteBasePath,
       },
     },
     {
@@ -167,13 +172,12 @@ const config: Config = {
       innerHTML: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        name: "@apical-ts/craft",
-        description:
-          "Generate fully-typed Zod v4 schemas and type-safe REST API clients from OpenAPI specifications. Supports OpenAPI 2.0, 3.0.x, and 3.1.x with comprehensive validation and error handling.",
+        name: siteTitle,
+        description: siteDescription,
         applicationCategory: "DeveloperApplication",
         operatingSystem: "Node.js",
         programmingLanguage: "TypeScript",
-        url: "https://gunzip.github.io/apical-ts/",
+        url: siteBasePath,
         downloadUrl: "https://www.npmjs.com/package/@apical-ts/craft",
         codeRepository: "https://github.com/gunzip/apical-ts",
         license: "https://github.com/gunzip/apical-ts/blob/main/LICENSE",
@@ -206,17 +210,21 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: "https://gunzip.github.io",
+  url: siteUrl,
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/apical-ts/",
+  baseUrl: siteBaseUrl,
 
   // GitHub pages deployment config.
   organizationName: "gunzip", // Usually your GitHub org/user name.
   projectName: "apical-ts", // Usually your repo name.
 
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: "warn",
+    },
+  },
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -254,19 +262,21 @@ const config: Config = {
       defaultMode: "dark",
     },
     // Replace with your project's social card
-    image: "img/demo.gif",
+    image: socialCard,
     navbar: {
-      title: "@apical-ts/craft",
-      logo: {
-        alt: "@apical-ts/craft Logo",
-        src: "img/logo.png",
-      },
+      title: siteTitle,
       items: [
         {
           type: "docSidebar",
           sidebarId: "docsSidebar",
           position: "left",
-          label: "Documentation",
+          label: "Docs",
+        },
+        {
+          href: "https://www.npmjs.com/package/@apical-ts/craft",
+          label: "npm",
+          position: "right",
+          "aria-label": "npm package",
         },
         {
           href: "https://github.com/gunzip/apical-ts",
@@ -291,8 +301,8 @@ const config: Config = {
               to: "/docs/cli-usage",
             },
             {
-              label: "Client Generation",
-              to: "/docs/client-generation/define-configuration",
+              label: "Framework Integrations",
+              to: "/docs/client-generation/framework-integrations",
             },
           ],
         },

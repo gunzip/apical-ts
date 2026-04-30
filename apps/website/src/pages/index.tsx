@@ -1,190 +1,215 @@
-import type { ReactNode } from "react";
 import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
-import CodeBlock from "../components/CodeBlock";
 import Heading from "@theme/Heading";
 
+import CodeBlock from "../components/CodeBlock";
 import styles from "./index.module.css";
+
+const previewCommand = `npx @apical-ts/craft generate \\
+  -i https://petstore.swagger.io/v2/swagger.json \\
+  -o ./generated \\
+  --client --server`;
+
+const clientPreview = `import { findPetsByStatus } from "./generated/operations/findPetsByStatus.js";
+
+// Import just the operations you need
+// without pulling in a huge client bundle.
+const r = await findPetsByStatus({
+  query: { status: "available" },
+});
+
+// Strict typing over status code and content type
+// using discriminated unions guides agents toward safe code
+if (r.status === "200") {
+  // Zod v4 parsed payload
+  console.log(r.parsed.data[0].name);
+}
+`;
+
+const integrationPills = [
+  {
+    name: "Hono",
+    label: "custom handlers",
+    href: "https://github.com/gunzip/apical-ts/tree/main/examples/hono",
+  },
+  {
+    name: "MSW",
+    label: "mock routes",
+    href: "https://github.com/gunzip/apical-ts/tree/main/examples/msw-mock-server",
+  },
+  {
+    name: "React Query",
+    label: "client hooks",
+    href: "https://github.com/gunzip/apical-ts/tree/main/examples/react-query-hooks",
+  },
+] as const;
+
+const featureCards = [
+  {
+    index: "AI adapters",
+    title: "Precise building blocks for custom integrations",
+    description:
+      "Precise per-operation schemas and route shapes give agents enough structure to generate custom Hono, MSW, or React Query adapters fast.",
+  },
+  {
+    index: "No rigid plugins",
+    title: "Integrations are vibe-coded starters, not framework lock-in",
+    description:
+      "No opinionated plugins. Just exact types and small examples you can inspect, extend, and regenerate with AI.",
+  },
+  {
+    index: "Tree shaking",
+    title: "Selective imports stay practical on very large specs",
+    description:
+      "Import only the operations you actually call, even when the OpenAPI document defines thousands of endpoints.",
+  },
+  {
+    index: "Typed responses",
+    title: "Discriminated unions guide coding agents toward safe code",
+    description:
+      "Responses narrow by status code and content type, so agent-written code can branch safely with strong typing.",
+  },
+] as const;
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
+
   return (
-    <header className={clsx("hero", styles.heroBanner)}>
-      <div className={clsx("container", styles.heroInner)}>
-        {/* <div className={styles.heroBadge} aria-label="Project status badge">
-          <span style={{ fontSize: "0.95rem" }}>🚀</span>
-          <span>OpenAPI → TypeScript · Zod v4 Ready</span>
-        </div> */}
-        <Heading
-          as="h1"
-          className={clsx("hero__title", styles.heroTitleGradient)}
-        >
-          {siteConfig.title}
-        </Heading>
-        <div className={styles.heroSubBold}></div>
-        <p className={clsx("hero__subtitle", styles.heroSubtitle)}>
-          {siteConfig.tagline}
-        </p>
-        <nav className={styles.buttons} aria-label="Main navigation">
-          {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
-          <Link
-            className={clsx("button button--lg", styles.ctaButton)}
-            style={{
-              background: "linear-gradient(135deg, #2dd4bf, #22d3ee)",
-              color: "#0e1a2b",
-            }}
-            to="/docs/introduction"
-            aria-label="Get started with @apical-ts/craft documentation"
-          >
-            Get Started in 5&nbsp;min <span aria-hidden="true">→</span>
-          </Link>
-        </nav>
-        {/* <div
-          className={styles.installBar}
-          role="group"
-          aria-label="Install command"
-        >
-          <code>pnpm add -D @apical-ts/craft</code>
-          <button
-            type="button"
-            onClick={() => {
-              try {
-                navigator.clipboard?.writeText("pnpm add -D @apical-ts/craft");
-              } catch {}
-            }}
-            aria-label="Copy install command"
-          >
-            <span style={{ fontSize: "0.85rem" }}>📋</span> Copy
-          </button>
-        </div>*/}
-        <section className={styles.demoSection} aria-label="Code examples">
-          <div className={styles.codeExample}>
-            <div className={styles.codeBlockLabel}>CLI</div>
+    <header className={styles.heroBanner}>
+      <div className={clsx("container", styles.heroLayout)}>
+        <div className={styles.heroBody}>
+          <div className={styles.eyebrow}>{siteConfig.title}</div>
+          <Heading as="h1" className={styles.heroTitle}>
+            {siteConfig.tagline}
+          </Heading>
+          <p className={styles.heroSummary}>
+            Apical gives coding agents a precise base: exact Zod v4 schemas for
+            each operation and typed route structures extracted from your
+            OpenAPI contract.
+          </p>
+          <div className={styles.integrationStrip}>
+            <ul className={styles.integrationList}>
+              {integrationPills.map((integration) => (
+                <li key={integration.name}>
+                  {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
+                  <Link
+                    className={styles.integrationItem}
+                    href={integration.href}
+                  >
+                    <span className={styles.integrationName}>
+                      {integration.name}
+                    </span>
+                    <span className={styles.integrationDivider}>/</span>
+                    <span className={styles.integrationLabel}>
+                      {integration.label}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className={styles.heroDetail}>
+            With that base, it is easy to vibe-code custom adapters such as Hono
+            handlers, MSW mocks, or React Query hooks without baking framework
+            plugins into the generator itself. The sweet spot between{" "}
+            <strong>flexibility and precision</strong> for AI-assisted
+            development.
+          </p>
+          <div className={styles.heroActions}>
+            {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
+            <Link
+              className={clsx(
+                "button button--lg button--primary",
+                styles.primaryAction,
+              )}
+              to="/docs/introduction"
+            >
+              Read the docs
+            </Link>
+            {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
+            <Link
+              className={styles.secondaryAction}
+              href="https://github.com/gunzip/apical-ts"
+            >
+              View on GitHub
+            </Link>
+          </div>
+        </div>
+        <div className={styles.heroPreview}>
+          <div className={styles.previewFrame}>
+            <div className={styles.previewHeader}>
+              <span className={styles.previewPill}>
+                generate schemas and routes
+              </span>
+            </div>
             <CodeBlock
-              className={styles.codeBlock}
-              code={`npx @apical-ts/craft generate \\\n -i https://petstore.swagger.io/v2/swagger.json \\\n -o ./generated \\\n --server \\\n --client\n\ncd generated\n\nnpm install && npm run build`}
+              className={styles.previewCode}
+              code={previewCommand}
               language="bash"
             />
           </div>
-          <div className={styles.codeExample}>
-            <div className={styles.codeBlockLabel}>TypeScript</div>
+
+          <div className={styles.outputCard}>
+            <div className={styles.previewHeader}>
+              <span className={styles.previewPill}>use generated client</span>
+            </div>
             <CodeBlock
-              className={styles.codeBlock}
-              code={`import { findPetsByStatus } from './generated/client/findPetsByStatus.js';\n\nconst r = await findPetsByStatus({\n  query: { status: "available" },\n});\nif (r.status === "200") {\n  // Zod v4 parsed payload\n  console.log(r.parsed.data[0].name);\n}`}
+              className={styles.previewCode}
+              code={clientPreview}
               language="typescript"
             />
           </div>
-        </section>
+        </div>
       </div>
     </header>
   );
 }
 
-function WhyChooseUs() {
+function FeatureSection() {
   return (
-    <section className={styles.whyChooseSection} aria-label="Key features">
-      <div className="container">
-        {/* <div className={styles.whyChooseTitle}>Why @apical-ts/craft?</div> */}
-        <ul className={styles.whyChooseList}>
-          <li className={styles.whyChooseItem}>
-            <span className={styles.whyChooseIcon} aria-hidden="true">
-              🧩
-            </span>
-            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>
-              Modular & Tree-shakable
-            </h3>
-            <p>
-              Import only what you need. No bloat, minimal dependencies, no dead
-              code.
-            </p>
-          </li>
-          <li className={styles.whyChooseItem}>
-            <span className={styles.whyChooseIcon} aria-hidden="true">
-              🔧
-            </span>
-            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>
-              Framework Integrations
-            </h3>
-            <p>
-              Easily adapt to any framework with generated Zod schemas. Includes
-              ready-to-use integrations for{" "}
-              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
-              <Link to="/docs/client-generation/framework-integrations#react-query-hooks">
-                React Query
-              </Link>
-              ,{" "}
-              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
-              <Link to="/docs/client-generation/framework-integrations#express-server-wrappers">
-                Express
-              </Link>
-              ,{" "}
-              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
-              <Link to="/docs/client-generation/framework-integrations#hono-mock-server">
-                Hono
-              </Link>
-              , and{" "}
-              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
-              <Link to="/docs/client-generation/framework-integrations#msw-mock-server">
-                MSW
-              </Link>
-              .
-            </p>
-          </li>
-          {/* <li className={styles.whyChooseItem}>
-            <span className={styles.whyChooseIcon} aria-hidden="true">
-              ⚡
-            </span>
-            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>Performance</h3>
-            <p>
-              Bring your own validator: choose Zod v4 for runtime validation,
-              swap in your own library, or skip validation entirely.
-            </p>
-          </li> */}
-          <li className={styles.whyChooseItem}>
-            <span className={styles.whyChooseIcon} aria-hidden="true">
-              🔒
-            </span>
-            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>
-              Type-Safe by Design
-            </h3>
-            <p>
-              All schemas are fully typed. Supports multiple success status
-              codes (2xx) and multiple content-types for both requests and
-              responses.
-            </p>
-          </li>
-          <li className={styles.whyChooseItem}>
-            <span className={styles.whyChooseIcon} aria-hidden="true">
-              🌐
-            </span>
-            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>
-              Efficient error handling
-            </h3>
-            <p>
-              Provides discriminated unions for errors that can occur at
-              different stages, such as during network requests or payload
-              validation. Client calls never throw.
-            </p>
-          </li>
-        </ul>
+    <section className={styles.section}>
+      <div className={clsx("container", styles.sectionStack)}>
+        <div className={styles.sectionIntro}>
+          <p className={styles.sectionEyebrow}>What matters in practice</p>
+          <Heading as="h2" className={styles.sectionTitle}>
+            A hard base for coding agents.
+          </Heading>
+          <p className={styles.sectionLead}>
+            Apical keeps that hard part small and precise: schemas and route
+            metadata first, custom adapters on top.
+          </p>
+        </div>
+
+        <div className={styles.featureGrid}>
+          {featureCards.map((card) => (
+            <article key={card.title} className={styles.featureCard}>
+              <span className={styles.featureIndex}>{card.index}</span>
+              <Heading as="h3" className={styles.featureTitle}>
+                {card.title}
+              </Heading>
+              <p className={styles.featureDescription}>{card.description}</p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
-export default function Home(): ReactNode {
+export default function Home() {
   return (
     <Layout
-      title="OpenAPI to TypeScript Generator | @apical-ts/craft"
-      description="Generate fully-typed Zod v4 schemas and type-safe REST API clients from OpenAPI specifications. Supports OpenAPI 2.0, 3.0.x, and 3.1.x with comprehensive validation, error handling, and minimal dependencies."
+      title="OpenAPI to a typed TypeScript stack"
+      description="Generate Zod v4 schemas, typed clients, and server wrappers from one OpenAPI specification."
     >
-      <HomepageHeader />
-      <WhyChooseUs />
-      {/* <main>
-        <HomepageFeatures />
-      </main> */}
+      <div className={styles.pageShell}>
+        <HomepageHeader />
+        <main className={styles.mainContent}>
+          <FeatureSection />
+        </main>
+      </div>
     </Layout>
   );
 }
