@@ -2,10 +2,9 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import type { OperationParameterMetadata } from "../core-generator/parameter-extractor.js";
+import { PARAMETER_SCHEMA_BUNDLE_BASE_NAME } from "../shared/parameter-schema-bundle.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-
-const PARAMETER_SCHEMA_BUNDLE_BASE_NAME = "parameters";
 
 /**
  * Generates the schema index barrel file that exports all schemas including parameter schemas

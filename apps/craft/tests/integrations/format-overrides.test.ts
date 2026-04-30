@@ -18,6 +18,7 @@ const taxCodeSourcePath = join(
   "fixtures/format-overrides/TaxCode.ts",
 );
 const formatOverrideAlias = "__apicalStringFormatTaxCode";
+const parameterSchemaBundleFileName = "__apical_generated_parameters.ts";
 
 describe("format overrides integration", () => {
   beforeEach(async () => {
@@ -28,13 +29,14 @@ describe("format overrides integration", () => {
     await fs.rm(outputDir, { force: true, recursive: true });
   });
 
-  it("imports the custom schema into generated schemas and parameter files", async () => {
+  it("imports the custom schema into generated schemas and bundled parameter schemas", async () => {
     await generateWithFormatOverride();
 
     const profilePath = join(outputDir, "schemas/Profile.ts");
     const parametersPath = join(
       outputDir,
-      "schemas/getProfileByTaxCodeParameters.ts",
+      "schemas",
+      parameterSchemaBundleFileName,
     );
     const profileContent = await fs.readFile(profilePath, "utf-8");
     const parametersContent = await fs.readFile(parametersPath, "utf-8");

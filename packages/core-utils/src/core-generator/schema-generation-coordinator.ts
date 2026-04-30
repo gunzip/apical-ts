@@ -31,6 +31,7 @@ import {
   extractResponseSchemas,
 } from "./schema-extractor.js";
 import { generateSchemaIndex } from "./schema-index-generator.js";
+import { LEGACY_PARAMETER_SCHEMA_BUNDLE_FILE_NAMES } from "../shared/parameter-schema-bundle.js";
 
 /**
  * Options for component schema promise creation
@@ -85,6 +86,8 @@ export async function generateSchemas(
     schemasDir,
   };
   const operationParameters = extractOperationParameters(openApiDoc);
+  const requestSchemas = extractRequestSchemas(openApiDoc);
+  const responseSchemas = extractResponseSchemas(openApiDoc);
 
   if (!profiler) {
     const schemaGenerationPromises: Promise<void>[] = [
@@ -92,7 +95,7 @@ export async function generateSchemas(
       ...generateComponentSchemas(context),
       // Generate request schemas from operations
       ...createSchemaGenerationPromises(
-        extractRequestSchemas(openApiDoc),
+        requestSchemas,
         context,
         (name, schema) =>
           generateRequestSchemaFile(name, schema, {
@@ -104,7 +107,7 @@ export async function generateSchemas(
       ),
       // Generate response schemas from operations
       ...createSchemaGenerationPromises(
-        extractResponseSchemas(openApiDoc),
+        responseSchemas,
         context,
         (name, schema) =>
           generateResponseSchemaFile(name, schema, {
@@ -119,6 +122,11 @@ export async function generateSchemas(
     ];
 
     await Promise.all(schemaGenerationPromises);
+    await removeLegacyParameterSchemaBundles(
+      context,
+      requestSchemas,
+      responseSchemas,
+    );
 
     /* Generate the schema index barrel file */
     await generateSchemaIndex(context.schemasDir, operationParameters);
@@ -130,32 +138,26 @@ export async function generateSchemas(
 
     profiler.start("schemas:requests");
     await Promise.all(
-      createSchemaGenerationPromises(
-        extractRequestSchemas(openApiDoc),
-        context,
-        (name, schema) =>
-          generateRequestSchemaFile(name, schema, {
-            extraProps: context.extraProps,
-            formatOverrides: context.formatOverrides,
-            resolvedSchemas: context.resolvedSchemas,
-            schemaDirectory: context.schemasDir,
-          }),
+      createSchemaGenerationPromises(requestSchemas, context, (name, schema) =>
+        generateRequestSchemaFile(name, schema, {
+          extraProps: context.extraProps,
+          formatOverrides: context.formatOverrides,
+          resolvedSchemas: context.resolvedSchemas,
+          schemaDirectory: context.schemasDir,
+        }),
       ),
     );
     profiler.end("schemas:requests");
 
     profiler.start("schemas:responses");
     await Promise.all(
-      createSchemaGenerationPromises(
-        extractResponseSchemas(openApiDoc),
-        context,
-        (name, schema) =>
-          generateResponseSchemaFile(name, schema, {
-            extraProps: context.extraProps,
-            formatOverrides: context.formatOverrides,
-            resolvedSchemas: context.resolvedSchemas,
-            schemaDirectory: context.schemasDir,
-          }),
+      createSchemaGenerationPromises(responseSchemas, context, (name, schema) =>
+        generateResponseSchemaFile(name, schema, {
+          extraProps: context.extraProps,
+          formatOverrides: context.formatOverrides,
+          resolvedSchemas: context.resolvedSchemas,
+          schemaDirectory: context.schemasDir,
+        }),
       ),
     );
     profiler.end("schemas:responses");
@@ -165,11 +167,41 @@ export async function generateSchemas(
     profiler.end("schemas:parameters");
 
     profiler.start("schemas:index");
+    await removeLegacyParameterSchemaBundles(
+      context,
+      requestSchemas,
+      responseSchemas,
+    );
     await generateSchemaIndex(context.schemasDir, operationParameters);
     profiler.end("schemas:index");
   }
   /* eslint-disable-next-line no-console */
   console.log("✅ Schemas generated successfully");
+}
+
+async function removeLegacyParameterSchemaBundles(
+  context: SchemaGenerationContext,
+  requestSchemas: ReadonlyMap<string, SchemaObject>,
+  responseSchemas: ReadonlyMap<string, SchemaObject>,
+): Promise<void> {
+  const expectedSchemaBaseNames = new Set<string>([
+    ...Object.keys(context.resolvedSchemas ?? {}).map((name) =>
+      sanitizeIdentifier(name),
+    ),
+    ...requestSchemas.keys(),
+    ...responseSchemas.keys(),
+  ]);
+
+  await Promise.all(
+    LEGACY_PARAMETER_SCHEMA_BUNDLE_FILE_NAMES.map(async (fileName) => {
+      const baseName = path.basename(fileName, ".ts");
+      if (expectedSchemaBaseNames.has(baseName)) {
+        return;
+      }
+
+      await fs.rm(path.join(context.schemasDir, fileName), { force: true });
+    }),
+  );
 }
 
 /**

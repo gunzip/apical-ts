@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { generateRouteMetadata } from "../src/index.js";
 
+const parameterSchemaBundleBaseName = "__apical_generated_parameters";
+
 describe("route metadata generator", () => {
   it("avoids response type name collisions with imported schemas", () => {
     const result = generateRouteMetadata(
@@ -51,7 +53,9 @@ describe("route metadata generator", () => {
     expect(result.routeCode).toContain(
       "export type petFindByStatusRouteResponse =",
     );
-    expect(result.routeCode).toContain(`from "../schemas/parameters.js";`);
+    expect(result.routeCode).toContain(
+      `from "../schemas/${parameterSchemaBundleBaseName}.js";`,
+    );
     expect(result.routeCode).not.toContain(
       "export type petFindByStatusResponse =",
     );

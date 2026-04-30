@@ -5,6 +5,7 @@ export * from "./models/request-body-models.js";
 export * from "./models/security-models.js";
 export * from "./operation-extractor.js";
 export * from "./operation-utils.js";
+export * from "./parameter-schema-bundle.js";
 export * from "./parameter-schemas.js";
 export * from "./parameter-utils.js";
 export * from "./request-body-maps.js";

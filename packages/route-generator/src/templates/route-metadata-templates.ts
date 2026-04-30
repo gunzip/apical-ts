@@ -1,4 +1,5 @@
 import { sanitizeIdentifier } from "@apical-ts/core-utils";
+import { PARAMETER_SCHEMA_BUNDLE_BASE_NAME } from "@apical-ts/core-utils/shared";
 
 /**
  * Template parameters for route metadata generation
@@ -54,7 +55,7 @@ export function renderRouteMetadata(
     ? `import {
   ${parsedParamsName},
   ${serverParsedParamsName},
-} from "../schemas/parameters.js";`
+} from "../schemas/${PARAMETER_SCHEMA_BUNDLE_BASE_NAME}.js";`
     : "";
 
   /* Build request/response maps if needed */

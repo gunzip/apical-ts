@@ -8,6 +8,7 @@ import {
   findStringFormatOverrideByReferenceName,
   renderStringFormatOverrideImports,
 } from "./format-overrides.js";
+import { PARAMETER_SCHEMA_BUNDLE_FILE_NAME } from "../shared/parameter-schema-bundle.js";
 import { generateParameterSchemas } from "../shared/parameter-schemas.js";
 import { sanitizeIdentifier } from "./utils.js";
 
@@ -25,8 +26,6 @@ interface ParameterSchemaSectionResult {
   content: string;
   typeImports: Set<string>;
 }
-
-const PARAMETER_SCHEMA_BUNDLE_FILE_NAME = "parameters.ts";
 
 /**
  * Generates Zod schema content for a single operation.
