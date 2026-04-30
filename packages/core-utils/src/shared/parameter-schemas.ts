@@ -87,6 +87,14 @@ export function generateParameterSchemas(
   const hasHeaders =
     parameterGroups.headerParams.length > 0 || securityHeaders.length > 0;
 
+  const normalizeParameterName = (
+    originalName: string,
+    parameterLocation: ParameterObject["in"],
+  ): string =>
+    lowercaseHeaderKeys && parameterLocation === "header"
+      ? originalName.toLowerCase()
+      : originalName;
+
   /* Helper to build property entry using zodSchemaToCode; fallback to z.string()
      For servers, applies parameter-specific transformations:
        - Preserve original OpenAPI key verbatim (quoted)
@@ -95,10 +103,7 @@ export function generateParameterSchemas(
   const buildProp = (originalName: string, param: ParameterObject): string => {
     const schema = param.schema as ReferenceObject | SchemaObject | undefined;
     const isRequired = param.required === true;
-    const name =
-      lowercaseHeaderKeys && param.in === "header"
-        ? originalName.toLowerCase()
-        : originalName;
+    const name = normalizeParameterName(originalName, param.in);
 
     let zodCode: string;
     if (schema) {
@@ -178,25 +183,30 @@ export function generateParameterSchemas(
   const hasCombinedHeaders = hasHeaders || hasSecurityOverrides;
 
   if (hasCombinedHeaders) {
-    const headerProps = parameterGroups.headerParams
-      .map((p) => buildProp(p.name, p))
-      .join(", ");
+    const headerProps = new Map<string, string>();
+
+    for (const headerParam of parameterGroups.headerParams) {
+      const normalizedName = normalizeParameterName(headerParam.name, "header");
+      headerProps.set(normalizedName, buildProp(headerParam.name, headerParam));
+    }
 
     /* Add security override headers to the schema (always required) */
-    const securityHeaderProps = securityOverrideHeaders
-      .map((sh) => {
-        const name = lowercaseHeaderKeys
-          ? sh.headerName.toLowerCase()
-          : sh.headerName;
-        // Security override headers are always required
-        const zodCode = "z.string()";
-        return `${JSON.stringify(name)}: ${zodCode}`;
-      })
-      .join(", ");
+    for (const securityHeader of securityOverrideHeaders) {
+      const normalizedName = normalizeParameterName(
+        securityHeader.headerName,
+        "header",
+      );
+      if (headerProps.has(normalizedName)) {
+        continue;
+      }
 
-    const allHeaderProps = [headerProps, securityHeaderProps]
-      .filter(Boolean)
-      .join(", ");
+      headerProps.set(
+        normalizedName,
+        `${JSON.stringify(normalizedName)}: z.string()`,
+      );
+    }
+
+    const allHeaderProps = [...headerProps.values()].join(", ");
 
     schemas.push(
       `const ${headersSchemaName} = ${headerObjectMethod}({ ${allHeaderProps} });`,

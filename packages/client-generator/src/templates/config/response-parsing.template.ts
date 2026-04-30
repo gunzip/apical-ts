@@ -3,7 +3,21 @@
 /* Render RequestBody alias used across generated clients */
 export function renderRequestBodyType(): string {
   return `/* Common request body union for generated clients */
-export type RequestBody = string | Blob | ArrayBuffer | FormData | undefined;`;
+export type RequestBody = string | Blob | ArrayBuffer | FormData | undefined;
+
+export function normalizeRequestBody(body: unknown): RequestBody {
+  if (body === undefined || typeof body === "string") {
+    return body;
+  }
+  if (
+    body instanceof Blob ||
+    body instanceof ArrayBuffer ||
+    body instanceof FormData
+  ) {
+    return body;
+  }
+  return JSON.stringify(body);
+}`;
 }
 
 /*

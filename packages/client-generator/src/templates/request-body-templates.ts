@@ -16,7 +16,7 @@ export const DEFAULT_CONTENT_TYPE_HANDLERS: ContentTypeHandlerConfig = {
     requiresFormData: false,
   },
   "application/octet-stream": {
-    bodyProcessing: "params.body",
+    bodyProcessing: "normalizeRequestBody(params.body)",
     contentTypeHeader: '"Content-Type": "application/octet-stream"',
     requiresFormData: false,
   },

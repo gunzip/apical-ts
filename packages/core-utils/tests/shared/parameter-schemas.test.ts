@@ -74,4 +74,58 @@ describe("generateParameterSchemas", () => {
       '.describe("Schema desc").describe("Param desc")',
     );
   });
+
+  it("should deduplicate security headers and preserve explicit header schemas", () => {
+    const parameterGroups = {
+      queryParams: [],
+      headerParams: [
+        {
+          in: "header",
+          name: "X-Auth-Email",
+          required: true,
+          schema: { type: "string" },
+          description: "Explicit email header",
+        },
+      ],
+      pathParams: [],
+      cookieParams: [],
+    };
+
+    const result = generateParameterSchemas(
+      "getUsers",
+      parameterGroups as any,
+      {
+        securityHeaders: [
+          {
+            headerName: "X-Auth-Email",
+            isOverride: true,
+            isRequired: true,
+            schemeName: "emailAuth",
+          },
+          {
+            headerName: "X-Auth-Email",
+            isOverride: true,
+            isRequired: true,
+            schemeName: "emailAuthAlt",
+          },
+          {
+            headerName: "X-Auth-Key",
+            isOverride: true,
+            isRequired: true,
+            schemeName: "keyAuth",
+          },
+          {
+            headerName: "X-Auth-Key",
+            isOverride: true,
+            isRequired: true,
+            schemeName: "keyAuthAlt",
+          },
+        ],
+      },
+    );
+
+    expect((result.schemaCode.match(/"X-Auth-Email":/g) ?? []).length).toBe(1);
+    expect((result.schemaCode.match(/"X-Auth-Key":/g) ?? []).length).toBe(1);
+    expect(result.schemaCode).toContain('.describe("Explicit email header")');
+  });
 });

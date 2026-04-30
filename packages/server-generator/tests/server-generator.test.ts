@@ -252,6 +252,33 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("parsedBody");
   });
 
+  it("should not import or validate a request map when request content types are empty", () => {
+    const operation = {
+      operationId: "testEmptyRequestBody",
+      requestBody: {
+        required: false,
+        content: {},
+      },
+      responses: {
+        200: {
+          description: "OK",
+        },
+      },
+    };
+
+    const result = generateServerOperationWrapper(
+      "/test",
+      "post",
+      operation as any,
+      [],
+      {} as any,
+    );
+
+    expect(result.wrapperCode).not.toContain("testEmptyRequestBodyRequestMap");
+    expect(result.wrapperCode).not.toContain("schema.safeParse(req.body)");
+    expect(result.wrapperCode).not.toContain("Unsupported Content-Type");
+  });
+
   it("should generate route function with correct path and method", () => {
     const operation = {
       operationId: "testAuthBearer",

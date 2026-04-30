@@ -390,6 +390,50 @@ describe("schema-generator file-generators", () => {
         "export type IndirectNode = z.infer<typeof IndirectNode>;",
       );
     });
+
+    it("should preserve nullability and deduplicate primitive branches for recursive multi-type schemas", async () => {
+      const schema: SchemaObject = {
+        anyOf: [
+          {
+            type: ["object", "null"],
+            additionalProperties: true,
+          },
+          {
+            type: ["number", "integer"],
+          },
+          {
+            type: "array",
+            items: { $ref: "#/components/schemas/WorkersKvAny" },
+          },
+        ],
+      };
+
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.union([z.object({}).catchall(z.unknown()).nullable(), z.number(), z.array(z.lazy(() => WorkersKvAny))])",
+          imports: new Set(),
+        }),
+      );
+
+      const recursiveContext = createRecursiveContext();
+      recursiveContext.recursiveSchemas.add("WorkersKvAny");
+
+      const result = await generateSchemaFile(
+        "WorkersKvAny",
+        schema,
+        undefined,
+        {
+          recursiveContext,
+        },
+      );
+
+      expect(result.content).toContain("export type WorkersKvAny =");
+      expect(result.content).toContain("| null");
+      expect(result.content).not.toContain("number | number");
+      expect(result.content).toContain(
+        "export const WorkersKvAny: z.ZodType<WorkersKvAny> =",
+      );
+    });
   });
 
   describe("circular reference type annotations", () => {
