@@ -24,9 +24,7 @@ export interface GeneratedRouteMetadata {
   routeCode: string;
 }
 
-/**
- * Extended route operation metadata for template generation (includes server request body map)
- */
+/* Extended route operation metadata for template generation */
 export interface RouteOperationMetadata {
   bodyInfo: {
     contentTypeMaps: LightweightRouteMetadata["bodyInfo"]["contentTypeMaps"];
@@ -158,9 +156,7 @@ export function generateRouteMetadataFromMetadata(
   };
 }
 
-/**
- * Extracts metadata needed for route generation (wrapper that adds server-specific data)
- */
+/* Extracts metadata needed for route generation */
 function extractCompleteRouteMetadata(
   metadata: OperationGenerationMetadata,
 ): RouteOperationMetadata {

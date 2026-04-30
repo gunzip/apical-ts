@@ -148,31 +148,27 @@ async function generateAllOperations(
   generateServer: boolean,
   profiler?: Profiler,
 ): Promise<void> {
-  const operationPromises: Promise<void>[] = [];
-  let operationMetadata:
-    | ReturnType<typeof extractAllOperationGenerationMetadata>
-    | undefined;
-
-  if (generateRoutes || generateClient || generateServer) {
-    profiler?.start("operation-metadata");
-    operationMetadata = extractAllOperationGenerationMetadata(openApiDoc);
-    profiler?.end("operation-metadata");
+  if (!generateRoutes && !generateClient && !generateServer) {
+    return;
   }
+
+  const operationPromises: Promise<void>[] = [];
+  profiler?.start("operation-metadata");
+  const operationMetadata = extractAllOperationGenerationMetadata(openApiDoc);
+  profiler?.end("operation-metadata");
 
   /* Generate routes if explicitly requested or if client/server is enabled */
-  if (generateRoutes || generateClient || generateServer) {
-    profiler?.start("routes");
-    operationPromises.push(
-      generateRouteMetadata(
-        openApiDoc,
-        output,
-        concurrency,
-        operationMetadata,
-      ).finally(() => {
-        profiler?.end("routes");
-      }),
-    );
-  }
+  profiler?.start("routes");
+  operationPromises.push(
+    generateRouteMetadata(
+      openApiDoc,
+      output,
+      concurrency,
+      operationMetadata,
+    ).finally(() => {
+      profiler?.end("routes");
+    }),
+  );
 
   if (generateClient) {
     profiler?.start("client-operations");
