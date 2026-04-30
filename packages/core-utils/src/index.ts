@@ -14,7 +14,12 @@ export {
 export { ImportManager } from "./core-generator/import-types.js";
 export { resolveResponseReference } from "./core-generator/openapi-utils.js";
 export { createPackageFiles } from "./core-generator/package-generator.js";
-export { parseOpenAPI } from "./core-generator/parser.js";
+export {
+  convertParsedOpenAPI,
+  hasExternalRefPointers,
+  parseOpenAPI,
+  parseOpenAPIDocument,
+} from "./core-generator/parser.js";
 export { Profiler } from "./core-generator/profiler.js";
 export { resolveRequestBodies } from "./core-generator/request-body-resolver.js";
 

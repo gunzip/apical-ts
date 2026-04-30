@@ -1,0 +1,20 @@
+openapi: 3.0.3
+info:
+  title: Internal refs
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        address:
+          $ref: "#/components/schemas/Address"
+        name:
+          type: string
+          nullable: true
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
