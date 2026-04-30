@@ -9,7 +9,8 @@ metadata.
 - route-metadata generation with `craft generate --routes`
 - a second generator step that creates `generated/hono/*`
 - automatic mock responses using `zocker`
-- request validation for path, query, headers, and request bodies
+- request validation for path, query, headers, and request bodies via
+  `@hono/zod-validator`
 
 ## Quick start
 
@@ -38,8 +39,15 @@ The server runs on `http://localhost:3002`.
 
 - `scripts/generate-hono-server.ts`: reads `generated/routes/*` and emits
   `generated/hono/*`
-- `generated/hono/runtime.ts`: generated runtime helpers for validation, request
-  extraction, and mocked responses
+- `scripts/hono-generator/*`: modular generators for route registration, inline
+  operation handlers, usecases, runtime helpers, and file writing
+- `generated/hono/operations/*`: route registration modules with
+  `@hono/zod-validator` middleware and inline HTTP handling
+- `generated/hono/usecases/*`: zocker-backed mock business logic
+- `generated/package.json`: includes the runtime dependencies required by the
+  generated Hono layer
+- `generated/hono/runtime.ts`: generated runtime helpers for validation error
+  formatting and mocked responses
 - `server-examples/mock-server-example.ts`: runnable Hono server
 
 ## Why it reuses `examples/express/examples.yaml`
