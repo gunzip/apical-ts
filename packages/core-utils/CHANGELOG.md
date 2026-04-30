@@ -1,5 +1,13 @@
 # @apical-ts/core-utils
 
+## 0.19.1
+
+### Patch Changes
+
+- 3b00ec0: Make OpenAPI spec parsing more sound
+- bbd19f8: Make OpenAPI parsing more tolerant against wrong specs
+- bf6211f: Fix null serialization in client generator
+
 ## 0.19.0
 
 ### Minor Changes

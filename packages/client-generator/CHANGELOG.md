@@ -1,5 +1,17 @@
 # @apical-ts/client-generator
 
+## 0.14.1
+
+### Patch Changes
+
+- 3b00ec0: Make OpenAPI spec parsing more sound
+- bbd19f8: Make OpenAPI parsing more tolerant against wrong specs
+- bf6211f: Fix null serialization in client generator
+- Updated dependencies [3b00ec0]
+- Updated dependencies [bbd19f8]
+- Updated dependencies [bf6211f]
+  - @apical-ts/core-utils@0.19.1
+
 ## 0.14.0
 
 ### Minor Changes

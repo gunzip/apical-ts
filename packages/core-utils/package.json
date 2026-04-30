@@ -1,6 +1,6 @@
 {
   "name": "@apical-ts/core-utils",
-  "version": "0.19.0",
+  "version": "0.19.1",
   "private": true,
   "description": "Core utilities and generators for apical-ts OpenAPI tooling",
   "main": "dist/index.js",
