@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
   hasExternalRefPointers,
@@ -9,6 +9,15 @@ import {
 } from "../src/core-generator/parser.js";
 
 describe("OpenAPI parser", () => {
+  beforeAll(() => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    vi.restoreAllMocks();
+  });
+
   it("parses internal-only documents without flagging external refs", async () => {
     const specPath = fileURLToPath(
       new URL("./fixtures/internal-refs.yaml", import.meta.url),
