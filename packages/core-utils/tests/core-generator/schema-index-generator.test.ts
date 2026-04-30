@@ -63,6 +63,37 @@ describe("core-generator schema-index-generator", () => {
     );
   });
 
+  it("deduplicates imports when multiple entries share a file name", () => {
+    const content = buildSchemaIndexContent([
+      buildSchemaFileIndexEntry("Pet.ts"),
+      buildSchemaFileIndexEntry("Pet.ts"),
+      {
+        exportNames: ["listPetsQuerySchema"],
+        fileName: "listPetsParameters.ts",
+      },
+      {
+        exportNames: ["listPetsHeadersSchema", "listPetsQuerySchema"],
+        fileName: "listPetsParameters.ts",
+      },
+    ]);
+
+    expect(content.match(/from "\.\/Pet\.js";/g)).toHaveLength(1);
+    expect(content.match(/from "\.\/listPetsParameters\.js";/g)).toHaveLength(
+      1,
+    );
+    expect(content).toContain("  listPetsHeadersSchema,");
+    expect(content).toContain("  listPetsQuerySchema,");
+    expect(content).toContain(
+      [
+        "export {",
+        "  Pet,",
+        "  listPetsHeadersSchema,",
+        "  listPetsQuerySchema,",
+        "};",
+      ].join("\n"),
+    );
+  });
+
   it("derives query and security header exports from parameter metadata", () => {
     const queryParam = {
       in: "query",

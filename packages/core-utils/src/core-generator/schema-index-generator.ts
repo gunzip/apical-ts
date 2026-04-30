@@ -49,11 +49,9 @@ export function buildSchemaIndexContent(
   const imports: string[] = [];
   const exports = new Set<string>();
 
-  const sortedEntries = [...entries]
-    .filter((entry) => entry.exportNames.length > 0)
-    .sort((left, right) => left.fileName.localeCompare(right.fileName));
+  const normalizedEntries = normalizeSchemaIndexEntries(entries);
 
-  for (const entry of sortedEntries) {
+  for (const entry of normalizedEntries) {
     imports.push(...buildImportLines(entry));
 
     for (const exportName of entry.exportNames) {
@@ -80,6 +78,33 @@ export async function generateSchemaIndex(
   const content = buildSchemaIndexContent(entries);
   const indexPath = path.join(schemasDir, "index.ts");
   await fs.writeFile(indexPath, content, "utf-8");
+}
+
+function normalizeSchemaIndexEntries(
+  entries: readonly SchemaIndexEntry[],
+): SchemaIndexEntry[] {
+  const exportsByFileName = new Map<string, Set<string>>();
+
+  for (const entry of entries) {
+    if (entry.exportNames.length === 0) {
+      continue;
+    }
+
+    const exportNames = exportsByFileName.get(entry.fileName) ?? new Set();
+
+    for (const exportName of entry.exportNames) {
+      exportNames.add(exportName);
+    }
+
+    exportsByFileName.set(entry.fileName, exportNames);
+  }
+
+  return [...exportsByFileName.entries()]
+    .map(([fileName, exportNames]) => ({
+      exportNames: [...exportNames],
+      fileName,
+    }))
+    .sort((left, right) => left.fileName.localeCompare(right.fileName));
 }
 
 function buildImportLines(entry: SchemaIndexEntry): string[] {
