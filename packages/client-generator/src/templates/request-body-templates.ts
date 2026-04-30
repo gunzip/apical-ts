@@ -89,7 +89,7 @@ export function renderContentTypeSwitch(requestContentTypes: string[]): string {
       } else {
         /* Generic approach for unknown content types */
         return `    case "${contentType}":
-      bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);
+      bodyContent = normalizeRequestBody(params.body);
       contentTypeHeader = { "Content-Type": "${contentType}" };
       break;`;
       }
@@ -97,7 +97,7 @@ export function renderContentTypeSwitch(requestContentTypes: string[]): string {
     .join("\n");
 
   const defaultCase = `    default:
-      bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);
+      bodyContent = normalizeRequestBody(params.body);
       contentTypeHeader = { "Content-Type": finalRequestContentType };`;
 
   return `  let bodyContent: RequestBody = "";
@@ -132,7 +132,7 @@ export function renderDynamicBodyHandling(
       } else {
         /* Generic approach for unknown content types */
         return `    case "${contentType}":
-      bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);
+      bodyContent = normalizeRequestBody(params.body);
       contentTypeHeader = { "Content-Type": "${contentType}" };
       break;`;
       }
@@ -140,7 +140,7 @@ export function renderDynamicBodyHandling(
     .join("\n");
 
   const defaultCase = `    default:
-      bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);
+      bodyContent = normalizeRequestBody(params.body);
       contentTypeHeader = { "Content-Type": finalRequestContentType };`;
 
   return `  let bodyContent: RequestBody = "";
@@ -171,8 +171,7 @@ export function renderLegacyRequestBodyHandling(
     } else {
       /* Fallback for unknown content types */
       const fallbackStrategy: ContentTypeStrategy = {
-        bodyProcessing:
-          "typeof params.body === 'string' ? params.body : JSON.stringify(params.body)",
+        bodyProcessing: "normalizeRequestBody(params.body)",
         contentTypeHeader: `"Content-Type": "${context.requestContentType}"`,
         requiresFormData: false,
       };
