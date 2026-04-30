@@ -3,7 +3,18 @@
 /* Render RequestBody alias used across generated clients */
 export function renderRequestBodyType(): string {
   return `/* Common request body union for generated clients */
-export type RequestBody = string | Blob | ArrayBuffer | FormData | undefined;
+type RequestBodyArrayBufferView = Extract<
+  NonNullable<RequestInit["body"]>,
+  ArrayBufferView
+>;
+
+function isRequestBodyArrayBufferView(
+  body: unknown,
+): body is RequestBodyArrayBufferView {
+  return ArrayBuffer.isView(body);
+}
+
+export type RequestBody = RequestInit["body"] | undefined;
 
 export function normalizeRequestBody(body: unknown): RequestBody {
   if (body === undefined || typeof body === "string") {
@@ -12,7 +23,10 @@ export function normalizeRequestBody(body: unknown): RequestBody {
   if (
     body instanceof Blob ||
     body instanceof ArrayBuffer ||
-    body instanceof FormData
+    isRequestBodyArrayBufferView(body) ||
+    body instanceof FormData ||
+    body instanceof URLSearchParams ||
+    (typeof ReadableStream !== "undefined" && body instanceof ReadableStream)
   ) {
     return body;
   }

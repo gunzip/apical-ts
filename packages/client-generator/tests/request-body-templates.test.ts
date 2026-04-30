@@ -118,7 +118,7 @@ describe("Request Body Template Functions", () => {
 
       const result = renderLegacyRequestBodyHandling(context);
 
-      expect(result.bodyContent).toContain("JSON.stringify");
+      expect(result.bodyContent).toContain("normalizeRequestBody(params.body)");
       expect(result.contentTypeHeader).toContain("application/custom");
     });
 
@@ -173,7 +173,7 @@ describe("Request Body Template Functions", () => {
       const result = renderDynamicBodyHandling(contentTypes);
 
       expect(result).toContain('case "application/unknown"');
-      expect(result).toContain("JSON.stringify");
+      expect(result).toContain("normalizeRequestBody(params.body)");
       expect(result).toContain("application/unknown");
     });
 
@@ -247,7 +247,7 @@ describe("Request Body Template Functions", () => {
       expect(result).toContain('case "text/plain":');
       expect(result).toContain("default:");
       expect(result).toContain(
-        "bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);",
+        "bodyContent = normalizeRequestBody(params.body);",
       );
       expect(result).toContain(
         'contentTypeHeader = { "Content-Type": finalRequestContentType };',
@@ -260,7 +260,7 @@ describe("Request Body Template Functions", () => {
 
       expect(result).toContain('case "application/custom":');
       expect(result).toContain(
-        "bodyContent = typeof params.body === 'string' ? params.body : JSON.stringify(params.body);",
+        "bodyContent = normalizeRequestBody(params.body);",
       );
       expect(result).toContain(
         'contentTypeHeader = { "Content-Type": "application/custom" };',

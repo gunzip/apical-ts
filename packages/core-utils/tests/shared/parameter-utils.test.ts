@@ -124,4 +124,74 @@ describe("extractParameterGroups", () => {
     expect(result.pathParams).toHaveLength(1);
     expect(result.pathParams[0].description).toBe("operation-level");
   });
+
+  it("should normalize malformed quoted header names during extraction", () => {
+    const pathParams: ParameterObject[] = [
+      {
+        in: "header",
+        name: "'x-path-header'",
+        required: false,
+        schema: { type: "string" },
+      },
+    ];
+    const operation = {
+      parameters: [
+        {
+          in: "header",
+          name: "'x-operation-header'",
+          required: true,
+          schema: { type: "integer" },
+        } satisfies ParameterObject,
+        {
+          in: "query",
+          name: "'still-quoted-query'",
+          schema: { type: "string" },
+        } satisfies ParameterObject,
+      ],
+      responses: {},
+    };
+
+    const result = extractParameterGroups(operation, pathParams, emptyDoc);
+
+    expect(result.headerParams).toHaveLength(2);
+    expect(result.headerParams[0].name).toBe("x-path-header");
+    expect(result.headerParams[1].name).toBe("x-operation-header");
+    expect(result.queryParams[0].name).toBe("'still-quoted-query'");
+  });
+
+  it("should normalize quoted header refs before deduplicating with operation-level headers", () => {
+    const doc: OpenAPIObject = {
+      ...emptyDoc,
+      components: {
+        parameters: {
+          InteractiveHeader: {
+            in: "header",
+            name: "'x-interactive'",
+            required: false,
+            schema: { type: "integer" },
+            description: "ref-level",
+          },
+        },
+      },
+    };
+    const pathParams = [{ $ref: "#/components/parameters/InteractiveHeader" }];
+    const operation = {
+      parameters: [
+        {
+          in: "header",
+          name: "x-interactive",
+          required: true,
+          schema: { type: "integer" },
+          description: "operation-level",
+        } satisfies ParameterObject,
+      ],
+      responses: {},
+    };
+
+    const result = extractParameterGroups(operation, pathParams, doc);
+
+    expect(result.headerParams).toHaveLength(1);
+    expect(result.headerParams[0].name).toBe("x-interactive");
+    expect(result.headerParams[0].description).toBe("operation-level");
+  });
 });

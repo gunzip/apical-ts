@@ -10,6 +10,28 @@ import {
   renderOperationUtilities,
   renderUtilityFunctions,
 } from "../src/templates/config/index.js";
+import { renderRequestBodyType } from "../src/templates/config/response-parsing.template.js";
+
+function getNormalizeRequestBody() {
+  const js = renderRequestBodyType()
+    .replace(/type RequestBodyArrayBufferView =[\s\S]*?;\n\n/u, "")
+    .replace(
+      /function isRequestBodyArrayBufferView\(\n  body: unknown,\n\): body is RequestBodyArrayBufferView \{/u,
+      "function isRequestBodyArrayBufferView(body) {",
+    )
+    .replace(/export type RequestBody =[\s\S]*?\| undefined;\n\n/u, "")
+    .replace(
+      "export function normalizeRequestBody(body: unknown): RequestBody {",
+      "function normalizeRequestBody(body) {",
+    );
+  const normalizeRequestBody = new Function(
+    `${js}\nreturn normalizeRequestBody;`,
+  )();
+  if (typeof normalizeRequestBody !== "function") {
+    throw new Error("normalizeRequestBody was not rendered");
+  }
+  return normalizeRequestBody as (body: unknown) => unknown;
+}
 
 describe("client-generator config-templates", () => {
   describe("renderConfigInterface", () => {
@@ -176,6 +198,32 @@ describe("client-generator config-templates", () => {
 
       expect(result).toContain("export async function parseResponseBody");
       expect(result).toContain("application/json");
+    });
+  });
+
+  describe("renderRequestBodyType", () => {
+    it("should preserve array buffer views and Buffers", () => {
+      const normalizeRequestBody = getNormalizeRequestBody();
+      const bytes = new Uint8Array([1, 2, 3]);
+      const buffer = Buffer.from([4, 5, 6]);
+      const view = new DataView(new ArrayBuffer(4));
+
+      expect(normalizeRequestBody(bytes)).toBe(bytes);
+      expect(normalizeRequestBody(buffer)).toBe(buffer);
+      expect(normalizeRequestBody(view)).toBe(view);
+    });
+
+    it("should preserve readable streams and stringify plain objects", () => {
+      const normalizeRequestBody = getNormalizeRequestBody();
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new Uint8Array([1]));
+          controller.close();
+        },
+      });
+
+      expect(normalizeRequestBody(stream)).toBe(stream);
+      expect(normalizeRequestBody({ ok: true })).toBe('{"ok":true}');
     });
   });
 
