@@ -93,6 +93,7 @@ function HomepageHeader() {
             <ul className={styles.integrationList}>
               {integrationPills.map((integration) => (
                 <li key={integration.name}>
+                  {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
                   <Link
                     className={styles.integrationItem}
                     href={integration.href}
@@ -117,6 +118,7 @@ function HomepageHeader() {
             development.
           </p>
           <div className={styles.heroActions}>
+            {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
             <Link
               className={clsx(
                 "button button--lg button--primary",
@@ -126,6 +128,7 @@ function HomepageHeader() {
             >
               Read the docs
             </Link>
+            {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
             <Link
               className={styles.secondaryAction}
               href="https://github.com/gunzip/apical-ts"
