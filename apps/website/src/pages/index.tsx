@@ -119,6 +119,11 @@ function WhyChooseUs() {
               <Link to="/docs/client-generation/framework-integrations#express-server-wrappers">
                 Express
               </Link>
+              ,{" "}
+              {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
+              <Link to="/docs/client-generation/framework-integrations#hono-mock-server">
+                Hono
+              </Link>
               , and{" "}
               {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
               <Link to="/docs/client-generation/framework-integrations#msw-mock-server">

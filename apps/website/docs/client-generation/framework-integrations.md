@@ -16,7 +16,7 @@ integrate with your preferred libraries.
 
 ## Example Integrations
 
-We provide complete working examples for three popular frameworks in the
+We provide complete working examples for four popular frameworks in the
 [`examples/`](https://github.com/gunzip/apical-ts/tree/main/examples/) folder:
 
 ### React Query Hooks
@@ -56,6 +56,24 @@ wrappers.
 ```typescript
 // Generated route wrapper
 createExpressAdapter(findPetsByStatusRoute(), findPetsByStatusHandler)(app);
+```
+
+### Hono Mock Server
+
+The
+[Hono integration](https://github.com/gunzip/apical-ts/tree/main/examples/hono/)
+shows how to start from Apical TS `--routes` output and generate a Hono-specific
+registration layer for a runnable mock server.
+
+**Features:**
+
+- Route-metadata-driven Hono registration
+- Automatic request validation for path, query, headers, and body
+- Auto-generated mock responses using zocker
+
+```typescript
+// Register all generated Hono routes
+registerGeneratedRoutes(app);
 ```
 
 ### MSW Mock Server
@@ -101,7 +119,7 @@ To explore these integrations:
 3. Install dependencies: `pnpm install`
 4. Generate the code: `pnpm run generate`
 5. Run the example using the command documented in that example's README (for
-   MSW: `pnpm dev`).
+   Hono/MSW: `pnpm dev`).
 
 The examples include comprehensive documentation and working code you can adapt
 for your own projects.

@@ -1,0 +1,40 @@
+{
+  "name": "@apical-ts/examples-hono",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hono mock server example generated from Apical TS route metadata.",
+  "type": "module",
+  "scripts": {
+    "typecheck:code": "pnpm run generate && tsgo -p tsconfig.examples.json",
+    "generate:apical": "craft generate --routes -i ../express/examples.yaml -o generated",
+    "generate:hono": "tsx scripts/generate-hono-server.ts",
+    "generate": "pnpm run clean && pnpm run generate:apical && pnpm run generate:hono",
+    "clean": "rm -rf generated",
+    "dev": "pnpm run generate && tsx server-examples/mock-server-example.ts",
+    "test": "pnpm run generate && vitest run --config vitest.config.ts",
+    "test:watch": "pnpm run generate && vitest --config vitest.config.ts"
+  },
+  "author": "gunzip",
+  "license": "MIT",
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "@hono/node-server": "^2.0.1",
+    "hono": "^4.12.16",
+    "zocker": "^3.0.0",
+    "zod": "^4.3.6"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748",
+  "devDependencies": {
+    "@apical-ts/craft": "workspace:*",
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "tsx": "^4.21.0",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

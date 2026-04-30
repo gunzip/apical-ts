@@ -19,6 +19,9 @@
     "examples/express": {
       "entry": ["client-examples/**/*.ts", "server-examples/**/*.ts"]
     },
+    "examples/hono": {
+      "entry": ["scripts/**/*.ts", "server-examples/**/*.ts"]
+    },
     "examples/msw-mock-server": {
       "entry": ["server-examples/**/*.ts"]
     },
