@@ -68,7 +68,7 @@ program
       const elapsedMs = Number(process.hrtime.bigint() - started) / 1_000_000;
       console.log(
         "✅ Generation completed successfully%s!",
-        generationOptions.profile ? "" : `in ${elapsedMs.toFixed(2)} ms`,
+        generationOptions.profile ? "" : ` in ${elapsedMs.toFixed(2)} ms`,
       );
     } catch (error) {
       console.error("❌ An error occurred during generation:", error);

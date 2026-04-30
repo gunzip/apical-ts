@@ -21,8 +21,18 @@ export function hasCustomParamNames(paramNameMap: Record<string, string>) {
 
 export function toHonoPath(routePath: string) {
   const paramNameMap: Record<string, string> = {};
+  const rawParamNamesBySanitizedName: Record<string, string> = {};
   const honoPath = routePath.replaceAll(/\{([^}]+)\}/g, (_, raw) => {
     const sanitized = sanitizeParamName(raw);
+
+    const existingRaw = rawParamNamesBySanitizedName[sanitized];
+    if (existingRaw !== undefined && existingRaw !== raw) {
+      throw new Error(
+        `Route path "${routePath}" contains parameter names "${existingRaw}" and "${raw}" that both sanitize to "${sanitized}" for Hono.`,
+      );
+    }
+
+    rawParamNamesBySanitizedName[sanitized] = raw;
     paramNameMap[raw] = sanitized;
     return `:${sanitized}`;
   });
