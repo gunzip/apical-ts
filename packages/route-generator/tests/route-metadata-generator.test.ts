@@ -51,6 +51,7 @@ describe("route metadata generator", () => {
     expect(result.routeCode).toContain(
       "export type petFindByStatusRouteResponse =",
     );
+    expect(result.routeCode).toContain(`from "../schemas/parameters.js";`);
     expect(result.routeCode).not.toContain(
       "export type petFindByStatusResponse =",
     );

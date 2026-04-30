@@ -16,13 +16,16 @@ import {
   generateRequestSchemaFile,
   generateResponseSchemaFile,
   generateSchemaFile,
-  writeParameterSchemaFile,
+  writeParameterSchemaBundleFile,
 } from "../schema-generator/index.js";
 import type { ResolvedSchemas } from "../schema-generator/types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import type { ExtraPropsMode } from "../shared/types.js";
 import { isPlainSchemaObject } from "./openapi-utils.js";
-import { extractOperationParameters } from "./parameter-extractor.js";
+import {
+  extractOperationParameters,
+  type OperationParameterMetadata,
+} from "./parameter-extractor.js";
 import {
   extractRequestSchemas,
   extractResponseSchemas,
@@ -81,6 +84,7 @@ export async function generateSchemas(
     resolvedSchemas: openApiDoc.components?.schemas ?? {},
     schemasDir,
   };
+  const operationParameters = extractOperationParameters(openApiDoc);
 
   if (!profiler) {
     const schemaGenerationPromises: Promise<void>[] = [
@@ -111,13 +115,12 @@ export async function generateSchemas(
           }),
       ),
       // Generate parameter schemas from operations
-      ...generateParameterSchemas(openApiDoc, context),
+      ...generateParameterSchemas(operationParameters, context),
     ];
 
     await Promise.all(schemaGenerationPromises);
 
     /* Generate the schema index barrel file */
-    const operationParameters = extractOperationParameters(openApiDoc);
     await generateSchemaIndex(context.schemasDir, operationParameters);
   } else {
     // Profiled path: run phases sequentially to get isolated timings
@@ -158,11 +161,10 @@ export async function generateSchemas(
     profiler.end("schemas:responses");
 
     profiler.start("schemas:parameters");
-    await Promise.all(generateParameterSchemas(openApiDoc, context));
+    await Promise.all(generateParameterSchemas(operationParameters, context));
     profiler.end("schemas:parameters");
 
     profiler.start("schemas:index");
-    const operationParameters = extractOperationParameters(openApiDoc);
     await generateSchemaIndex(context.schemasDir, operationParameters);
     profiler.end("schemas:index");
   }
@@ -328,33 +330,19 @@ function generateComponentSchemas(
  * Generates parameter schemas for all operations
  */
 function generateParameterSchemas(
-  openApiDoc: OpenAPIObject,
+  operationParameters: readonly OperationParameterMetadata[],
   context: SchemaGenerationContext,
 ): Promise<void>[] {
-  const promises: Promise<void>[] = [];
-
-  /* Extract all operation parameters */
-  const operationParameters = extractOperationParameters(openApiDoc);
-
-  /* Generate parameter schema files for each operation */
-  for (const parameterMetadata of operationParameters) {
-    const promise = context.limit(() =>
-      writeParameterSchemaFile(
-        context.schemasDir,
-        parameterMetadata.operationId,
-        parameterMetadata,
-        {
-          /* Client defaults - no coercion or special handling */
-          coercePrimitives: false,
-          formatOverrides: context.formatOverrides,
-          lowercaseHeaderKeys: false,
-        },
-      ),
-    );
-    promises.push(promise);
-  }
-
-  return promises;
+  return [
+    context.limit(() =>
+      writeParameterSchemaBundleFile(context.schemasDir, operationParameters, {
+        /* Client defaults - no coercion or special handling */
+        coercePrimitives: false,
+        formatOverrides: context.formatOverrides,
+        lowercaseHeaderKeys: false,
+      }),
+    ),
+  ];
 }
 
 /* Generates a minimal fallback file for schemas that are not plain OpenAPI objects */

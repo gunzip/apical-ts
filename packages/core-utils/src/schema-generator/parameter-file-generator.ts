@@ -12,31 +12,32 @@ import { generateParameterSchemas } from "../shared/parameter-schemas.js";
 import { sanitizeIdentifier } from "./utils.js";
 
 /**
- * Result of parameter schema file generation
+ * Supported options for generated parameter schema content
  */
-interface ParameterSchemaFileResult {
-  content: string;
-  fileName: string;
+interface ParameterSchemaFileOptions {
+  /* Use client defaults for parameter schema generation */
+  coercePrimitives?: boolean;
+  formatOverrides?: StringFormatOverrideRegistry;
+  lowercaseHeaderKeys?: boolean;
 }
 
+interface ParameterSchemaSectionResult {
+  content: string;
+  typeImports: Set<string>;
+}
+
+const PARAMETER_SCHEMA_BUNDLE_FILE_NAME = "parameters.ts";
+
 /**
- * Generates Zod schema files for operation parameters.
- * Creates separate files for each operation's query, path, and headers schemas.
+ * Generates Zod schema content for a single operation.
  */
-async function generateParameterSchemaFile(
-  schemasDir: string,
+function generateParameterSchemaSection(
   operationId: string,
   parameterMetadata: OperationParameterMetadata,
-  options: {
-    /* Use client defaults for parameter schema generation */
-    coercePrimitives?: boolean;
-    formatOverrides?: StringFormatOverrideRegistry;
-    lowercaseHeaderKeys?: boolean;
-  } = {},
-): Promise<ParameterSchemaFileResult> {
+  options: ParameterSchemaFileOptions = {},
+): ParameterSchemaSectionResult {
   /* Extract security headers from metadata */
   const sanitizedId = sanitizeIdentifier(operationId);
-  const fileName = `${sanitizedId}Parameters.ts`;
   const { securityHeaders = [] } = parameterMetadata;
 
   /* Generate parameter schemas using shared logic */
@@ -70,39 +71,6 @@ async function generateParameterSchemaFile(
 
   /* Track which parameter types actually exist */
   const { hasHeaders, hasPath, hasQuery } = result.hasParameters;
-
-  /* Build the file content */
-  const imports: string[] = [];
-
-  /* Always include Zod import */
-  imports.push(`import * as z from "zod";`);
-
-  /* Add other type imports */
-  if (result.typeImports.size > 0) {
-    const typeImportsList = Array.from(result.typeImports)
-      .filter(
-        (typeImport) =>
-          typeImport !== "z" &&
-          !findStringFormatOverrideByReferenceName(
-            typeImport,
-            options.formatOverrides,
-          ),
-      )
-      .sort();
-    for (const typeImport of typeImportsList) {
-      imports.push(`import { ${typeImport} } from "./${typeImport}.js";`);
-    }
-  }
-
-  const filePath = path.join(schemasDir, fileName);
-  const externalImportLines = renderStringFormatOverrideImports(
-    new Set([...result.typeImports, ...serverResult.typeImports]),
-    options.formatOverrides,
-    filePath,
-  );
-  if (externalImportLines.length > 0) {
-    imports.push(...externalImportLines);
-  }
 
   /* Calculate optionality for parameters */
   const queryParams = parameterMetadata.parameterGroups.queryParams || [];
@@ -178,12 +146,12 @@ async function generateParameterSchemaFile(
     hasQuery,
   });
 
-  const contentParts: string[] = [
-    ...imports,
-    "",
-    "/* Parameter schemas for type-safe inputs */",
-    result.schemaCode,
-  ];
+  const contentParts: string[] = [`/* Parameter schemas for ${sanitizedId} */`];
+
+  if (result.schemaCode) {
+    contentParts.push("", "/* Parameter schemas for type-safe inputs */");
+    contentParts.push(result.schemaCode);
+  }
 
   if (serverResult.schemaCode) {
     contentParts.push(
@@ -224,36 +192,64 @@ async function generateParameterSchemaFile(
     "",
   );
 
-  const content = contentParts.join("\n");
-
   return {
-    content,
-    fileName,
+    content: contentParts.join("\n"),
+    typeImports: new Set([...result.typeImports, ...serverResult.typeImports]),
   };
 }
 
 /**
- * Writes parameter schema file to the schemas directory
+ * Generates bundled parameter schema file content for all operations.
  */
-export async function writeParameterSchemaFile(
+function generateParameterSchemaBundleContent(
   schemasDir: string,
-  operationId: string,
-  parameterMetadata: OperationParameterMetadata,
-  options: {
-    coercePrimitives?: boolean;
-    formatOverrides?: StringFormatOverrideRegistry;
-    lowercaseHeaderKeys?: boolean;
-  } = {},
-): Promise<void> {
-  const result = await generateParameterSchemaFile(
-    schemasDir,
-    operationId,
-    parameterMetadata,
-    options,
+  operationParameters: readonly OperationParameterMetadata[],
+  options: ParameterSchemaFileOptions = {},
+): string {
+  const sections: string[] = [];
+  const typeImports = new Set<string>();
+
+  for (const parameterMetadata of operationParameters) {
+    const section = generateParameterSchemaSection(
+      parameterMetadata.operationId,
+      parameterMetadata,
+      options,
+    );
+    sections.push(section.content);
+
+    for (const typeImport of section.typeImports) {
+      typeImports.add(typeImport);
+    }
+  }
+
+  if (sections.length === 0) {
+    return "export {};\n";
+  }
+
+  const imports = buildParameterSchemaImports(
+    path.join(schemasDir, PARAMETER_SCHEMA_BUNDLE_FILE_NAME),
+    typeImports,
+    options.formatOverrides,
   );
 
-  const filePath = path.join(schemasDir, result.fileName);
-  await fs.writeFile(filePath, result.content, "utf-8");
+  return [...imports, "", sections.join("\n\n")].join("\n");
+}
+
+/**
+ * Writes the bundled parameter schema file to the schemas directory.
+ */
+export async function writeParameterSchemaBundleFile(
+  schemasDir: string,
+  operationParameters: readonly OperationParameterMetadata[],
+  options: ParameterSchemaFileOptions = {},
+): Promise<void> {
+  const filePath = path.join(schemasDir, PARAMETER_SCHEMA_BUNDLE_FILE_NAME);
+  const content = generateParameterSchemaBundleContent(
+    schemasDir,
+    operationParameters,
+    options,
+  );
+  await fs.writeFile(filePath, content, "utf-8");
 }
 
 /**
@@ -321,6 +317,36 @@ function buildSchemaExports(
   }
 
   return exports;
+}
+
+function buildParameterSchemaImports(
+  filePath: string,
+  typeImports: ReadonlySet<string>,
+  formatOverrides?: StringFormatOverrideRegistry,
+): string[] {
+  const imports = [`import * as z from "zod";`];
+  const typeImportsList = Array.from(typeImports)
+    .filter(
+      (typeImport) =>
+        typeImport !== "z" &&
+        !findStringFormatOverrideByReferenceName(typeImport, formatOverrides),
+    )
+    .sort();
+
+  for (const typeImport of typeImportsList) {
+    imports.push(`import { ${typeImport} } from "./${typeImport}.js";`);
+  }
+
+  const externalImportLines = renderStringFormatOverrideImports(
+    new Set(typeImports),
+    formatOverrides,
+    filePath,
+  );
+  if (externalImportLines.length > 0) {
+    imports.push(...externalImportLines);
+  }
+
+  return imports;
 }
 
 /**

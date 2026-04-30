@@ -8,7 +8,7 @@ export {
   createStringFormatOverrideRegistry,
   type StringFormatOverride,
 } from "./format-overrides.js";
-export { writeParameterSchemaFile } from "./parameter-file-generator.js";
+export { writeParameterSchemaBundleFile } from "./parameter-file-generator.js";
 export {
   analyzeSchemaForRecursion,
   createRecursiveContext,

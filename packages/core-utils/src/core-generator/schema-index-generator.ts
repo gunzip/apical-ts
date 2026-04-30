@@ -5,6 +5,8 @@ import type { OperationParameterMetadata } from "../core-generator/parameter-ext
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 
+const PARAMETER_SCHEMA_BUNDLE_BASE_NAME = "parameters";
+
 /**
  * Generates the schema index barrel file that exports all schemas including parameter schemas
  */
@@ -26,7 +28,7 @@ export async function generateSchemaIndex(
     const baseName = path.basename(file, ".ts");
 
     /* Skip parameter files - they will be handled separately */
-    if (file.includes("Parameters.ts")) {
+    if (baseName === PARAMETER_SCHEMA_BUNDLE_BASE_NAME) {
       continue;
     }
 
@@ -34,52 +36,12 @@ export async function generateSchemaIndex(
     exports.push(baseName);
   }
 
-  /* Add imports and exports for parameter schemas */
-  for (const parameterMetadata of operationParameters) {
-    const sanitizedId = sanitizeIdentifier(parameterMetadata.operationId);
-    const parameterFileName = `${sanitizedId}Parameters`;
-
-    /* Check if the parameter file exists */
-    const parameterFilePath = path.join(schemasDir, `${parameterFileName}.ts`);
-    try {
-      await fs.access(parameterFilePath);
-
-      /* Read the parameter file to check which schemas actually exist */
-      const parameterFileContent = await fs.readFile(
-        parameterFilePath,
-        "utf-8",
-      );
-
-      /* Collect available schema exports from the file */
-      const availableExports: string[] = [];
-
-      /* Check for both client and server schema exports */
-      const querySchemaName = `${sanitizedId}QuerySchema`;
-      const pathSchemaName = `${sanitizedId}PathSchema`;
-      const headersSchemaName = `${sanitizedId}HeadersSchema`;
-
-      if (parameterFileContent.includes(`export { ${querySchemaName} }`)) {
-        availableExports.push(querySchemaName);
-      }
-      if (parameterFileContent.includes(`export { ${pathSchemaName} }`)) {
-        availableExports.push(pathSchemaName);
-      }
-      if (parameterFileContent.includes(`export { ${headersSchemaName} }`)) {
-        availableExports.push(headersSchemaName);
-      }
-
-      /* Only add imports if there are any exports */
-      if (availableExports.length > 0) {
-        imports.push(`import {`);
-        imports.push(...availableExports.map((exp) => `  ${exp},`));
-        imports.push(`} from "./${parameterFileName}.js";`);
-
-        /* Add to exports */
-        exports.push(...availableExports);
-      }
-    } catch {
-      /* Parameter file doesn't exist - skip */
-    }
+  const parameterExports = collectParameterSchemaExports(operationParameters);
+  if (parameterExports.length > 0) {
+    imports.push(`import {`);
+    imports.push(...parameterExports.map((exp) => `  ${exp},`));
+    imports.push(`} from "./${PARAMETER_SCHEMA_BUNDLE_BASE_NAME}.js";`);
+    exports.push(...parameterExports);
   }
 
   /* Sort exports for consistency */
@@ -98,4 +60,31 @@ export async function generateSchemaIndex(
   /* Write the index file */
   const indexPath = path.join(schemasDir, "index.ts");
   await fs.writeFile(indexPath, content, "utf-8");
+}
+
+function collectParameterSchemaExports(
+  operationParameters: readonly OperationParameterMetadata[],
+): string[] {
+  const exports: string[] = [];
+
+  for (const parameterMetadata of operationParameters) {
+    const sanitizedId = sanitizeIdentifier(parameterMetadata.operationId);
+
+    if (parameterMetadata.parameterGroups.queryParams.length > 0) {
+      exports.push(`${sanitizedId}QuerySchema`);
+    }
+
+    if (parameterMetadata.parameterGroups.pathParams.length > 0) {
+      exports.push(`${sanitizedId}PathSchema`);
+    }
+
+    if (
+      parameterMetadata.parameterGroups.headerParams.length > 0 ||
+      (parameterMetadata.securityHeaders?.length ?? 0) > 0
+    ) {
+      exports.push(`${sanitizedId}HeadersSchema`);
+    }
+  }
+
+  return exports;
 }

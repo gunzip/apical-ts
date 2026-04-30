@@ -54,7 +54,7 @@ export function renderRouteMetadata(
     ? `import {
   ${parsedParamsName},
   ${serverParsedParamsName},
-} from "../schemas/${sanitizedId}Parameters.js";`
+} from "../schemas/parameters.js";`
     : "";
 
   /* Build request/response maps if needed */
