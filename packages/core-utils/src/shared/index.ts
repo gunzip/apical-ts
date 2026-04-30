@@ -3,6 +3,7 @@ export * from "./generated-operation-files.js";
 export * from "./models/parameter-models.js";
 export * from "./models/request-body-models.js";
 export * from "./models/security-models.js";
+export * from "./operation-generation-metadata.js";
 export * from "./operation-extractor.js";
 export * from "./operation-utils.js";
 export * from "./parameter-schemas.js";

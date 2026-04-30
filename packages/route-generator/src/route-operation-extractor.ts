@@ -1,4 +1,7 @@
-import type { ContentTypeMaps } from "@apical-ts/core-utils/shared";
+import type {
+  ContentTypeMaps,
+  OperationGenerationMetadata,
+} from "@apical-ts/core-utils/shared";
 import type {
   OpenAPIObject,
   OperationObject,
@@ -6,10 +9,7 @@ import type {
   ReferenceObject,
 } from "openapi3-ts/oas31";
 
-import { sanitizeIdentifier } from "@apical-ts/core-utils";
-import { generateContentTypeMaps } from "@apical-ts/core-utils/shared";
-import { extractParameterGroups } from "@apical-ts/core-utils/shared";
-import { getOperationSecuritySchemes } from "@apical-ts/core-utils/shared";
+import { extractOperationGenerationMetadata } from "@apical-ts/core-utils/shared";
 
 /**
  * Route operation metadata for template generation
@@ -21,18 +21,13 @@ export interface RouteOperationMetadata {
     requestMapTypeName: string;
     responseMapTypeName: string;
     shouldGenerateRequestMap: boolean;
+    shouldGenerateResponseMap: boolean;
   };
   method: string;
   operation: OperationObject;
   operationId: string;
   /* Flags indicating which parameter types have actual parameters */
-  parameterInfo: {
-    hasHeaders: boolean;
-    hasPath: boolean;
-    hasQuery: boolean;
-    isHeadersOptional: boolean;
-    isQueryOptional: boolean;
-  };
+  parameterInfo: OperationGenerationMetadata["parameterInfo"];
   pathKey: string;
 }
 
@@ -49,61 +44,33 @@ export function extractRouteOperationMetadata(
   pathLevelParameters: (ParameterObject | ReferenceObject)[],
   doc: OpenAPIObject,
 ): RouteOperationMetadata {
-  const operationId = operation.operationId;
-  if (!operationId) {
-    throw new Error("Operation ID is required for route generation");
-  }
-
-  /* Extract content-type information using shared logic */
-  const contentTypeMaps = generateContentTypeMaps(operation, doc);
-  const hasBody = !!operation.requestBody;
-
-  /* Determine if maps should be generated based on content type counts */
-  const shouldGenerateRequestMap =
-    hasBody && contentTypeMaps.requestContentTypeCount > 0;
-
-  /* Extract parameter groups to determine which parameter types exist */
-  const parameterGroups = extractParameterGroups(
-    operation,
-    pathLevelParameters,
+  const sharedMetadata = extractOperationGenerationMetadata({
     doc,
-  );
-
-  /* Extract security headers to calculate header optionality */
-  const securityHeaders = getOperationSecuritySchemes(operation, doc);
-
-  /* Calculate optionality - same logic as in parameter-file-generator */
-  const isQueryOptional = parameterGroups.queryParams.every(
-    (p) => p.required !== true,
-  );
-  /*
-   * Headers are optional only if all header params AND security headers are optional.
-   * When required headers exist, they must be provided in params OR config.
-   */
-  const hasRequiredSecurityHeader = securityHeaders.some((sh) => sh.isRequired);
-  const isHeadersOptional =
-    parameterGroups.headerParams.every((p) => p.required !== true) &&
-    !hasRequiredSecurityHeader;
-
-  return {
-    bodyInfo: {
-      contentTypeMaps,
-      hasBody,
-      requestMapTypeName: `${sanitizeIdentifier(operationId)}RequestMap`,
-      responseMapTypeName: `${sanitizeIdentifier(operationId)}ResponseMap`,
-      shouldGenerateRequestMap,
-    },
     method,
     operation,
-    operationId,
-    parameterInfo: {
-      hasHeaders:
-        parameterGroups.headerParams.length > 0 || securityHeaders.length > 0,
-      hasPath: parameterGroups.pathParams.length > 0,
-      hasQuery: parameterGroups.queryParams.length > 0,
-      isHeadersOptional,
-      isQueryOptional,
-    },
     pathKey,
+    pathLevelParameters,
+  });
+
+  return extractRouteOperationMetadataFromMetadata(sharedMetadata);
+}
+
+export function extractRouteOperationMetadataFromMetadata(
+  metadata: OperationGenerationMetadata,
+): RouteOperationMetadata {
+  return {
+    bodyInfo: {
+      contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
+      hasBody: metadata.bodyInfo.hasRequestBody,
+      requestMapTypeName: `${metadata.functionName}RequestMap`,
+      responseMapTypeName: `${metadata.functionName}ResponseMap`,
+      shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
+      shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
+    },
+    method: metadata.method,
+    operation: metadata.operation,
+    operationId: metadata.operationId,
+    parameterInfo: metadata.parameterInfo,
+    pathKey: metadata.pathKey,
   };
 }

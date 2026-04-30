@@ -6,6 +6,7 @@ import type {
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import { generateOperations } from "@apical-ts/client-generator";
+import { extractAllOperationGenerationMetadata } from "@apical-ts/core-utils/shared";
 import {
   applyGeneratedOperationIds,
   convertToOpenAPI31,
@@ -148,12 +149,26 @@ async function generateAllOperations(
   profiler?: Profiler,
 ): Promise<void> {
   const operationPromises: Promise<void>[] = [];
+  let operationMetadata:
+    | ReturnType<typeof extractAllOperationGenerationMetadata>
+    | undefined;
+
+  if (generateRoutes || generateClient || generateServer) {
+    profiler?.start("operation-metadata");
+    operationMetadata = extractAllOperationGenerationMetadata(openApiDoc);
+    profiler?.end("operation-metadata");
+  }
 
   /* Generate routes if explicitly requested or if client/server is enabled */
   if (generateRoutes || generateClient || generateServer) {
     profiler?.start("routes");
     operationPromises.push(
-      generateRouteMetadata(openApiDoc, output, concurrency).finally(() => {
+      generateRouteMetadata(
+        openApiDoc,
+        output,
+        concurrency,
+        operationMetadata,
+      ).finally(() => {
         profiler?.end("routes");
       }),
     );
@@ -162,7 +177,12 @@ async function generateAllOperations(
   if (generateClient) {
     profiler?.start("client-operations");
     operationPromises.push(
-      generateOperations(openApiDoc, output, concurrency).finally(() => {
+      generateOperations(
+        openApiDoc,
+        output,
+        concurrency,
+        operationMetadata,
+      ).finally(() => {
         profiler?.end("client-operations");
       }),
     );

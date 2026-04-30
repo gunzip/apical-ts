@@ -1,9 +1,12 @@
-import type { OperationMetadata } from "@apical-ts/core-utils/shared";
+import type {
+  OperationGenerationMetadata,
+  OperationMetadata,
+} from "@apical-ts/core-utils/shared";
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
-import { extractAllOperations } from "@apical-ts/core-utils/shared";
 import { extractServerUrls } from "@apical-ts/core-utils/shared";
 import { extractAuthHeaders } from "@apical-ts/core-utils/shared";
+import { extractAllOperationGenerationMetadata } from "@apical-ts/core-utils/shared";
 import pLimit from "p-limit";
 
 import {
@@ -12,7 +15,7 @@ import {
   writeIndexFile,
   writeOperationFile,
 } from "./file-writer.js";
-import { generateOperationFunction } from "./operation-function-generator.js";
+import { generateOperationFunctionFromMetadata } from "./operation-function-generator.js";
 
 /**
  * Generates individual operation files and configuration
@@ -21,6 +24,7 @@ export async function generateOperations(
   doc: OpenAPIObject,
   outputDir: string,
   concurrency: number,
+  operationMetadata = extractAllOperationGenerationMetadata(doc),
 ): Promise<void> {
   const operationsDir = await createOperationsDirectory(outputDir);
 
@@ -29,7 +33,12 @@ export async function generateOperations(
   const serverUrls = extractServerUrls(doc);
 
   // Process all operations and write files
-  const operations = await processOperations(doc, operationsDir, concurrency);
+  const operations = await processOperations(
+    doc,
+    operationsDir,
+    concurrency,
+    operationMetadata,
+  );
 
   // Write configuration file
   await writeConfigFile(authHeaders, serverUrls, operationsDir);
@@ -45,29 +54,18 @@ async function processOperations(
   doc: OpenAPIObject,
   operationsDir: string,
   concurrency: number,
+  operationMetadata: OperationGenerationMetadata[],
 ): Promise<OperationMetadata[]> {
-  const operations = extractAllOperations(doc);
   const limit = pLimit(concurrency);
   const operationPromises: Promise<void>[] = [];
 
-  for (const {
-    method,
-    operation,
-    operationId,
-    pathKey,
-    pathLevelParameters,
-  } of operations) {
+  for (const metadata of operationMetadata) {
     const promise = limit(async () => {
-      const { functionCode, importManager } = generateOperationFunction(
-        pathKey,
-        method,
-        operation,
-        pathLevelParameters,
-        doc,
-      );
+      const { functionCode, importManager } =
+        generateOperationFunctionFromMetadata(metadata, doc);
 
       await writeOperationFile(
-        operationId,
+        metadata.operationId,
         functionCode,
         importManager,
         operationsDir,
@@ -77,7 +75,7 @@ async function processOperations(
   }
 
   await Promise.all(operationPromises);
-  return operations;
+  return operationMetadata;
 }
 
 export {

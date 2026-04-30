@@ -6,13 +6,14 @@ import type {
 } from "openapi3-ts/oas31";
 
 import { ImportManager } from "@apical-ts/core-utils";
-import { sanitizeIdentifier } from "@apical-ts/core-utils";
-import { generateResponseMap } from "@apical-ts/core-utils/shared";
-import { generateResponseUnion } from "@apical-ts/core-utils/shared";
-import { generateServerRequestBodyMap } from "@apical-ts/core-utils/shared";
+import {
+  extractOperationGenerationMetadata,
+  generateResponseUnion,
+  type OperationGenerationMetadata,
+} from "@apical-ts/core-utils/shared";
 
 import {
-  extractRouteOperationMetadata,
+  extractRouteOperationMetadataFromMetadata,
   type RouteOperationMetadata as LightweightRouteMetadata,
 } from "./route-operation-extractor.js";
 import { renderRouteMetadata } from "./templates/route-metadata-templates.js";
@@ -30,11 +31,14 @@ export interface RouteOperationMetadata {
   bodyInfo: {
     contentTypeMaps: LightweightRouteMetadata["bodyInfo"]["contentTypeMaps"];
     hasBody: boolean;
+    requestBodyMap: OperationGenerationMetadata["bodyInfo"]["requestBodyMap"];
     requestMapTypeName: string;
+    responseMap: OperationGenerationMetadata["bodyInfo"]["responseMap"];
     responseMapTypeName: string;
-    serverRequestBodyMap: ReturnType<typeof generateServerRequestBodyMap>;
     shouldGenerateRequestMap: boolean;
+    shouldGenerateResponseMap: boolean;
   };
+  functionName: string;
   operation: OperationObject;
   operationId: string;
   parameterInfo: LightweightRouteMetadata["parameterInfo"];
@@ -55,15 +59,13 @@ export function buildRequestMap(
 export type ${mapName} = typeof ${mapName};`;
   }
 
-  const { serverRequestBodyMap } = metadata.bodyInfo;
-
-  /* Add imports for request schemas */
-  for (const typeImport of serverRequestBodyMap.typeImports) {
+  for (const typeImport of metadata.bodyInfo.requestBodyMap.typeImports) {
     importManager.addSchemaImport(typeImport);
   }
 
-  /* Convert the client generator format (with semicolons) to object literal format (with commas) */
-  const fixedMapType = serverRequestBodyMap.requestMapType.replace(/;/g, ",");
+  /* Convert the type-shape map into an object-literal friendly map */
+  const fixedMapType =
+    metadata.bodyInfo.requestBodyMap.requestMapType.replaceAll(";", ",");
 
   return `export const ${mapName} = ${fixedMapType} as const;
 export type ${mapName} = typeof ${mapName};`;
@@ -77,53 +79,31 @@ export function buildResponseMap(
   importManager: ImportManager,
   doc: OpenAPIObject,
 ): string {
-  /* Create a temporary Set to collect type imports */
-  const typeImports = new Set<string>();
-  // Route files already import schema response symbols (e.g. FooResponse).
-  // Use a distinct route-level union name to avoid TS2440 collisions between
-  // imported schema types and the response union exported by the route module.
-  const routeResponseTypeName = `${sanitizeIdentifier(metadata.operationId)}RouteResponse`;
-
-  /* Generate response union type using existing logic */
+  const responseTypeImports = new Set<string>();
+  const routeResponseTypeName = `${metadata.functionName}RouteResponse`;
   const unionResult = generateResponseUnion(
     metadata.operation,
     metadata.operationId,
-    typeImports,
+    responseTypeImports,
     doc,
     undefined,
     routeResponseTypeName,
   );
 
-  /* Generate response map using shared logic */
-  const responseMapResult = generateResponseMap(
-    metadata.operation,
-    metadata.operationId,
-    typeImports,
-    doc,
-    {},
-  );
-
-  /* Add type imports to ImportManager */
-  for (const typeImport of typeImports) {
+  for (const typeImport of metadata.bodyInfo.responseMap.typeImports) {
     importManager.addSchemaImport(typeImport);
   }
-  for (const typeImport of responseMapResult.typeImports) {
+  for (const typeImport of unionResult.typeImports) {
     importManager.addSchemaImport(typeImport);
   }
 
-  /* Generate response map constant and type */
-  const responseMapName = `${sanitizeIdentifier(metadata.operationId)}ResponseMap`;
-
-  let responseMapCode = "";
-  if (responseMapResult.shouldGenerateResponseMap) {
-    responseMapCode = `export const ${responseMapName} = ${responseMapResult.responseMapType} as const;
+  const responseMapName = metadata.bodyInfo.responseMapTypeName;
+  const responseMapCode = metadata.bodyInfo.shouldGenerateResponseMap
+    ? `export const ${responseMapName} = ${metadata.bodyInfo.responseMap.responseMapType} as const;
+export type ${responseMapName} = typeof ${responseMapName};`
+    : `export const ${responseMapName} = {} as const;
 export type ${responseMapName} = typeof ${responseMapName};`;
-  } else {
-    responseMapCode = `export const ${responseMapName} = {} as const;
-export type ${responseMapName} = typeof ${responseMapName};`;
-  }
 
-  /* Combine both the union type and the response map */
   return `${responseMapCode}\n\n${unionResult.unionTypeDefinition}`;
 }
 
@@ -137,36 +117,39 @@ export function generateRouteMetadata(
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
   doc: OpenAPIObject,
 ): GeneratedRouteMetadata {
-  const metadata = extractCompleteRouteMetadata(
-    pathKey,
+  const metadata = extractOperationGenerationMetadata({
+    doc,
     method,
     operation,
+    pathKey,
     pathLevelParameters,
-    doc,
-  );
+  });
 
+  return generateRouteMetadataFromMetadata(metadata, doc);
+}
+
+export function generateRouteMetadataFromMetadata(
+  metadata: OperationGenerationMetadata,
+  doc: OpenAPIObject,
+): GeneratedRouteMetadata {
+  const routeMetadata = extractCompleteRouteMetadata(metadata);
   const importManager = new ImportManager();
 
-  /* Build request map (always, even if empty) */
-  const requestMapCode = buildRequestMap(metadata, importManager);
-
-  /* Build response map */
-  const responseMapCode = buildResponseMap(metadata, importManager, doc);
-
-  /* Render the complete route metadata */
+  const requestMapCode = buildRequestMap(routeMetadata, importManager);
+  const responseMapCode = buildResponseMap(routeMetadata, importManager, doc);
   const routeCode = renderRouteMetadata({
-    hasHeaders: metadata.parameterInfo.hasHeaders,
-    hasPath: metadata.parameterInfo.hasPath,
-    hasQuery: metadata.parameterInfo.hasQuery,
-    isHeadersOptional: metadata.parameterInfo.isHeadersOptional,
-    isQueryOptional: metadata.parameterInfo.isQueryOptional,
-    method: method.toLowerCase(),
-    operationId: metadata.operationId,
-    pathKey,
+    hasHeaders: routeMetadata.parameterInfo.hasHeaders,
+    hasPath: routeMetadata.parameterInfo.hasPath,
+    hasQuery: routeMetadata.parameterInfo.hasQuery,
+    isHeadersOptional: routeMetadata.parameterInfo.isHeadersOptional,
+    isQueryOptional: routeMetadata.parameterInfo.isQueryOptional,
+    method: metadata.method.toLowerCase(),
+    operationId: routeMetadata.operationId,
+    pathKey: metadata.pathKey,
     requestMapCode,
-    requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
+    requestMapTypeName: routeMetadata.bodyInfo.requestMapTypeName,
     responseMapCode,
-    responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+    responseMapTypeName: routeMetadata.bodyInfo.responseMapTypeName,
   });
 
   return {
@@ -179,46 +162,26 @@ export function generateRouteMetadata(
  * Extracts metadata needed for route generation (wrapper that adds server-specific data)
  */
 function extractCompleteRouteMetadata(
-  pathKey: string,
-  method: string,
-  operation: OperationObject,
-  pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
-  doc: OpenAPIObject,
+  metadata: OperationGenerationMetadata,
 ): RouteOperationMetadata {
-  const operationId = operation.operationId;
-  if (!operationId) {
-    throw new Error("Operation ID is required for route generation");
-  }
-
-  /* Use lightweight extractor instead of heavyweight client generator */
-  const lightweightMeta = extractRouteOperationMetadata(
-    pathKey,
-    method,
-    operation,
-    pathLevelParameters,
-    doc,
-  );
-
-  /* Generate server request body map (server-specific addition) */
-  const typeImports = new Set<string>();
-  const serverRequestBodyMap = generateServerRequestBodyMap(
-    operation,
-    operationId,
-    typeImports,
-  );
+  const lightweightMeta = extractRouteOperationMetadataFromMetadata(metadata);
 
   return {
     bodyInfo: {
       contentTypeMaps: lightweightMeta.bodyInfo.contentTypeMaps,
       hasBody: lightweightMeta.bodyInfo.hasBody,
+      requestBodyMap: metadata.bodyInfo.requestBodyMap,
       requestMapTypeName: lightweightMeta.bodyInfo.requestMapTypeName,
+      responseMap: metadata.bodyInfo.responseMap,
       responseMapTypeName: lightweightMeta.bodyInfo.responseMapTypeName,
-      serverRequestBodyMap,
       shouldGenerateRequestMap:
         lightweightMeta.bodyInfo.shouldGenerateRequestMap,
+      shouldGenerateResponseMap:
+        lightweightMeta.bodyInfo.shouldGenerateResponseMap,
     },
-    operation,
-    operationId,
+    functionName: metadata.functionName,
+    operation: metadata.operation,
+    operationId: metadata.operationId,
     parameterInfo: lightweightMeta.parameterInfo,
   };
 }
