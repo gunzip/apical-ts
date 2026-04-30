@@ -12,6 +12,8 @@ import type {
   SecurityHeader,
 } from "./models/security-models.js";
 
+import { normalizeHeaderName } from "./header-name-utils.js";
+
 export type { SecurityHeader };
 
 /*
@@ -72,7 +74,7 @@ export function analyzeSecurityScheme(
   let isHeaderBased = false;
 
   if (scheme.type === "apiKey" && scheme.in === "header" && scheme.name) {
-    headerName = scheme.name;
+    headerName = normalizeHeaderName(scheme.name);
     isHeaderBased = true;
   } else if (scheme.type === "http" && scheme.scheme === "bearer") {
     headerName = "Authorization";

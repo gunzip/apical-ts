@@ -13,6 +13,8 @@ import { assert } from "console";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
 import type { ImportManager } from "../core-generator/import-types.js";
+
+import { normalizeHeaderParameter } from "./header-name-utils.js";
 import type { ParameterGroups } from "./models/parameter-models.js";
 
 /**
@@ -82,10 +84,10 @@ export function extractParameterGroups(
 ): ParameterGroups {
   /* Resolve parameter references and combine path-level and operation-level parameters */
   const resolvedPathLevelParams = pathLevelParameters.map((p) =>
-    resolveParameterReference(p, doc),
+    normalizeHeaderParameter(resolveParameterReference(p, doc)),
   );
   const resolvedOperationParams = (operation.parameters || []).map((p) =>
-    resolveParameterReference(p, doc),
+    normalizeHeaderParameter(resolveParameterReference(p, doc)),
   );
   /* Deduplicate by name+location: operation-level params override path-level per OpenAPI spec */
   const parameterMap = new Map<string, ParameterObject>();

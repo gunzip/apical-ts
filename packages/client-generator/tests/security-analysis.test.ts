@@ -32,6 +32,23 @@ describe("client-generator security analysis", () => {
       });
     });
 
+    it("should normalize malformed quoted API key header names", () => {
+      const scheme: SecuritySchemeObject = {
+        in: "header",
+        name: "'X-API-Key'",
+        type: "apiKey",
+      };
+
+      const result = analyzeSecurityScheme("apiKey", scheme);
+
+      expect(result).toEqual({
+        schemeName: "apiKey",
+        scheme,
+        headerName: "X-API-Key",
+        isHeaderBased: true,
+      });
+    });
+
     it("should analyze bearer token scheme", () => {
       const scheme: SecuritySchemeObject = {
         scheme: "bearer",
