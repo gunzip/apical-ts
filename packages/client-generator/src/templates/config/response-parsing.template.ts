@@ -17,7 +17,7 @@ function isRequestBodyArrayBufferView(
 export type RequestBody = RequestInit["body"] | undefined;
 
 export function normalizeRequestBody(body: unknown): RequestBody {
-  if (body === undefined || typeof body === "string") {
+  if (body === undefined || body === null || typeof body === "string") {
     return body;
   }
   if (

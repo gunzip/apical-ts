@@ -213,7 +213,7 @@ describe("client-generator config-templates", () => {
       expect(normalizeRequestBody(view)).toBe(view);
     });
 
-    it("should preserve readable streams and stringify plain objects", () => {
+    it("should preserve null, readable streams, and stringify plain objects", () => {
       const normalizeRequestBody = getNormalizeRequestBody();
       const stream = new ReadableStream<Uint8Array>({
         start(controller) {
@@ -222,6 +222,7 @@ describe("client-generator config-templates", () => {
         },
       });
 
+      expect(normalizeRequestBody(null)).toBeNull();
       expect(normalizeRequestBody(stream)).toBe(stream);
       expect(normalizeRequestBody({ ok: true })).toBe('{"ok":true}');
     });
