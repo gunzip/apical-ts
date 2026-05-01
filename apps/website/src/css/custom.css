@@ -153,10 +153,23 @@ h3 {
 
 /* Navbar styling */
 .navbar {
-  backdrop-filter: blur(18px);
-  background: var(--site-frame-bg);
+  background: transparent;
   border-bottom: 1px solid var(--site-frame-border);
   box-shadow: var(--site-frame-shadow);
+  position: relative;
+}
+
+/* Keep the blur off the navbar element itself so the mobile sidebar's fixed
+ * positioning stays anchored to the viewport instead of the header box.
+ */
+.navbar::before {
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  background: var(--site-frame-bg);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
 }
 
 .navbar__inner {
@@ -164,7 +177,9 @@ h3 {
   display: flex;
   margin: 0 auto;
   max-width: 1200px;
+  position: relative;
   width: min(1200px, calc(100% - 2rem));
+  z-index: 1;
 }
 
 .navbar__items,
@@ -241,8 +256,14 @@ h3 {
 }
 
 .navbar-sidebar {
+  -webkit-backdrop-filter: blur(20px);
   background: var(--site-frame-bg-strong);
   backdrop-filter: blur(20px);
+  z-index: 3;
+}
+
+.navbar-sidebar__backdrop {
+  z-index: 2;
 }
 
 /* Improved button styles */
