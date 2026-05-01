@@ -51,7 +51,7 @@ const featureCards = [
     index: "AI adapters",
     title: "Precise building blocks for custom integrations",
     description:
-      "Precise per-operation schemas and route shapes give agents enough structure to generate custom Hono, MSW, or React Query adapters fast.",
+      "Precise per-operation schemas and route shapes give agents enough structure toave tokens generat custom Hono, MSW, or React Query adapters fast.",
   },
   {
     index: "No rigid plugins",
@@ -111,11 +111,10 @@ function HomepageHeader() {
             </ul>
           </div>
           <p className={styles.heroDetail}>
-            With that base, it is easy to vibe-code custom adapters such as Hono
-            handlers, MSW mocks, or React Query hooks without baking framework
-            plugins into the generator itself. The sweet spot between{" "}
-            <strong>flexibility and precision</strong> for AI-assisted
-            development.
+            Hand-written glue and AI-generated scaffolding both tend to get
+            route contracts subtly wrong. Apical focuses on that hard layer
+            first, then lets you generate or compose clients, server wrappers,
+            and custom adapters on top of a contract that stays precise.
           </p>
           <div className={styles.heroActions}>
             {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
@@ -141,7 +140,7 @@ function HomepageHeader() {
           <div className={styles.previewFrame}>
             <div className={styles.previewHeader}>
               <span className={styles.previewPill}>
-                generate schemas and routes
+                generate precise route contracts
               </span>
             </div>
             <CodeBlock
@@ -177,8 +176,8 @@ function FeatureSection() {
             A hard base for coding agents.
           </Heading>
           <p className={styles.sectionLead}>
-            Apical keeps that hard part small and precise: schemas and route
-            metadata first, custom adapters on top.
+            If route schemas are precise, generating clients and servers becomes
+            a flexible implementation choice instead of a typing gamble.
           </p>
         </div>
 

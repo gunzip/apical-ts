@@ -24,30 +24,52 @@ keywords:
 **fully-typed Zod v4 schemas** ready for runtime (client or server) validation
 and TypeScript development.
 
-You may ask: why another Typescript OpenAPI generator? The answer lies in full
-commitment to **strict type safety**. With @apical-ts/craft, you get:
+## Why another Typescript OpenAPI generator?
 
+With @apical-ts/craft, you get some unique features that set it apart from other
+generators that implements _runtime_ validation:
+
+- 🧪 **Self-contained reusable route definitions** – Zod schemas are generated
+  for independent use. Bring your own client or server generator!
 - 🎯 **Operation-based architecture** – Each API operation is a standalone,
-  fully-typed function
-- 🛡️ **Runtime validation** – Zod v4 ensures robust type safety for requests and
-  responses
+  fully-typed function. Avoid huge bundles and enjoy tree-shaking benefits
+- 🦄 **Discriminated unions** – Polymorphic schemas are handled with precise
+  union types. You cannot access properties that are not guaranteed to exist,
+  preventing runtime errors
 - 🔄 **Multiple content types** – Supports JSON, XML, form data, and more
 - 📝 **OpenAPI compatibility** – Works with OpenAPI 2.0, 3.0.x, and 3.1.x specs
-- 🚀 **Minimal dependencies** – Generated code is lightweight and easy to
-  integrate
-- 🧪 **Self-contained schemas** – Zod schemas are generated for independent use
-- 🛑 **No runtime exceptions** – Client operations are safe and predictable
-- 🙅‍♂️ **No accidental undefined access** – Strict typings prevent undefined
-  property access
-- 🦄 **Discriminated unions** – Polymorphic schemas are handled with precise
-  union types
-- 🎉 **Multiple success responses** – Handles multiple success codes (e.g.,
-  `200`, `201`) with payloads
-- 🌐 **Wildcard response support** – Supports wildcard status codes (e.g.,
-  `2XX`, `4XX`)
+- 🎉 **Resilient to edge cases** – Handles multiple success codes (e.g., `200`,
+  `201`) and wildcard status codes (e.g., `2XX`, `4XX`)
+- 📝 **Writeonly and readonly properties** – Respects OpenAPI's `readOnly` and
+  `writeOnly` schema properties for accurate client and server typings
+- 🔧 **Custom formats** – Supports custom formats for strings with user-defined
+  validation schemas
 - 🔁 **Circular reference support** – Handles circular schema references
   gracefully without overflows
-- 🐞 **Rich error reporting** – Debug operations easily with detailed errors
+
+We all like the developer experience of [tRPC](https://trpc.io/) or
+[oRPC](https://orpc.io/), but not always we're in control of the backend.
+
+OpenAPI specifications provide a powerful way to define your API contracts, and
+with @apical-ts/craft, you can easily generate TypeScript code that strictly
+adheres to those contracts, all while enjoying a seamless developer experience
+and instant feedback on your API's correctness in your code editor.
+
+Many existing generators lack flexibility and strong type safety. Most do not
+support multiple success responses or multiple content types, and their typings
+are often too loose—making it easy to accidentally access undefined properties.
+With **stricter** guardrails, @apical-ts/craft helps developers and coding
+agents catch mistakes early, leading to more robust and reliable
+implementations.
+
+Despite @apical-ts/craft's can generate a fully functional client, it is
+designed to be flexible and modular. You can use the generated routes in your
+own custom client or server implementations without being locked into a specific
+framework or architecture.
+
+Curious why you should choose this generator over others? See our
+[comparison with alternative libraries](./comparison-with-alternative-libraries.md)
+for more details or check our comprehensive feature list for more information.
 
 ## Quick Start
 
@@ -56,26 +78,26 @@ Get started with @apical-ts/craft in just a few commands:
 ```bash
 # Generate schemas and client from an OpenAPI specification
 npx @apical-ts/craft generate \
-  --server \
-  --client \
+  --client --server \
   -i https://petstore.swagger.io/v2/swagger.json \
   -o generated
 
-# Install runtime dependencies for the generated code
 cd generated
 npm install
+npm run build
 ```
 
 This will create:
 
-- **`server/`** - Typed handler wrappers
+- **`schemas/`** - Zod v4 schemas and TypeScript types
+- **`routes/`** - For request and response validation
 - **`client/`** - Individual operation functions for each API endpoint
-- **`schemas/`** - Zod schemas and TypeScript types
+- **`server/`** - Typed handler wrappers, agnostic to your server framework
 
 :::note
 
-The generated client and server code requires `zod` as a runtime dependency for
-schema validation. Make sure to install it in your project.
+The generated code requires `zod` as a runtime dependency for schema validation.
+Make sure to install it in your project.
 
 :::
 
@@ -104,24 +126,6 @@ Explore the live demo to see @apical-ts/craft in action:
 src="https://stackblitz.com/edit/apical-craft-example?ctl=1&embed=1&file=src%2Fclient.ts&view=editor&theme=dark"></iframe>
 
 <!-- ![Demo of OpenAPI TypeScript Generator](../static/img/demo.gif) -->
-
-## Why another generator?
-
-We all like the developer experience of [tRPC](https://trpc.io/), but not always
-we're in control of the backend. OpenAPI specifications provide a powerful way
-to define your API contracts, and with @apical-ts/craft, you can easily generate
-TypeScript code that strictly adheres to those contracts, all while enjoying a
-seamless developer experience.
-
-Many existing generators lack flexibility and strong type safety. Most do not
-support multiple success responses or multiple content types, and their typings
-are often too loose—making it easy to accidentally access undefined properties.
-With **stricter** guardrails, @apical-ts/craft helps developers (and Gen-AIs)
-build more robust and reliable implementations.
-
-Curious why you should choose this generator over others? See our
-[comparison with alternative libraries](./comparison-with-alternative-libraries.md)
-for more details or check our comprehensive feature list for more information.
 
 ## Next Steps
 
