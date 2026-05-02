@@ -73,9 +73,12 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Manrope", sans-serif;
+  font-family:
+    "Instrument Serif",
+    Times New Roman,
+    serif;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.05em;
 }
 
 h1 {
