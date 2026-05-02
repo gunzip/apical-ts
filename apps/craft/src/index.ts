@@ -15,7 +15,7 @@ program
   .description(
     "Generate TypeScript from an OpenAPI or JSON Schema specification.",
   )
-  .version("0.20.0");
+  .version("0.20.2");
 
 program
   .command("generate")

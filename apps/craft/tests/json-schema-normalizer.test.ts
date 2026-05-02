@@ -91,4 +91,90 @@ describe("JSON Schema normalizer", () => {
       false,
     );
   });
+
+  it("treats empty-string refs as root schema refs", () => {
+    const normalized = normalizeRawJsonSchemaDocument({
+      properties: {
+        self: {
+          $ref: "",
+        },
+      },
+      title: "RecursiveRoot",
+      type: "object",
+    });
+
+    const schema = normalized.document.components?.schemas?.RecursiveRoot;
+    if (
+      !schema ||
+      typeof schema !== "object" ||
+      Array.isArray(schema) ||
+      "$ref" in schema
+    ) {
+      expect.fail(
+        "Expected RecursiveRoot to be emitted as a normalized schema object",
+      );
+    }
+
+    const normalizedSchema = schema as {
+      properties?: Record<string, unknown>;
+    };
+
+    expect(normalizedSchema.properties?.self).toEqual({
+      $ref: "#/components/schemas/RecursiveRoot",
+    });
+  });
+
+  it("does not throw on invalid percent-encoding in local refs", () => {
+    expect(() =>
+      normalizeRawJsonSchemaDocument({
+        $defs: {
+          "Bad%ZZ": {
+            type: "string",
+          },
+        },
+        properties: {
+          value: {
+            $ref: "#/$defs/Bad%ZZ",
+          },
+        },
+        title: "PercentFallback",
+        type: "object",
+      }),
+    ).not.toThrow();
+
+    const normalized = normalizeRawJsonSchemaDocument({
+      $defs: {
+        "Bad%ZZ": {
+          type: "string",
+        },
+      },
+      properties: {
+        value: {
+          $ref: "#/$defs/Bad%ZZ",
+        },
+      },
+      title: "PercentFallback",
+      type: "object",
+    });
+
+    const schema = normalized.document.components?.schemas?.PercentFallback;
+    if (
+      !schema ||
+      typeof schema !== "object" ||
+      Array.isArray(schema) ||
+      "$ref" in schema
+    ) {
+      expect.fail(
+        "Expected PercentFallback to be emitted as a normalized schema object",
+      );
+    }
+
+    const normalizedSchema = schema as {
+      properties?: Record<string, unknown>;
+    };
+
+    expect(normalizedSchema.properties?.value).toEqual({
+      $ref: "#/components/schemas/BadZZ",
+    });
+  });
 });

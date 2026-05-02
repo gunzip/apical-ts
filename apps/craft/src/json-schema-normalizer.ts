@@ -255,11 +255,15 @@ function rewriteJsonSchemaRef(
   ref: string,
   context: JsonSchemaRefRewriteContext,
 ): string {
+  if (ref === "") {
+    return toComponentSchemaRef(context.rootSchemaName);
+  }
+
   if (!ref.startsWith("#")) {
     return ref;
   }
 
-  if (ref === "" || ref === "#") {
+  if (ref === "#") {
     return toComponentSchemaRef(context.rootSchemaName);
   }
 
@@ -341,9 +345,15 @@ function parseJsonPointer(ref: string): string[] | undefined {
 }
 
 function decodeJsonPointerSegment(segment: string): string {
-  const decodedUriSegment = segment.includes("%")
-    ? decodeURIComponent(segment)
-    : segment;
+  let decodedUriSegment = segment;
+
+  if (segment.includes("%")) {
+    try {
+      decodedUriSegment = decodeURIComponent(segment);
+    } catch {
+      decodedUriSegment = segment;
+    }
+  }
 
   return decodedUriSegment.replaceAll("~1", "/").replaceAll("~0", "~");
 }
