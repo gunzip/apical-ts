@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.21.0
+
+### Minor Changes
+
+- ddf410c: Support JSON Schema as input
+
 ## 0.20.2
 
 ### Patch Changes

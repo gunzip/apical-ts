@@ -1,5 +1,11 @@
 # @apical-ts/website
 
+## 0.6.0
+
+### Minor Changes
+
+- ddf410c: Support JSON Schema as input
+
 ## 0.5.0
 
 ### Minor Changes
