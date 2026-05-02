@@ -1,62 +1,79 @@
-# Hono Mock Server Example
+# Hono Route-Metadata Example
 
-This example shows how to build a **Hono** server starting from Apical TS
-`--routes` output, then generate Hono-ready route registration files from that
-metadata.
+This example shows the **dynamic, metadata-driven** integration style. Apical TS
+first generates route metadata, then a second generator turns that metadata into
+a runnable Hono layer. The API contract stays the same; only the framework
+integration changes.
 
-## What this example demonstrates
+## Contract-first flow
 
-- route-metadata generation with `craft generate --routes`
-- a second generator step that creates `generated/hono/*`
-- automatic mock responses using `zocker`
-- request validation for path, query, headers, and request bodies via
-  `@hono/zod-validator`
+1. This example intentionally reuses `../express/examples.yaml`.
+2. `pnpm run generate:apical` runs Apical with `--routes`.
+3. Apical emits `generated/routes/*` plus the shared schemas.
+4. `pnpm run generate:hono` reads those route files and produces
+   `generated/hono/*`.
+5. `server-examples/mock-server-example.ts` mounts the generated Hono routes.
+
+## Why this is the dynamic style
+
+- **Express** wires each route explicitly with generated wrappers.
+- **Hono in this folder** derives the framework layer from generated route
+  metadata instead of registering routes one by one.
+- The contract is still modeled once, so moving from Express to Hono does not
+  require reshaping handlers, payloads, or status unions by hand.
 
 ## Quick start
 
-Install dependencies from the monorepo root:
+1. Install dependencies from the monorepo root:
 
-```bash
-pnpm install
-```
+   ```bash
+   pnpm install
+   ```
 
-Generate Apical TS routes and the Hono-specific registration layer:
+2. Generate route metadata and the Hono layer:
 
-```bash
-cd examples/hono
-pnpm run generate
-```
+   ```bash
+   cd examples/hono
+   pnpm run generate
+   ```
 
-Run the mock server:
+3. Run the mock server:
 
-```bash
-pnpm run dev
-```
+   ```bash
+   pnpm run dev
+   ```
 
 The server runs on `http://localhost:3002`.
 
 ## Project layout
 
-- `scripts/generate-hono-server.ts`: reads `generated/routes/*` and emits
-  `generated/hono/*`
-- `scripts/hono-generator/*`: modular generators for route registration, inline
-  operation handlers, usecases, runtime helpers, and file writing
-- `generated/hono/operations/*`: route registration modules with
-  `@hono/zod-validator` middleware and inline HTTP handling
-- `generated/hono/usecases/*`: zocker-backed mock business logic
-- `generated/package.json`: includes the runtime dependencies required by the
-  generated Hono layer
-- `generated/hono/runtime.ts`: generated runtime helpers for validation error
-  formatting and mocked responses
+- `generated/routes/*`: route metadata generated directly by Apical
+- `scripts/generate-hono-server.ts`: entry point for the secondary generator
+- `scripts/hono-generator/*`: Hono-specific code generation utilities
+- `generated/hono/operations/*`: generated Hono route modules
+- `generated/hono/usecases/*`: generated mock use cases backed by `zocker`
+- `generated/hono/register-routes.ts`: generated route registration entry point
 - `server-examples/mock-server-example.ts`: runnable Hono server
 
-## Why it reuses `examples/express/examples.yaml`
+## Example prompt
 
-This example intentionally reuses the same OpenAPI document as
-`examples/express`, so it is easy to compare:
+Use a prompt like this when you want an LLM to generate or extend the Hono
+integration from Apical route metadata:
 
-- the Express wrapper-based integration
-- the Hono route-metadata-driven integration
+```text
+You are working in examples/hono.
+
+Read `generated/routes/*` and use those files as the only source of truth for
+the API. Do not rewrite the OpenAPI surface manually.
+
+Generate or update the Hono integration so that:
+- path, method, params, requestMap, and responseMap come from generated route
+  metadata
+- output is written under `generated/hono/*`
+- request validation uses `@hono/zod-validator`
+- one generated Hono module exists per operation
+- mock responses come from generated schemas instead of hand-written models
+```
 
 ## Testing
 
@@ -65,4 +82,4 @@ pnpm run test
 ```
 
 The test suite regenerates the Hono layer before running so the example stays
-consistent with the OpenAPI source.
+aligned with the contract.

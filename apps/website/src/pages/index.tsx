@@ -80,7 +80,7 @@ function HomepageHeader() {
     <header className={styles.heroBanner}>
       <div className={clsx("container", styles.heroLayout)}>
         <div className={styles.heroBody}>
-          <div className={styles.eyebrow}>{siteConfig.title}</div>
+          {/* <div className={styles.eyebrow}>{siteConfig.title}</div> */}
           <Heading as="h1" className={styles.heroTitle}>
             {siteConfig.tagline}
           </Heading>

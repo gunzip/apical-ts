@@ -1,114 +1,119 @@
 # Framework Integrations
 
-Apical TS generates fully-typed Zod schemas and operation-based clients that can
-be easily adapted to any JavaScript/TypeScript framework. The generated route
-schemas provide runtime validation and type safety, making it straightforward to
-integrate with your preferred libraries.
+Apical TS works best as a **contract-first** generator: you describe the API
+once in OpenAPI, then let every integration consume the generated artifacts
+instead of re-declaring paths, params, and response shapes for each framework.
 
-## Key Benefits
+The main reusable outputs are:
 
-- **Framework Agnostic**: Use the same generated schemas across different
-  frameworks
-- **Type Safety**: Full TypeScript support with inferred types from OpenAPI
-  specs
-- **Runtime Validation**: Zod schemas ensure data integrity at runtime
-- **Operation-Based**: Each API operation is a separate, composable function
+- **`generated/routes/*`**: route metadata plus request/response schemas
+- **`generated/server/*`**: typed request-validation wrappers for explicit
+  server integrations
+- **`generated/client/*`**: typed operation functions for frontend and SDK usage
+
+## Static vs Dynamic Route Usage
+
+Different integrations reuse the same contract in different ways:
+
+| Style                               | Generated input                                                       | Example                                                                                                                                                                  | What you write                                                                |
+| ----------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| Static, wrapper-based               | `--server` (`server/` + `routes/`)                                    | [Express](https://github.com/gunzip/apical-ts/tree/main/examples/express/)                                                                                               | explicit framework route registration and business handlers                   |
+| Dynamic, metadata-driven            | `--routes` (or the `routes/` emitted alongside `--client`/`--server`) | [Hono](https://github.com/gunzip/apical-ts/tree/main/examples/hono/)                                                                                                     | a second generator or adapter that derives framework glue from route metadata |
+| Dynamic, contract-derived consumers | `--client` or `--server`, plus `routes/`                              | [React Query](https://github.com/gunzip/apical-ts/tree/main/examples/react-query-hooks/), [MSW](https://github.com/gunzip/apical-ts/tree/main/examples/msw-mock-server/) | hooks, mock handlers, and utilities generated from the same operations        |
+
+The important part is that the OpenAPI contract stays the single source of truth
+no matter which style you choose.
 
 ## Example Integrations
 
-We provide complete working examples for four popular frameworks in the
+We provide complete working examples in the
 [`examples/`](https://github.com/gunzip/apical-ts/tree/main/examples/) folder:
 
-### React Query Hooks
+### Express: explicit wrapper-based integration
 
 The
-[React Query integration](https://github.com/gunzip/apical-ts/tree/main/examples/react-query-hooks/)
-generates typed React Query hooks directly from your OpenAPI specification.
+[Express example](https://github.com/gunzip/apical-ts/tree/main/examples/express/)
+shows the more static style: generate `--server`, then register each route in
+Express with the generated wrapper.
 
-**Features:**
+**What it demonstrates**
 
-- `useX` query hooks for GET/HEAD operations
-- `useXMutation` hooks for POST/PUT/PATCH/DELETE operations
-- Automatic type inference from generated client operations
-- Error handling and loading states built-in
+- request/response validation from generated wrappers
+- explicit route registration with framework-specific adapters
+- custom business logic without redefining the API contract
 
 ```typescript
-// Generated hook usage
-const { data, isLoading, error } = useFindPetsByStatus({
-  query: { status: "available" },
-});
+createExpressAdapter(getPetByIdRoute(), getPetByIdHandler)(app);
 ```
 
-### Express Server Wrappers
+### Hono: route-metadata-driven generation
 
-The
-[Express integration](https://github.com/gunzip/apical-ts/tree/main/examples/express/)
-demonstrates how to create type-safe Express servers using generated route
-wrappers.
+The [Hono example](https://github.com/gunzip/apical-ts/tree/main/examples/hono/)
+shows the more dynamic style: generate `--routes`, then run a second generator
+that turns route metadata into a Hono registration layer.
 
-**Features:**
+**What it demonstrates**
 
-- Automatic request/response validation
-- Type-safe route handlers
-- Mock server support with realistic data generation
-- Full OpenAPI compliance
+- route-metadata-driven code generation
+- automatic request validation for path, query, headers, and body
+- zero manual remodelling of endpoints when switching from Express to Hono
 
 ```typescript
-// Generated route wrapper
-createExpressAdapter(findPetsByStatusRoute(), findPetsByStatusHandler)(app);
-```
-
-### Hono Mock Server
-
-The
-[Hono integration](https://github.com/gunzip/apical-ts/tree/main/examples/hono/)
-shows how to start from Apical TS `--routes` output and generate a Hono-specific
-registration layer for a runnable mock server.
-
-**Features:**
-
-- Route-metadata-driven Hono registration
-- Automatic request validation for path, query, headers, and body
-- Auto-generated mock responses using zocker
-
-```typescript
-// Register all generated Hono routes
 registerGeneratedRoutes(app);
 ```
 
-### MSW Mock Server
+### React Query: hooks derived from generated operations
 
 The
-[MSW integration](https://github.com/gunzip/apical-ts/tree/main/examples/msw-mock-server/)
-shows how to create fully functional mock APIs using Mock Service Worker.
+[React Query example](https://github.com/gunzip/apical-ts/tree/main/examples/react-query-hooks/)
+shows how the same contract can feed frontend hooks. Apical generates the client
+and routes once, then a secondary generator emits `useX` and `useXMutation`
+hooks from those artifacts.
 
-**Features:**
+**What it demonstrates**
 
-- HTTP request interception
-- Auto-generated mock data using zocker
-- Request validation against OpenAPI schemas
-- Support for all response status codes
+- `useX` hooks for GET/HEAD operations
+- `useXMutation` hooks for write operations
+- type inference from generated client operations and route methods
 
 ```typescript
-// MSW handler from generated route
-const handlers = [createMswHandler(findPetsByStatusRoute)];
+const { data, isLoading, error } = useFindPetsByStatus({
+  query: { status: ["available"] },
+});
+```
+
+### MSW: mock handlers derived from generated wrappers
+
+The
+[MSW example](https://github.com/gunzip/apical-ts/tree/main/examples/msw-mock-server/)
+shows a dynamic mock integration. It iterates the generated operations, creates
+one MSW handler per route, and still reuses the generated wrapper validation and
+response maps.
+
+**What it demonstrates**
+
+- dynamic handler registration from generated operations
+- request validation aligned with the OpenAPI contract
+- mock payload generation from response schemas via `zocker`
+
+```typescript
+const handlers = Object.values(routes).map((routeFn) => {
+  const routeInfo = routeFn();
+  return createMswHandler(routeInfo, createMockHandler(routeInfo));
+});
 ```
 
 ## Adapting to Other Frameworks
 
-The generated Zod schemas and operation functions are designed to be
-framework-agnostic. Here's how you can adapt them:
+Once you have generated `routes/`, `server/`, or `client/`, every other
+integration follows the same pattern:
 
-1. **Use the generated schemas** for validation in your framework's middleware
-2. **Compose the operation functions** with your framework's request/response
-   handling
-3. **Leverage the type definitions** for full TypeScript support
+1. Import the generated contract artifacts
+2. Derive framework-specific adapters, handlers, or hooks from those artifacts
+3. Keep framework code thin and avoid redefining API models by hand
 
-Each integration follows a similar adapter pattern:
-
-- Import the generated route schemas and operations
-- Create framework-specific adapters that handle requests/responses
-- Apply validation and type safety at the framework layer
+That is the main advantage of the contract-first flow: you can swap or add
+integrations without remodeling the API every time.
 
 ## Getting Started
 
@@ -118,8 +123,7 @@ To explore these integrations:
 2. Navigate to the desired example: `cd examples/[framework]`
 3. Install dependencies: `pnpm install`
 4. Generate the code: `pnpm run generate`
-5. Run the example using the command documented in that example's README (for
-   Hono/MSW: `pnpm dev`).
+5. Run the example using the command documented in that example's README
 
-The examples include comprehensive documentation and working code you can adapt
-for your own projects.
+Each example README now documents which generated artifacts it consumes and how
+to extend that integration without breaking the contract-first workflow.
