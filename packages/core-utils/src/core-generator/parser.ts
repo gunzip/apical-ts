@@ -11,11 +11,6 @@ import {
   isOpenAPI30,
   isOpenAPI31,
 } from "./converter.js";
-import { normalizeParsedInputDocument } from "./input-normalizer.js";
-
-export interface ConvertParsedOpenAPIOptions {
-  sourcePath?: string;
-}
 
 /**
  * Parses an OpenAPI specification from a file path or URL and converts it to OpenAPI 3.1
@@ -24,9 +19,7 @@ export async function parseOpenAPI(
   filePathOrUrl: string,
 ): Promise<OpenAPIObject> {
   const parsed = await parseOpenAPIDocument(filePathOrUrl);
-  return await convertParsedOpenAPI(parsed, {
-    sourcePath: filePathOrUrl,
-  });
+  return await convertParsedOpenAPI(parsed);
 }
 
 export async function parseOpenAPIDocument(
@@ -38,44 +31,34 @@ export async function parseOpenAPIDocument(
 
 export async function convertParsedOpenAPI(
   parsed: unknown,
-  options: ConvertParsedOpenAPIOptions = {},
 ): Promise<OpenAPIObject> {
-  const normalizedInput = normalizeParsedInputDocument(parsed, {
-    sourcePath: options.sourcePath,
-  });
-  const documentToConvert = normalizedInput.document;
-
-  if (normalizedInput.kind === "json-schema") {
-    console.log("🔄 Detected raw JSON Schema input");
-  }
-
-  if (isOpenAPI20(documentToConvert)) {
+  if (isOpenAPI20(parsed)) {
     console.log(
       "🔄 Detected OpenAPI 2.0 (Swagger) specification, converting to 3.1.0...",
     );
-    const converted = await convertToOpenAPI31(documentToConvert);
+    const converted = await convertToOpenAPI31(parsed);
     console.log("✅ Successfully converted from OpenAPI 2.0 to 3.1.0");
     return converted;
   }
 
-  if (isOpenAPI30(documentToConvert)) {
+  if (isOpenAPI30(parsed)) {
     console.log(
       "🔄 Detected OpenAPI 3.0.x specification, converting to 3.1.0...",
     );
-    const converted = convertOpenAPI30to31(documentToConvert);
+    const converted = convertOpenAPI30to31(parsed);
     console.log("✅ Successfully converted to OpenAPI 3.1.0");
     return converted;
   }
 
-  if (isOpenAPI31(documentToConvert)) {
+  if (isOpenAPI31(parsed)) {
     console.log(
       "✅ OpenAPI 3.1.x specification detected, no conversion needed",
     );
-    return documentToConvert;
+    return parsed;
   }
 
   console.warn("⚠️ Unknown OpenAPI version, proceeding without conversion");
-  return documentToConvert as OpenAPIObject;
+  return parsed as OpenAPIObject;
 }
 
 export function hasExternalRefPointers(document: unknown): boolean {

@@ -13,7 +13,6 @@ import {
   createPackageFiles,
   generateSchemas,
   hasExternalRefPointers,
-  normalizeParsedInputDocument,
   parseOpenAPIDocument,
   Profiler,
   renameConflictingSchemas,
@@ -25,7 +24,17 @@ import { generateServerOperations } from "@apical-ts/server-generator";
 import $RefParser from "@apidevtools/json-schema-ref-parser";
 import { promises as fs } from "fs";
 
+import {
+  isRawJsonSchemaDocument,
+  normalizeRawJsonSchemaDocument,
+} from "./json-schema-normalizer.js";
+
 const DEFAULT_CONCURRENCY = 10;
+
+interface NormalizedParsedInputDocument {
+  document: unknown;
+  isJsonSchema: boolean;
+}
 
 /**
  * Configuration options for code generation
@@ -250,19 +259,20 @@ async function parseAndPreprocessOpenAPI(
   }
 
   profiler?.start("parse:normalize-input");
-  const normalizedInput = normalizeParsedInputDocument(documentToConvert, {
-    sourcePath: input,
-  });
+  const normalizedInput = normalizeParsedInputDocument(
+    documentToConvert,
+    input,
+  );
   profiler?.end("parse:normalize-input");
 
-  if (normalizedInput.kind === "json-schema") {
+  if (normalizedInput.isJsonSchema) {
     console.log(
       "🔄 Detected raw JSON Schema input, normalizing it for schema generation...",
     );
   }
 
   if (
-    normalizedInput.kind === "json-schema" &&
+    normalizedInput.isJsonSchema &&
     (generationModes.generateClient ||
       generationModes.generateRoutes ||
       generationModes.generateServer)
@@ -327,4 +337,23 @@ async function parseAndPreprocessOpenAPI(
   }
 
   return openApiDoc;
+}
+
+function normalizeParsedInputDocument(
+  parsed: unknown,
+  sourcePath: string,
+): NormalizedParsedInputDocument {
+  if (!isRawJsonSchemaDocument(parsed)) {
+    return {
+      document: parsed,
+      isJsonSchema: false,
+    };
+  }
+
+  return {
+    document: normalizeRawJsonSchemaDocument(parsed, {
+      sourcePath,
+    }).document,
+    isJsonSchema: true,
+  };
 }

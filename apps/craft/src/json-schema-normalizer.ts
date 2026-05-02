@@ -2,8 +2,7 @@ import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import path from "node:path";
 
-import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import { isOpenAPI20, isOpenAPI30, isOpenAPI31 } from "./converter.js";
+import { sanitizeIdentifier } from "@apical-ts/core-utils";
 
 const DEFAULT_INFO_TITLE = "JSON Schema Input";
 const DEFAULT_INFO_VERSION = "1.0.0";
@@ -52,19 +51,11 @@ const JSON_SCHEMA_KEYWORDS = new Set([
   "unevaluatedProperties",
 ]);
 
-export type ParsedInputKind = "json-schema" | "openapi" | "unknown";
-
-export interface NormalizeParsedInputOptions {
+export interface JsonSchemaNormalizationOptions {
   sourcePath?: string;
 }
 
-export interface NormalizedParsedInputDocument {
-  document: unknown;
-  kind: ParsedInputKind;
-  rootSchemaName?: string;
-}
-
-interface JsonSchemaNormalizationResult {
+export interface NormalizedJsonSchemaDocument {
   document: OpenAPIObject;
   rootSchemaName: string;
 }
@@ -78,6 +69,14 @@ interface JsonSchemaRefRewriteContext {
 
 type JsonSchemaObject = Record<string, unknown>;
 
+/*
+ * Heuristic detection for raw JSON Schema input.
+ *
+ * Examples:
+ * - `{ openapi: "3.1.0", ... }` => false
+ * - `{ $schema: "...", type: "object" }` => true
+ * - `false` => true (boolean JSON Schema root)
+ */
 export function isRawJsonSchemaDocument(parsed: unknown): boolean {
   if (typeof parsed === "boolean") {
     return true;
@@ -94,30 +93,35 @@ export function isRawJsonSchemaDocument(parsed: unknown): boolean {
   return Object.keys(parsed).some((key) => JSON_SCHEMA_KEYWORDS.has(key));
 }
 
-export function normalizeParsedInputDocument(
+/*
+ * Wrap a raw JSON Schema document into the OpenAPI shape expected by the rest
+ * of the pipeline.
+ *
+ * Example:
+ * - input root:
+ *   {
+ *     title: "Person",
+ *     $defs: { Address: { type: "object" } },
+ *     properties: { address: { $ref: "#/$defs/Address" } }
+ *   }
+ *
+ * - normalized output:
+ *   {
+ *     openapi: "3.1.0",
+ *     components: {
+ *       schemas: {
+ *         Address: { type: "object" },
+ *         Person: {
+ *           properties: { address: { $ref: "#/components/schemas/Address" } }
+ *         }
+ *       }
+ *     }
+ *   }
+ */
+export function normalizeRawJsonSchemaDocument(
   parsed: unknown,
-  options: NormalizeParsedInputOptions = {},
-): NormalizedParsedInputDocument {
-  if (!isRawJsonSchemaDocument(parsed)) {
-    return {
-      document: parsed,
-      kind: detectParsedInputKind(parsed),
-    };
-  }
-
-  const normalized = normalizeRawJsonSchemaDocument(parsed, options);
-
-  return {
-    document: normalized.document,
-    kind: "json-schema",
-    rootSchemaName: normalized.rootSchemaName,
-  };
-}
-
-function normalizeRawJsonSchemaDocument(
-  parsed: unknown,
-  options: NormalizeParsedInputOptions,
-): JsonSchemaNormalizationResult {
+  options: JsonSchemaNormalizationOptions = {},
+): NormalizedJsonSchemaDocument {
   const usedSchemaNames = new Set<string>();
   const rootSchemaName = createUniqueSchemaName(
     getRootSchemaName(parsed, options.sourcePath),
@@ -188,6 +192,12 @@ function normalizeRawJsonSchemaDocument(
   };
 }
 
+/*
+ * Deeply clone arrays/objects while rewriting supported local JSON Schema refs.
+ *
+ * The WeakMap avoids re-walking the same object graph and preserves recursive
+ * structures when a schema points back to itself.
+ */
 function rewriteJsonSchemaRefs(
   value: unknown,
   context: JsonSchemaRefRewriteContext,
@@ -232,6 +242,15 @@ function rewriteJsonSchemaRefs(
   return rewrittenObject;
 }
 
+/*
+ * Translate raw JSON Schema local refs into the component-based refs used by
+ * the OpenAPI schema generator.
+ *
+ * Examples:
+ * - `#` => `#/components/schemas/Person`
+ * - `#/$defs/Address` => `#/components/schemas/Address`
+ * - `#/definitions/LegacyTag` => `#/components/schemas/LegacyTag`
+ */
 function rewriteJsonSchemaRef(
   ref: string,
   context: JsonSchemaRefRewriteContext,
@@ -274,6 +293,14 @@ function rewriteJsonSchemaRef(
   );
 }
 
+/*
+ * Resolve a definition name through the normalized name map.
+ *
+ * Example:
+ * - original `$defs` key: `postal-address`
+ * - normalized component name: `postalAddress`
+ * - resulting ref: `#/components/schemas/postalAddress`
+ */
 function toMappedComponentSchemaRef(
   ref: string,
   definitionName: string,
@@ -291,6 +318,13 @@ function toComponentSchemaRef(schemaName: string): string {
   return `#/components/schemas/${schemaName}`;
 }
 
+/*
+ * Parse a JSON Pointer while decoding both JSON Pointer escapes and any
+ * percent-encoded characters in the path.
+ *
+ * Example:
+ * - `#/$defs/Foo~1Bar` => ["$defs", "Foo/Bar"]
+ */
 function parseJsonPointer(ref: string): string[] | undefined {
   if (ref === "#") {
     return [];
@@ -314,6 +348,14 @@ function decodeJsonPointerSegment(segment: string): string {
   return decodedUriSegment.replaceAll("~1", "/").replaceAll("~0", "~");
 }
 
+/*
+ * Build the stable mapping between original JSON Schema definition keys and the
+ * component names exposed to the rest of the generator.
+ *
+ * Example:
+ * - definitions: `postal-address`, `postal_address`
+ * - mapped names: `postalAddress`, `postalAddress2`
+ */
 function createDefinitionNameMap(
   definitions: Map<string, unknown>,
   usedSchemaNames: Set<string>,
@@ -330,6 +372,13 @@ function createDefinitionNameMap(
   return nameMap;
 }
 
+/*
+ * Ensure every emitted component schema name is unique after sanitization.
+ *
+ * Example:
+ * - first `postal-address` => `postalAddress`
+ * - second colliding name => `postalAddress2`
+ */
 function createUniqueSchemaName(
   candidate: string,
   usedSchemaNames: Set<string>,
@@ -360,6 +409,14 @@ function sanitizeSchemaName(candidate: string): string {
   }
 }
 
+/*
+ * Prefer the schema `title`, then the input file name, then a generic fallback.
+ *
+ * Examples:
+ * - `{ title: "Person" }` => `Person`
+ * - `customer-profile.yaml` => `customerProfile`
+ * - boolean root without source path => `RootSchema`
+ */
 function getRootSchemaName(parsed: unknown, sourcePath?: string): string {
   if (
     isRecord(parsed) &&
@@ -410,6 +467,14 @@ function getSourceFileStem(sourcePath?: string): string | undefined {
   return extension ? baseName.slice(0, -extension.length) : baseName;
 }
 
+/*
+ * Strip root-only definition containers after their entries have been hoisted to
+ * `components.schemas`.
+ *
+ * Example:
+ * - root before: `{ $defs: {...}, properties: {...} }`
+ * - root after: `{ properties: {...} }`
+ */
 function omitRootDefinitions(schema: JsonSchemaObject): JsonSchemaObject {
   const result: JsonSchemaObject = {};
 
@@ -430,14 +495,6 @@ function getDefinitionEntries(value: unknown): Map<string, unknown> {
   }
 
   return new Map(Object.entries(value));
-}
-
-function detectParsedInputKind(parsed: unknown): ParsedInputKind {
-  if (isOpenAPI20(parsed) || isOpenAPI30(parsed) || isOpenAPI31(parsed)) {
-    return "openapi";
-  }
-
-  return "unknown";
 }
 
 function hasOpenAPIVersionMarker(parsed: JsonSchemaObject): boolean {

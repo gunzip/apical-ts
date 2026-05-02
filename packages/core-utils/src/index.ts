@@ -16,18 +16,10 @@ export { resolveResponseReference } from "./core-generator/openapi-utils.js";
 export { createPackageFiles } from "./core-generator/package-generator.js";
 export {
   convertParsedOpenAPI,
-  type ConvertParsedOpenAPIOptions,
   hasExternalRefPointers,
   parseOpenAPI,
   parseOpenAPIDocument,
 } from "./core-generator/parser.js";
-export {
-  isRawJsonSchemaDocument,
-  normalizeParsedInputDocument,
-  type NormalizedParsedInputDocument,
-  type NormalizeParsedInputOptions,
-  type ParsedInputKind,
-} from "./core-generator/input-normalizer.js";
 export { Profiler } from "./core-generator/profiler.js";
 export { resolveRequestBodies } from "./core-generator/request-body-resolver.js";
 
