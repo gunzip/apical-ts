@@ -51,7 +51,7 @@ const featureCards = [
     index: "AI adapters",
     title: "Precise building blocks for custom integrations",
     description:
-      "Precise per-operation schemas and route shapes give agents enough structure toave tokens generat custom Hono, MSW, or React Query adapters fast.",
+      "Precise per-operation schemas and route shapes give agents enough structure. Save tokens generating custom Hono, MSW, or React Query adapters deterministically.",
   },
   {
     index: "No rigid plugins",
@@ -85,9 +85,12 @@ function HomepageHeader() {
             {siteConfig.tagline}
           </Heading>
           <p className={styles.heroSummary}>
-            Apical gives coding agents a precise base: exact Zod v4 schemas for
-            each operation and typed route structures extracted from your
-            OpenAPI contract.
+            @apical-ts/craft extracts exact Zod v4 schemas from your OpenAPI
+            contract to give your coding agents a rock-solid foundation. The
+            automated client is useful, but the real value is this: you can
+            "vibe-code" **custom integrations** with complete, deterministic
+            confidence that your code will never drift out of sync with the API
+            contract.
           </p>
           <div className={styles.integrationStrip}>
             <ul className={styles.integrationList}>
@@ -176,8 +179,9 @@ function FeatureSection() {
             A hard base for coding agents.
           </Heading>
           <p className={styles.sectionLead}>
-            If route schemas are precise, generating clients and servers becomes
-            a flexible implementation choice instead of a typing gamble.
+            Apical can generate the whole client layer, but the durable asset is
+            the route contract itself: precise Zod v4 schemas that keep client,
+            server, and custom integrations aligned.
           </p>
         </div>
 
