@@ -73,8 +73,9 @@ specification.
 
 ### Required Options
 
-- `-i, --input <path>`: Path to the OpenAPI spec file (2.0, 3.0.x, or 3.1.x) in
-  YAML or JSON format. Can be a local file path or a remote URL.
+- `-i, --input <path>`: Path to the OpenAPI spec file (2.0, 3.0.x, or 3.1.x) or
+  a raw JSON Schema document in YAML or JSON format. Can be a local file path or
+  a remote URL.
 - `-o, --output <path>`: Output directory for generated code
 
 ### Generation Options
@@ -98,6 +99,9 @@ specification.
 > **Note**: The long-form flags `--generate-client`, `--generate-server`, and
 > `--generate-routes` are deprecated in favor of the shorter `--client`,
 > `--server`, and `--routes` aliases.
+>
+> Raw JSON Schema input supports **schema generation only**. `--client`,
+> `--server`, and `--routes` require an OpenAPI document.
 
 ## Overriding OpenAPI String Formats
 

@@ -27,6 +27,23 @@ versions:
 - **Conversion**: No conversion needed
 - **Support level**: ✅ Native support
 
+### Raw JSON Schema
+
+- **File extensions**: `.json`, `.yaml`, `.yml`
+- **Conversion**: Automatically wrapped into a minimal OpenAPI 3.1 document
+- **Support level**: ✅ Supported for schema generation
+- **Limitations**: `--client`, `--server`, and `--routes` require an OpenAPI
+  document
+
+Raw JSON Schema input can reference:
+
+- `#`
+- `#/$defs/<Name>`
+- `#/definitions/<Name>`
+
+These references are normalized to `#/components/schemas/...` before the
+existing schema pipeline runs.
+
 ### Benefits of Normalization
 
 1. **Consistent Processing** - All specifications are processed using the same

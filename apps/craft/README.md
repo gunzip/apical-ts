@@ -17,6 +17,20 @@ schemas.
 pnpm start generate -i ./openapi.yaml -o ./generated --client --server
 ```
 
+### Raw JSON Schema input
+
+```bash
+pnpm start generate -i ./schema.yaml -o ./generated
+```
+
+`craft` can also accept raw JSON Schema documents in YAML or JSON format. These
+inputs are normalized to a minimal OpenAPI 3.1 document before schema
+generation.
+
+Raw JSON Schema input is currently limited to **schema generation only**. If you
+need `--client`, `--server`, or `--routes`, convert the document to OpenAPI
+first.
+
 ### Overriding OpenAPI string formats
 
 Use `--format` to replace a `type: string` + `format` mapping with your own Zod

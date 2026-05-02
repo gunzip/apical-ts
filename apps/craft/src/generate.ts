@@ -24,7 +24,17 @@ import { generateServerOperations } from "@apical-ts/server-generator";
 import $RefParser from "@apidevtools/json-schema-ref-parser";
 import { promises as fs } from "fs";
 
+import {
+  isRawJsonSchemaDocument,
+  normalizeRawJsonSchemaDocument,
+} from "./json-schema-normalizer.js";
+
 const DEFAULT_CONCURRENCY = 10;
+
+interface NormalizedParsedInputDocument {
+  document: unknown;
+  isJsonSchema: boolean;
+}
 
 /**
  * Configuration options for code generation
@@ -105,7 +115,15 @@ export async function generate(options: GenerationOptions): Promise<void> {
   const profiler = profile ? new Profiler() : undefined;
 
   profiler?.start("parse+preprocess");
-  const openApiDoc = await parseAndPreprocessOpenAPI(input, profiler);
+  const openApiDoc = await parseAndPreprocessOpenAPI(
+    input,
+    {
+      generateClient: genClient,
+      generateRoutes: genRoutes,
+      generateServer: genServer,
+    },
+    profiler,
+  );
   profiler?.end("parse+preprocess");
 
   profiler?.start("schemas:all");
@@ -206,6 +224,11 @@ async function generateAllOperations(
  */
 async function parseAndPreprocessOpenAPI(
   input: string,
+  generationModes: {
+    generateClient: boolean;
+    generateRoutes: boolean;
+    generateServer: boolean;
+  },
   profiler?: Profiler,
 ): Promise<OpenAPIObject> {
   profiler?.start("parse:load-source");
@@ -235,8 +258,32 @@ async function parseAndPreprocessOpenAPI(
     }
   }
 
+  profiler?.start("parse:normalize-input");
+  const normalizedInput = normalizeParsedInputDocument(
+    documentToConvert,
+    input,
+  );
+  profiler?.end("parse:normalize-input");
+
+  if (normalizedInput.isJsonSchema) {
+    console.log(
+      "🔄 Detected raw JSON Schema input, normalizing it for schema generation...",
+    );
+  }
+
+  if (
+    normalizedInput.isJsonSchema &&
+    (generationModes.generateClient ||
+      generationModes.generateRoutes ||
+      generationModes.generateServer)
+  ) {
+    throw new Error(
+      "Raw JSON Schema input supports schema generation only. Remove --client, --server, and --routes, or convert the document to OpenAPI first.",
+    );
+  }
+
   profiler?.start("parse:convert-openapi");
-  const openApiDoc = await convertParsedOpenAPI(documentToConvert);
+  const openApiDoc = await convertParsedOpenAPI(normalizedInput.document);
   profiler?.end("parse:convert-openapi");
 
   // Apply generated operation IDs for operations that don't have them
@@ -290,4 +337,23 @@ async function parseAndPreprocessOpenAPI(
   }
 
   return openApiDoc;
+}
+
+function normalizeParsedInputDocument(
+  parsed: unknown,
+  sourcePath: string,
+): NormalizedParsedInputDocument {
+  if (!isRawJsonSchemaDocument(parsed)) {
+    return {
+      document: parsed,
+      isJsonSchema: false,
+    };
+  }
+
+  return {
+    document: normalizeRawJsonSchemaDocument(parsed, {
+      sourcePath,
+    }).document,
+    isJsonSchema: true,
+  };
 }
