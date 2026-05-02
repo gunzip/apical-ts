@@ -80,7 +80,7 @@ Goal: build type safe Express handlers that uses generated server wrappers
 from OpenAPI contract in `examples.yaml`.
 
 Process:
-1. Run `nps @apical-ts/craft generate -i examples.yaml -o generated --server --client`.
+1. Run `npx @apical-ts/craft generate -i examples.yaml -o generated --server --client`.
 2. Treat the generated files as the contract artifacts:
    - `generated/server/*` for wrappers, handler types, and typed response unions
    - `generated/routes/*` for path and method metadata
