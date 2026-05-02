@@ -58,22 +58,36 @@ All three approaches start from the same contract and generated artifacts.
 
 ## Example prompt
 
-Use a prompt like this when you want an LLM to extend the MSW integration from
-generated Apical artifacts:
+Use a prompt like this when you want an LLM to recreate MSW handlers from
+scratch starting from the OpenAPI contract only:
 
 ```text
-You are working in examples/msw-mock-server.
+Goal: build MSW mock handlers from
+@apical-ts/craft artifacts instead of hand-writing one handler per endpoint.
 
-Use `generated/server/*`, `generated/routes/*`, and `generated/schemas/*` as
-the only API contract. Do not redefine endpoints or payload shapes manually.
+Process:
+1. Run `npx @apical-ts/craft generate -i examples.yaml -o generated --server --client`.
+2. Treat the generated files as the integration inputs:
+   - `generated/server/*` for wrappers and response maps
+   - `generated/routes/*` for path and method metadata
+   - `generated/schemas/*` for schema-driven mock data
+3. Implement `msw-adapter.ts` so it:
+   - converts MSW requests into the params expected by the generated wrappers
+   - converts wrapper results back into MSW responses
+4. Implement `mock-server-example.ts` as a handler
+   generator/factory that:
+   - iterates the generated operations
+   - creates one MSW handler per route at runtime
+   - validates requests through the generated wrappers
+   - selects response schemas from `responseMap`
+   - generates payloads with `zocker`
+5. Export the resulting handlers so they can be used with both
+   `setupServer(...)` and `setupWorker(...)`.
 
-Generate or update the MSW integration so that:
-- one handler is created per generated operation
-- method and path come from generated route info
-- request validation goes through the generated Apical wrapper
-- response schemas are selected from `responseMap`
-- mock payloads are generated from the schemas with `zocker`
-- the result works with both `setupServer(...)` and `setupWorker(...)`
+Rules:
+- do not hand-write endpoint-specific handler lists
+- do not redefine paths, params, or response payloads outside @apical-ts/craft output
+- the custom code should only be the MSW adapter and runtime handler factory
 ```
 
 ## Usage in tests

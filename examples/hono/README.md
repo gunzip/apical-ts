@@ -57,22 +57,31 @@ The server runs on `http://localhost:3002`.
 
 ## Example prompt
 
-Use a prompt like this when you want an LLM to generate or extend the Hono
-integration from Apical route metadata:
+Use a prompt like this when you want an LLM to recreate Hono handlers from
+scratch starting from the OpenAPI contract only:
 
 ```text
-You are working in examples/hono.
+Goal: build type safe Hono handlers by first generating route metadata with @apical-ts/craft and
+then writing a generator that emits the Hono integration.
 
-Read `generated/routes/*` and use those files as the only source of truth for
-the API. Do not rewrite the OpenAPI surface manually.
+Process:
+1. Run `npx @apical-ts/craft generate --routes -i examples.yaml -o generated`.
+2. Inspect `generated/routes/*` and use them as the only source of truth for
+   `operationId`, `path`, `method`, `params`, `requestMap`, and `responseMap`.
+3. Implement the generator entrypoint in `scripts/generate-hono-server.ts`.
+4. Implement the generator modules under `scripts/hono-generator/*` so they read
+   generated route metadata and emit `generated/hono/*`.
+5. The generator should produce:
+   - one generated Hono operation module per route
+   - a register-routes module
+   - shared runtime helpers
+6. Add a runnable Hono server that imports the generated registration layer.
 
-Generate or update the Hono integration so that:
-- path, method, params, requestMap, and responseMap come from generated route
-  metadata
-- output is written under `generated/hono/*`
-- request validation uses `@hono/zod-validator`
-- one generated Hono module exists per operation
-- mock responses come from generated schemas instead of hand-written models
+Rules:
+- do not hand-write `generated/hono/*`
+- do not redefine endpoints or payload types outside @apical-ts/craft output
+- request validation must be driven by generated schemas and metadata
+- use `@hono/zod-validator` where request validation is needed
 ```
 
 ## Testing

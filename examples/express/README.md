@@ -72,23 +72,30 @@ pnpx tsx server-examples/mock-server-example.ts
 
 ## Example prompt
 
-Use a prompt like this when you want an LLM to extend the Express integration
-without re-modeling the API:
+Use a prompt like this when you want an LLM to create Express handlers from
+scratch starting from the OpenAPI contract only:
 
 ```text
-You are working in examples/express.
+Goal: build type safe Express handlers that uses generated server wrappers
+from OpenAPI contract in `examples.yaml`.
 
-Use `examples.yaml`, `generated/routes/*`, and `generated/server/*` as the only
-source of truth for the API surface. Do not redefine paths, methods, params, or
-response payloads by hand.
+Process:
+1. Run `nps @apical-ts/craft generate -i examples.yaml -o generated --server --client`.
+2. Treat the generated files as the contract artifacts:
+   - `generated/server/*` for wrappers, handler types, and typed response unions
+   - `generated/routes/*` for path and method metadata
+3. Write `express-adapter.ts` so it:
+   - extracts query, path, headers, body, and content type from Express requests
+   - passes them to the generated wrapper
+   - translates wrapper results back into Express responses
+4. Write `express-server.ts` so it:
+   - registers the routes explicitly in Express
+   - keeps business logic inside typed handlers
+   - wraps each handler with the generated server wrapper
 
-Update the Express integration so that:
-- each route is registered from generated metadata
-- each handler is wrapped with the generated Apical server wrapper
-- business logic stays in `server-examples/*`
-- response objects keep the generated status/contentType/data unions
-- existing adapters are reused instead of creating ad-hoc DTOs or duplicate
-  schema definitions
+Rules:
+- do not hand-write endpoint definitions, DTOs, or validation schemas
+- paths, methods, params, and response shapes must come from @apical-ts/craft output
 ```
 
 ## Why this example matters

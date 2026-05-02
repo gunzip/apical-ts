@@ -58,21 +58,32 @@ See `example/Usage.tsx` for a minimal consumption example.
 
 ## Example prompt
 
-Use a prompt like this when you want an LLM to generate hooks from Apical
-artifacts without redesigning the API:
+Use a prompt like this when you want an LLM to recreate react-query hooks from
+scratch starting from the OpenAPI contract only:
 
 ```text
-You are working in examples/react-query-hooks.
+Goal: build a generator that produces React Query hooks from @apical-ts/craft output.
 
-Use `generated/client/index.ts` and `generated/routes/index.ts` as the only API
-contract. Do not restate endpoints, payload types, or HTTP methods manually.
+Process:
+1. Run `npx @apical-ts/craft generate --client -i swagger.json -o generated`.
+2. Treat the generated files as the inputs to the hook generator:
+   - `generated/client/*` for operation functions and their types
+   - `generated/routes/*` for operation metadata and HTTP methods
+3. Implement `scripts/generate-hooks.ts` as the generator entrypoint.
+4. Make the generator read the @apical-ts/craft outputs and emit
+   `generated/react-query-hooks/*`.
+5. The generator must:
+   - map GET and HEAD operations to `useX` query hooks
+   - map POST, PUT, PATCH, and DELETE operations to `useXMutation` hooks
+   - derive hook names from generated operation names
+   - derive parameter and result types from the generated client functions
+6. Generate an `index.ts` file and a small example component that imports the
+   emitted hooks.
 
-Generate or update React Query hooks so that:
-- GET and HEAD operations become `useX` hooks
-- POST, PUT, PATCH, and DELETE operations become `useXMutation` hooks
-- hook names come from generated operation names
-- parameter and result types come from the generated client functions
-- output is written under `generated/react-query-hooks/*`
+Rules:
+- do not hand-write files under `generated/react-query-hooks/*`
+- do not duplicate endpoint definitions or payload types
+- the custom code belongs in the hook generator and usage example only
 ```
 
 ## Example usage
