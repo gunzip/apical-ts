@@ -1,6 +1,6 @@
 ---
 id: schema-validation-modes
-title: Schema Validation Modes
+title: Handle Additional Properties
 description:
   Control how Zod schemas handle additional properties using the --extra-props
   CLI flag. Configure strict, loose, or strip modes for object validation.
@@ -16,7 +16,7 @@ keywords:
   ]
 ---
 
-# Schema Validation Modes
+# Handle Additional Properties
 
 @apical-ts/craft provides fine-grained control over how generated Zod schemas
 handle additional properties through the `--extra-props` CLI flag. This feature

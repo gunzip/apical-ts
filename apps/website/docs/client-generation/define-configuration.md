@@ -1,6 +1,6 @@
 ---
 id: define-configuration
-title: Define Configuration
+title: Using the Generated Client
 description:
   Learn how to configure @apical-ts/craft generated clients with base URLs,
   authentication, headers, and custom options for API interactions.
@@ -15,7 +15,7 @@ keywords:
   ]
 ---
 
-# Define Configuration
+# Using the Generated Client
 
 The generated client operations require configuration to specify how to connect
 to your API. This includes the base URL, authentication, custom headers, and

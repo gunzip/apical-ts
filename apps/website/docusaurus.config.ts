@@ -302,7 +302,7 @@ const config: Config = {
             },
             {
               label: "Framework Integrations",
-              to: "/docs/client-generation/framework-integrations",
+              to: "/docs/schema-generation/framework-integrations",
             },
           ],
         },

@@ -1,4 +1,4 @@
-# Server Routes Wrappers Generation
+# Using Generated Server Routes Wrappers
 
 The generator can also produce a fully-typed server handler wrapper for your
 OpenAPI operations. This enables you to build type-safe HTTP servers (e.g., with

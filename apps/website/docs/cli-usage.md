@@ -92,7 +92,8 @@ specification.
   [String Format Overrides](./schema-generation/string-format-overrides.md).
 - `--extra-props <mode>`: Control how Zod schemas handle additional properties.
   Options: `strip` (default), `loose`, `strict`. See
-  [Schema Validation Modes](./schema-validation-modes.md) for details.
+  [Schema Validation Modes](./schema-generation/schema-validation-modes.md) for
+  details.
 
 > **Note**: The long-form flags `--generate-client`, `--generate-server`, and
 > `--generate-routes` are deprecated in favor of the shorter `--client`,
