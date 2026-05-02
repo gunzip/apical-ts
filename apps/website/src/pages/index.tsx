@@ -88,9 +88,9 @@ function HomepageHeader() {
             @apical-ts/craft extracts exact Zod v4 schemas from your OpenAPI
             contract to give your coding agents a rock-solid foundation. The
             automated client is useful, but the real value is this: you can
-            "vibe-code" **custom integrations** with complete, deterministic
-            confidence that your code will never drift out of sync with the API
-            contract.
+            "vibe-code" <strong>custom integrations</strong> with complete,
+            deterministic confidence that your code will never drift out of sync
+            with the API contract.
           </p>
           <div className={styles.integrationStrip}>
             <ul className={styles.integrationList}>
