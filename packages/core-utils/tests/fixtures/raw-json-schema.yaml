@@ -1,0 +1,33 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Person
+type: object
+properties:
+  name:
+    type: string
+  address:
+    $ref: "#/$defs/Address"
+  legacyTag:
+    $ref: "#/definitions/LegacyTag"
+  manager:
+    $ref: "#"
+required:
+  - name
+$defs:
+  Address:
+    type: object
+    properties:
+      street:
+        type: string
+      country:
+        $ref: "#/$defs/Country"
+    required:
+      - street
+  Country:
+    type: string
+    enum:
+      - IT
+      - US
+definitions:
+  LegacyTag:
+    type: string
+    const: legacy

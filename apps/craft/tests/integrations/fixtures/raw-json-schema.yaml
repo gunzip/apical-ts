@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Person
+type: object
+properties:
+  name:
+    type: string
+  address:
+    $ref: "#/$defs/Address"
+required:
+  - name
+  - address
+$defs:
+  Address:
+    type: object
+    properties:
+      street:
+        type: string
+      country:
+        $ref: "#/$defs/Country"
+    required:
+      - street
+  Country:
+    type: string
+    enum:
+      - IT
+      - US

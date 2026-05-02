@@ -13,6 +13,7 @@ import {
   createPackageFiles,
   generateSchemas,
   hasExternalRefPointers,
+  normalizeParsedInputDocument,
   parseOpenAPIDocument,
   Profiler,
   renameConflictingSchemas,
@@ -105,7 +106,15 @@ export async function generate(options: GenerationOptions): Promise<void> {
   const profiler = profile ? new Profiler() : undefined;
 
   profiler?.start("parse+preprocess");
-  const openApiDoc = await parseAndPreprocessOpenAPI(input, profiler);
+  const openApiDoc = await parseAndPreprocessOpenAPI(
+    input,
+    {
+      generateClient: genClient,
+      generateRoutes: genRoutes,
+      generateServer: genServer,
+    },
+    profiler,
+  );
   profiler?.end("parse+preprocess");
 
   profiler?.start("schemas:all");
@@ -206,6 +215,11 @@ async function generateAllOperations(
  */
 async function parseAndPreprocessOpenAPI(
   input: string,
+  generationModes: {
+    generateClient: boolean;
+    generateRoutes: boolean;
+    generateServer: boolean;
+  },
   profiler?: Profiler,
 ): Promise<OpenAPIObject> {
   profiler?.start("parse:load-source");
@@ -235,8 +249,31 @@ async function parseAndPreprocessOpenAPI(
     }
   }
 
+  profiler?.start("parse:normalize-input");
+  const normalizedInput = normalizeParsedInputDocument(documentToConvert, {
+    sourcePath: input,
+  });
+  profiler?.end("parse:normalize-input");
+
+  if (normalizedInput.kind === "json-schema") {
+    console.log(
+      "🔄 Detected raw JSON Schema input, normalizing it for schema generation...",
+    );
+  }
+
+  if (
+    normalizedInput.kind === "json-schema" &&
+    (generationModes.generateClient ||
+      generationModes.generateRoutes ||
+      generationModes.generateServer)
+  ) {
+    throw new Error(
+      "Raw JSON Schema input supports schema generation only. Remove --client, --server, and --routes, or convert the document to OpenAPI first.",
+    );
+  }
+
   profiler?.start("parse:convert-openapi");
-  const openApiDoc = await convertParsedOpenAPI(documentToConvert);
+  const openApiDoc = await convertParsedOpenAPI(normalizedInput.document);
   profiler?.end("parse:convert-openapi");
 
   // Apply generated operation IDs for operations that don't have them

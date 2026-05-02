@@ -12,15 +12,17 @@ const program = new Command();
 
 program
   .name("@apical-ts/craft")
-  .description("Generate TypeScript from an OpenAPI specification.")
-  .version("0.10.0");
+  .description(
+    "Generate TypeScript from an OpenAPI or JSON Schema specification.",
+  )
+  .version("0.20.0");
 
 program
   .command("generate")
   .description("Generate TypeScript client, server and/or schemas.")
   .requiredOption(
     "-i, --input <path>",
-    "Path to the OpenAPI specification file.",
+    "Path to the OpenAPI or JSON Schema file.",
   )
   .requiredOption("-o, --output <path>", "Path to the output directory.")
   .option(
