@@ -1,404 +1,105 @@
-# Express OpenAPI Server Wrapper Examples
+# Express Contract-First Server Example
 
-These examples demonstrate how to use the generated OpenAPI server wrappers with
-Express.js, showcasing complete integrations that include both server-side
-wrappers and client-side type-safe API calls. Two server implementations are
-provided:
+This example shows the **static, wrapper-based** integration style. Apical TS
+generates the contract artifacts once, then Express explicitly wires each route
+to the generated wrappers. You keep full control over middleware and business
+logic without re-declaring paths, params, or response types by hand.
 
-- **Express Server Example**: Full implementation with custom business logic
-- **Mock Server Example**: Automatic mock server using zocker for data
-  generation
+## Contract-first flow
 
-## Overview
+1. `examples.yaml` is the source of truth.
+2. `pnpm run generate` runs Apical with `--server --client`.
+3. Apical emits:
+   - `generated/routes/*`: route metadata shared across integrations
+   - `generated/server/*`: typed wrappers and handler signatures for Express
+   - `generated/client/*`: typed client operations for the client example
+   - `generated/schemas/*`: runtime validation schemas
+4. `server-examples/express-adapter.ts` adapts Express `Request` / `Response`
+   objects to the generated wrappers.
+5. `server-examples/express-server-example.ts` registers each route explicitly.
 
-These examples use the
-[Swagger Petstore OpenAPI specification](https://raw.githubusercontent.com/swagger-api/swagger-petstore/refs/heads/master/src/main/resources/openapi.yaml)
-to generate:
+## Static vs dynamic route usage
 
-- **Server wrappers**: Type-safe request handlers with automatic validation
-- **Client functions**: Type-safe API client functions
-- **Zod schemas**: Runtime validation schemas for all data types
+- **Express in this folder** is the static style: you decide how every route is
+  mounted with `createExpressAdapter(...)` or manual wrapper calls.
+- **Hono in `../hono`** is the dynamic style: a second generator reads the
+  generated route metadata and emits a full Hono registration layer.
+- Both approaches reuse the same contract, so switching frameworks does not
+  require remodeling the API.
 
-The examples show how to bridge the generated server wrappers with Express.js
-using an adapter pattern, and how to call the resulting API using the generated
-client.
+## Quick start
 
-## Prerequisites
+1. Install dependencies from the monorepo root:
 
-- Node.js 20.18.2+ (check your version with `node --version`)
-- pnpm 10.14.0+ (install with `npm install -g pnpm@10.14.0`)
+   ```bash
+   pnpm install
+   ```
 
-## Quick Start
+2. Generate the contract artifacts:
 
-### 1. Generate Server and Client Code
+   ```bash
+   cd examples/express
+   pnpm run generate
+   ```
 
-First, generate the TypeScript code from the OpenAPI specification:
+3. Run the Express server:
 
-```bash
-# From the examples directory
-pnpm generate:examples
-```
+   ```bash
+   pnpx tsx server-examples/express-server-example.ts
+   ```
 
-This task will:
+4. In another terminal, exercise the generated client:
 
-- Clean any existing generated code
-- Run the TypeScript OpenAPI generator with both `--server` and `--client` flags
-- Create the `generated/` directory with schemas, server wrappers, and client
-  functions
+   ```bash
+   pnpx tsx client-examples/client-example.ts
+   ```
 
-### 2. Choose Your Server Implementation
-
-#### Option A: Full Express Server with Custom Logic
-
-Run the Express server that uses the generated server wrappers with custom
-business logic:
-
-```bash
-# From the examples directory
-pnpx tsx server-examples/express-server-example.ts
-```
-
-#### Option B: Mock Server with Auto-Generated Data
-
-Run the mock Express server that automatically generates responses using zocker:
+For the mock-only variant, run:
 
 ```bash
-# From the examples directory
 pnpx tsx server-examples/mock-server-example.ts
 ```
 
-Both servers will start on `http://localhost:3000` and display available
-endpoints:
+## Project layout
 
-```
-🚀 Express server running on http://localhost:3000
-📊 Available endpoints:
-  GET /pet/findByStatus?status=available
-  GET /pet/{petId} (e.g., /pet/1)
-  GET /store/inventory
-  GET /health
-```
+- `examples.yaml`: the API contract used by this example
+- `generated/server/*`: wrapper-based server integration
+- `generated/routes/*`: reusable route metadata
+- `server-examples/express-adapter.ts`: Express-specific request/response bridge
+- `server-examples/express-server-example.ts`: custom business logic plus
+  explicit route registration
+- `client-examples/*`: typed client consumers of the same contract
 
-The mock server will additionally show:
+## Example prompt
 
-```
-📊 All OpenAPI operations are mocked with zocker-generated data for all status codes in responseMap
-🔍 Validation errors include detailed error messages
-```
+Use a prompt like this when you want an LLM to create Express handlers from
+scratch starting from the OpenAPI contract only:
 
-### 3. Test with the Generated Client
+```text
+Goal: build type safe Express handlers that uses generated server wrappers
+from OpenAPI contract in `examples.yaml`.
 
-In a new terminal, run the client example to test the API:
+Process:
+1. Run `nps @apical-ts/craft generate -i examples.yaml -o generated --server --client`.
+2. Treat the generated files as the contract artifacts:
+   - `generated/server/*` for wrappers, handler types, and typed response unions
+   - `generated/routes/*` for path and method metadata
+3. Write `express-adapter.ts` so it:
+   - extracts query, path, headers, body, and content type from Express requests
+   - passes them to the generated wrapper
+   - translates wrapper results back into Express responses
+4. Write `express-server.ts` so it:
+   - registers the routes explicitly in Express
+   - keeps business logic inside typed handlers
+   - wraps each handler with the generated server wrapper
 
-```bash
-# From the examples directory
-pnpx tsx client-examples/client-example.ts
-```
-
-This will demonstrate:
-
-- Finding pets by status with query parameters
-- Getting a specific pet by ID with path parameters
-- Retrieving store inventory
-- Handling typed operation errors (e.g. network, validation, missing schema)
-
-### 4. Manual Testing
-
-You can also test the API manually using curl:
-
-```bash
-# Find available pets
-curl "http://localhost:3000/pet/findByStatus?status=available"
-
-# Get pet by ID
-curl "http://localhost:3000/pet/1"
-
-# Get store inventory
-curl "http://localhost:3000/store/inventory"
-
-# Health check
-curl "http://localhost:3000/health"
+Rules:
+- do not hand-write endpoint definitions, DTOs, or validation schemas
+- paths, methods, params, and response shapes must come from @apical-ts/craft output
 ```
 
-## Key Components Explained
+## Why this example matters
 
-### 1. Express Adapter (`server-examples/express-adapter.ts`)
-
-The adapter module provides utilities to bridge generated server wrappers with
-Express:
-
-- **`extractRequestParams(req)`**: Converts Express `Request` objects into the
-  format expected by generated wrappers
-- **`sendWrapperResponse(res, result)`**: Sends wrapper results as Express
-  responses
-- **`createExpressAdapter()`**: Higher-order function for setting up routes
-
-```typescript
-// Example usage
-const params = extractRequestParams(req);
-const wrappedHandler = getPetByIdWrapper(getPetByIdHandler);
-const result = await wrappedHandler(params);
-sendWrapperResponse(res, result);
-```
-
-### 2. Server Implementation (`server-examples/express-server-example.ts`)
-
-Shows two approaches for setting up routes:
-
-**Manual approach:**
-
-```typescript
-app.get("/pet/findByStatus", async (req, res) => {
-  const params = extractRequestParams(req);
-  const wrappedHandler = findPetsByStatusWrapper(findPetsByStatusHandler);
-  const result = await wrappedHandler(params);
-  sendWrapperResponse(res, result);
-});
-```
-
-**Helper function approach:**
-
-```typescript
-setupRoute(getPetByIdWrapper, getPetByIdRoute(), getPetByIdHandler);
-```
-
-### 3. Mock Server Implementation (`server-examples/mock-server-example.ts`)
-
-Demonstrates automatic mock data generation using zocker:
-
-**Key features:**
-
-- **Automatic mock generation**: Uses zocker to generate realistic mock data for
-  all response schemas
-- **Status code coverage**: Mocks responses for all status codes defined in the
-  OpenAPI specification
-- **Validation error handling**: Provides detailed error messages for invalid
-  requests
-- **Generic handler factory**: `createMockHandler()` automatically creates
-  handlers for any operation
-
-**Mock handler pattern:**
-
-```typescript
-const createMockHandler = (routeInfo) => {
-  const handler = async (params) => {
-    if (!params.isValid) {
-      // Generate mock validation error response
-      const schema = routeInfo.responseMap["400"]["application/json"];
-      const mockData = zocker(schema).setSeed(123).generate();
-      return {
-        status: 400,
-        contentType: "application/json",
-        data: { ...mockData, message: prettifyValidationError(params) },
-      };
-    }
-
-    // Generate mock success response
-    const statusResponseMap = routeInfo.responseMap["200"];
-    const schema = statusResponseMap["application/json"];
-    const data = zocker(schema).setSeed(123).generate();
-    return { status: 200, contentType: "application/json", data };
-  };
-  return handler;
-};
-```
-
-**Automatic route registration:**
-
-```typescript
-Object.values(routes).forEach((routeFn) => {
-  registerRoute(routeFn());
-});
-```
-
-### 3. Request Parameter Extraction
-
-The `extractRequestParams` function handles parameter transformation:
-
-- **Query parameters**: Extracted from `req.query`
-- **Path parameters**: Extracted from `req.params`
-- **Headers**: Extracted from `req.headers`
-- **Body**: Passed through from `req.body`
-- **Content-Type**: Extracted from request headers
-
-Parameter names are transformed from kebab-case to camelCase to match the
-generated schemas.
-
-### 4. Handler Implementation Pattern
-
-Generated server wrappers expect handlers that follow this pattern:
-
-```typescript
-const handler: getPetByIdHandler = async (params) => {
-  if (!params.isValid) {
-    // Handle validation errors
-    return { status: 400 };
-  }
-
-  // Access validated parameters
-  const { petId } = params.value.path;
-
-  // Business logic here
-  const pet = findPetById(petId);
-
-  if (!pet) {
-    return { status: 404 };
-  }
-
-  return {
-    status: 200,
-    contentType: "application/json",
-    data: pet,
-  };
-};
-```
-
-### 5. Client Usage (`client-examples/client-example.ts`)
-
-The generated client provides type-safe functions with built-in validation:
-
-```typescript
-// Configure client for local server
-const localConfig = {
-  ...globalConfig,
-  baseURL: "http://localhost:3000",
-};
-
-// Call API with type safety
-const response = await findPetsByStatus(
-  { query: { status: "available" } },
-  localConfig,
-);
-
-if (response.status === "200") {
-  const data = response.parse();
-  if (isParsed(data)) {
-    console.log("Pets:", data.parsed);
-  } else if (data.kind === "parse-error") {
-    console.error("Validation failed:", data.error);
-  }
-} else {
-  console.error("Operation failed:", response.kind, response.error);
-}
-```
-
-### Error Handling with `neverthrow`
-
-See
-[`neverthrow-error-handling.ts`](./client-examples/neverthrow-error-handling.ts)
-for an example of how to use `neverthrow` to handle errors from the generated
-client.
-
-## Generated Code Structure
-
-### Server Wrappers (`generated/server/`)
-
-Each operation generates:
-
-- **Handler type**: `operationNameHandler` - Function signature for your
-  business logic
-- **Wrapper function**: `operationNameWrapper` - Validation and parameter
-  extraction
-- **Route function**: `route()` - Returns path and HTTP method information
-- **Response types**: Discriminated unions for all possible responses
-
-### Client Functions (`generated/client/`)
-
-Each operation generates:
-
-- **Client function**: Type-safe function for making API calls
-- **Parameter types**: Input validation schemas
-- **Response types**: Discriminated unions matching server responses
-- **Parse helpers**: Runtime validation for response data
-
-### Schemas (`generated/schemas/`)
-
-- **Zod schemas**: Runtime validation schemas for all data types
-- **TypeScript types**: Inferred types from Zod schemas
-- **Import/export structure**: Proper module organization
-
-## Benefits of This Approach
-
-1. **Type Safety**: Full TypeScript coverage from API definition to
-   implementation
-2. **Runtime Validation**: Opt‑in (`parse()` method) or automatic
-   (`forceValidation: true` in config) response validation
-3. **Error Handling**: Structured, non‑throwing error objects with discriminated
-   unions
-4. **Framework Agnostic**: Server wrappers can work with any Node.js framework
-5. **Consistent APIs**: Generated client matches server implementation exactly
-6. **Development Experience**: IntelliSense, auto-completion, and compile-time
-   checks
-7. **Mock Server Support**: Automatic mock data generation for rapid prototyping
-   and testing
-8. **Comprehensive Coverage**: Mock server supports all status codes and
-   response schemas from the OpenAPI specification
-
-## Customization
-
-### Choosing Between Server Implementations
-
-- **Use Express Server Example** (`express-server-example.ts`) when:
-  - You need custom business logic implementation
-  - You want full control over response data
-  - You're building a production API
-  - You need to integrate with databases or external services
-
-- **Use Mock Server Example** (`mock-server-example.ts`) when:
-  - You need rapid prototyping and testing
-  - You want to explore API behavior without implementing business logic
-  - You're developing client applications and need realistic test data
-  - You want to validate OpenAPI specifications with comprehensive response
-    coverage
-
-### Adding New Operations
-
-1. Update the OpenAPI specification (`examples.yaml`)
-2. Regenerate code: `pnpm generate:examples`
-3. Implement the handler in your Express server (for custom logic)
-4. Use the generated client to call the new endpoint
-
-### Custom Error Handling
-
-```typescript
-const handler: operationHandler = async (params) => {
-  if (params.kind === "query-error") {
-    // Handle query parameter validation errors
-    console.error("Query validation failed:", params.error);
-    return {
-      status: 400,
-      contentType: "application/json",
-      data: { error: "Invalid query parameters" },
-    };
-  }
-
-  if (params.kind === "path-error") {
-    // Handle path parameter validation errors
-    return {
-      status: 400,
-      contentType: "application/json",
-      data: { error: "Invalid path parameters" },
-    };
-  }
-
-  // Handle success case
-  // ...
-};
-```
-
-## Troubleshooting
-
-### Generation Issues
-
-- **File not found**: Ensure you're running the generation task
-  `pnpm generate:examples`
-- **Network issues**: Check your internet connection for downloading the OpenAPI
-  spec
-
-### Runtime Issues
-
-- **Module not found**: Ensure generated code exists by running the generation
-  task `pnpm generate:examples`
-- **Type errors**: Regenerate code after OpenAPI specification changes
-- **Connection refused**: Make sure the Express server is running before running
-  the client
+This is the best reference when you want **maximum framework control** while
+still keeping the contract generated once. If you want the contract to drive
+route registration more directly, compare it with the Hono example.

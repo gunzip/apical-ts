@@ -1,13 +1,19 @@
 # Using Generated Server Routes Wrappers
 
-The generator can also produce a fully-typed server handler wrapper for your
-OpenAPI operations. This enables you to build type-safe HTTP servers (e.g., with
-Express, Fastify, or custom frameworks) that validate requests at runtime using
-Zod schemas and can return only responses of the expected types.
+Apical TS supports two contract-first server integration styles:
 
-## How to Generate a Server Route Wrapper
+1. **Wrapper-based integrations** via `--server`
+2. **Metadata-driven integrations** via `--routes`
 
-To generate server-side code, use the CLI with the `--server` flag:
+This page focuses on the first style. It is the approach used in
+`examples/express`: Apical generates typed wrappers, and you explicitly bind
+them to your framework routes. If you want to derive a framework layer from
+route metadata instead of wiring routes one by one, see the Hono example and the
+`--routes` flow.
+
+## How to Generate Server Wrappers
+
+To generate server-side wrappers, use the CLI with the `--server` flag:
 
 ```bash
 npx @apical-ts/craft generate \
@@ -16,98 +22,90 @@ npx @apical-ts/craft generate \
   -o generated
 ```
 
-This will create a `server/` directory in your output folder, containing:
+This creates:
 
-- **`server/index.ts`**: Exports the server handler wrappers and types
-- **`server/<operationId>.ts`**: Individual operation handler wrappers
+- **`routes/`**: route metadata shared by every generated integration
+- **`server/index.ts`**: exports the server handler wrappers and types
+- **`server/<operationId>.ts`**: individual operation handler wrappers
+
+## When to Use `--server` vs `--routes`
+
+- Use **`--server`** when you want Apical to validate requests and type your
+  handler inputs/outputs, while you keep explicit control over framework route
+  registration. This is the more static style shown in `examples/express`.
+- Use **`--routes`** when you want metadata only and plan to generate a second
+  framework layer from it. This is the more dynamic style shown in
+  `examples/hono`.
+- You can mix both approaches because `--server` also generates `routes/`. The
+  same contract can therefore power Express handlers, Hono generators, MSW mock
+  handlers, or React Query hook generators without remodeling the API surface.
 
 ## Runtime Dependencies
 
 The generated server code requires `zod` as a runtime dependency for request and
-response validation. After generation, install it in your output directory:
-
-```bash
-cd generated
-npm install
-```
+response validation. After generation, install dependencies in your project or
+output directory as needed.
 
 ## Using the Wrapped Handler
 
-The generated route wrapper is a function that takes a request handler and
-returns an async function that can be used with any web framework. This allows
-you to ensure type safety and runtime validation for your request parameters
-(path, query, headers) and response data.
+The generated route wrapper takes a typed handler and returns an async function
+that you can connect to any web framework. Your framework adapter is responsible
+for:
 
-You are responsible for extracting parameters from the framework request and
-passing them to the wrapper, then handling the result (status, contentType,
-data) in your route handler. The `status` field is now always a string (e.g.
-`'200'`, `'404'`, `'4XX'`, `'5XX'`), allowing you to handle both specific and
-range status codes type-safely. This allows you to integrate with any web
-framework and customize error handling as needed.
+1. Extracting `query`, `path`, `headers`, `body`, and `contentType`
+2. Passing that data to the wrapper
+3. Translating the wrapper result back into the framework response
 
-Example usage with Express and a helper for parameter extraction:
+This is what keeps the framework layer thin: the contract stays in the generated
+files, while your adapter only moves data in and out of them.
+
+Example usage with Express:
 
 ```ts
-// ../../examples/express/server-examples/express-server-example.ts#L62-L91
-
-/* Implementation of getPetById handler */
 const getPetByIdHandler: getPetByIdHandler = async (params) => {
   if (!params.isValid) {
-    /* Handle validation errors */
-    console.error("Validation error in getPetById:", params);
-    return {
-      status: "400",
-    };
+    return { status: "400" };
   }
 
   const { petId } = params.value.path;
-  console.log(`Getting pet by ID: ${petId}`);
-
-  /* Find pet by ID */
-  const pet = mockPets.find((p) => p.id === petId);
+  const pet = mockPets.find((candidate) => candidate.id === petId);
 
   if (!pet) {
-    return {
-      status: "404",
-    };
+    return { status: "404" };
   }
 
-  // Response is typed here
   return {
     status: "200",
     contentType: "application/json",
     data: pet,
   };
 };
-/* Setup routes using the helper function */
+
 createExpressAdapter(getPetByIdRoute(), getPetByIdHandler)(app);
 ```
 
-- The wrapper receives a single params object containing validated query, path,
-  headers, body, etc. or error details if validation fails
-- You control the HTTP response based on the wrapper's result
-- All responses are type checked: you cannot return a response shape which is
-  not valid according to the OpenAPI schema.
-
-See the `apps/examples` directory in the repository for more usage examples.
+The wrapper receives a single params object containing validated query, path,
+headers, and body data, or structured validation errors when parsing fails. All
+responses are type checked against the OpenAPI contract.
 
 ### Handler Function Signature
 
-The handler you provide to the wrapper receives a single argument:
+The handler you provide to the wrapper receives one of:
 
-- For valid requests:
-  `{ isValid: true, value: { query, path, headers, body, ... } }`
-- For validation errors:
-  `{ isValid: false, kind: "query-error" | "body-error" | ... , error: ZodError }`
+- `{ isValid: true, value: { query, path, headers, body, ... } }`
+- `{ isValid: false, kind: "query-error" | "body-error" | ..., error: ZodError }`
 
-It must return an object with `{ status, contentType, data }`.
+It must return a typed object shaped like `{ status, contentType, data }`.
 
-## Features
+## Why This Is the "Static" Route Style
 
-- Request validation (body, query, params) using generated Zod schemas
-- Response validation before sending (if you use the generated types)
-- Automatic error details for validation failures
-- Type-safe handler context
+With `--server`, you still choose how routes are mounted in the framework. That
+is useful when you want:
 
-You can use the generated types and schemas for further custom validation or
-integration with other frameworks.
+- full control over middleware ordering and framework features
+- custom business logic per endpoint
+- incremental adoption in an existing server
+
+If, instead, you want the contract to drive route registration itself, start
+from `--routes` and generate a framework-specific layer from the route metadata,
+as shown in `examples/hono`.
