@@ -5,7 +5,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const siteTitle = "@apical-ts/craft";
-const siteTagline = "OpenAPI to a typed TypeScript stack.";
+const siteTagline = "From OpenAPI to your TypeScript stack.";
 const siteDescription =
   "Generate Zod v4 schemas, typed clients, and server wrappers from one OpenAPI specification.";
 const siteUrl = "https://gunzip.github.io";
