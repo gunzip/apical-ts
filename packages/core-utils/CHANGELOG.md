@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.19.2
+
+### Patch Changes
+
+- 391ae05: Fallback to simple union when one of the member in oneOf is an array
+
 ## 0.19.1
 
 ### Patch Changes

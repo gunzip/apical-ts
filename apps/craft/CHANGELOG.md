@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.21.1
+
+### Patch Changes
+
+- 391ae05: Fallback to simple union when one of the member in oneOf is an array
+
 ## 0.21.0
 
 ### Minor Changes

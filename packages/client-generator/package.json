@@ -1,6 +1,6 @@
 {
   "name": "@apical-ts/client-generator",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "private": true,
   "description": "OpenAPI client generator for apical-ts",
   "main": "dist/index.js",

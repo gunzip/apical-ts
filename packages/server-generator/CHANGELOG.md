@@ -1,5 +1,12 @@
 # @apical-ts/server-generator
 
+## 0.14.2
+
+### Patch Changes
+
+- Updated dependencies [391ae05]
+  - @apical-ts/core-utils@0.19.2
+
 ## 0.14.1
 
 ### Patch Changes
