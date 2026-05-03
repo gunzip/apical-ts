@@ -37,7 +37,7 @@ const outputExamples = {
     path: "schemas/",
     note: "Validate payloads and infer exact runtime-safe types.",
     language: "typescript",
-    code: `import { UserSchema } from "./generated/schemas";
+    code: `import { UserSchema } from "./generated/schemas/User.js";
 
 const result = UserSchema.safeParse(apiResponse);
 
