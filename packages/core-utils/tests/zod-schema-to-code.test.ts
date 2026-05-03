@@ -759,6 +759,105 @@ describe("zodSchemaToCode", () => {
     expect(result.code).toBe("z.union([NullableMember, NonNullableMember])");
   });
 
+  it("should fall back to plain z.union when a discriminated union contains an inline array member", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "type",
+      },
+      oneOf: [
+        {
+          items: { type: "string" },
+          type: "array",
+        },
+        {
+          properties: {
+            name: { type: "string" },
+            type: { enum: ["file"], type: "string" },
+          },
+          required: ["type", "name"],
+          type: "object",
+        },
+      ],
+    };
+    const result = zodSchemaToCode(schema);
+
+    expect(result.code).toContain("z.union([");
+    expect(result.code).not.toContain("discriminatedUnion");
+    expect(result.code).not.toContain("superRefine");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(["README.md"]).success).toBe(true);
+    expect(
+      zodSchema.safeParse({ name: "README.md", type: "file" }).success,
+    ).toBe(true);
+  });
+
+  it("should keep using z.discriminatedUnion for resolved $ref members with discriminator tags", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "type",
+      },
+      oneOf: [
+        { $ref: "#/components/schemas/Circle" },
+        { $ref: "#/components/schemas/Square" },
+      ],
+    };
+    const result = zodSchemaToCode(schema, {
+      resolvedSchemas: {
+        Circle: {
+          properties: {
+            radius: { type: "number" },
+            type: { enum: ["circle"], type: "string" },
+          },
+          required: ["type", "radius"],
+          type: "object",
+        },
+        Square: {
+          properties: {
+            size: { type: "number" },
+            type: { enum: ["square"], type: "string" },
+          },
+          required: ["type", "size"],
+          type: "object",
+        },
+      },
+    });
+
+    expect(result.code).toBe('z.discriminatedUnion("type", [Circle, Square])');
+  });
+
+  it("should fall back to z.union when a referenced discriminated union member resolves to an array schema", () => {
+    const schema: SchemaObject = {
+      discriminator: {
+        propertyName: "type",
+      },
+      oneOf: [
+        { $ref: "#/components/schemas/ContentDirectory" },
+        { $ref: "#/components/schemas/ContentFile" },
+      ],
+    };
+    const result = zodSchemaToCode(schema, {
+      resolvedSchemas: {
+        ContentDirectory: {
+          items: { type: "string" },
+          type: "array",
+        },
+        ContentFile: {
+          properties: {
+            name: { type: "string" },
+            type: { enum: ["file"], type: "string" },
+          },
+          required: ["type", "name"],
+          type: "object",
+        },
+      },
+    });
+
+    expect(result.code).toBe("z.union([ContentDirectory, ContentFile])");
+    expect(result.imports.has("ContentDirectory")).toBe(true);
+    expect(result.imports.has("ContentFile")).toBe(true);
+  });
+
   it("should keep inline nullable discriminated union members with descriptions discriminable", () => {
     const schema: SchemaObject = {
       discriminator: {

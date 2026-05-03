@@ -22,6 +22,19 @@ export function buildDiscriminatedUnionCode(
 ): string {
   const { discriminatorProperty, members, resolvedSchemas } = options;
   const memberCodes = members.map((member) => member.code);
+
+  if (
+    !members.every((member) =>
+      isDiscriminatedUnionMemberCompatible(
+        member.schema,
+        discriminatorProperty,
+        resolvedSchemas,
+      ),
+    )
+  ) {
+    return renderPlainUnion(memberCodes);
+  }
+
   const nullableFlags = members.map((member) =>
     isDiscriminatedUnionMemberNullable(member.schema, resolvedSchemas),
   );
@@ -82,6 +95,47 @@ function unwrapNullableDiscriminatedUnionMember(
   return stripTopLevelNullableWrapper(member.code);
 }
 
+function isDiscriminatedUnionMemberCompatible(
+  schema: ReferenceObject | SchemaObject,
+  discriminatorProperty: string,
+  resolvedSchemas?: ResolvedSchemas,
+  seenRefs = new Set<string>(),
+): boolean {
+  if (isReferenceObject(schema)) {
+    const refName = parseSchemaReference(schema.$ref);
+    if (!refName || seenRefs.has(refName.originalName) || !resolvedSchemas) {
+      return true;
+    }
+
+    const resolvedSchema = resolvedSchemas[refName.originalName];
+    if (!resolvedSchema || !isSchemaObject(resolvedSchema)) {
+      return true;
+    }
+
+    return isDiscriminatedUnionMemberCompatible(
+      resolvedSchema,
+      discriminatorProperty,
+      resolvedSchemas,
+      new Set(seenRefs).add(refName.originalName),
+    );
+  }
+
+  if (!isObjectLikeDiscriminatedUnionMember(schema)) {
+    return false;
+  }
+
+  const discriminatorSchema = schema.properties?.[discriminatorProperty];
+  if (!discriminatorSchema) {
+    return false;
+  }
+
+  return isStaticDiscriminatorSchema(
+    discriminatorSchema,
+    resolvedSchemas,
+    seenRefs,
+  );
+}
+
 function isDiscriminatedUnionMemberNullable(
   schema: ReferenceObject | SchemaObject,
   resolvedSchemas?: ResolvedSchemas,
@@ -117,6 +171,45 @@ function resolveReferencedSchema(
   return resolvedSchema && isSchemaObject(resolvedSchema)
     ? resolvedSchema
     : null;
+}
+
+function isObjectLikeDiscriminatedUnionMember(schema: SchemaObject): boolean {
+  if (schema.allOf || schema.anyOf || schema.oneOf) {
+    return false;
+  }
+
+  if (Array.isArray(schema.type)) {
+    const nonNullTypes = schema.type.filter((type) => type !== "null");
+    return nonNullTypes.length === 1 && nonNullTypes[0] === "object";
+  }
+
+  return !schema.type || schema.type === "object";
+}
+
+function isStaticDiscriminatorSchema(
+  schema: ReferenceObject | SchemaObject,
+  resolvedSchemas?: ResolvedSchemas,
+  seenRefs = new Set<string>(),
+): boolean {
+  if (isReferenceObject(schema)) {
+    const refName = parseSchemaReference(schema.$ref);
+    if (!refName || seenRefs.has(refName.originalName) || !resolvedSchemas) {
+      return true;
+    }
+
+    const resolvedSchema = resolvedSchemas[refName.originalName];
+    if (!resolvedSchema || !isSchemaObject(resolvedSchema)) {
+      return true;
+    }
+
+    return isStaticDiscriminatorSchema(
+      resolvedSchema,
+      resolvedSchemas,
+      new Set(seenRefs).add(refName.originalName),
+    );
+  }
+
+  return schema.const !== undefined || Boolean(schema.enum?.length);
 }
 
 function stripTopLevelNullableWrapper(code: string): null | string {
