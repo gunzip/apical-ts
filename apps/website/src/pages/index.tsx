@@ -1,3 +1,4 @@
+import { useEffect, useState, type ComponentProps } from "react";
 import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
@@ -12,139 +13,281 @@ const previewCommand = `npx @apical-ts/craft generate \\
   -o ./generated \\
   --client --server`;
 
-const clientPreview = `import { findPetsByStatus } from "./generated/operations/findPetsByStatus.js";
+const heroHighlights = [
+  {
+    label: "Reusable output",
+    value: "Generate schemas, routes, client operations, and server wrappers.",
+  },
+  {
+    label: "Large specs",
+    value: "Selective imports keep very large APIs practical in real apps.",
+  },
+  {
+    label: "Safe responses",
+    value: "Narrowed responses, discriminated by status code and content type.",
+  },
+] as const;
+
+const outputOrder = ["schema", "route", "client", "server"] as const;
+type OutputExampleId = (typeof outputOrder)[number];
+
+const outputExamples = {
+  schema: {
+    title: "Schema",
+    path: "schemas/",
+    note: "Validate payloads and infer exact runtime-safe types.",
+    language: "typescript",
+    code: `import { UserSchema } from "./generated/schemas";
+
+const result = UserSchema.safeParse(apiResponse);
+
+if (result.success) {
+  console.log(result.data.email);
+}`,
+  },
+  route: {
+    title: "Route",
+    path: "routes/",
+    note: "Read generated method/path metadata for adapters and tooling.",
+    language: "typescript",
+    code: `import { getPetByIdRoute } from "./generated/routes/getPetById.js";
+
+const route = getPetByIdRoute();
+
+console.log({
+  method: route.method,
+  path: route.path,
+  responseMap: route.responseMap,
+  requestMap: route.requestMap,
+});`,
+  },
+  client: {
+    title: "Client",
+    path: "client/",
+    note: "Call one operation and branch on typed responses.",
+    language: "typescript",
+    code: `import { findPetsByStatus } from "./generated/client/findPetsByStatus.js";
 
 // Import just the operations you need
 // without pulling in a huge client bundle.
-const r = await findPetsByStatus({
+const response = await findPetsByStatus({
   query: { status: "available" },
 });
 
 // Strict typing over status code and content type
 // using discriminated unions guides agents toward safe code
-if (r.status === "200") {
+if (response.status === "200") {
   // Zod v4 parsed payload
-  console.log(r.parsed.data[0].name);
-}
-`;
+  console.log(response.parsed.data[0].name);
+}`,
+  },
+  server: {
+    title: "Server",
+    path: "server/",
+    note: "Write typed handlers and keep validation inside the wrapper.",
+    language: "typescript",
+    code: `import type { getPetByIdHandler } from "./generated/server/getPetById.js";
 
-const integrationPills = [
+const handler: getPetByIdHandler = async (params) => {
+  if (!params.isValid) return { status: "400" };
+
+  const petId = params.value.path.petId;
+  const pet = mockPets.find((candidate) => candidate.id === petId);
+  if (!pet) return { status: "404" };
+
+  return {
+    status: "200",
+    contentType: "application/json",
+    data: pet,
+  };
+};`,
+  },
+} satisfies Record<
+  OutputExampleId,
+  {
+    title: string;
+    path: string;
+    note: string;
+    language: string;
+    code: string;
+  }
+>;
+
+const featureCards = [
+  {
+    index: "Exact contract layer",
+    title: "Make the generated contract the source of truth",
+    description:
+      "Generate precise request, response, and route shapes once, then reuse them across frontend code, server handlers, tests, and custom tooling.",
+  },
+  {
+    index: "No framework lock-in",
+    title: "Keep your runtime choices open",
+    description:
+      "Apical generates the hard layer first. Plug it into Hono, Express, MSW, React Query, or your own adapters without getting trapped in a plugin.",
+  },
+  {
+    index: "Scales with the spec",
+    title: "Stay practical on very large APIs",
+    description:
+      "Operation-level output and selective imports keep large OpenAPI documents usable in application code instead of collapsing into one oversized client.",
+  },
+  {
+    index: "Agent-friendly typing",
+    title: "Give coding agents safer primitives",
+    description:
+      "Discriminated response unions and exact request shapes help generated and agent-written code branch safely and stay aligned with the API contract.",
+  },
+] as const;
+
+const workflowSteps = [
+  {
+    step: "01",
+    title: "Point at one OpenAPI document",
+    description:
+      "Use a local file or URL and keep one contract as the source of truth for every generated layer.",
+  },
+  {
+    step: "02",
+    title: "Generate the layers you need",
+    description:
+      "Emit Zod schemas, route metadata, client operations, and server wrappers from the same spec.",
+  },
+  {
+    step: "03",
+    title: "Compose your own integrations",
+    description:
+      "Use the generated output directly or build custom adapters around it for frameworks, tests, and internal tooling.",
+  },
+] as const;
+
+const integrationCards = [
   {
     name: "Hono",
     label: "custom handlers",
+    description:
+      "Derive framework routes from generated metadata while keeping validation and contract logic centralized.",
     href: "https://github.com/gunzip/apical-ts/tree/main/examples/hono",
   },
   {
     name: "MSW",
     label: "mock routes",
+    description:
+      "Generate mock handlers from the same operations you use in production clients and test suites.",
     href: "https://github.com/gunzip/apical-ts/tree/main/examples/msw-mock-server",
   },
   {
     name: "React Query",
     label: "client hooks",
+    description:
+      "Wrap operation functions in hooks without giving up tree-shaking or precise response typing.",
     href: "https://github.com/gunzip/apical-ts/tree/main/examples/react-query-hooks",
   },
 ] as const;
 
-const featureCards = [
+const resourceCards = [
   {
-    index: "AI adapters",
-    title: "Precise building blocks for custom integrations",
+    title: "Get started",
     description:
-      "Precise per-operation schemas and route shapes give agents enough structure. Save tokens generating custom Hono, MSW, or React Query adapters deterministically.",
+      "Install the package, run the generator, and inspect the output structure end to end.",
+    to: "/docs/introduction",
+    meta: "Documentation",
   },
   {
-    index: "No rigid plugins",
-    title: "Integrations are vibe-coded starters, not framework lock-in",
+    title: "Learn the CLI",
     description:
-      "No opinionated plugins. Just exact types and small examples you can inspect, extend, and regenerate with AI.",
+      "Review flags like --client, --server, and --routes with concrete command examples.",
+    to: "/docs/cli-usage",
+    meta: "Command reference",
   },
   {
-    index: "Tree shaking",
-    title: "Selective imports stay practical on very large specs",
+    title: "Browse integration patterns",
     description:
-      "Import only the operations you actually call, even when the OpenAPI document defines thousands of endpoints.",
-  },
-  {
-    index: "Typed responses",
-    title: "Discriminated unions guide coding agents toward safe code",
-    description:
-      "Responses narrow by status code and content type, so agent-written code can branch safely with strong typing.",
+      "See how generated contracts plug into framework glue, mock servers, and custom tooling.",
+    to: "/docs/schema-generation/framework-integrations",
+    meta: "Examples and patterns",
   },
 ] as const;
 
+function HomepageLink(props: ComponentProps<typeof Link>) {
+  // @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types.
+  return <Link {...props} />;
+}
+
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
+  const [openOutputId, setOpenOutputId] = useState<OutputExampleId | null>(
+    null,
+  );
+  const activeOutput = openOutputId ? outputExamples[openOutputId] : null;
+
+  useEffect(() => {
+    if (!openOutputId) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpenOutputId(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [openOutputId]);
 
   return (
     <header className={styles.heroBanner}>
       <div className={clsx("container", styles.heroLayout)}>
         <div className={styles.heroBody}>
-          {/* <div className={styles.eyebrow}>{siteConfig.title}</div> */}
           <Heading as="h1" className={styles.heroTitle}>
-            {siteConfig.tagline}
+            From OpenAPI to your TypeScript stack.
           </Heading>
           <p className={styles.heroSummary}>
-            @apical-ts/craft extracts exact Zod v4 schemas from your OpenAPI
-            contract to give your coding agents a rock-solid foundation. The
-            automated client is useful, but the real value is this: you can
-            "vibe-code" <strong>custom integrations</strong> with complete,
-            deterministic confidence that your code will never drift out of sync
-            with the API contract.
-          </p>
-          <div className={styles.integrationStrip}>
-            <ul className={styles.integrationList}>
-              {integrationPills.map((integration) => (
-                <li key={integration.name}>
-                  {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
-                  <Link
-                    className={styles.integrationItem}
-                    href={integration.href}
-                  >
-                    <span className={styles.integrationName}>
-                      {integration.name}
-                    </span>
-                    <span className={styles.integrationDivider}>/</span>
-                    <span className={styles.integrationLabel}>
-                      {integration.label}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <p className={styles.heroDetail}>
-            Hand-written glue and AI-generated scaffolding both tend to get
-            route contracts subtly wrong. Apical focuses on that hard layer
-            first, then lets you generate or compose clients, server wrappers,
-            and custom adapters on top of a contract that stays precise.
+            <strong>{siteConfig.title}</strong> generates Zod v4 schemas, route
+            metadata, typed clients, and server wrappers from one OpenAPI
+            document.
           </p>
           <div className={styles.heroActions}>
-            {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
-            <Link
+            <HomepageLink
               className={clsx(
                 "button button--lg button--primary",
                 styles.primaryAction,
               )}
               to="/docs/introduction"
             >
-              Read the docs
-            </Link>
-            {/* @ts-ignore - React 19 includes bigint in ReactNode but Docusaurus uses React 18 types */}
-            <Link
+              Get started
+            </HomepageLink>
+            <HomepageLink
               className={styles.secondaryAction}
               href="https://github.com/gunzip/apical-ts"
             >
               View on GitHub
-            </Link>
+            </HomepageLink>
           </div>
+          <p className={styles.heroDetail}>
+            Use the generated contract directly or compose Hono, MSW, React
+            Query, and custom adapters without drifting away from the spec. The
+            same precision gives coding agents safer primitives.
+          </p>
+          <ul className={styles.proofGrid}>
+            {heroHighlights.map((highlight) => (
+              <li key={highlight.label} className={styles.proofItem}>
+                <span className={styles.proofLabel}>{highlight.label}</span>
+                <span className={styles.proofValue}>{highlight.value}</span>
+              </li>
+            ))}
+          </ul>
         </div>
+
         <div className={styles.heroPreview}>
           <div className={styles.previewFrame}>
             <div className={styles.previewHeader}>
-              <span className={styles.previewPill}>
-                generate precise route contracts
-              </span>
+              <span className={styles.previewPill}>generate from one spec</span>
+              <span className={styles.previewCaption}>CLI</span>
             </div>
             <CodeBlock
               className={styles.previewCode}
@@ -155,16 +298,85 @@ function HomepageHeader() {
 
           <div className={styles.outputCard}>
             <div className={styles.previewHeader}>
-              <span className={styles.previewPill}>use generated client</span>
+              <span className={styles.previewPill}>generated output</span>
+              <span className={styles.previewCaption}>Reusable layers</span>
             </div>
-            <CodeBlock
-              className={styles.previewCode}
-              code={clientPreview}
-              language="typescript"
-            />
+            <div className={styles.outputBody}>
+              <p className={styles.outputSummary}>
+                Click a layer to open a minimal generated example.
+              </p>
+              <ul className={styles.outputList}>
+                {outputOrder.map((outputId) => {
+                  const output = outputExamples[outputId];
+
+                  return (
+                    <li key={outputId}>
+                      <button
+                        type="button"
+                        className={clsx(
+                          styles.outputButton,
+                          outputId === openOutputId &&
+                            styles.outputButtonActive,
+                        )}
+                        onClick={() => setOpenOutputId(outputId)}
+                        aria-haspopup="dialog"
+                        aria-expanded={outputId === openOutputId}
+                      >
+                        <span className={styles.outputTitle}>
+                          {output.title}
+                        </span>
+                        <span className={styles.outputPath}>{output.path}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
+
+      {activeOutput && (
+        <div
+          className={styles.outputModalBackdrop}
+          onClick={() => setOpenOutputId(null)}
+        >
+          <div
+            className={styles.outputModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="homepage-output-example-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className={styles.outputModalHeader}>
+              <div>
+                <span
+                  id="homepage-output-example-title"
+                  className={styles.outputModalTitle}
+                >
+                  {activeOutput.title} example
+                </span>
+                <span className={styles.outputModalMeta}>
+                  {activeOutput.path}
+                </span>
+              </div>
+              <button
+                type="button"
+                className={styles.outputModalClose}
+                onClick={() => setOpenOutputId(null)}
+              >
+                Close
+              </button>
+            </div>
+            <p className={styles.outputModalLead}>{activeOutput.note}</p>
+            <CodeBlock
+              className={clsx(styles.previewCode, styles.outputModalCode)}
+              code={activeOutput.code}
+              language={activeOutput.language}
+            />
+          </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -174,14 +386,14 @@ function FeatureSection() {
     <section className={styles.section}>
       <div className={clsx("container", styles.sectionStack)}>
         <div className={styles.sectionIntro}>
-          <p className={styles.sectionEyebrow}>What matters in practice</p>
+          <p className={styles.sectionEyebrow}>Why teams keep it</p>
           <Heading as="h2" className={styles.sectionTitle}>
-            A hard base for coding agents.
+            A contract layer worth generating once.
           </Heading>
           <p className={styles.sectionLead}>
-            Apical can generate the whole client layer, but the durable asset is
-            the route contract itself: precise Zod v4 schemas that keep client,
-            server, and custom integrations aligned.
+            The generated client is useful, but the durable asset is the exact
+            contract layer underneath it: schemas and route metadata you can
+            reuse everywhere TypeScript touches the API.
           </p>
         </div>
 
@@ -201,16 +413,130 @@ function FeatureSection() {
   );
 }
 
+function WorkflowSection() {
+  return (
+    <section className={styles.section}>
+      <div className={clsx("container", styles.sectionStack)}>
+        <div className={styles.sectionIntro}>
+          <p className={styles.sectionEyebrow}>How it works</p>
+          <Heading as="h2" className={styles.sectionTitle}>
+            One spec in, reusable layers out.
+          </Heading>
+          <p className={styles.sectionLead}>
+            Start from a single OpenAPI document, generate the pieces you need,
+            and keep your app-specific glue code thin and inspectable.
+          </p>
+        </div>
+
+        <div className={styles.workflowGrid}>
+          {workflowSteps.map((step) => (
+            <article key={step.step} className={styles.workflowCard}>
+              <span className={styles.workflowStep}>{step.step}</span>
+              <Heading as="h3" className={styles.workflowTitle}>
+                {step.title}
+              </Heading>
+              <p className={styles.workflowDescription}>{step.description}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function IntegrationSection() {
+  return (
+    <section className={styles.section}>
+      <div className={clsx("container", styles.sectionStack)}>
+        <div className={styles.sectionIntro}>
+          <p className={styles.sectionEyebrow}>Real starting points</p>
+          <Heading as="h2" className={styles.sectionTitle}>
+            Start from examples for the glue code around the contract.
+          </Heading>
+          <p className={styles.sectionLead}>
+            The integrations are meant to be inspectable starters. Copy the
+            pattern you need, adapt it to your stack, and keep the generated
+            contract as the stable base.
+          </p>
+        </div>
+
+        <div className={styles.integrationGrid}>
+          {integrationCards.map((integration) => (
+            <HomepageLink
+              key={integration.name}
+              className={styles.integrationCard}
+              href={integration.href}
+            >
+              <div className={styles.integrationHeader}>
+                <Heading as="h3" className={styles.integrationName}>
+                  {integration.name}
+                </Heading>
+                <span className={styles.integrationLabel}>
+                  {integration.label}
+                </span>
+              </div>
+              <p className={styles.integrationDescription}>
+                {integration.description}
+              </p>
+              <span className={styles.resourceMeta}>View example</span>
+            </HomepageLink>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ResourceSection() {
+  return (
+    <section className={styles.section}>
+      <div className={clsx("container", styles.sectionStack)}>
+        <div className={styles.sectionIntro}>
+          <p className={styles.sectionEyebrow}>Start here</p>
+          <Heading as="h2" className={styles.sectionTitle}>
+            Pick the shortest path to shipping.
+          </Heading>
+          <p className={styles.sectionLead}>
+            Use the docs to get the generator running quickly, then drill into
+            CLI flags and integration patterns only where your stack needs them.
+          </p>
+        </div>
+
+        <div className={styles.resourceGrid}>
+          {resourceCards.map((resource) => (
+            <HomepageLink
+              key={resource.title}
+              className={styles.resourceCard}
+              to={resource.to}
+            >
+              <Heading as="h3" className={styles.resourceTitle}>
+                {resource.title}
+              </Heading>
+              <p className={styles.resourceDescription}>
+                {resource.description}
+              </p>
+              <span className={styles.resourceMeta}>{resource.meta}</span>
+            </HomepageLink>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   return (
     <Layout
-      title="OpenAPI to a typed TypeScript stack"
-      description="Generate Zod v4 schemas, typed clients, and server wrappers from one OpenAPI specification."
+      title="Generate exact Zod schemas and typed clients from OpenAPI"
+      description="Turn one OpenAPI specification into exact Zod v4 schemas, route metadata, typed clients, and server wrappers for TypeScript."
     >
       <div className={styles.pageShell}>
         <HomepageHeader />
         <main className={styles.mainContent}>
           <FeatureSection />
+          <WorkflowSection />
+          <IntegrationSection />
+          <ResourceSection />
         </main>
       </div>
     </Layout>
