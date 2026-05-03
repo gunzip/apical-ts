@@ -254,7 +254,9 @@ function HomepageHeader() {
   const modalRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
-  const outputButtonRefs = useRef<Record<OutputExampleId, HTMLButtonElement | null>>({
+  const outputButtonRefs = useRef<
+    Record<OutputExampleId, HTMLButtonElement | null>
+  >({
     schema: null,
     route: null,
     client: null,
@@ -267,7 +269,8 @@ function HomepageHeader() {
   ) => {
     restoreFocusRef.current =
       triggerElement ??
-      (outputButtonRefs.current[outputId] ?? restoreFocusRef.current);
+      outputButtonRefs.current[outputId] ??
+      restoreFocusRef.current;
     setOpenOutputId(outputId);
   };
 
@@ -493,10 +496,7 @@ function HomepageHeader() {
       </div>
 
       {activeOutput && (
-        <div
-          className={styles.outputModalBackdrop}
-          onClick={closeOutput}
-        >
+        <div className={styles.outputModalBackdrop} onClick={closeOutput}>
           <div
             ref={modalRef}
             className={styles.outputModal}
