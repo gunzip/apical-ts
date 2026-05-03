@@ -1,4 +1,11 @@
-import { useEffect, useState, type ComponentProps } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
@@ -31,13 +38,37 @@ const heroHighlights = [
 const outputOrder = ["schema", "route", "client", "server"] as const;
 type OutputExampleId = (typeof outputOrder)[number];
 
+function getAdjacentOutputId(
+  currentOutputId: OutputExampleId,
+  direction: -1 | 1,
+): OutputExampleId {
+  const currentIndex = outputOrder.indexOf(currentOutputId);
+  const nextIndex =
+    (currentIndex + direction + outputOrder.length) % outputOrder.length;
+
+  return outputOrder[nextIndex];
+}
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((element) => {
+    return (
+      !element.hasAttribute("disabled") &&
+      element.getAttribute("aria-hidden") !== "true"
+    );
+  });
+}
+
 const outputExamples = {
   schema: {
     title: "Schema",
     path: "schemas/",
     note: "Validate payloads and infer exact runtime-safe types.",
     language: "typescript",
-    code: `import { UserSchema } from "./generated/schemas";
+    code: `import { UserSchema } from "./generated/schemas/User.js";
 
 const result = UserSchema.safeParse(apiResponse);
 
@@ -220,15 +251,101 @@ function HomepageHeader() {
     null,
   );
   const activeOutput = openOutputId ? outputExamples[openOutputId] : null;
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const outputButtonRefs = useRef<Record<OutputExampleId, HTMLButtonElement | null>>({
+    schema: null,
+    route: null,
+    client: null,
+    server: null,
+  });
+
+  const openOutput = (
+    outputId: OutputExampleId,
+    triggerElement?: HTMLElement | null,
+  ) => {
+    restoreFocusRef.current =
+      triggerElement ??
+      (outputButtonRefs.current[outputId] ?? restoreFocusRef.current);
+    setOpenOutputId(outputId);
+  };
+
+  const closeOutput = () => {
+    const restoreTarget = restoreFocusRef.current;
+    setOpenOutputId(null);
+    requestAnimationFrame(() => {
+      restoreTarget?.focus();
+    });
+  };
+
+  const showAdjacentOutput = (direction: -1 | 1) => {
+    if (!openOutputId) {
+      return;
+    }
+
+    const nextOutputId = getAdjacentOutputId(openOutputId, direction);
+    restoreFocusRef.current = outputButtonRefs.current[nextOutputId];
+    setOpenOutputId(nextOutputId);
+  };
 
   useEffect(() => {
     if (!openOutputId) {
       return;
     }
 
+    if (!modalRef.current?.contains(document.activeElement)) {
+      closeButtonRef.current?.focus();
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setOpenOutputId(null);
+        event.preventDefault();
+        closeOutput();
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        showAdjacentOutput(1);
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        showAdjacentOutput(-1);
+        return;
+      }
+
+      if (event.key !== "Tab" || !modalRef.current) {
+        return;
+      }
+
+      const focusableElements = getFocusableElements(modalRef.current);
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement;
+      const isInsideModal =
+        activeElement instanceof HTMLElement &&
+        modalRef.current.contains(activeElement);
+
+      if (event.shiftKey) {
+        if (activeElement === firstElement || !isInsideModal) {
+          event.preventDefault();
+          lastElement.focus();
+        }
+
+        return;
+      }
+
+      if (activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     };
 
@@ -238,6 +355,37 @@ function HomepageHeader() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [openOutputId]);
+
+  const handleOutputButtonClick = (
+    outputId: OutputExampleId,
+    event: ReactMouseEvent<HTMLButtonElement>,
+  ) => {
+    openOutput(outputId, event.currentTarget);
+  };
+
+  const handleOutputButtonKeyDown = (
+    outputId: OutputExampleId,
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+  ) => {
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      const nextOutputId = getAdjacentOutputId(outputId, 1);
+      openOutput(
+        nextOutputId,
+        outputButtonRefs.current[nextOutputId] ?? event.currentTarget,
+      );
+      return;
+    }
+
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      const previousOutputId = getAdjacentOutputId(outputId, -1);
+      openOutput(
+        previousOutputId,
+        outputButtonRefs.current[previousOutputId] ?? event.currentTarget,
+      );
+    }
+  };
 
   return (
     <header className={styles.heroBanner}>
@@ -313,12 +461,20 @@ function HomepageHeader() {
                     <li key={outputId}>
                       <button
                         type="button"
+                        ref={(element) => {
+                          outputButtonRefs.current[outputId] = element;
+                        }}
                         className={clsx(
                           styles.outputButton,
                           outputId === openOutputId &&
                             styles.outputButtonActive,
                         )}
-                        onClick={() => setOpenOutputId(outputId)}
+                        onClick={(event) =>
+                          handleOutputButtonClick(outputId, event)
+                        }
+                        onKeyDown={(event) =>
+                          handleOutputButtonKeyDown(outputId, event)
+                        }
                         aria-haspopup="dialog"
                         aria-expanded={outputId === openOutputId}
                       >
@@ -339,9 +495,10 @@ function HomepageHeader() {
       {activeOutput && (
         <div
           className={styles.outputModalBackdrop}
-          onClick={() => setOpenOutputId(null)}
+          onClick={closeOutput}
         >
           <div
+            ref={modalRef}
             className={styles.outputModal}
             role="dialog"
             aria-modal="true"
@@ -360,13 +517,32 @@ function HomepageHeader() {
                   {activeOutput.path}
                 </span>
               </div>
-              <button
-                type="button"
-                className={styles.outputModalClose}
-                onClick={() => setOpenOutputId(null)}
-              >
-                Close
-              </button>
+              <div className={styles.outputModalActions}>
+                <button
+                  type="button"
+                  className={styles.outputModalNav}
+                  onClick={() => showAdjacentOutput(-1)}
+                >
+                  <span aria-hidden="true">←</span>
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  className={styles.outputModalNav}
+                  onClick={() => showAdjacentOutput(1)}
+                >
+                  Next
+                  <span aria-hidden="true">→</span>
+                </button>
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  className={styles.outputModalClose}
+                  onClick={closeOutput}
+                >
+                  Close
+                </button>
+              </div>
             </div>
             <p className={styles.outputModalLead}>{activeOutput.note}</p>
             <CodeBlock

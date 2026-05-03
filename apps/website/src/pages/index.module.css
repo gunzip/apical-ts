@@ -376,6 +376,7 @@
 .outputModalBackdrop {
   align-items: center;
   background: rgba(3, 8, 16, 0.72);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   display: flex;
   inset: 0;
@@ -427,6 +428,15 @@
   padding: 0.6rem 1.15rem 0;
 }
 
+.outputModalActions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.outputModalNav,
 .outputModalClose {
   align-items: center;
   background: rgba(12, 20, 33, 0.55);
@@ -437,6 +447,7 @@
   display: inline-flex;
   font-size: 0.9rem;
   font-weight: 600;
+  gap: 0.35rem;
   min-height: 40px;
   padding: 0 0.95rem;
   transition:
@@ -445,12 +456,14 @@
     transform 0.2s ease;
 }
 
+.outputModalNav:hover,
 .outputModalClose:hover {
   background: rgba(15, 26, 42, 0.8);
   border-color: rgba(166, 204, 255, 0.32);
   transform: translateY(-1px);
 }
 
+.outputModalNav:focus-visible,
 .outputModalClose:focus-visible {
   border-color: rgba(166, 204, 255, 0.42);
   outline: 2px solid rgba(166, 204, 255, 0.28);
@@ -636,6 +649,12 @@
     flex-direction: column;
   }
 
+  .outputModalActions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .outputModalNav,
   .outputModalClose {
     justify-content: center;
     width: 100%;
@@ -659,6 +678,7 @@
   .previewFrame,
   .outputCard,
   .outputButton,
+  .outputModalNav,
   .outputModalClose,
   .heroActions :global(.button).primaryAction {
     transition: none;
