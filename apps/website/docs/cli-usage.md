@@ -182,15 +182,10 @@ handle runtime validation.
 ## Formatting Generated Code
 
 For performance reasons, the CLI does not format the generated TypeScript files
-by default. To format them you may use [Biome](https://biomejs.dev/) running the
-following command in the output directory:
+by default. To format them you may use
+[oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) running the following
+command in the output directory:
 
 ```bash
-npx @biomejs/biome format --write .
-```
-
-Alternatively, you can use any other slower code formatter of your choice, e.g.
-
-```bash
-npx prettier --log-level=silent --write .
+npx oxfmt
 ```
