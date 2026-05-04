@@ -11,10 +11,12 @@ Need to **validate server requests and return typed responses**? 🛡️ We've g
 you covered with built-in support for request and response validation using Zod
 schemas.
 
+See https://gunzip.github.io/apical-ts/ for more information.
+
 ## CLI
 
 ```bash
-pnpm start generate -i ./openapi.yaml -o ./generated --client --server
+npx @apical-ts/craft generate -i https://petstore.swagger.io/v2/swagger.json -o ./generated --client --server
 ```
 
 ## Contract-first integrations
@@ -31,35 +33,7 @@ want to derive later.
 
 `--client` and `--server` also emit `routes/`, so the same contract can feed
 mock handlers, frontend hooks, or custom framework adapters without re-modeling
-paths, params, or responses for each integration. See the examples in
-[`examples/`](./examples/), especially `express`, `hono`, `msw-mock-server`, and
-`react-query-hooks`.
+paths, params, or responses for each integration.
 
-### Overriding OpenAPI string formats
-
-Use `--format` to replace a `type: string` + `format` mapping with your own Zod
-schema:
-
-```bash
-pnpm start generate \
-  -i ./openapi.yaml \
-  -o ./generated \
-  --client \
-  --server \
-  --format tax-code=./src/zod/TaxCode.ts \
-  --format uuid=@acme/domain-schemas#Uuid
-```
-
-- `--format` is repeatable
-- `<format>` must match the OpenAPI `format` value exactly
-- `<module-or-path>` accepts both package/module specifiers and explicit project
-  paths (`./` or `../`)
-- `#<export>` is optional; when omitted, `craft` infers the export name from the
-  last path or module segment
-
-When a mapping matches, the generator imports your Zod schema into generated
-`schemas` files and reuses it through generated routes, client, and server
-types. The matched string field stops using the built-in OpenAPI string
-constraints and delegates validation to your custom schema.
-
-See https://gunzip.github.io/apical-ts/ for more information.
+See the examples in [`examples/`](./examples/), especially `express`, `hono`,
+`msw-mock-server`, and `react-query-hooks`.
