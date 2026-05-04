@@ -33,7 +33,7 @@ if (result.success) {
   route: {
     title: "Route",
     path: "routes/",
-    note: "Read generated method/path metadata for adapters and tooling.",
+    note: "Access methods, paths, and maps for custom adapters and tooling.",
     language: "typescript",
     code: `import { getPetByIdRoute } from "./generated/routes/getPetById.js";
 
@@ -49,7 +49,7 @@ console.log({
   client: {
     title: "Client",
     path: "client/",
-    note: "Call one operation and branch on typed responses.",
+    note: "Call operations with discriminated unions. Zero bloat, only import what you use.",
     language: "typescript",
     code: `import { findPetsByStatus } from "./generated/client/findPetsByStatus.js";
 
@@ -69,7 +69,7 @@ if (response.status === "200") {
   server: {
     title: "Server",
     path: "server/",
-    note: "Write typed handlers and keep validation inside the wrapper.",
+    note: "Implement typed handlers with automatic runtime validation.",
     language: "typescript",
     code: `import type { getPetByIdHandler } from "./generated/server/getPetById.js";
 
@@ -103,14 +103,14 @@ const integrationCards = [
     name: "Hono",
     label: "custom handlers",
     description:
-      "Derive framework routes from generated metadata while keeping validation and contract logic centralized.",
+      "Derive framework routes from generated metadata and leverage automatic request validation.",
     href: "https://github.com/gunzip/apical-ts/tree/main/examples/hono",
   },
   {
     name: "MSW",
     label: "mock routes",
     description:
-      "Generate mock handlers from the same operations you use in production clients and test suites.",
+      "Type-safe Mocking. Use the same contract for production and your test suites with zero mismatch.",
     href: "https://github.com/gunzip/apical-ts/tree/main/examples/msw-mock-server",
   },
   {
@@ -160,9 +160,10 @@ function HomepageHeader() {
             </HomepageLink>
           </div>
           <p className={styles.heroDetail}>
-            Compose Hono, MSW, React Query, and custom adapters without drifting
-            away from the spec. The same precision gives coding agents safer
-            primitives.
+            Use the generated contract directly or compose it with Hono, MSW,
+            and React Query. By providing mathematical precision to your types,
+            you also give Coding Agents the exact primitives they need to write
+            safer code for you.
           </p>
         </div>
 
@@ -236,7 +237,7 @@ function IntegrationSection() {
     <section className={styles.section}>
       <div className={clsx("container", styles.sectionStack)}>
         <div className={styles.sectionIntro}>
-          <p className={styles.sectionEyebrow}>Real starting points</p>
+          <p className={styles.sectionEyebrow}>Ready-to-use patterns</p>
           <Heading as="h2" className={styles.sectionTitle}>
             Start from examples for the glue code around the contract.
           </Heading>
