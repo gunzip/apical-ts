@@ -13,8 +13,7 @@ popular TypeScript OpenAPI client generators.
 - ✅ Multiple success (2xx) responses handling
 - ✅ Multiple content types response handling
 - ✅ Server-side validation support
-- 🟡 Integration with popular frameworks (express, react-query, msw via sample
-  adapters)
+- ✅ Integration with popular frameworks (via AI-generated adapters)
 - ✅ Wildcard status code handling (e.g., 5xx)
 - ✅ Recursive schema support
 - ✅ Maintenance and active development
@@ -22,19 +21,31 @@ popular TypeScript OpenAPI client generators.
 
 ## [@heyapi/openapi-ts](https://github.com/hey-api/openapi-ts)
 
-- ✅ Exact typings with Zod v4
+- 🟡 Exact typings with Zod v4 (solid baseline coverage, handling of some edge
+  cases remains a bit rough)
 - ❌ Discriminated unions for response payloads based on status codes
-- ❌ Typed error handling / no unknown exceptions
-- 🟡 Default response handling (passthrough)
-- ❌ Modular, tree-shakable output
-- 🟡 Multiple success (2xx) responses handling (undiscriminated union)
+- 🟡 Typed error handling / no unknown exceptions (typed aliases and transport
+  options, but no status-aware semantic error union)
+- 🟡 Default response handling (type-level support, generic runtime passthrough
+  for non-OK responses)
+- 🟡 Modular, tree-shakable output (flat SDK is tree-shakeable, but generated
+  output is more centralized than craft)
+- ❌ Multiple success (2xx) responses handling in the SDK surface
 - ❌ Multiple content types response handling
 - 🟡 Server-side validation support (via fastify plugin)
-- ✅ Integration with popular frameworks via adapters (react-query and others)
-- 🟡 Wildcard status code handling, e.g., 5xx (passthrough)
-- 🟡 Recursive schema support (to some extent, mostly typed using `any`)
+- ✅ Integration with popular frameworks via adapters (excellent ecosystem of
+  plugins and integrations)
+- 🟡 Wildcard status code handling, e.g., 5xx (type-level support, generic
+  runtime passthrough)
+- ✅ Recursive schema support (with some `any` leakage in recursive
+  `z.lazy(...)`)
 - ✅ Maintenance and active development
 - ✅ Strong Community support
+
+Hey API is actually stronger than this checklist suggests, especially regarding
+ecosystem breadth and transport ergonomics if you need a lot of customization
+(`interceptors`, `parseAs`, `responseStyle`, `throwOnError`,
+`responseTransformer`).
 
 ## [Massimo](https://massimohttp.dev)
 
