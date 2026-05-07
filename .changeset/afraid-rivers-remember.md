@@ -1,7 +1,7 @@
 ---
-"@apical-ts/craft": patch
-"@apical-ts/core-utils": patch
-"@apical-ts/route-generator": patch
+"@apical-ts/craft": minor
+"@apical-ts/core-utils": minor
+"@apical-ts/route-generator": minor
 ---
 
 Keep inherited auth headers in generated route params: optional on client
