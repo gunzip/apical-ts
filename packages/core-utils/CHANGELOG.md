@@ -1,5 +1,13 @@
 # @apical-ts/core-utils
 
+## 0.20.0
+
+### Minor Changes
+
+- 1b8a744: Keep inherited auth headers in generated route params: optional on
+  client operations and required on server handlers unless an operation-level
+  security override replaces them.
+
 ## 0.19.2
 
 ### Patch Changes

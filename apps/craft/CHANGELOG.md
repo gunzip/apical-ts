@@ -1,5 +1,13 @@
 # @apical-ts/craft
 
+## 0.22.0
+
+### Minor Changes
+
+- 1b8a744: Keep inherited auth headers in generated route params: optional on
+  client operations and required on server handlers unless an operation-level
+  security override replaces them.
+
 ## 0.21.2
 
 ### Patch Changes
@@ -161,6 +169,7 @@
 ### Minor Changes
 
 - 0a04a4e: ## Breaking changes
+
   - The generated `GlobalConfig.headers` now only accepts the declared auth
     header keys. Supplying fewer keys or injecting arbitrary default headers now
     fails type-checking, so update your configuration factories to fill every
@@ -170,6 +179,7 @@
     client calls when the OpenAPI spec actually defined them.
 
   ## Migration guidance
+
   1. Regenerate your client/server and update any helper that builds
      `globalConfig` so it hydrates all generated auth headers (you can store
      credentials elsewhere and spread them in).
