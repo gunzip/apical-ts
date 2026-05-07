@@ -9,6 +9,7 @@ import type {
 import { isReferenceObject } from "openapi3-ts/oas31";
 
 import type { ParameterGroups } from "./models/parameter-models.js";
+import type { SecurityHeader } from "./models/security-models.js";
 import type { StringFormatOverrideRegistry } from "../schema-generator/format-overrides.js";
 
 import { zodSchemaToCode } from "../schema-generator/index.js";
@@ -26,13 +27,16 @@ export interface ParameterSchemaOptions {
   coercePrimitives?: boolean;
   formatOverrides?: StringFormatOverrideRegistry;
   lowercaseHeaderKeys?: boolean;
+  /**
+   * Controls how auth headers are materialized in generated parameter schemas.
+   * - client: only operation-level overrides are emitted, so global config auth
+   *   headers do not become required client params.
+   * - server: all security headers are emitted because incoming requests carry
+   *   those headers explicitly.
+   */
+  parameterSchemaKind?: "client" | "server";
   /* Security headers to include in the headers schema */
-  securityHeaders?: {
-    headerName: string;
-    isOverride: boolean;
-    isRequired: boolean;
-    schemeName: string;
-  }[];
+  securityHeaders?: SecurityHeader[];
 }
 
 /**
@@ -75,11 +79,16 @@ export function generateParameterSchemas(
     coercePrimitives = false,
     formatOverrides,
     lowercaseHeaderKeys = false,
+    parameterSchemaKind = "client",
     securityHeaders = [],
   } = options;
   const sanitizedId = sanitizeIdentifier(operationId);
   const typeImports = new Set<string>();
   const schemas: string[] = [];
+  const materializedSecurityHeaders =
+    parameterSchemaKind === "server"
+      ? securityHeaders
+      : securityHeaders.filter((securityHeader) => securityHeader.isOverride);
 
   /* Track whether each parameter type has actual parameters */
   const hasQuery = parameterGroups.queryParams.length > 0;
@@ -177,12 +186,7 @@ export function generateParameterSchemas(
   const headersSchemaName = `${sanitizedId}HeadersSchema`;
   const headersTypeName = `${sanitizedId}HeadersSchema`;
 
-  // Only security overrides go into the headers schema, not global security headers
-  const securityOverrideHeaders = securityHeaders.filter((sh) => sh.isOverride);
-  const hasSecurityOverrides = securityOverrideHeaders.length > 0;
-  const hasCombinedHeaders = hasHeaders || hasSecurityOverrides;
-
-  if (hasCombinedHeaders) {
+  if (hasHeaders) {
     const headerProps = new Map<string, string>();
 
     for (const headerParam of parameterGroups.headerParams) {
@@ -190,8 +194,11 @@ export function generateParameterSchemas(
       headerProps.set(normalizedName, buildProp(headerParam.name, headerParam));
     }
 
-    /* Add security override headers to the schema (always required) */
-    for (const securityHeader of securityOverrideHeaders) {
+    /*
+     * Client schemas only materialize operation-level overrides.
+     * Server schemas validate all security headers present in incoming requests.
+     */
+    for (const securityHeader of materializedSecurityHeaders) {
       const normalizedName = normalizeParameterName(
         securityHeader.headerName,
         "header",
@@ -202,7 +209,11 @@ export function generateParameterSchemas(
 
       headerProps.set(
         normalizedName,
-        `${JSON.stringify(normalizedName)}: z.string()`,
+        `${JSON.stringify(normalizedName)}: ${
+          parameterSchemaKind === "server" || securityHeader.isRequired
+            ? "z.string()"
+            : "z.string().optional()"
+        }`,
       );
     }
 

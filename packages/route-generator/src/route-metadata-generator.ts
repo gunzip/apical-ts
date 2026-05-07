@@ -135,11 +135,15 @@ export function generateRouteMetadataFromMetadata(
 
   const requestMapCode = buildRequestMap(routeMetadata, importManager);
   const responseMapCode = buildResponseMap(routeMetadata, importManager, doc);
+  const isServerHeadersOptional =
+    metadata.parameterGroups.headerParams.every(
+      (parameter) => parameter.required !== true,
+    ) && metadata.operationSecurityHeaders.length === 0;
   const routeCode = renderRouteMetadata({
+    clientIsHeadersOptional: routeMetadata.parameterInfo.isHeadersOptional,
     hasHeaders: routeMetadata.parameterInfo.hasHeaders,
     hasPath: routeMetadata.parameterInfo.hasPath,
     hasQuery: routeMetadata.parameterInfo.hasQuery,
-    isHeadersOptional: routeMetadata.parameterInfo.isHeadersOptional,
     isQueryOptional: routeMetadata.parameterInfo.isQueryOptional,
     method: metadata.method.toLowerCase(),
     operationId: routeMetadata.operationId,
@@ -148,6 +152,7 @@ export function generateRouteMetadataFromMetadata(
     requestMapTypeName: routeMetadata.bodyInfo.requestMapTypeName,
     responseMapCode,
     responseMapTypeName: routeMetadata.bodyInfo.responseMapTypeName,
+    serverIsHeadersOptional: isServerHeadersOptional,
   });
 
   return {

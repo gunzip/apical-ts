@@ -128,4 +128,46 @@ describe("generateParameterSchemas", () => {
     expect((result.schemaCode.match(/"X-Auth-Key":/g) ?? []).length).toBe(1);
     expect(result.schemaCode).toContain('.describe("Explicit email header")');
   });
+
+  it("keeps global security headers out of client schemas but includes them in server schemas", () => {
+    const parameterGroups = {
+      queryParams: [],
+      headerParams: [],
+      pathParams: [],
+      cookieParams: [],
+    };
+    const securityHeaders = [
+      {
+        headerName: "custom-token",
+        isOverride: false,
+        isRequired: false,
+        schemeName: "customToken",
+      },
+    ];
+
+    const clientResult = generateParameterSchemas(
+      "getCatalog",
+      parameterGroups,
+      {
+        securityHeaders,
+      },
+    );
+    const serverResult = generateParameterSchemas(
+      "getCatalog",
+      parameterGroups,
+      {
+        lowercaseHeaderKeys: true,
+        parameterSchemaKind: "server",
+        securityHeaders,
+      },
+    );
+
+    expect(clientResult.schemaCode).toContain(
+      "const getCatalogHeadersSchema = z.object({  });",
+    );
+    expect(clientResult.schemaCode).not.toContain('"custom-token": z.string()');
+    expect(serverResult.schemaCode).toContain(
+      'const getCatalogHeadersSchema = z.object({ "custom-token": z.string() });',
+    );
+  });
 });

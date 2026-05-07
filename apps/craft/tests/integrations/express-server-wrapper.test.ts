@@ -152,6 +152,7 @@ describe("Express server wrappers integration", () => {
     const base = `http://127.0.0.1:${addr.port}`;
     const res = await request(base)
       .get("/test-parameter-with-dash/abcdef")
+      .set("custom-token", "test-token")
       .set("headerInlineParam", "inline-header")
       .set("x-header-param", "xvalue")
       .query({ "foo-bar": "qb", "request-id": "1234567890" });
@@ -167,6 +168,7 @@ describe("Express server wrappers integration", () => {
     const base = `http://127.0.0.1:${addr.port}`;
     const res = await request(base)
       .get("/test-two-path-params/123/true")
+      .set("custom-token", "test-token")
       .query({});
     expect(res.status).toBe(200);
     expect(res.body.path).toBeDefined();
@@ -182,6 +184,7 @@ describe("Express server wrappers integration", () => {
     const base = `http://127.0.0.1:${addr.port}`;
     const res = await request(base)
       .get("/test-coercion/456/false")
+      .set("custom-token", "test-token")
       .set("count-header", "99")
       .query({ "num-query": "123.5", class: "true" });
     expect(res.status).toBe(200);

@@ -4,11 +4,11 @@ import { sanitizeIdentifier } from "@apical-ts/core-utils";
  * Template parameters for route metadata generation
  */
 export interface RouteMetadataTemplateParams {
+  clientIsHeadersOptional: boolean;
   hasHeaders: boolean;
   hasPath: boolean;
   /** Flags indicating which parameter types have actual parameters */
   hasQuery: boolean;
-  isHeadersOptional: boolean;
   isQueryOptional: boolean;
   /** HTTP method in lowercase (e.g., "get", "post") */
   method: string;
@@ -19,6 +19,7 @@ export interface RouteMetadataTemplateParams {
   requestMapTypeName?: string;
   responseMapCode: string;
   responseMapTypeName?: string;
+  serverIsHeadersOptional: boolean;
 }
 
 /**
@@ -28,10 +29,10 @@ export function renderRouteMetadata(
   params: RouteMetadataTemplateParams,
 ): string {
   const {
+    clientIsHeadersOptional,
     hasHeaders,
     hasPath,
     hasQuery,
-    isHeadersOptional,
     isQueryOptional,
     method,
     operationId,
@@ -40,6 +41,7 @@ export function renderRouteMetadata(
     requestMapTypeName,
     responseMapCode,
     responseMapTypeName,
+    serverIsHeadersOptional,
   } = params;
 
   const sanitizedId = sanitizeIdentifier(operationId);
@@ -87,14 +89,14 @@ export const clientRoute = {
   ...baseRoute,
   params: ${clientParamsValue},
   isQueryOptional: ${isQueryOptional},
-  isHeadersOptional: ${isHeadersOptional},
+  isHeadersOptional: ${clientIsHeadersOptional},
 } as const;
 
 export const serverRoute = {
   ...baseRoute,
   params: ${serverParamsValue},
   isQueryOptional: ${isQueryOptional},
-  isHeadersOptional: ${isHeadersOptional},
+  isHeadersOptional: ${serverIsHeadersOptional},
 } as const;`;
 
   /* Combine all parts */
