@@ -165,7 +165,9 @@ describe("generateParameterSchemas", () => {
     expect(clientResult.schemaCode).toContain("getCatalogHeadersSchema");
     expect(clientResult.schemaCode).toContain("z.object(");
     expect(clientResult.schemaCode).toContain("z.string().optional()");
-    expect(clientResult.schemaCode).not.toContain('"custom-token": z.string() }');
+    expect(clientResult.schemaCode).not.toContain(
+      '"custom-token": z.string() }',
+    );
 
     expect(serverResult.schemaCode).toContain("getCatalogHeadersSchema");
     expect(serverResult.schemaCode).toContain("z.object(");
