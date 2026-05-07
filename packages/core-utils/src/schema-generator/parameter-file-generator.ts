@@ -45,6 +45,7 @@ async function generateParameterSchemaFile(
     parameterMetadata.parameterGroups,
     {
       ...options,
+      parameterSchemaKind: "client",
       securityHeaders,
     },
   );
@@ -57,6 +58,7 @@ async function generateParameterSchemaFile(
       coercePrimitives: true,
       formatOverrides: options.formatOverrides,
       lowercaseHeaderKeys: true,
+      parameterSchemaKind: "server",
       securityHeaders,
     },
   );
@@ -111,30 +113,34 @@ async function generateParameterSchemaFile(
     (p: { required?: boolean }) => p.required !== true,
   );
   /*
-   * Headers optional only if:
+   * Client headers optional only if:
    * - All explicit header params are optional
    * - AND no required security override headers
    *
    * Notes:
    * - Security override (operation.security): go in params.headers (required if present)
-   * - Global security: go in config.headers (always optional, not in params)
+   * - Global security: stays available through config.headers and is also exposed
+   *   as optional params.headers fields for per-operation overrides
    * - security: [] → empty array, no required headers (disables global security)
    * - security: [{ apiKey: [] }] → requires apiKey header in params.headers
    */
   const securityOverrideHeaders = securityHeaders.filter((sh) => sh.isOverride);
-  const hasRequiredSecurityOverride = securityOverrideHeaders.some(
+  const hasRequiredClientSecurityHeader = securityOverrideHeaders.some(
     (sh) => sh.isRequired,
   );
-  const isHeadersOptional =
+  const isClientHeadersOptional =
     headerParams.every((p: { required?: boolean }) => p.required !== true) &&
-    !hasRequiredSecurityOverride;
+    !hasRequiredClientSecurityHeader;
+  const isServerHeadersOptional =
+    headerParams.every((p: { required?: boolean }) => p.required !== true) &&
+    securityHeaders.length === 0;
 
   /* Build client parsed params */
   const clientParsedParams = buildParsedParamsSchema(
     sanitizedId,
     result.schemaNames,
     { hasHeaders, hasPath, hasQuery },
-    { isHeadersOptional, isQueryOptional },
+    { isHeadersOptional: isClientHeadersOptional, isQueryOptional },
   );
 
   /* Build server parsed params */
@@ -142,7 +148,7 @@ async function generateParameterSchemaFile(
     sanitizedId,
     serverSchemaNames,
     { hasHeaders, hasPath, hasQuery },
-    { isHeadersOptional, isQueryOptional },
+    { isHeadersOptional: isServerHeadersOptional, isQueryOptional },
     serverSchemaPrefix,
   );
 

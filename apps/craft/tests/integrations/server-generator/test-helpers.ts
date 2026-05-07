@@ -150,6 +150,9 @@ function extractRequestParams(req: Request) {
   // Express normalizes all headers to lowercase, so we need to handle this
   const transformedHeaders: Record<string, any> = {};
   for (const [key, value] of Object.entries(req.headers)) {
+    // Preserve the original lowercase header key for server-side schema validation.
+    transformedHeaders[key] = value;
+
     // Apply basic transformation
     const transformedKey = transformParameterName(key);
     transformedHeaders[transformedKey] = value;

@@ -128,4 +128,50 @@ describe("generateParameterSchemas", () => {
     expect((result.schemaCode.match(/"X-Auth-Key":/g) ?? []).length).toBe(1);
     expect(result.schemaCode).toContain('.describe("Explicit email header")');
   });
+
+  it("materializes global security headers as optional client fields and required server fields", () => {
+    const parameterGroups = {
+      queryParams: [],
+      headerParams: [],
+      pathParams: [],
+      cookieParams: [],
+    };
+    const securityHeaders = [
+      {
+        headerName: "custom-token",
+        isOverride: false,
+        isRequired: false,
+        schemeName: "customToken",
+      },
+    ];
+
+    const clientResult = generateParameterSchemas(
+      "getCatalog",
+      parameterGroups,
+      {
+        securityHeaders,
+      },
+    );
+    const serverResult = generateParameterSchemas(
+      "getCatalog",
+      parameterGroups,
+      {
+        lowercaseHeaderKeys: true,
+        parameterSchemaKind: "server",
+        securityHeaders,
+      },
+    );
+
+    expect(clientResult.schemaCode).toContain("getCatalogHeadersSchema");
+    expect(clientResult.schemaCode).toContain("z.object(");
+    expect(clientResult.schemaCode).toContain("z.string().optional()");
+    expect(clientResult.schemaCode).not.toContain(
+      '"custom-token": z.string() }',
+    );
+
+    expect(serverResult.schemaCode).toContain("getCatalogHeadersSchema");
+    expect(serverResult.schemaCode).toContain("z.object(");
+    expect(serverResult.schemaCode).toContain('"custom-token"');
+    expect(serverResult.schemaCode).toContain("z.string()");
+  });
 });

@@ -36,7 +36,9 @@ describe("testWildcards operation integration tests", () => {
     );
 
     // Act: Make the HTTP request
-    const response = await supertest(app).get("/wildcards");
+    const response = await supertest(app)
+      .get("/wildcards")
+      .set("custom-token", "test-token");
 
     // Assert: Verify the response
     expect(response.status).toBe(200);
@@ -73,7 +75,9 @@ describe("testWildcards operation integration tests", () => {
     );
 
     // Act: Make the HTTP request
-    const response = await supertest(app).get("/wildcards");
+    const response = await supertest(app)
+      .get("/wildcards")
+      .set("custom-token", "test-token");
 
     // Assert: Verify the response
     expect(response.status).toBe(200);
@@ -110,7 +114,9 @@ describe("testWildcards operation integration tests", () => {
     );
 
     // Act: Make the HTTP request
-    const response = await supertest(app).get("/wildcards");
+    const response = await supertest(app)
+      .get("/wildcards")
+      .set("custom-token", "test-token");
 
     // Assert: Verify the response
     expect(response.status).toBe(200);
@@ -144,7 +150,9 @@ describe("testWildcards operation integration tests", () => {
     );
 
     // Act: Make the HTTP request
-    const response = await supertest(app).get("/wildcards");
+    const response = await supertest(app)
+      .get("/wildcards")
+      .set("custom-token", "test-token");
 
     // Assert: Verify the response
     expect(response.status).toBe(404);
@@ -175,7 +183,9 @@ describe("testWildcards operation integration tests", () => {
     );
 
     // Act: Make the HTTP request
-    const response = await supertest(app).get("/wildcards");
+    const response = await supertest(app)
+      .get("/wildcards")
+      .set("custom-token", "test-token");
 
     // Assert: Verify the response
     expect(response.status).toBe(400);
@@ -211,7 +221,9 @@ describe("testWildcards operation integration tests", () => {
     );
 
     // Act: Make the HTTP request
-    const response = await supertest(app).get("/wildcards");
+    const response = await supertest(app)
+      .get("/wildcards")
+      .set("custom-token", "test-token");
 
     // Assert: Verify the response
     expect(response.status).toBe(403);
@@ -254,7 +266,9 @@ describe("testWildcards operation integration tests", () => {
     );
 
     // Act: Make the HTTP request
-    const response = await supertest(app).get("/wildcards");
+    const response = await supertest(app)
+      .get("/wildcards")
+      .set("custom-token", "test-token");
 
     // Assert: Verify the response
     expect(response.status).toBe(200);
@@ -289,7 +303,9 @@ describe("testWildcards operation integration tests", () => {
     );
 
     // Act: Make the HTTP request
-    const response = await supertest(app).get("/wildcards");
+    const response = await supertest(app)
+      .get("/wildcards")
+      .set("custom-token", "test-token");
 
     // Assert: Verify the response
     expect(response.status).toBe(200);
