@@ -6,10 +6,14 @@ import {
 } from "../generated/schemas/getCatalogParameters.js";
 
 describe("Generated global security header schemas", () => {
-  it("keeps client auth headers out of params while validating them on server routes", () => {
+  it("keeps inherited auth headers optional on client params and required on server routes", () => {
     const clientHeadersParse = getCatalogParsedParams.shape.headers.safeParse(
       {},
     );
+    const clientHeadersWithAuthParse =
+      getCatalogParsedParams.shape.headers.safeParse({
+        "custom-token": "test-token",
+      });
     const serverHeadersParse =
       getCatalogServerParsedParams.shape.headers.safeParse({
         "custom-token": "test-token",
@@ -18,6 +22,7 @@ describe("Generated global security header schemas", () => {
       getCatalogServerParsedParams.shape.headers.safeParse({});
 
     expect(clientHeadersParse.success).toBe(true);
+    expect(clientHeadersWithAuthParse.success).toBe(true);
     expect(serverHeadersParse.success).toBe(true);
     expect(missingServerHeadersParse.success).toBe(false);
   });

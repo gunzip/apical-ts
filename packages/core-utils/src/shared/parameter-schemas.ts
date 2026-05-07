@@ -29,10 +29,10 @@ export interface ParameterSchemaOptions {
   lowercaseHeaderKeys?: boolean;
   /**
    * Controls how auth headers are materialized in generated parameter schemas.
-   * - client: only operation-level overrides are emitted, so global config auth
-   *   headers do not become required client params.
-   * - server: all security headers are emitted because incoming requests carry
-   *   those headers explicitly.
+   * - client: inherited auth headers are emitted as optional fields, while
+   *   operation-level overrides remain required.
+   * - server: all security headers are emitted as required because incoming
+   *   requests must carry those headers explicitly.
    */
   parameterSchemaKind?: "client" | "server";
   /* Security headers to include in the headers schema */
@@ -85,10 +85,6 @@ export function generateParameterSchemas(
   const sanitizedId = sanitizeIdentifier(operationId);
   const typeImports = new Set<string>();
   const schemas: string[] = [];
-  const materializedSecurityHeaders =
-    parameterSchemaKind === "server"
-      ? securityHeaders
-      : securityHeaders.filter((securityHeader) => securityHeader.isOverride);
 
   /* Track whether each parameter type has actual parameters */
   const hasQuery = parameterGroups.queryParams.length > 0;
@@ -195,10 +191,10 @@ export function generateParameterSchemas(
     }
 
     /*
-     * Client schemas only materialize operation-level overrides.
-     * Server schemas validate all security headers present in incoming requests.
+     * Client schemas expose inherited auth headers as optional params so callers
+     * can pass them per-operation even when a global config already exists.
      */
-    for (const securityHeader of materializedSecurityHeaders) {
+    for (const securityHeader of securityHeaders) {
       const normalizedName = normalizeParameterName(
         securityHeader.headerName,
         "header",

@@ -4,5 +4,6 @@
 "@apical-ts/route-generator": patch
 ---
 
-Restore inherited auth headers in generated server parameter schemas without
-reintroducing them in client parameter schemas.
+Keep inherited auth headers in generated route params: optional on client
+operations and required on server handlers unless an operation-level security
+override replaces them.

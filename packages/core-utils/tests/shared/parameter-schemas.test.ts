@@ -129,7 +129,7 @@ describe("generateParameterSchemas", () => {
     expect(result.schemaCode).toContain('.describe("Explicit email header")');
   });
 
-  it("keeps global security headers out of client schemas but includes them in server schemas", () => {
+  it("materializes global security headers as optional client fields and required server fields", () => {
     const parameterGroups = {
       queryParams: [],
       headerParams: [],
@@ -163,9 +163,8 @@ describe("generateParameterSchemas", () => {
     );
 
     expect(clientResult.schemaCode).toContain(
-      "const getCatalogHeadersSchema = z.object({  });",
+      'const getCatalogHeadersSchema = z.object({ "custom-token": z.string().optional() });',
     );
-    expect(clientResult.schemaCode).not.toContain('"custom-token": z.string()');
     expect(serverResult.schemaCode).toContain(
       'const getCatalogHeadersSchema = z.object({ "custom-token": z.string() });',
     );
