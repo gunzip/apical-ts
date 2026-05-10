@@ -231,10 +231,10 @@ importers:
     dependencies:
       '@hono/zod-validator':
         specifier: ^0.7.6
-        version: 0.7.6(hono@4.12.16)(zod@4.3.6)
+        version: 0.7.6(hono@4.12.18)(zod@4.3.6)
       hono:
-        specifier: ^4.12.16
-        version: 4.12.16
+        specifier: ^4.12.18
+        version: 4.12.18
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -244,7 +244,7 @@ importers:
         version: link:../../apps/craft
       '@hono/node-server':
         specifier: ^2.0.1
-        version: 2.0.1(hono@4.12.16)
+        version: 2.0.1(hono@4.12.18)
       '@tsconfig/node22':
         specifier: 'catalog:'
         version: 22.0.5
@@ -2143,12 +2143,16 @@ packages:
       hono: '>=3.9.0'
       zod: ^3.25.0 || ^4.0.0
 
-  '@humanfs/core@0.19.1':
-    resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
+  '@humanfs/core@0.19.2':
+    resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
     engines: {node: '>=18.18.0'}
 
-  '@humanfs/node@0.16.7':
-    resolution: {integrity: sha512-/zUx+yOsIrG4Y43Eh2peDeKCxlRt/gET6aHfaKpuq267qXdYDFViVHfMaLyygZOnl0kGWxFIgsBy8QFuTLUXEQ==}
+  '@humanfs/node@0.16.8':
+    resolution: {integrity: sha512-gE1eQNZ3R++kTzFUpdGlpmy8kDZD/MLyHqDwqjkVQI0JMdI1D51sy1H958PNXYkM2rAac7e5/CnIKZrHtPh3BQ==}
+    engines: {node: '>=18.18.0'}
+
+  '@humanfs/types@0.15.0':
+    resolution: {integrity: sha512-ZZ1w0aoQkwuUuC7Yf+7sdeaNfqQiiLcSRbfI08oAxqLtpXQr9AIVX7Ay7HLDuiLYAaFPu8oBYNq/QIi9URHJ3Q==}
     engines: {node: '>=18.18.0'}
 
   '@humanwhocodes/module-importer@1.0.1':
@@ -3343,6 +3347,9 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
+  '@types/estree@1.0.9':
+    resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
+
   '@types/express-serve-static-core@4.19.7':
     resolution: {integrity: sha512-FvPtiIf1LfhzsaIXhv/PHan/2FeQBbtBDtfX2QfvPxdUelMDEckK08SM6nqo1MIZY3RUlfA+HV8+hFUSio78qg==}
 
@@ -3608,6 +3615,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@vercel/oidc@3.0.5':
     resolution: {integrity: sha512-fnYhv671l+eTTp48gB4zEsTW/YtRgRPnkI2nT7x6qw5rkI1Lq2hTmQIpHPgyThI0znLK+vX2n9XxKdXZ7BUbbw==}
@@ -3792,6 +3800,9 @@ packages:
 
   ajv@6.14.0:
     resolution: {integrity: sha512-IWrosm/yrn43eiKqkfkHis7QioDleaXQHdDVPKg0FSwwd/DuvyX79TZnFOnYpB7dcsFAMmtFztZuXPDvSePkFw==}
+
+  ajv@6.15.0:
+    resolution: {integrity: sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw==}
 
   ajv@8.17.1:
     resolution: {integrity: sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==}
@@ -5257,8 +5268,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.12.16:
-    resolution: {integrity: sha512-jN0ZewiNAWSe5khM3EyCmBb250+b40wWbwNILNfEvq84VREWwOIkuUsFONk/3i3nqkz7Oe1PcpM2mwQEK2L9Kg==}
+  hono@4.12.18:
+    resolution: {integrity: sha512-RWzP96k/yv0PQfyXnWjs6zot20TqfpfsNXhOnev8d1InAxubW93L11/oNUc3tQqn2G0bSdAOBpX+2uDFHV7kdQ==}
     engines: {node: '>=16.9.0'}
 
   hpack.js@2.1.6:
@@ -8106,6 +8117,7 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   validate.io-array@1.0.6:
@@ -10793,21 +10805,26 @@ snapshots:
     dependencies:
       '@hapi/hoek': 9.3.0
 
-  '@hono/node-server@2.0.1(hono@4.12.16)':
+  '@hono/node-server@2.0.1(hono@4.12.18)':
     dependencies:
-      hono: 4.12.16
+      hono: 4.12.18
 
-  '@hono/zod-validator@0.7.6(hono@4.12.16)(zod@4.3.6)':
+  '@hono/zod-validator@0.7.6(hono@4.12.18)(zod@4.3.6)':
     dependencies:
-      hono: 4.12.16
+      hono: 4.12.18
       zod: 4.3.6
 
-  '@humanfs/core@0.19.1': {}
-
-  '@humanfs/node@0.16.7':
+  '@humanfs/core@0.19.2':
     dependencies:
-      '@humanfs/core': 0.19.1
+      '@humanfs/types': 0.15.0
+
+  '@humanfs/node@0.16.8':
+    dependencies:
+      '@humanfs/core': 0.19.2
+      '@humanfs/types': 0.15.0
       '@humanwhocodes/retry': 0.4.3
+
+  '@humanfs/types@0.15.0': {}
 
   '@humanwhocodes/module-importer@1.0.1': {}
 
@@ -11880,6 +11897,8 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
+  '@types/estree@1.0.9': {}
+
   '@types/express-serve-static-core@4.19.7':
     dependencies:
       '@types/node': 25.0.10
@@ -12425,6 +12444,13 @@ snapshots:
       fast-deep-equal: 3.1.3
 
   ajv@6.14.0:
+    dependencies:
+      fast-deep-equal: 3.1.3
+      fast-json-stable-stringify: 2.1.0
+      json-schema-traverse: 0.4.1
+      uri-js: 4.4.1
+
+  ajv@6.15.0:
     dependencies:
       fast-deep-equal: 3.1.3
       fast-json-stable-stringify: 2.1.0
@@ -13463,7 +13489,7 @@ snapshots:
   eslint-scope@9.1.2:
     dependencies:
       '@types/esrecurse': 4.3.1
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       esrecurse: 4.3.0
       estraverse: 5.3.0
 
@@ -13479,11 +13505,11 @@ snapshots:
       '@eslint/config-helpers': 0.5.5
       '@eslint/core': 1.2.1
       '@eslint/plugin-kit': 0.7.1
-      '@humanfs/node': 0.16.7
+      '@humanfs/node': 0.16.8
       '@humanwhocodes/module-importer': 1.0.1
       '@humanwhocodes/retry': 0.4.3
-      '@types/estree': 1.0.8
-      ajv: 6.14.0
+      '@types/estree': 1.0.9
+      ajv: 6.15.0
       cross-spawn: 7.0.6
       debug: 4.4.3
       escape-string-regexp: 4.0.0
@@ -14140,7 +14166,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.12.16: {}
+  hono@4.12.18: {}
 
   hpack.js@2.1.6:
     dependencies:
