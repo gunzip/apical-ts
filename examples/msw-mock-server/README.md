@@ -1,9 +1,7 @@
 # MSW Contract-First Mock Server Example
 
-This example shows how to turn Apical-generated artifacts into a **dynamic mock
-integration** with Mock Service Worker. Like the Express example, it reuses the
-generated server wrappers for validation. Unlike Express, it registers handlers
-dynamically by iterating the generated operations.
+This example shows how to turn @apical-ts/craft generated artifacts into a Mock
+Service Worker server implementation.
 
 ## Contract-first flow
 
@@ -17,14 +15,6 @@ dynamically by iterating the generated operations.
 4. `server-examples/msw-adapter.ts` adapts generated wrapper results to MSW.
 5. `server-examples/mock-server-example.ts` loops over the generated operations
    and creates one MSW handler per route.
-
-## Where this sits on the static/dynamic spectrum
-
-- **Express**: explicit route registration, one framework binding at a time
-- **MSW in this folder**: dynamic handler registration over generated wrappers
-- **Hono**: second generator that emits a framework layer from route metadata
-
-All three approaches start from the same contract and generated artifacts.
 
 ## Quick start
 
@@ -46,49 +36,6 @@ All three approaches start from the same contract and generated artifacts.
    ```bash
    pnpm run dev
    ```
-
-## Project layout
-
-- `examples.yaml`: the API contract
-- `generated/server/*`: generated wrappers reused by MSW handlers
-- `generated/routes/*`: shared route metadata
-- `server-examples/msw-adapter.ts`: MSW-specific adapter
-- `server-examples/mock-server-example.ts`: dynamic handler registration and
-  `zocker`-based responses
-
-## Example prompt
-
-Use a prompt like this when you want an LLM to recreate MSW handlers from
-scratch starting from the OpenAPI contract only:
-
-```text
-Goal: build MSW mock handlers from
-@apical-ts/craft artifacts instead of hand-writing one handler per endpoint.
-
-Process:
-1. Run `npx @apical-ts/craft generate -i examples.yaml -o generated --server --client`.
-2. Treat the generated files as the integration inputs:
-   - `generated/server/*` for wrappers and response maps
-   - `generated/routes/*` for path and method metadata
-   - `generated/schemas/*` for schema-driven mock data
-3. Implement `msw-adapter.ts` so it:
-   - converts MSW requests into the params expected by the generated wrappers
-   - converts wrapper results back into MSW responses
-4. Implement `mock-server-example.ts` as a handler
-   generator/factory that:
-   - iterates the generated operations
-   - creates one MSW handler per route at runtime
-   - validates requests through the generated wrappers
-   - selects response schemas from `responseMap`
-   - generates payloads with `zocker`
-5. Export the resulting handlers so they can be used with both
-   `setupServer(...)` and `setupWorker(...)`.
-
-Rules:
-- do not hand-write endpoint-specific handler lists
-- do not redefine paths, params, or response payloads outside @apical-ts/craft output
-- the custom code should only be the MSW adapter and runtime handler factory
-```
 
 ## Usage in tests
 
@@ -122,4 +69,38 @@ See `server-examples/browser-setup.ts` for the complete browser bootstrap.
 
 ```bash
 pnpm run test
+```
+
+## Example prompt
+
+Use a prompt like this when you want an LLM to recreate MSW handlers from
+scratch starting from the OpenAPI contract only:
+
+```text
+Goal: build MSW mock handlers from
+@apical-ts/craft artifacts instead of hand-writing one handler per endpoint.
+
+Process:
+1. Run `npx @apical-ts/craft generate -i examples.yaml -o generated --server --client`.
+2. Treat the generated files as the integration inputs:
+   - `generated/server/*` for wrappers and response maps
+   - `generated/routes/*` for path and method metadata
+   - `generated/schemas/*` for schema-driven mock data
+3. Implement `msw-adapter.ts` so it:
+   - converts MSW requests into the params expected by the generated wrappers
+   - converts wrapper results back into MSW responses
+4. Implement `mock-server-example.ts` as a handler
+   generator/factory that:
+   - iterates the generated operations
+   - creates one MSW handler per route at runtime
+   - validates requests through the generated wrappers
+   - selects response schemas from `responseMap`
+   - generates payloads with `zocker`
+5. Export the resulting handlers so they can be used with both
+   `setupServer(...)` and `setupWorker(...)`.
+
+Rules:
+- do not hand-write endpoint-specific handler lists
+- do not redefine paths, params, or response payloads outside @apical-ts/craft output
+- the custom code should only be the MSW adapter and runtime handler factory
 ```

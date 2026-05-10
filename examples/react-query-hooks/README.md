@@ -56,6 +56,14 @@ See `example/Usage.tsx` for a minimal consumption example.
 - `generated/react-query-hooks/*`: generated hooks
 - `example/Usage.tsx`: example component using the generated hooks
 
+## Example usage
+
+```tsx
+const { data, isLoading, error } = useFindPetsByStatus({
+  query: { status: ["available"] },
+});
+```
+
 ## Example prompt
 
 Use a prompt like this when you want an LLM to recreate react-query hooks from
@@ -85,14 +93,3 @@ Rules:
 - do not duplicate endpoint definitions or payload types
 - the custom code belongs in the hook generator and usage example only
 ```
-
-## Example usage
-
-```tsx
-const { data, isLoading, error } = useFindPetsByStatus({
-  query: { status: ["available"] },
-});
-```
-
-This is the same contract-first idea as the Hono and MSW examples, applied to a
-frontend adapter instead of a server framework.
