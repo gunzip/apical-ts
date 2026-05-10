@@ -34,7 +34,7 @@ if (process.argv[1] !== undefined) {
           `🚀 Hono mock server running on http://localhost:${info.port}`,
         );
         console.log(
-          "📊 All OpenAPI operations are mocked with zocker-generated data",
+          "📊 Mock handlers are generated as one file per operation for the demo flow",
         );
         console.log("🔍 Validation errors include detailed error messages");
         console.log("📚 Registered routes:");

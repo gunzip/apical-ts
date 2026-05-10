@@ -34,8 +34,8 @@ describe("Hono Mock Server", () => {
     expect(data).toHaveProperty("message");
   });
 
-  it("generates operations with inline handlers plus separate usecases", async () => {
-    const [operationModule, usecaseModule, generatedPackageJsonContent] =
+  it("generates one mock handler file per route for the demo flow", async () => {
+    const [operationModule, mockHandlerModule, generatedPackageJsonContent] =
       await Promise.all([
         readFile(
           path.join(
@@ -47,7 +47,7 @@ describe("Hono Mock Server", () => {
         readFile(
           path.join(
             currentDirectoryPath,
-            "../generated/hono/usecases/addPet.ts",
+            "../generated/hono/handlers/addPet.ts",
           ),
           "utf8",
         ),
@@ -61,9 +61,14 @@ describe("Hono Mock Server", () => {
     expect(operationModule).toContain(
       'import { zValidator } from "@hono/zod-validator";',
     );
-    expect(operationModule).toContain("../usecases/addPet.js");
-    expect(operationModule).not.toContain("../handlers/addPet.js");
-    expect(usecaseModule).toContain("createMockUsecase");
+    expect(operationModule).toContain(
+      'import { addPetHandler } from "../handlers/addPet.js";',
+    );
+    expect(operationModule).toContain("type addPetRouteResponse");
+    expect(operationModule).toContain("await addPetHandler(input, context);");
+    expect(mockHandlerModule).toContain(
+      "export const addPetHandler = createMockOperationHandler(addPetRoute);",
+    );
     expect(generatedPackageJson.dependencies).toMatchObject({
       "@hono/zod-validator": expect.any(String),
       hono: expect.any(String),
@@ -72,7 +77,12 @@ describe("Hono Mock Server", () => {
     });
     await expect(
       access(
-        path.join(currentDirectoryPath, "../generated/hono/handlers/addPet.ts"),
+        path.join(currentDirectoryPath, "../generated/hono/mock-handlers.ts"),
+      ),
+    ).rejects.toThrow();
+    await expect(
+      access(
+        path.join(currentDirectoryPath, "../generated/hono/usecases/addPet.ts"),
       ),
     ).rejects.toThrow();
   });

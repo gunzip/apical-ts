@@ -27,3 +27,14 @@ export async function writeFileIfChanged(filePath: string, content: string) {
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, content);
 }
+
+export async function writeFileIfAbsent(filePath: string, content: string) {
+  const existingContent = await readTextFile(filePath);
+
+  if (existingContent !== undefined) {
+    return;
+  }
+
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, content);
+}
