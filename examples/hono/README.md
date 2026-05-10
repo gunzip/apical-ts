@@ -142,8 +142,8 @@ pnpm run generate:mocks -- --routes ./generated/routes --output ./src/generated/
 
 ## Example prompt
 
-Use a prompt like this when you want an LLM to recreate Hono handlers from
-scratch starting from the OpenAPI contract only:
+If you want to recreate this integration from scratch starting from the OpenAPI
+contract, you can use a prompt like this:
 
 ```text
 Goal: build type safe Hono handlers by first generating route metadata with @apical-ts/craft and
