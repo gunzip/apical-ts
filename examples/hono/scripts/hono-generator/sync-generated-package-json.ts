@@ -16,8 +16,12 @@ interface PackageJson {
 const honoRuntimeDependencyNames = [
   "@hono/zod-validator",
   "hono",
-  "zocker",
   "zod",
+] as const;
+const honoMockDependencyNames = ["zocker"] as const;
+const managedDependencyNames = [
+  ...honoRuntimeDependencyNames,
+  ...honoMockDependencyNames,
 ] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -40,36 +44,51 @@ function parsePackageJson(
   return parsedValue;
 }
 
-function getDependencies(
+function getDependencyVersion(
   packageJson: PackageJson,
   filePath: string,
-): Record<string, string> {
-  if (packageJson.dependencies === undefined) {
-    throw new Error(`Expected ${filePath} to define dependencies.`);
+  dependencyName: string,
+) {
+  const dependencyVersion =
+    packageJson.dependencies?.[dependencyName] ??
+    packageJson.devDependencies?.[dependencyName];
+
+  if (dependencyVersion === undefined) {
+    throw new Error(
+      `Expected ${filePath} to define ${dependencyName} as a dependency or devDependency.`,
+    );
   }
 
-  return packageJson.dependencies;
+  return dependencyVersion;
 }
 
-function getHonoRuntimeDependencies(
+function getManagedDependencies(
   packageJson: PackageJson,
   filePath: string,
-): Record<(typeof honoRuntimeDependencyNames)[number], string> {
-  const dependencies = getDependencies(packageJson, filePath);
+  includeMocks: boolean,
+) {
+  const dependencyNames = includeMocks
+    ? [...honoRuntimeDependencyNames, ...honoMockDependencyNames]
+    : honoRuntimeDependencyNames;
 
   return Object.fromEntries(
-    honoRuntimeDependencyNames.map((dependencyName) => {
-      const dependencyVersion = dependencies[dependencyName];
-
-      if (dependencyVersion === undefined) {
-        throw new Error(
-          `Expected ${filePath} to define ${dependencyName} as a runtime dependency.`,
-        );
-      }
-
-      return [dependencyName, dependencyVersion];
+    dependencyNames.map((dependencyName) => {
+      return [
+        dependencyName,
+        getDependencyVersion(packageJson, filePath, dependencyName),
+      ];
     }),
-  ) as Record<(typeof honoRuntimeDependencyNames)[number], string>;
+  );
+}
+
+function stripManagedDependencies(dependencies?: Record<string, string>) {
+  return Object.fromEntries(
+    Object.entries(dependencies ?? {}).filter(([dependencyName]) => {
+      return !managedDependencyNames.includes(
+        dependencyName as (typeof managedDependencyNames)[number],
+      );
+    }),
+  );
 }
 
 function sortDependencies(dependencies: Record<string, string>) {
@@ -80,10 +99,16 @@ function sortDependencies(dependencies: Record<string, string>) {
   );
 }
 
+interface SyncGeneratedPackageJsonOptions {
+  generatedDirPath: string;
+  includeMocks: boolean;
+  projectRoot: string;
+}
+
 export async function syncGeneratedPackageJson(
-  projectRoot: string,
-  generatedDirPath: string,
+  options: SyncGeneratedPackageJsonOptions,
 ) {
+  const { generatedDirPath, includeMocks, projectRoot } = options;
   const generatedPackageJsonPath = path.join(generatedDirPath, "package.json");
   const examplePackageJsonPath = path.join(projectRoot, "package.json");
 
@@ -101,16 +126,17 @@ export async function syncGeneratedPackageJson(
     examplePackageJsonContent,
     examplePackageJsonPath,
   );
-  const honoRuntimeDependencies = getHonoRuntimeDependencies(
+  const managedDependencies = getManagedDependencies(
     examplePackageJson,
     examplePackageJsonPath,
+    includeMocks,
   );
 
   const nextPackageJson: PackageJson = {
     ...generatedPackageJson,
     dependencies: sortDependencies({
-      ...generatedPackageJson.dependencies,
-      ...honoRuntimeDependencies,
+      ...stripManagedDependencies(generatedPackageJson.dependencies),
+      ...managedDependencies,
     }),
   };
 

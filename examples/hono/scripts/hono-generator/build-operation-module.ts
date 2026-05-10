@@ -2,6 +2,11 @@ import { toCamelCase, toPascalCase } from "./naming.js";
 import { hasCustomParamNames } from "./route-utils.js";
 import type { BodyValidatorDefinition, OperationDefinition } from "./types.js";
 
+interface BuildOperationModuleOptions {
+  handlersImportDirectory: string;
+  routesImportDirectory: string;
+}
+
 function buildInputProperties(
   operation: OperationDefinition,
   contextName: string,
@@ -154,24 +159,11 @@ function buildValidationMiddlewareExpressions(
 function buildInlineHandlerLines(
   operation: OperationDefinition,
   routeIdentifier: string,
-  usecaseFunctionName: string,
-  usecaseInputTypeName: string,
+  handlerName: string,
+  handlerInputTypeName: string,
 ) {
-  const usesValidatedInput =
-    operation.hasHeaders ||
-    operation.hasPath ||
-    operation.hasQuery ||
-    operation.bodyValidators.length > 0;
-  const contextName =
-    operation.hasBody ||
-    operation.hasHeaders ||
-    operation.hasPath ||
-    operation.hasQuery
-      ? "context"
-      : "_context";
-  const contextType = usesValidatedInput
-    ? `runtime.GeneratedOperationContext<typeof ${routeIdentifier}>`
-    : "Context";
+  const contextName = "context";
+  const contextType = `runtime.GeneratedOperationContext<typeof ${routeIdentifier}>`;
   const inputProperties = buildInputProperties(operation, contextName);
 
   return [
@@ -188,36 +180,33 @@ function buildInlineHandlerLines(
       ? [
           "      const input = {",
           ...inputProperties,
-          `      } satisfies ${usecaseInputTypeName};`,
+          `      } satisfies ${handlerInputTypeName};`,
         ]
-      : [`      const input = {} satisfies ${usecaseInputTypeName};`]),
+      : [`      const input = {} satisfies ${handlerInputTypeName};`]),
     "",
-    `      const result = await ${usecaseFunctionName}(input);`,
+    `      const result = await ${handlerName}(input, context);`,
     "",
     "      return runtime.sendRouteResponse(result);",
     "    },",
   ];
 }
 
-export function buildOperationModule(operation: OperationDefinition) {
+export function buildOperationModule(
+  operation: OperationDefinition,
+  options: BuildOperationModuleOptions,
+) {
   const registerFunctionName = `register${toPascalCase(operation.moduleBasename)}Route`;
   const routeIdentifier = `${toCamelCase(operation.moduleBasename)}Route`;
+  const routeResponseTypeName = `${operation.moduleBasename}RouteResponse`;
   const requestMapName = `${operation.moduleBasename}RequestMap`;
   const validationHookName = `${toCamelCase(operation.moduleBasename)}ValidationHook`;
-  const usecaseFunctionName = `${toCamelCase(operation.moduleBasename)}Usecase`;
-  const usecaseInputTypeName = `${toPascalCase(operation.moduleBasename)}UsecaseInput`;
+  const handlerName = `${toCamelCase(operation.moduleBasename)}Handler`;
+  const handlerInputTypeName = `${toPascalCase(operation.moduleBasename)}HandlerInput`;
+  const handlerContextTypeName = `${toPascalCase(operation.moduleBasename)}HandlerContext`;
+  const handlerResultTypeName = `${toPascalCase(operation.moduleBasename)}HandlerResult`;
+  const handlerTypeName = `${toPascalCase(operation.moduleBasename)}Handler`;
   const paramMapName = `${toCamelCase(operation.moduleBasename)}ParamNameMap`;
-  const needsRouteImport =
-    operation.hasBody ||
-    operation.hasHeaders ||
-    operation.hasPath ||
-    operation.hasQuery;
   const usesZValidator =
-    operation.hasHeaders ||
-    operation.hasPath ||
-    operation.hasQuery ||
-    operation.bodyValidators.length > 0;
-  const usesValidatedInput =
     operation.hasHeaders ||
     operation.hasPath ||
     operation.hasQuery ||
@@ -234,15 +223,11 @@ export function buildOperationModule(operation: OperationDefinition) {
     ...(usesZValidator
       ? ['import { zValidator } from "@hono/zod-validator";']
       : []),
-    `import type { ${usesValidatedInput ? "Hono" : "Context, Hono"} } from "hono";`,
-    ...(needsRouteImport
-      ? [
-          operation.hasBody
-            ? `import {\n  ${requestMapName},\n  serverRoute as ${routeIdentifier},\n} from "../../routes/${operation.moduleBasename}.js";`
-            : `import { serverRoute as ${routeIdentifier} } from "../../routes/${operation.moduleBasename}.js";`,
-        ]
-      : []),
-    `import { ${usecaseFunctionName}, type ${usecaseInputTypeName} } from "../usecases/${operation.moduleBasename}.js";`,
+    'import type { Hono } from "hono";',
+    operation.hasBody
+      ? `import {\n  ${requestMapName},\n  serverRoute as ${routeIdentifier},\n  type ${routeResponseTypeName},\n} from "${options.routesImportDirectory}/${operation.moduleBasename}.js";`
+      : `import {\n  serverRoute as ${routeIdentifier},\n  type ${routeResponseTypeName},\n} from "${options.routesImportDirectory}/${operation.moduleBasename}.js";`,
+    `import { ${handlerName} } from "${options.handlersImportDirectory}/${operation.moduleBasename}.js";`,
     'import * as runtime from "../runtime.js";',
     "",
     ...(hasCustomParamNames(operation.paramNameMap)
@@ -251,7 +236,7 @@ export function buildOperationModule(operation: OperationDefinition) {
           "",
         ]
       : []),
-    ...(usesZValidator && needsRouteImport
+    ...(usesZValidator
       ? [
           `const ${validationHookName} = runtime.createValidationHook(${routeIdentifier});`,
           "",
@@ -268,14 +253,19 @@ export function buildOperationModule(operation: OperationDefinition) {
           "",
         ]
       : []),
+    `export type ${handlerInputTypeName} = runtime.GeneratedOperationInput<typeof ${routeIdentifier}>;`,
+    `export type ${handlerContextTypeName} = runtime.GeneratedOperationContext<typeof ${routeIdentifier}>;`,
+    `export type ${handlerResultTypeName} = ${routeResponseTypeName};`,
+    `export type ${handlerTypeName} = runtime.GeneratedOperationHandler<typeof ${routeIdentifier}, ${handlerResultTypeName}>;`,
+    "",
     `export function ${registerFunctionName}<TApp extends Hono>(app: TApp) {`,
     `  return ${buildRegistrationStart(operation.method)}`,
     ...buildRegistrationArgumentLines(operation, middlewareExpressions),
     ...buildInlineHandlerLines(
       operation,
       routeIdentifier,
-      usecaseFunctionName,
-      usecaseInputTypeName,
+      handlerName,
+      handlerInputTypeName,
     ),
     "  );",
     "}",

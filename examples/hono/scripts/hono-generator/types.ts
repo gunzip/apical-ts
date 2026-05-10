@@ -25,5 +25,12 @@ export interface OperationDefinition {
   moduleBasename: string;
   operationId: string;
   paramNameMap: Record<string, string>;
-  requestContentTypes: string[];
+}
+
+export interface GenerateHonoServerOptions {
+  generatedHonoDirPath: string;
+  generatedRoutesDirPath: string;
+  handlersDirPath?: string;
+  includeMocks?: boolean;
+  projectRoot: string;
 }

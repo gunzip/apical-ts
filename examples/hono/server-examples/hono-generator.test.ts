@@ -1,16 +1,17 @@
 import { describe, expect, it } from "vitest";
 import * as z from "zod";
 
+import { createMockOperationHandler } from "../generated/hono/mock-runtime.js";
 import {
-  createMockUsecase,
   sendRouteResponse,
-  type MockRouteDefinition,
+  type GeneratedOperationContext,
+  type GeneratedRouteDefinition,
 } from "../generated/hono/runtime.js";
 import { toHonoPath } from "../scripts/hono-generator/route-utils.js";
 
 function createRoute(
-  responseMap: MockRouteDefinition["responseMap"],
-): MockRouteDefinition {
+  responseMap: GeneratedRouteDefinition["responseMap"],
+): GeneratedRouteDefinition {
   return {
     operationId: "testRoute",
     requestMap: {},
@@ -18,7 +19,11 @@ function createRoute(
   };
 }
 
-describe("generated Hono runtime", () => {
+function createUnusedContext<TRoute extends GeneratedRouteDefinition>() {
+  return {} as GeneratedOperationContext<TRoute>;
+}
+
+describe("generated Hono mock runtime", () => {
   it("prefers structured JSON responses when multiple content types are declared", async () => {
     const route = createRoute({
       "200": {
@@ -29,7 +34,10 @@ describe("generated Hono runtime", () => {
       },
     });
 
-    const result = await createMockUsecase(route)({});
+    const result = await createMockOperationHandler(route)(
+      {},
+      createUnusedContext<typeof route>(),
+    );
     const response = sendRouteResponse(result);
 
     expect(result.contentType).toBe("application/problem+json; charset=utf-8");
@@ -50,7 +58,10 @@ describe("generated Hono runtime", () => {
       },
     });
 
-    const result = await createMockUsecase(route)({});
+    const result = await createMockOperationHandler(route)(
+      {},
+      createUnusedContext<typeof route>(),
+    );
     const response = sendRouteResponse(result);
 
     expect(result.contentType).toBe("application/xml");

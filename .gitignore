@@ -34,3 +34,6 @@ tmp/
 
 .playwright-mcp
 core
+
+examples/hono/handlers/
+

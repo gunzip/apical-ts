@@ -229,18 +229,12 @@ importers:
 
   examples/hono:
     dependencies:
-      '@hono/node-server':
-        specifier: ^2.0.1
-        version: 2.0.1(hono@4.12.16)
       '@hono/zod-validator':
         specifier: ^0.7.6
         version: 0.7.6(hono@4.12.16)(zod@4.3.6)
       hono:
         specifier: ^4.12.16
         version: 4.12.16
-      zocker:
-        specifier: ^3.0.0
-        version: 3.0.0(zod@4.3.6)
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -248,6 +242,9 @@ importers:
       '@apical-ts/craft':
         specifier: workspace:*
         version: link:../../apps/craft
+      '@hono/node-server':
+        specifier: ^2.0.1
+        version: 2.0.1(hono@4.12.16)
       '@tsconfig/node22':
         specifier: 'catalog:'
         version: 22.0.5
@@ -269,6 +266,9 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.4(@opentelemetry/api@1.9.0)(@types/node@22.19.7)(@vitest/coverage-v8@4.1.4)(msw@2.12.7(@types/node@22.19.7)(typescript@5.9.3))(vite@7.3.2(@types/node@22.19.7)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.3))
+      zocker:
+        specifier: ^3.0.0
+        version: 3.0.0(zod@4.3.6)
 
   examples/msw-mock-server:
     dependencies:

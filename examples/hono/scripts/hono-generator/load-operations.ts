@@ -56,12 +56,11 @@ export async function loadOperations(generatedRoutesDirPath: string) {
     seenOperationIds.add(operationId);
 
     const parameterShape = route.params?.shape ?? {};
-    const requestContentTypes = Object.keys(route.requestMap);
     const { honoPath, paramNameMap } = toHonoPath(route.path);
 
     operations.push({
       bodyValidators: getBodyValidators(route.requestMap),
-      hasBody: requestContentTypes.length > 0,
+      hasBody: Object.keys(route.requestMap).length > 0,
       hasHeaders: "headers" in parameterShape,
       hasPath: "path" in parameterShape,
       hasQuery: "query" in parameterShape,
@@ -70,7 +69,6 @@ export async function loadOperations(generatedRoutesDirPath: string) {
       moduleBasename,
       operationId,
       paramNameMap,
-      requestContentTypes,
     });
   }
 
