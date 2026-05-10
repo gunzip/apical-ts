@@ -20,12 +20,12 @@
     "release:major": "turbo run release:major"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.30.0",
+    "@changesets/cli": "^2.31.0",
     "@pagopa/eslint-config": "^5.1.2",
-    "knip": "^6.4.1",
+    "knip": "^6.12.2",
     "oxfmt": "catalog:",
-    "oxlint": "^1.59.0",
-    "turbo": "^2.9.6",
+    "oxlint": "^1.63.0",
+    "turbo": "^2.9.12",
     "vite": "catalog:",
     "vitest": "catalog:"
   },
