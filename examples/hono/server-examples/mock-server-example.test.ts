@@ -34,6 +34,19 @@ describe("Hono Mock Server", () => {
     expect(data).toHaveProperty("message");
   });
 
+  it("accepts declared XML request bodies", async () => {
+    const response = await app.request("/store/order", {
+      body: "<order><id>1</id></order>",
+      headers: {
+        "content-type": "application/xml",
+      },
+      method: "POST",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("application/json");
+  });
+
   it("generates one mock handler file per route for the demo flow", async () => {
     const [operationModule, mockHandlerModule, generatedPackageJsonContent] =
       await Promise.all([
