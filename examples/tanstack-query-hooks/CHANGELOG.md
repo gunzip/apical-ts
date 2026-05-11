@@ -1,4 +1,4 @@
-# @apical-ts/react-query-hooks
+# @apical-ts/tanstack-query-hooks
 
 ## 0.2.0
 
@@ -17,4 +17,4 @@
 
 ### Minor Changes
 
-- 2ebf2fc: Add react-query hook generation example
+- 2ebf2fc: Add TanStack Query hook generation example

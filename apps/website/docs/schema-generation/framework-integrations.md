@@ -15,11 +15,11 @@ The main reusable outputs are:
 
 Different integrations reuse the same contract in different ways:
 
-| Style                               | Generated input                                                       | Example                                                                                                                                                                  | What you write                                                                |
-| ----------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| Static, wrapper-based               | `--server` (`server/` + `routes/`)                                    | [Express](https://github.com/gunzip/apical-ts/tree/main/examples/express/)                                                                                               | explicit framework route registration and business handlers                   |
-| Dynamic, metadata-driven            | `--routes` (or the `routes/` emitted alongside `--client`/`--server`) | [Hono](https://github.com/gunzip/apical-ts/tree/main/examples/hono/)                                                                                                     | a second generator or adapter that derives framework glue from route metadata |
-| Dynamic, contract-derived consumers | `--client` or `--server`, plus `routes/`                              | [React Query](https://github.com/gunzip/apical-ts/tree/main/examples/react-query-hooks/), [MSW](https://github.com/gunzip/apical-ts/tree/main/examples/msw-mock-server/) | hooks, mock handlers, and utilities generated from the same operations        |
+| Style                               | Generated input                                                       | Example                                                                                                                                                                        | What you write                                                                |
+| ----------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| Static, wrapper-based               | `--server` (`server/` + `routes/`)                                    | [Express](https://github.com/gunzip/apical-ts/tree/main/examples/express/)                                                                                                     | explicit framework route registration and business handlers                   |
+| Dynamic, metadata-driven            | `--routes` (or the `routes/` emitted alongside `--client`/`--server`) | [Hono](https://github.com/gunzip/apical-ts/tree/main/examples/hono/)                                                                                                           | a second generator or adapter that derives framework glue from route metadata |
+| Dynamic, contract-derived consumers | `--client` or `--server`, plus `routes/`                              | [TanStack Query](https://github.com/gunzip/apical-ts/tree/main/examples/tanstack-query-hooks/), [MSW](https://github.com/gunzip/apical-ts/tree/main/examples/msw-mock-server/) | hooks, mock handlers, and utilities generated from the same operations        |
 
 The important part is that the OpenAPI contract stays the single source of truth
 no matter which style you choose.
@@ -62,10 +62,10 @@ that turns route metadata into a Hono registration layer.
 registerGeneratedRoutes(app);
 ```
 
-### React Query: hooks derived from generated operations
+### TanStack Query: hooks derived from generated operations
 
 The
-[React Query example](https://github.com/gunzip/apical-ts/tree/main/examples/react-query-hooks/)
+[TanStack Query example](https://github.com/gunzip/apical-ts/tree/main/examples/tanstack-query-hooks/)
 shows how the same contract can feed frontend hooks. Apical generates the client
 and routes once, then a secondary generator emits `useX` and `useXMutation`
 hooks from those artifacts.
