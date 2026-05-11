@@ -53,4 +53,4 @@ jobs:
 
       - name: Publish to NPM
         # working-directory: apps/craft
-        run: pnpm changeset publish --access public
+        run: pnpm changeset publish
