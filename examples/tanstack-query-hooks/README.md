@@ -1,8 +1,8 @@
-# React Query Hooks from Generated Client and Routes
+# TanStack Query Hooks from Generated Client and Routes
 
 This example shows a **contract-derived frontend integration**. Apical TS
 generates the client operations once, then a second generator turns those
-operations and route metadata into React Query hooks. No endpoint modeling is
+operations and route metadata into TanStack Query hooks. No endpoint modeling is
 duplicated in the frontend layer.
 
 ## Contract-first flow
@@ -13,7 +13,7 @@ duplicated in the frontend layer.
    - `generated/routes/*`: route metadata, including HTTP methods
    - `generated/schemas/*`: shared Zod schemas
 3. `pnpm run generate:hooks` reads the generated client and routes and emits
-   `generated/react-query-hooks/*`.
+   `generated/tanstack-query-hooks/*`.
 4. `example/Usage.tsx` consumes the generated hooks.
 
 ## Why this is dynamic reuse
@@ -35,7 +35,7 @@ duplicated in the frontend layer.
 2. Generate the client and hooks:
 
    ```bash
-   cd examples/react-query-hooks
+   cd examples/tanstack-query-hooks
    pnpm run generate
    ```
 
@@ -52,8 +52,9 @@ See `example/Usage.tsx` for a minimal consumption example.
 - `swagger.json`: the API contract
 - `generated/client/*`: generated operation functions
 - `generated/routes/*`: generated route metadata
-- `scripts/generate-hooks.ts`: secondary generator that emits React Query hooks
-- `generated/react-query-hooks/*`: generated hooks
+- `scripts/generate-hooks.ts`: secondary generator that emits TanStack Query
+  hooks
+- `generated/tanstack-query-hooks/*`: generated hooks
 - `example/Usage.tsx`: example component using the generated hooks
 
 ## Example usage
@@ -66,11 +67,11 @@ const { data, isLoading, error } = useFindPetsByStatus({
 
 ## Example prompt
 
-Use a prompt like this when you want an LLM to recreate react-query hooks from
-scratch starting from the OpenAPI contract only:
+Use a prompt like this when you want an LLM to recreate TanStack Query hooks
+from scratch starting from the OpenAPI contract only:
 
 ```text
-Goal: build a generator that produces React Query hooks from @apical-ts/craft output.
+Goal: build a generator that produces TanStack Query hooks from @apical-ts/craft output.
 
 Process:
 1. Run `npx @apical-ts/craft generate --client -i swagger.json -o generated`.
@@ -79,7 +80,7 @@ Process:
    - `generated/routes/*` for operation metadata and HTTP methods
 3. Implement `scripts/generate-hooks.ts` as the generator entrypoint.
 4. Make the generator read the @apical-ts/craft outputs and emit
-   `generated/react-query-hooks/*`.
+   `generated/tanstack-query-hooks/*`.
 5. The generator must:
    - map GET and HEAD operations to `useX` query hooks
    - map POST, PUT, PATCH, and DELETE operations to `useXMutation` hooks
@@ -89,7 +90,7 @@ Process:
    emitted hooks.
 
 Rules:
-- do not hand-write files under `generated/react-query-hooks/*`
+- do not hand-write files under `generated/tanstack-query-hooks/*`
 - do not duplicate endpoint definitions or payload types
 - the custom code belongs in the hook generator and usage example only
 ```

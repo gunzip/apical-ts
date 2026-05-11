@@ -29,11 +29,11 @@
     "test": {
       "dependsOn": ["^test", "generate:tests"]
     },
-    "@apical-ts/react-query-hooks#generate": {
+    "@apical-ts/tanstack-query-hooks#generate": {
       "dependsOn": ["^build"],
       "outputs": ["generated"]
     },
-    "@apical-ts/react-query-hooks#build": {
+    "@apical-ts/tanstack-query-hooks#build": {
       "dependsOn": ["generate"],
       "outputs": ["dist/**"]
     },

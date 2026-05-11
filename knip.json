@@ -25,7 +25,7 @@
     "examples/msw-mock-server": {
       "entry": ["server-examples/**/*.ts"]
     },
-    "examples/react-query-hooks": {
+    "examples/tanstack-query-hooks": {
       "entry": ["example/**/*.tsx", "scripts/**/*.ts"],
       "ignoreDependencies": ["@tanstack/react-query", "zod"]
     },

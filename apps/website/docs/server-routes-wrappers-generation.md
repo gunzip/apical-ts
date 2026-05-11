@@ -38,7 +38,8 @@ This creates:
   `examples/hono`.
 - You can mix both approaches because `--server` also generates `routes/`. The
   same contract can therefore power Express handlers, Hono generators, MSW mock
-  handlers, or React Query hook generators without remodeling the API surface.
+  handlers, or TanStack Query hook generators without remodeling the API
+  surface.
 
 ## Runtime Dependencies
 

@@ -114,11 +114,11 @@ const integrationCards = [
     href: "https://github.com/gunzip/apical-ts/tree/main/examples/msw-mock-server",
   },
   {
-    name: "React Query",
+    name: "TanStack Query",
     label: "client hooks",
     description:
       "Wrap operation functions in hooks without giving up tree-shaking or precise response typing.",
-    href: "https://github.com/gunzip/apical-ts/tree/main/examples/react-query-hooks",
+    href: "https://github.com/gunzip/apical-ts/tree/main/examples/tanstack-query-hooks",
   },
 ] as const;
 
@@ -161,9 +161,9 @@ function HomepageHeader() {
           </div>
           <p className={styles.heroDetail}>
             Use the generated contract directly or compose it with Hono, MSW,
-            and React Query. By providing mathematical precision to your types,
-            you also give Coding Agents the exact primitives they need to write
-            safer code for you.
+            and TanStack Query. By providing mathematical precision to your
+            types, you also give Coding Agents the exact primitives they need to
+            write safer code for you.
           </p>
         </div>
 

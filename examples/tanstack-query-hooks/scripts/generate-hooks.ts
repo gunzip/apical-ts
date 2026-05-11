@@ -10,8 +10,8 @@ import * as importedRoutes from "../generated/routes/index.js";
 
 const root = process.cwd();
 const apiDir = path.join(root, "generated");
-const hooksDir = path.join(apiDir, "react-query-hooks");
-const indexFile = path.join(apiDir, "react-query-hooks", "index.ts");
+const hooksDir = path.join(apiDir, "tanstack-query-hooks");
+const indexFile = path.join(apiDir, "tanstack-query-hooks", "index.ts");
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
