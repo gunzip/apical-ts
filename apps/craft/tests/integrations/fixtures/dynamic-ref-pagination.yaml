@@ -1,0 +1,87 @@
+openapi: 3.1.0
+info:
+  title: DynamicRef Pagination API
+  version: 0.1.0
+paths:
+  /users:
+    get:
+      summary: List users
+      operationId: listUsers
+      responses:
+        "200":
+          description: User page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedUserResponse"
+  /groups:
+    get:
+      summary: List groups
+      operationId: listGroups
+      responses:
+        "200":
+          description: Group page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedGroupResponse"
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+    Group:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    PaginatedTemplate:
+      $defs:
+        itemType:
+          $dynamicAnchor: itemType
+          not: {}
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+      properties:
+        items:
+          type: array
+          items:
+            $dynamicRef: "#itemType"
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+    PaginatedUserResponse:
+      $defs:
+        itemType:
+          $dynamicAnchor: itemType
+          $ref: "#/components/schemas/User"
+      $ref: "#/components/schemas/PaginatedTemplate"
+    PaginatedGroupResponse:
+      $defs:
+        itemType:
+          $dynamicAnchor: itemType
+          $ref: "#/components/schemas/Group"
+      $ref: "#/components/schemas/PaginatedTemplate"

@@ -1,0 +1,75 @@
+openapi: 3.1.0
+info:
+  title: DynamicRef Nested Workspace API
+  version: 0.1.0
+paths:
+  /workspaces/current:
+    get:
+      summary: Get workspace
+      operationId: getWorkspace
+      responses:
+        "200":
+          description: Workspace with nested folders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceResponse"
+components:
+  schemas:
+    Document:
+      type: object
+      required:
+        - kind
+        - id
+        - title
+      properties:
+        kind:
+          const: document
+        id:
+          type: string
+        title:
+          type: string
+    BaseFolder:
+      $dynamicAnchor: folder
+      type: object
+      required:
+        - kind
+        - id
+        - name
+        - children
+      properties:
+        kind:
+          const: folder
+        id:
+          type: string
+        name:
+          type: string
+        children:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/Document"
+              - $dynamicRef: "#folder"
+    WorkspaceFolder:
+      $dynamicAnchor: folder
+      allOf:
+        - $ref: "#/components/schemas/BaseFolder"
+        - type: object
+          required:
+            - permissions
+          properties:
+            permissions:
+              type: array
+              items:
+                type: string
+                enum:
+                  - read
+                  - write
+                  - admin
+    WorkspaceResponse:
+      type: object
+      required:
+        - root
+      properties:
+        root:
+          $ref: "#/components/schemas/WorkspaceFolder"
