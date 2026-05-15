@@ -1938,4 +1938,93 @@ describe("zodSchemaToCode", () => {
       expect(result.code).not.toContain("discriminatedUnion");
     });
   });
+
+  describe("default preservation on $ref, anyOf, and oneOf", () => {
+    it("should preserve a primitive default on a $ref schema", () => {
+      const schema = { $ref: "#/components/schemas/Status", default: "active" };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('Status.default("active")');
+      expect(result.imports.has("Status")).toBe(true);
+    });
+
+    it("should preserve an object default on a $ref schema", () => {
+      const schema = {
+        $ref: "#/components/schemas/Config",
+        default: { enabled: true },
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe('Config.default({"enabled":true})');
+      expect(result.imports.has("Config")).toBe(true);
+    });
+
+    it("should preserve a null default on a $ref schema", () => {
+      const schema = { $ref: "#/components/schemas/Item", default: null };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe("Item.default(null)");
+      expect(result.imports.has("Item")).toBe(true);
+    });
+
+    it("should preserve a primitive default on an anyOf schema", () => {
+      const schema: SchemaObject = {
+        anyOf: [{ type: "string" }, { type: "number" }],
+        default: "hello",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe(
+        'z.union([z.string(), z.number()]).default("hello")',
+      );
+    });
+
+    it("should preserve a primitive default on a oneOf schema", () => {
+      const schema: SchemaObject = {
+        oneOf: [{ type: "string" }, { type: "number" }],
+        default: 42,
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toContain(".default(42)");
+      expect(result.code).toContain("z.union([z.string(), z.number()])");
+    });
+
+    it("should preserve a null default on an anyOf schema", () => {
+      const schema: SchemaObject = {
+        anyOf: [{ type: "string" }, { type: "number" }],
+        default: null,
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe(
+        "z.union([z.string(), z.number()]).default(null)",
+      );
+    });
+
+    it("should preserve an object default on an anyOf schema", () => {
+      const schema: SchemaObject = {
+        anyOf: [
+          {
+            type: "object",
+            properties: { name: { type: "string" } },
+          },
+          { type: "string" },
+        ],
+        default: { name: "test" },
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toContain('.default({"name":"test"})');
+    });
+
+    it("should not apply .default() when no default is present on anyOf", () => {
+      const schema: SchemaObject = {
+        anyOf: [{ type: "string" }, { type: "number" }],
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe("z.union([z.string(), z.number()])");
+      expect(result.code).not.toContain(".default(");
+    });
+
+    it("should not apply .default() when no default is present on $ref", () => {
+      const schema = { $ref: "#/components/schemas/Foo" };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).toBe("Foo");
+      expect(result.code).not.toContain(".default(");
+    });
+  });
 });

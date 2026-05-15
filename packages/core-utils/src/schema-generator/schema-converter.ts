@@ -59,12 +59,16 @@ export function zodSchemaToCode(
     return res;
   };
 
-  /* References */
+  /* References — OpenAPI 3.1 allows $ref with sibling keywords like default */
   if (!isSchemaObject(schema)) {
-    return handleReferenceWithContext(schema, result, {
+    const refResult = handleReferenceWithContext(schema, result, {
       currentSchemaName,
       recursiveContext,
     });
+    if ("default" in schema && schema.default !== undefined) {
+      refResult.code = addDefaultValue(refResult.code, schema.default);
+    }
+    return refResult;
   }
 
   const effectiveType = inferEffectiveType(schema);
@@ -122,7 +126,12 @@ export function zodSchemaToCode(
     extraProps,
     formatOverrides,
   );
-  if (composition) return applyDesc(composition);
+  if (composition) {
+    if (schema.default !== undefined) {
+      composition.code = addDefaultValue(composition.code, schema.default);
+    }
+    return applyDesc(composition);
+  }
 
   /* Primitives & structured */
   const primitiveHandled = handlePrimitive(
