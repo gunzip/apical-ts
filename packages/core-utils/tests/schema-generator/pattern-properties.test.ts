@@ -41,10 +41,10 @@ describe("pattern-properties", () => {
         zodSchemaToCode,
       );
       expect(result.valueCode).toBe("z.string()");
-      expect(result.keyCode).toBe("z.string()");
+      expect(result.keyCode).toBe("z.string().regex(/^S_/)");
     });
 
-    it("should generate union for multiple patterns", () => {
+    it("should generate union for multiple patterns with refinement", () => {
       const patternProperties = {
         "^S_": { type: "string" } as SchemaObject,
         "^I_": { type: "integer" } as SchemaObject,
@@ -54,6 +54,10 @@ describe("pattern-properties", () => {
         zodSchemaToCode,
       );
       expect(result.valueCode).toBe("z.union([z.string(), z.number().int()])");
+      expect(result.keyCode).toBe("z.string()");
+      expect(result.refinement).toBeDefined();
+      expect(result.refinement).toContain("/^S_/.test(key)");
+      expect(result.refinement).toContain("/^I_/.test(key)");
     });
   });
 
@@ -116,6 +120,26 @@ describe("pattern-properties", () => {
         }),
       ).toBe('z.record(z.enum(["a", "b"]), z.string())');
     });
+
+    it("should append superRefine when refinement is provided", () => {
+      const code = generateRecordCode({
+        keyCode: "z.string()",
+        refinement: "(val, ctx) => { /* check */ }",
+        valueCode: "z.unknown()",
+      });
+      expect(code).toBe(
+        "z.record(z.string(), z.unknown()).superRefine((val, ctx) => { /* check */ })",
+      );
+    });
+
+    it("should not append superRefine when refinement is undefined", () => {
+      const code = generateRecordCode({
+        keyCode: "z.string()",
+        refinement: undefined,
+        valueCode: "z.string()",
+      });
+      expect(code).toBe("z.record(z.string(), z.string())");
+    });
   });
 
   describe("handleObjectType integration", () => {
@@ -128,10 +152,10 @@ describe("pattern-properties", () => {
       const result: ZodSchemaResult = { code: "", imports: new Set() };
       handleObjectType(schema, result, zodSchemaToCode);
 
-      expect(result.code).toBe("z.record(z.string(), z.string())");
+      expect(result.code).toBe("z.record(z.string().regex(/^S_/), z.string())");
     });
 
-    it("should generate z.record with union for multiple patterns", () => {
+    it("should generate z.record with union and superRefine for multiple patterns", () => {
       const schema = {
         type: "object",
         patternProperties: {
@@ -143,9 +167,12 @@ describe("pattern-properties", () => {
       const result: ZodSchemaResult = { code: "", imports: new Set() };
       handleObjectType(schema, result, zodSchemaToCode);
 
-      expect(result.code).toBe(
+      expect(result.code).toContain(
         "z.record(z.string(), z.union([z.string(), z.number()]))",
       );
+      expect(result.code).toContain(".superRefine(");
+      expect(result.code).toContain("/^S_/.test(key)");
+      expect(result.code).toContain("/^N_/.test(key)");
     });
 
     it("should generate z.record with enum key from propertyNames", () => {

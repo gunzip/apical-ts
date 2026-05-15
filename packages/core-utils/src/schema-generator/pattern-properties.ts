@@ -18,6 +18,7 @@ interface SchemaWithPatternProperties extends SchemaObject {
  */
 export interface PatternPropertiesResult {
   keyCode: string;
+  refinement?: string;
   valueCode: string;
   imports: Set<string>;
 }
@@ -46,8 +47,11 @@ export function getPatternProperties(
 
 /*
  * Generate a combined value schema from all patternProperties entries.
- * When a single pattern exists, use its schema directly.
- * When multiple patterns exist, wrap their schemas in z.union([...]).
+ *
+ * Single pattern: uses z.string().regex(...) as key and the value schema directly.
+ * Multiple patterns: uses z.string() as key with z.union([...]) as value and
+ * appends a .superRefine() that validates each key against the correct pattern
+ * and its corresponding value schema at runtime.
  */
 export function generatePatternPropertiesValueCode(
   patternProperties: Record<string, ReferenceObject | SchemaObject>,
@@ -76,14 +80,23 @@ export function generatePatternPropertiesValueCode(
     }
   }
 
-  const valueCode =
-    valueResults.length === 1
-      ? valueResults[0].code
-      : `z.union([${valueResults.map((r) => r.code).join(", ")}])`;
+  /*
+   * Single pattern: validate the key with a regex and use the value schema directly.
+   */
+  if (entries.length === 1) {
+    const [pattern] = entries;
+    const keyCode = `z.string().regex(/${escapeRegexForLiteral(pattern[0])}/)`;
+    return { imports, keyCode, valueCode: valueResults[0].code };
+  }
 
-  const keyCode = generateKeyCode(undefined, options, zodSchemaToCode, imports);
+  /*
+   * Multiple patterns: use a union for the value type and add a superRefine
+   * that validates each key against its matching pattern's value schema.
+   */
+  const valueCode = `z.union([${valueResults.map((r) => r.code).join(", ")}])`;
+  const refinement = generateSuperRefine(entries, valueResults);
 
-  return { imports, keyCode, valueCode };
+  return { imports, keyCode: "z.string()", refinement, valueCode };
 }
 
 /*
@@ -130,9 +143,7 @@ export function generatePropertyNamesKeyCode(
 
   /* Pattern-constrained keys */
   if (propertyNames.pattern) {
-    const escapedPattern = propertyNames.pattern
-      .replaceAll("\\", "\\\\")
-      .replaceAll("/", "\\/");
+    const escapedPattern = escapeRegexForLiteral(propertyNames.pattern);
     return { code: `z.string().regex(/${escapedPattern}/)`, imports };
   }
 
@@ -145,42 +156,53 @@ export function generatePropertyNamesKeyCode(
  */
 export function generateRecordCode(config: {
   keyCode: string;
+  refinement?: string;
   valueCode: string;
 }): string {
-  const { keyCode, valueCode } = config;
+  const { keyCode, refinement, valueCode } = config;
+  const base = `z.record(${keyCode}, ${valueCode})`;
 
-  if (keyCode === "z.string()") {
-    return `z.record(z.string(), ${valueCode})`;
+  if (refinement) {
+    return `${base}.superRefine(${refinement})`;
   }
 
-  return `z.record(${keyCode}, ${valueCode})`;
+  return base;
 }
 
 /*
- * Determine the key code from propertyNames when present, falling back to z.string().
+ * Generate a superRefine callback that validates each entry against the
+ * matching pattern's value schema at runtime.
+ *
+ * Output example:
+ *   (val, ctx) => { for (const [key, value] of Object.entries(val)) {
+ *     if (/^S_/.test(key) && !z.string().safeParse(value).success) {
+ *       ctx.addIssue({ code: "custom", path: [key], message: "..." });
+ *     }
+ *     if (/^N_/.test(key) && !z.number().int().safeParse(value).success) {
+ *       ctx.addIssue({ code: "custom", path: [key], message: "..." });
+ *     }
+ *   }}
  */
-function generateKeyCode(
-  propertyNames: ReferenceObject | SchemaObject | undefined,
-  options: ZodSchemaCodeOptions,
-  zodSchemaToCode: (
-    schema: ReferenceObject | SchemaObject,
-    options?: ZodSchemaCodeOptions,
-  ) => ZodSchemaResult,
-  imports: Set<string>,
+function generateSuperRefine(
+  entries: [string, ReferenceObject | SchemaObject][],
+  valueResults: ZodSchemaResult[],
 ): string {
-  if (!propertyNames) {
-    return "z.string()";
-  }
+  const checks = entries.map(([pattern], index) => {
+    const escapedPattern = escapeRegexForLiteral(pattern);
+    const valueSchema = valueResults[index].code;
+    return (
+      `if (/${escapedPattern}/.test(key) && !${valueSchema}.safeParse(value).success) ` +
+      `{ ctx.addIssue({ code: "custom", path: [key], message: "Value at key \\"" + key + "\\" does not match schema for pattern ${escapedPattern}" }); }`
+    );
+  });
 
-  const keyResult = generatePropertyNamesKeyCode(
-    propertyNames,
-    zodSchemaToCode,
-    { ...options, imports },
-  );
+  return `(val, ctx) => { for (const [key, value] of Object.entries(val)) { ${checks.join(" ")} } }`;
+}
 
-  for (const imp of keyResult.imports) {
-    imports.add(imp);
-  }
-
-  return keyResult.code;
+/*
+ * Escape a regex pattern for embedding in a JavaScript regex literal (/.../):
+ * - Forward slashes must be escaped so the regex literal doesn't terminate early
+ */
+function escapeRegexForLiteral(pattern: string): string {
+  return pattern.replaceAll("/", "\\/");
 }

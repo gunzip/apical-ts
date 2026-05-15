@@ -146,6 +146,7 @@ function generateRecordFromPatterns(
 
   let valueCode = "z.unknown()";
   let keyCode = "z.string()";
+  let refinement: string | undefined;
 
   /* Derive value type from patternProperties */
   if (patternProperties) {
@@ -155,6 +156,8 @@ function generateRecordFromPatterns(
       { ...options, imports },
     );
     valueCode = ppResult.valueCode;
+    keyCode = ppResult.keyCode;
+    refinement = ppResult.refinement;
     for (const imp of ppResult.imports) {
       imports.add(imp);
     }
@@ -193,7 +196,7 @@ function generateRecordFromPatterns(
   }
 
   return {
-    code: generateRecordCode({ keyCode, valueCode }),
+    code: generateRecordCode({ keyCode, refinement, valueCode }),
     imports,
   };
 }
