@@ -201,6 +201,15 @@ describe("zodSchemaToCode", () => {
     expect(result.imports.has("Profile")).toBe(true);
   });
 
+  it("should fall back to z.unknown() for external $ref references", () => {
+    const refSchema = {
+      $ref: "./schemas/profile.yaml#/components/schemas/Profile",
+    };
+    const result = zodSchemaToCode(refSchema);
+    expect(result.code).toBe("z.unknown()");
+    expect(result.imports.size).toBe(0);
+  });
+
   it("should handle allOf with $ref references", () => {
     const schema: SchemaObject = {
       allOf: [
@@ -1729,6 +1738,79 @@ describe("zodSchemaToCode", () => {
       expect(result.code).toBe(
         'z.discriminatedUnion("role", [AdminUser, RegularUser])',
       );
+    });
+
+    it("should fall back to z.union when a mapped ref resolves to a non-object schema", () => {
+      const schema: SchemaObject = {
+        discriminator: {
+          mapping: {
+            admin: "#/components/schemas/AdminUser",
+            regular: "#/components/schemas/RegularUser",
+          },
+          propertyName: "role",
+        },
+        oneOf: [
+          { $ref: "#/components/schemas/AdminUser" },
+          { $ref: "#/components/schemas/RegularUser" },
+        ],
+      };
+
+      const resolvedSchemas = {
+        AdminUser: {
+          type: "string" as const,
+        },
+        RegularUser: {
+          properties: {
+            name: { type: "string" as const },
+            role: { type: "string" as const },
+          },
+          required: ["role", "name"],
+          type: "object" as const,
+        },
+      };
+
+      const result = zodSchemaToCode(schema, { resolvedSchemas });
+      expect(result.code).toBe("z.union([AdminUser, RegularUser])");
+    });
+
+    it("should fall back to z.union when a mapped ref lacks the discriminator property", () => {
+      const schema: SchemaObject = {
+        discriminator: {
+          mapping: {
+            admin: "#/components/schemas/AdminUser",
+            regular: "#/components/schemas/RegularUser",
+          },
+          propertyName: "role",
+        },
+        oneOf: [
+          { $ref: "#/components/schemas/AdminUser" },
+          { $ref: "#/components/schemas/RegularUser" },
+        ],
+      };
+
+      const resolvedSchemas = {
+        AdminUser: {
+          properties: {
+            permissions: {
+              items: { type: "string" as const },
+              type: "array" as const,
+            },
+          },
+          required: ["permissions"],
+          type: "object" as const,
+        },
+        RegularUser: {
+          properties: {
+            name: { type: "string" as const },
+            role: { type: "string" as const },
+          },
+          required: ["role", "name"],
+          type: "object" as const,
+        },
+      };
+
+      const result = zodSchemaToCode(schema, { resolvedSchemas });
+      expect(result.code).toBe("z.union([AdminUser, RegularUser])");
     });
 
     it("should handle allOf inheritance with $ref discriminator members in mapping", () => {

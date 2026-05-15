@@ -22,6 +22,12 @@ interface BuildDiscriminatedUnionCodeOptions {
   resolvedSchemas?: ResolvedSchemas;
 }
 
+interface ResolvedDiscriminatedUnionMemberCompatibilityOptions {
+  allowNonStaticDiscriminator?: boolean;
+  resolvedSchemas?: ResolvedSchemas;
+  seenRefs?: Set<string>;
+}
+
 export function buildDiscriminatedUnionCode(
   options: BuildDiscriminatedUnionCodeOptions,
 ): string {
@@ -110,14 +116,6 @@ function isDiscriminatedUnionMemberCompatible(
   mapping?: DiscriminatorMapping,
 ): boolean {
   if (isReferenceObject(schema)) {
-    /*
-     * If a mapping exists and this ref is listed as a mapping target,
-     * we trust the mapping declaration without further schema inspection.
-     */
-    if (mapping && isMappingTarget(schema.$ref, mapping)) {
-      return true;
-    }
-
     const refName = parseSchemaReference(schema.$ref);
     if (!refName || seenRefs.has(refName.originalName) || !resolvedSchemas) {
       return true;
@@ -128,14 +126,38 @@ function isDiscriminatedUnionMemberCompatible(
       return true;
     }
 
-    return isDiscriminatedUnionMemberCompatible(
+    return isResolvedDiscriminatedUnionMemberCompatible(
       resolvedSchema,
       discriminatorProperty,
-      resolvedSchemas,
-      new Set(seenRefs).add(refName.originalName),
-      mapping,
+      {
+        allowNonStaticDiscriminator:
+          mapping !== undefined && isMappingTarget(schema.$ref, mapping),
+        resolvedSchemas,
+        seenRefs: new Set(seenRefs).add(refName.originalName),
+      },
     );
   }
+
+  return isResolvedDiscriminatedUnionMemberCompatible(
+    schema,
+    discriminatorProperty,
+    {
+      resolvedSchemas,
+      seenRefs,
+    },
+  );
+}
+
+function isResolvedDiscriminatedUnionMemberCompatible(
+  schema: SchemaObject,
+  discriminatorProperty: string,
+  options: ResolvedDiscriminatedUnionMemberCompatibilityOptions = {},
+): boolean {
+  const {
+    allowNonStaticDiscriminator = false,
+    resolvedSchemas,
+    seenRefs = new Set<string>(),
+  } = options;
 
   if (
     !isObjectLikeDiscriminatedUnionMember(schema, resolvedSchemas, seenRefs)
@@ -153,10 +175,9 @@ function isDiscriminatedUnionMemberCompatible(
     return false;
   }
 
-  return isStaticDiscriminatorSchema(
-    discriminatorSchema,
-    resolvedSchemas,
-    seenRefs,
+  return (
+    allowNonStaticDiscriminator ||
+    isStaticDiscriminatorSchema(discriminatorSchema, resolvedSchemas, seenRefs)
   );
 }
 
@@ -336,11 +357,13 @@ function findDiscriminatorProperty(
  * Handles both local and multi-file ref formats by comparing schema names.
  */
 function isMappingTarget(ref: string, mapping: DiscriminatorMapping): boolean {
-  const refName = parseSchemaReference(ref);
+  const refName = parseSchemaReference(ref, { allowExternal: true });
   if (!refName) return false;
 
   for (const mappingRef of Object.values(mapping)) {
-    const mappingRefName = parseSchemaReference(mappingRef);
+    const mappingRefName = parseSchemaReference(mappingRef, {
+      allowExternal: true,
+    });
     if (
       mappingRefName &&
       mappingRefName.originalName === refName.originalName

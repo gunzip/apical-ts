@@ -8,14 +8,20 @@ export interface ParsedSchemaReference {
   originalName: string;
 }
 
+interface ParseSchemaReferenceOptions {
+  allowExternal?: boolean;
+}
+
 /**
  * Parses local schema references used by generated schema code.
- * Handles local refs (#/components/schemas/X, #/X) and multi-file refs
- * (./path/file.yaml#/components/schemas/X) by extracting the schema name
- * from the fragment portion.
+ * External refs remain unsupported by default so callers can preserve the
+ * existing fallback paths for unresolved imports and unknown schemas. Pass
+ * allowExternal when you only need to extract the schema name from an
+ * external ref fragment for comparisons such as discriminator.mapping.
  */
 export function parseSchemaReference(
   ref: string | undefined,
+  options: ParseSchemaReferenceOptions = {},
 ): ParsedSchemaReference | undefined {
   if (!ref) {
     return undefined;
@@ -29,6 +35,10 @@ export function parseSchemaReference(
   const shortFormMatch = /^#\/([^/]+)$/.exec(ref);
   if (shortFormMatch) {
     return createParsedSchemaReference(shortFormMatch[1]);
+  }
+
+  if (!options.allowExternal) {
+    return undefined;
   }
 
   /*
