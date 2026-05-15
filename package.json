@@ -24,8 +24,8 @@
     "@pagopa/eslint-config": "^5.1.2",
     "knip": "^6.12.2",
     "oxfmt": "catalog:",
-    "oxlint": "^1.63.0",
-    "turbo": "^2.9.12",
+    "oxlint": "^1.64.0",
+    "turbo": "^2.9.14",
     "vite": "catalog:",
     "vitest": "catalog:"
   },
