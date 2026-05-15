@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.22.0
+
+### Minor Changes
+
+- 2b53eec: Support discriminator mapping
+
 ## 0.21.1
 
 ### Patch Changes
