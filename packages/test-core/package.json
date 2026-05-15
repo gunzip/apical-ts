@@ -26,6 +26,6 @@
   },
   "dependencies": {
     "openapi3-ts": "^4.3.0",
-    "zod": "^4.3.6"
+    "zod": "catalog:"
   }
 }

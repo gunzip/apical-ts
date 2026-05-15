@@ -59,7 +59,7 @@
     "tsup": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "zod": "^4.3.6"
+    "zod": "catalog:"
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^15.2.2",
