@@ -173,35 +173,23 @@ export function findReferencesInSchema(schema: SchemaObject): string[] {
   const references: string[] = [];
 
   function extractRefs(obj: unknown): void {
+    if (!obj || typeof obj !== "object") {
+      return;
+    }
+
+    if (isReferenceObject(obj)) {
+      references.push(obj.$ref);
+      return;
+    }
+
     if (Array.isArray(obj)) {
       obj.forEach(extractRefs);
       return;
     }
 
-    if (!obj || typeof obj !== "object") {
-      return;
-    }
-
-    const reference = getReferenceString(obj);
-    if (reference) {
-      references.push(reference);
-    }
-
-    for (const [key, value] of Object.entries(obj)) {
-      if (key === "$ref" && typeof value === "string") {
-        continue;
-      }
-
-      extractRefs(value);
-    }
+    Object.values(obj).forEach(extractRefs);
   }
 
   extractRefs(schema);
   return references;
-}
-
-function getReferenceString(value: object): string | undefined {
-  return "$ref" in value && typeof value.$ref === "string"
-    ? value.$ref
-    : undefined;
 }

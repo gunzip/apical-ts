@@ -1,5 +1,7 @@
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
+import { isReferenceObject } from "openapi3-ts/oas31";
+
 /*
  * Resolves requestBodies references by replacing $ref pointers with inline content.
  * This preprocessing step allows the existing client and server generators to work
@@ -31,24 +33,26 @@ export function resolveRequestBodies(openApiDoc: OpenAPIObject): number {
     }
     if (typeof node === "object") {
       const obj = node as Record<string, unknown>;
-      const ref = getReferenceString(obj);
-      if (ref?.startsWith(refPrefix)) {
-        const requestBodyName = ref.substring(refPrefix.length);
-        const requestBody = requestBodies[requestBodyName];
+      if (isReferenceObject(obj)) {
+        const ref: string = obj.$ref;
+        if (ref.startsWith(refPrefix)) {
+          const requestBodyName = ref.substring(refPrefix.length);
+          const requestBody = requestBodies[requestBodyName];
 
-        if (requestBody) {
-          // Replace the $ref with the actual requestBody content
-          delete obj.$ref;
+          if (requestBody) {
+            // Replace the $ref with the actual requestBody content
+            delete (obj as Record<string, unknown>).$ref;
 
-          // Copy all properties from the requestBody to the current object
-          for (const [key, value] of Object.entries(requestBody)) {
-            obj[key] = value;
+            // Copy all properties from the requestBody to the current object
+            for (const [key, value] of Object.entries(requestBody)) {
+              obj[key] = value;
+            }
+
+            resolvedCount++;
+          } else {
+            /* eslint-disable-next-line no-console */
+            console.warn(`⚠️ Could not resolve requestBody reference: ${ref}`);
           }
-
-          resolvedCount++;
-        } else {
-          /* eslint-disable-next-line no-console */
-          console.warn(`⚠️ Could not resolve requestBody reference: ${ref}`);
         }
       }
       for (const value of Object.values(obj)) visit(value);
@@ -57,8 +61,4 @@ export function resolveRequestBodies(openApiDoc: OpenAPIObject): number {
 
   visit(openApiDoc);
   return resolvedCount;
-}
-
-function getReferenceString(node: Record<string, unknown>): string | undefined {
-  return typeof node.$ref === "string" ? node.$ref : undefined;
 }

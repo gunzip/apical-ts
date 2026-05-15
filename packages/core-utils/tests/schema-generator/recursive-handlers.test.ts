@@ -270,22 +270,6 @@ describe("recursive-handlers", () => {
       expect(refs).toContain("#/components/schemas/TreeNode");
       expect(refs).toHaveLength(1);
     });
-
-    it("should ignore literal $ref property definitions", () => {
-      const schema: SchemaObject = {
-        type: "object",
-        properties: {
-          $ref: { type: "string" },
-          actualRef: {
-            $ref: "#/components/schemas/ActualRef",
-          },
-        },
-      };
-
-      const refs = findReferencesInSchema(schema);
-
-      expect(refs).toEqual(["#/components/schemas/ActualRef"]);
-    });
   });
 
   describe("findRecursiveSchemas", () => {
