@@ -9,7 +9,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  test:
+  test_matrix:
     name: Test (Node.js ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     strategy:
@@ -64,3 +64,17 @@ jobs:
 
       - name: Run tests
         run: pnpm test
+
+  test:
+    if: ${{ always() }}
+    needs: [test_matrix]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check matrix result
+        env:
+          MATRIX_RESULT: ${{ needs.test_matrix.result }}
+        run: |
+          if [ "$MATRIX_RESULT" != "success" ]; then
+            echo "Matrix test job concluded with: $MATRIX_RESULT"
+            exit 1
+          fi
