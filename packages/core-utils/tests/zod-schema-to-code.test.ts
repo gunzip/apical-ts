@@ -1964,6 +1964,17 @@ describe("zodSchemaToCode", () => {
       expect(result.imports.has("Item")).toBe(true);
     });
 
+    it("should coerce an int64 $ref default to bigint literal", () => {
+      const schema = { $ref: "#/components/schemas/BigId", default: 42 };
+      const result = zodSchemaToCode(schema, {
+        resolvedSchemas: {
+          BigId: { type: "integer", format: "int64" },
+        },
+      });
+      expect(result.code).toBe("BigId.default(42n)");
+      expect(result.imports.has("BigId")).toBe(true);
+    });
+
     it("should preserve a primitive default on an anyOf schema", () => {
       const schema: SchemaObject = {
         anyOf: [{ type: "string" }, { type: "number" }],

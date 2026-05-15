@@ -19,6 +19,7 @@ import {
   handleStringType,
 } from "./primitive-types.js";
 import { handleReferenceWithContext } from "./reference-handlers.js";
+import { parseSchemaReference } from "./schema-references.js";
 import { handleAllOfSchema, handleUnionSchema } from "./union-types.js";
 import {
   addDefaultValue,
@@ -32,6 +33,7 @@ import {
   mergeImports,
   toLiteralCode,
 } from "./utils.js";
+import type { DefaultValueOptions } from "./utils.js";
 
 /**
  * Converts an OpenAPI schema object to Zod validation code
@@ -66,7 +68,12 @@ export function zodSchemaToCode(
       recursiveContext,
     });
     if ("default" in schema && schema.default !== undefined) {
-      refResult.code = addDefaultValue(refResult.code, schema.default);
+      const defaultOpts = resolveRefDefaultOptions(schema, resolvedSchemas);
+      refResult.code = addDefaultValue(
+        refResult.code,
+        schema.default,
+        defaultOpts,
+      );
     }
     return refResult;
   }
@@ -128,7 +135,11 @@ export function zodSchemaToCode(
   );
   if (composition) {
     if (schema.default !== undefined) {
-      composition.code = addDefaultValue(composition.code, schema.default);
+      composition.code = addDefaultValue(
+        composition.code,
+        schema.default,
+        getDefaultValueOptions(schema),
+      );
     }
     return applyDesc(composition);
   }
@@ -341,4 +352,27 @@ function tryHandleCompositions(
     );
   }
   return undefined;
+}
+
+/*
+ * Resolve DefaultValueOptions for a $ref schema by looking up the referenced
+ * schema in resolvedSchemas. Falls back to undefined when the ref cannot be
+ * resolved, letting addDefaultValue use its default (untyped) behavior.
+ */
+function resolveRefDefaultOptions(
+  schema: ReferenceObject,
+  resolvedSchemas?: ResolvedSchemas,
+): DefaultValueOptions | undefined {
+  if (!resolvedSchemas || !schema.$ref) {
+    return undefined;
+  }
+  const parsed = parseSchemaReference(schema.$ref);
+  if (!parsed) {
+    return undefined;
+  }
+  const resolved = resolvedSchemas[parsed.originalName];
+  if (!resolved || !isSchemaObject(resolved)) {
+    return undefined;
+  }
+  return getDefaultValueOptions(resolved);
 }
