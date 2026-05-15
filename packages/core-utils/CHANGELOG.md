@@ -1,5 +1,16 @@
 # @apical-ts/core-utils
 
+## 0.22.0
+
+### Minor Changes
+
+- 3bbfb0a: Add support for patternProperties and propertyNames
+- 2b53eec: Support discriminator mapping
+
+### Patch Changes
+
+- 78e7035: Support regexes in patternProperties keys
+
 ## 0.21.1
 
 ### Patch Changes
