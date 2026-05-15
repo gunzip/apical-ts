@@ -225,6 +225,7 @@ export function handleUnionSchema(
 
     result.code = buildDiscriminatedUnionCode({
       discriminatorProperty,
+      mapping: discriminator.mapping,
       members: schemas.map((schema, index) => ({
         code: schemasCodes[index],
         schema,

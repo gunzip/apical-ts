@@ -28,4 +28,35 @@ describe("schema-references", () => {
     expect(parseSchemaReference("#/paths/users")).toBeUndefined();
     expect(getSchemaNameFromReference("not-a-ref")).toBeUndefined();
   });
+
+  it("should parse multi-file component schema references", () => {
+    const result = parseSchemaReference(
+      "./models/pets.yaml#/components/schemas/Dog",
+    );
+
+    expect(result).toEqual({
+      identifierName: "Dog",
+      originalName: "Dog",
+    });
+  });
+
+  it("should parse multi-file short-form schema references", () => {
+    const result = parseSchemaReference("../shared/types.yaml#/Cat");
+
+    expect(result).toEqual({
+      identifierName: "Cat",
+      originalName: "Cat",
+    });
+  });
+
+  it("should parse multi-file references with special characters in path", () => {
+    const result = parseSchemaReference(
+      "https://example.com/schemas.yaml#/components/schemas/my_schema",
+    );
+
+    expect(result).toEqual({
+      identifierName: "mySchema",
+      originalName: "my_schema",
+    });
+  });
 });
