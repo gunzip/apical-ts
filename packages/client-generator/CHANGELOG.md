@@ -1,5 +1,12 @@
 # @apical-ts/client-generator
 
+## 0.14.5
+
+### Patch Changes
+
+- Updated dependencies [d6d3660]
+  - @apical-ts/core-utils@0.21.1
+
 ## 0.14.4
 
 ### Patch Changes

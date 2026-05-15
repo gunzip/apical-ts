@@ -1,5 +1,11 @@
 # @apical-ts/tanstack-query-hooks
 
+## 0.2.1
+
+### Patch Changes
+
+- d6d3660: Upgrade Zod package
+
 ## 0.2.0
 
 ### Minor Changes

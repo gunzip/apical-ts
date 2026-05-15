@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.21.1
+
+### Patch Changes
+
+- d6d3660: Upgrade Zod package
+
 ## 0.21.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+### Patch Changes
+
+- d6d3660: Upgrade Zod package
+
 ## 0.1.2
 
 ### Patch Changes

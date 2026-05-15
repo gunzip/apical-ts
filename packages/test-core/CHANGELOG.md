@@ -1,5 +1,11 @@
 # @apical-ts/test-core
 
+## 0.12.2
+
+### Patch Changes
+
+- d6d3660: Upgrade Zod package
+
 ## 0.12.1
 
 ### Patch Changes
