@@ -4,6 +4,12 @@ import { isSchemaObject } from "openapi3-ts/oas31";
 import { shouldIncludeProperty } from "../shared/types.js";
 import type { ZodSchemaCodeOptions, ZodSchemaResult } from "./types.js";
 import { generateObjectCode } from "./object-properties.js";
+import {
+  generatePatternPropertiesValueCode,
+  generatePropertyNamesKeyCode,
+  generateRecordCode,
+  getPatternProperties,
+} from "./pattern-properties.js";
 import { addDefaultValue, addDescription } from "./utils.js";
 
 /**
@@ -59,12 +65,50 @@ export function handleObjectType(
     }
   }
 
+  const patternProperties = getPatternProperties(schema);
+  const codeOptions: ZodSchemaCodeOptions = {
+    currentSchemaName,
+    extraProps,
+    formatOverrides: options.formatOverrides,
+    imports: result.imports,
+    recursiveContext,
+    resolvedSchemas,
+  };
+
   /*
-   * Handle additionalProperties according to OpenAPI specification using the common function
+   * When patternProperties or propertyNames are present without named properties,
+   * generate a z.record(...) schema instead of z.object({}).
    */
+  if (
+    shape.length === 0 &&
+    !schema.properties &&
+    (patternProperties || schema.propertyNames)
+  ) {
+    const recordResult = generateRecordFromPatterns(
+      schema,
+      patternProperties,
+      zodSchemaToCode,
+      codeOptions,
+    );
+    result.imports = recordResult.imports;
+    let code = recordResult.code;
+    code = addDefaultValue(code, schema.default, { schemaType: "object" });
+    result.code = code;
+    return result;
+  }
+
+  /*
+   * When named properties exist alongside patternProperties, use the pattern
+   * value schema as the catchall (overriding additionalProperties if not explicitly set).
+   */
+  const effectiveAdditionalProperties = resolveAdditionalProperties(
+    schema.additionalProperties,
+    patternProperties,
+  );
+
   const objectCodeResult = generateObjectCode(
     shape,
-    schema.additionalProperties,
+    effectiveAdditionalProperties,
     zodSchemaToCode,
     {
       currentSchemaName,
@@ -79,9 +123,123 @@ export function handleObjectType(
   result.imports = objectCodeResult.imports;
   let code = objectCodeResult.code;
 
-  // Add default value if present
   code = addDefaultValue(code, schema.default, { schemaType: "object" });
 
   result.code = code;
   return result;
+}
+
+/*
+ * Generate a z.record() schema from patternProperties and/or propertyNames
+ * when no named properties are present.
+ */
+function generateRecordFromPatterns(
+  schema: SchemaObject,
+  patternProperties: Record<string, ReferenceObject | SchemaObject> | undefined,
+  zodSchemaToCode: (
+    schema: ReferenceObject | SchemaObject,
+    options?: ZodSchemaCodeOptions,
+  ) => ZodSchemaResult,
+  options: ZodSchemaCodeOptions,
+): { code: string; imports: Set<string> } {
+  const imports = options.imports || new Set<string>();
+
+  let valueCode = "z.unknown()";
+  let keyCode = "z.string()";
+
+  /* Derive value type from patternProperties */
+  if (patternProperties) {
+    const ppResult = generatePatternPropertiesValueCode(
+      patternProperties,
+      zodSchemaToCode,
+      { ...options, imports },
+    );
+    valueCode = ppResult.valueCode;
+    for (const imp of ppResult.imports) {
+      imports.add(imp);
+    }
+  }
+
+  /* Derive key constraint from propertyNames */
+  if (schema.propertyNames) {
+    const keyResult = generatePropertyNamesKeyCode(
+      schema.propertyNames,
+      zodSchemaToCode,
+      { ...options, imports },
+    );
+    keyCode = keyResult.code;
+    for (const imp of keyResult.imports) {
+      imports.add(imp);
+    }
+  }
+
+  /*
+   * If additionalProperties is explicitly a schema and no patternProperties
+   * provided a value, use the additionalProperties schema as the value.
+   */
+  if (!patternProperties && requiresValueSchema(schema.additionalProperties)) {
+    const addResult = zodSchemaToCode(schema.additionalProperties, {
+      currentSchemaName: options.currentSchemaName,
+      formatOverrides: options.formatOverrides,
+      imports,
+      recursiveContext: options.recursiveContext,
+      resolvedSchemas: options.resolvedSchemas,
+      skipDescription: true,
+    });
+    valueCode = addResult.code;
+    for (const imp of addResult.imports) {
+      imports.add(imp);
+    }
+  }
+
+  return {
+    code: generateRecordCode({ keyCode, valueCode }),
+    imports,
+  };
+}
+
+/*
+ * When patternProperties exist alongside named properties and additionalProperties
+ * is not explicitly set, synthesize an additionalProperties schema object whose
+ * value type matches the merged patternProperties value schemas.
+ *
+ * This causes generateObjectCode to emit a .catchall(...) with the correct type
+ * rather than degrading to z.unknown() or applying extraProps defaults.
+ */
+function resolveAdditionalProperties(
+  additionalProperties: SchemaObject["additionalProperties"],
+  patternProperties: Record<string, ReferenceObject | SchemaObject> | undefined,
+): SchemaObject["additionalProperties"] {
+  /* If additionalProperties is explicitly set, honour it */
+  if (additionalProperties !== undefined) {
+    return additionalProperties;
+  }
+
+  /* No patternProperties — fall through to default behavior */
+  if (!patternProperties) {
+    return additionalProperties;
+  }
+
+  /*
+   * Synthesize a schema that generateObjectCode will pass through zodSchemaToCode
+   * to produce the correct catchall. We use an anyOf wrapper when multiple pattern
+   * schemas exist, or the single schema directly.
+   */
+  const valueSchemas = Object.values(patternProperties);
+  if (valueSchemas.length === 1) {
+    return valueSchemas[0];
+  }
+
+  return { anyOf: valueSchemas } as SchemaObject;
+}
+
+function requiresValueSchema(
+  additionalProperties: SchemaObject["additionalProperties"],
+): additionalProperties is ReferenceObject | SchemaObject {
+  return (
+    additionalProperties !== undefined &&
+    additionalProperties !== false &&
+    additionalProperties !== true &&
+    typeof additionalProperties === "object"
+  );
 }

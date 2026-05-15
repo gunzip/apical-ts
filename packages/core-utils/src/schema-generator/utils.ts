@@ -288,13 +288,31 @@ export function cloneWithoutDefault(schema: SchemaObject): SchemaObject {
 export function inferEffectiveType(schema: SchemaObject): EffectiveType {
   let effectiveType = schema.type as EffectiveType;
   if (!effectiveType) {
-    if (schema.properties || schema.additionalProperties) {
+    if (
+      schema.properties ||
+      schema.additionalProperties ||
+      hasPatternProperties(schema) ||
+      schema.propertyNames
+    ) {
       effectiveType = "object";
     } else if (schema.items) {
       effectiveType = "array";
     }
   }
   return effectiveType;
+}
+
+/*
+ * Check if a schema has patternProperties.
+ * This keyword is a valid JSON Schema keyword preserved at runtime but not
+ * explicitly typed on openapi3-ts SchemaObject.
+ */
+function hasPatternProperties(schema: SchemaObject): boolean {
+  return (
+    "patternProperties" in schema &&
+    schema.patternProperties != null &&
+    typeof schema.patternProperties === "object"
+  );
 }
 
 /**
