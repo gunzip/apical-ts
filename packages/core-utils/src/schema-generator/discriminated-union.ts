@@ -137,7 +137,9 @@ function isDiscriminatedUnionMemberCompatible(
     );
   }
 
-  if (!isObjectLikeDiscriminatedUnionMember(schema, resolvedSchemas, seenRefs)) {
+  if (
+    !isObjectLikeDiscriminatedUnionMember(schema, resolvedSchemas, seenRefs)
+  ) {
     return false;
   }
 

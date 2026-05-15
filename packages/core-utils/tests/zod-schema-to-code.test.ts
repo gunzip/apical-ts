@@ -1821,7 +1821,9 @@ describe("zodSchemaToCode", () => {
       };
 
       const result = zodSchemaToCode(schema, { resolvedSchemas });
-      expect(result.code).toBe('z.discriminatedUnion("type", [Circle, Square])');
+      expect(result.code).toBe(
+        'z.discriminatedUnion("type", [Circle, Square])',
+      );
     });
 
     it("should fall back to z.union when allOf member is not object-like", () => {
