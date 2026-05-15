@@ -1,6 +1,6 @@
 {
   "name": "@apical-ts/server-generator",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "private": true,
   "description": "OpenAPI server generator for apical-ts",
   "main": "dist/index.js",

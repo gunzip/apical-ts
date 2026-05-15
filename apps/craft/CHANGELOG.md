@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.23.0
+
+### Minor Changes
+
+- 32695bd: Support resolution of $dynamicRefs
+
 ## 0.22.1
 
 ### Patch Changes
@@ -175,6 +181,7 @@
 ### Minor Changes
 
 - 0a04a4e: ## Breaking changes
+
   - The generated `GlobalConfig.headers` now only accepts the declared auth
     header keys. Supplying fewer keys or injecting arbitrary default headers now
     fails type-checking, so update your configuration factories to fill every
@@ -184,6 +191,7 @@
     client calls when the OpenAPI spec actually defined them.
 
   ## Migration guidance
+
   1. Regenerate your client/server and update any helper that builds
      `globalConfig` so it hydrates all generated auth headers (you can store
      credentials elsewhere and spread them in).

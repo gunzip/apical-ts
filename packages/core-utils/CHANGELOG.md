@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.21.0
+
+### Minor Changes
+
+- 32695bd: Support resolution of $dynamicRefs
+
 ## 0.20.0
 
 ### Minor Changes
