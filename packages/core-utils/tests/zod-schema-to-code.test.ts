@@ -2037,5 +2037,17 @@ describe("zodSchemaToCode", () => {
       expect(result.code).toBe("Foo");
       expect(result.code).not.toContain(".default(");
     });
+
+    it("should not apply a primitive default on an allOf schema", () => {
+      const schema: SchemaObject = {
+        allOf: [
+          { type: "object", properties: { id: { type: "string" } } },
+          { type: "object", properties: { value: { type: "string" } } },
+        ],
+        default: "off",
+      };
+      const result = zodSchemaToCode(schema);
+      expect(result.code).not.toContain(".default(");
+    });
   });
 });
