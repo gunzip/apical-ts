@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.22.2
+
+### Patch Changes
+
+- 58130e3: Fix default values on allOf
+
 ## 0.22.1
 
 ### Patch Changes
