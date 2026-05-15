@@ -11,16 +11,27 @@ interface DiscriminatedUnionMember {
   schema: ReferenceObject | SchemaObject;
 }
 
+interface DiscriminatorMapping {
+  [literalValue: string]: string;
+}
+
 interface BuildDiscriminatedUnionCodeOptions {
   discriminatorProperty: string;
+  mapping?: DiscriminatorMapping;
   members: DiscriminatedUnionMember[];
   resolvedSchemas?: ResolvedSchemas;
+}
+
+interface ResolvedDiscriminatedUnionMemberCompatibilityOptions {
+  allowNonStaticDiscriminator?: boolean;
+  resolvedSchemas?: ResolvedSchemas;
+  seenRefs?: Set<string>;
 }
 
 export function buildDiscriminatedUnionCode(
   options: BuildDiscriminatedUnionCodeOptions,
 ): string {
-  const { discriminatorProperty, members, resolvedSchemas } = options;
+  const { discriminatorProperty, mapping, members, resolvedSchemas } = options;
   const memberCodes = members.map((member) => member.code);
 
   if (
@@ -29,6 +40,8 @@ export function buildDiscriminatedUnionCode(
         member.schema,
         discriminatorProperty,
         resolvedSchemas,
+        undefined,
+        mapping,
       ),
     )
   ) {
@@ -100,6 +113,7 @@ function isDiscriminatedUnionMemberCompatible(
   discriminatorProperty: string,
   resolvedSchemas?: ResolvedSchemas,
   seenRefs = new Set<string>(),
+  mapping?: DiscriminatorMapping,
 ): boolean {
   if (isReferenceObject(schema)) {
     const refName = parseSchemaReference(schema.$ref);
@@ -112,27 +126,58 @@ function isDiscriminatedUnionMemberCompatible(
       return true;
     }
 
-    return isDiscriminatedUnionMemberCompatible(
+    return isResolvedDiscriminatedUnionMemberCompatible(
       resolvedSchema,
       discriminatorProperty,
-      resolvedSchemas,
-      new Set(seenRefs).add(refName.originalName),
+      {
+        allowNonStaticDiscriminator:
+          mapping !== undefined && isMappingTarget(schema.$ref, mapping),
+        resolvedSchemas,
+        seenRefs: new Set(seenRefs).add(refName.originalName),
+      },
     );
   }
 
-  if (!isObjectLikeDiscriminatedUnionMember(schema)) {
+  return isResolvedDiscriminatedUnionMemberCompatible(
+    schema,
+    discriminatorProperty,
+    {
+      resolvedSchemas,
+      seenRefs,
+    },
+  );
+}
+
+function isResolvedDiscriminatedUnionMemberCompatible(
+  schema: SchemaObject,
+  discriminatorProperty: string,
+  options: ResolvedDiscriminatedUnionMemberCompatibilityOptions = {},
+): boolean {
+  const {
+    allowNonStaticDiscriminator = false,
+    resolvedSchemas,
+    seenRefs = new Set<string>(),
+  } = options;
+
+  if (
+    !isObjectLikeDiscriminatedUnionMember(schema, resolvedSchemas, seenRefs)
+  ) {
     return false;
   }
 
-  const discriminatorSchema = schema.properties?.[discriminatorProperty];
+  const discriminatorSchema = findDiscriminatorProperty(
+    schema,
+    discriminatorProperty,
+    resolvedSchemas,
+    seenRefs,
+  );
   if (!discriminatorSchema) {
     return false;
   }
 
-  return isStaticDiscriminatorSchema(
-    discriminatorSchema,
-    resolvedSchemas,
-    seenRefs,
+  return (
+    allowNonStaticDiscriminator ||
+    isStaticDiscriminatorSchema(discriminatorSchema, resolvedSchemas, seenRefs)
   );
 }
 
@@ -173,9 +218,45 @@ function resolveReferencedSchema(
     : null;
 }
 
-function isObjectLikeDiscriminatedUnionMember(schema: SchemaObject): boolean {
-  if (schema.allOf || schema.anyOf || schema.oneOf) {
+function isObjectLikeDiscriminatedUnionMember(
+  schema: SchemaObject,
+  resolvedSchemas?: ResolvedSchemas,
+  seenRefs = new Set<string>(),
+): boolean {
+  if (schema.anyOf || schema.oneOf) {
     return false;
+  }
+
+  if (schema.enum || schema.const !== undefined) {
+    return false;
+  }
+
+  /*
+   * allOf compositions are object-like when all members resolve to objects.
+   * This handles discriminator inheritance patterns where a derived schema
+   * uses allOf to extend a base with a more specific discriminator value.
+   */
+  if (schema.allOf) {
+    return schema.allOf.every((member) => {
+      if (isReferenceObject(member)) {
+        if (!resolvedSchemas) return true;
+        const refName = parseSchemaReference(member.$ref);
+        if (!refName) return true;
+        if (seenRefs.has(refName.originalName)) return true;
+        const resolved = resolvedSchemas[refName.originalName];
+        if (!resolved || !isSchemaObject(resolved)) return true;
+        return isObjectLikeDiscriminatedUnionMember(
+          resolved,
+          resolvedSchemas,
+          new Set(seenRefs).add(refName.originalName),
+        );
+      }
+      return isObjectLikeDiscriminatedUnionMember(
+        member,
+        resolvedSchemas,
+        seenRefs,
+      );
+    });
   }
 
   if (Array.isArray(schema.type)) {
@@ -210,6 +291,90 @@ function isStaticDiscriminatorSchema(
   }
 
   return schema.const !== undefined || Boolean(schema.enum?.length);
+}
+
+/*
+ * Walk through an allOf chain to find the discriminator property schema,
+ * preferring the most specific (deepest/last) definition.
+ * For plain objects, returns the property directly.
+ */
+function findDiscriminatorProperty(
+  schema: SchemaObject,
+  propertyName: string,
+  resolvedSchemas?: ResolvedSchemas,
+  seenRefs = new Set<string>(),
+): ReferenceObject | SchemaObject | undefined {
+  if (schema.properties?.[propertyName]) {
+    return schema.properties[propertyName];
+  }
+
+  if (!schema.allOf) {
+    return undefined;
+  }
+
+  /*
+   * Scan allOf members in reverse order to prefer the most specific
+   * (derived) discriminator value over the base schema's definition.
+   */
+  for (let i = schema.allOf.length - 1; i >= 0; i--) {
+    const member = schema.allOf[i];
+    let resolvedMember: SchemaObject | undefined;
+
+    if (isReferenceObject(member)) {
+      if (!resolvedSchemas) continue;
+      const refName = parseSchemaReference(member.$ref);
+      if (!refName) continue;
+      if (seenRefs.has(refName.originalName)) continue;
+      const resolved = resolvedSchemas[refName.originalName];
+      if (!resolved || !isSchemaObject(resolved)) continue;
+      resolvedMember = resolved;
+      const found = findDiscriminatorProperty(
+        resolvedMember,
+        propertyName,
+        resolvedSchemas,
+        new Set(seenRefs).add(refName.originalName),
+      );
+      if (found) return found;
+      continue;
+    } else {
+      resolvedMember = member;
+    }
+
+    const found = findDiscriminatorProperty(
+      resolvedMember,
+      propertyName,
+      resolvedSchemas,
+      seenRefs,
+    );
+    if (found) return found;
+  }
+
+  return undefined;
+}
+
+/*
+ * Check whether a $ref appears as a target value in the discriminator mapping.
+ * Handles both local and multi-file ref formats by comparing schema names.
+ */
+function isMappingTarget(ref: string, mapping: DiscriminatorMapping): boolean {
+  const refName = parseSchemaReference(ref, { allowExternal: true });
+  if (!refName) return false;
+
+  for (const mappingRef of Object.values(mapping)) {
+    const mappingRefName = parseSchemaReference(mappingRef, {
+      allowExternal: true,
+    });
+    if (
+      mappingRefName &&
+      mappingRefName.originalName === refName.originalName
+    ) {
+      return true;
+    }
+    if (mappingRef === ref) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function stripTopLevelNullableWrapper(code: string): null | string {
