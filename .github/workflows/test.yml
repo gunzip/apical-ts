@@ -10,20 +10,25 @@ permissions:
 
 jobs:
   test:
+    name: Test (Node.js ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["22.x", "24.x"]
     env:
       TURBO_CACHE_DIR: .turbo-cache
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Enable corepack
         run: corepack enable
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version-file: ".node-version"
+          node-version: ${{ matrix.node-version }}
           cache: "pnpm"
 
       - name: Setup turbo cache
