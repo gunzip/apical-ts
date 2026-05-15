@@ -3,6 +3,8 @@ import path from "path";
 
 import type { StringFormatOverride } from "../schema-generator/format-overrides.js";
 
+import { buildScriptContent } from "./build-script-template.js";
+
 const baseCompilerOptions: Record<string, unknown> = {
   allowSyntheticDefaultImports: true,
   esModuleInterop: true,
@@ -19,11 +21,61 @@ const baseCompilerOptions: Record<string, unknown> = {
   types: ["node"],
 };
 
+const CHUNKED_BUILD_FILE_THRESHOLD = 1000;
+
+const GENERATED_DIRECTORIES = ["schemas", "client", "server", "routes"];
+
+async function countTypeScriptFilesRecursive(
+  directory: string,
+): Promise<number> {
+  const entries = await fs.readdir(directory, { withFileTypes: true });
+  let count = 0;
+
+  for (const entry of entries) {
+    const fullPath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      count += await countTypeScriptFilesRecursive(fullPath);
+      continue;
+    }
+
+    if (entry.isFile() && entry.name.endsWith(".ts")) {
+      count += 1;
+    }
+  }
+
+  return count;
+}
+
+async function countGeneratedTypeScriptFiles(
+  directory: string,
+): Promise<number> {
+  const entries = await fs.readdir(directory, { withFileTypes: true });
+  let count = 0;
+
+  for (const entry of entries) {
+    if (!entry.isDirectory() || !GENERATED_DIRECTORIES.includes(entry.name)) {
+      continue;
+    }
+
+    count += await countTypeScriptFilesRecursive(
+      path.join(directory, entry.name),
+    );
+  }
+
+  return count;
+}
+
 export async function createPackageFiles(
   output: string,
   formatOverrides: readonly StringFormatOverride[] = [],
 ): Promise<void> {
   const compilerOptions = { ...baseCompilerOptions };
+  const generatedTypeScriptFileCount =
+    await countGeneratedTypeScriptFiles(output);
+  const useChunkedBuild =
+    generatedTypeScriptFileCount > CHUNKED_BUILD_FILE_THRESHOLD;
+
   if (!formatOverrides.some((override) => override.import.kind === "path")) {
     compilerOptions.rootDir = ".";
   }
@@ -37,12 +89,13 @@ export async function createPackageFiles(
     },
     name: "generated-client",
     scripts: {
-      build: "tsgo",
+      build: useChunkedBuild ? "node ./build.mjs" : "tsgo",
     },
     type: "module",
     version: "0.1.0",
   };
-  await Promise.all([
+
+  const packageFileWrites = [
     fs.writeFile(
       path.join(output, "package.json"),
       JSON.stringify(packageJsonContent, null, 2),
@@ -51,5 +104,17 @@ export async function createPackageFiles(
       path.join(output, "tsconfig.json"),
       JSON.stringify({ compilerOptions }, null, 2),
     ),
-  ]);
+  ];
+
+  if (useChunkedBuild) {
+    packageFileWrites.push(
+      fs.writeFile(path.join(output, "build.mjs"), buildScriptContent),
+    );
+  } else {
+    packageFileWrites.push(
+      fs.rm(path.join(output, "build.mjs"), { force: true }),
+    );
+  }
+
+  await Promise.all(packageFileWrites);
 }

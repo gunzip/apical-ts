@@ -1,4 +1,11 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -9,10 +16,11 @@ import { describe, expect, it } from "vitest";
 import { createPackageFiles } from "../src/core-generator/package-generator.js";
 
 describe("package generator", () => {
-  it("writes package.json and tsconfig.json for generated output", async () => {
+  it("uses plain tsgo for generated outputs at or below the chunking threshold", async () => {
     const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
 
     try {
+      await writeFile(join(outputDir, "build.mjs"), "stale");
       await createPackageFiles(outputDir);
 
       const packageJson = JSON.parse(
@@ -37,6 +45,7 @@ describe("package generator", () => {
         type: "module",
         version: "0.1.0",
       });
+      await expect(access(join(outputDir, "build.mjs"))).rejects.toThrow();
 
       expect(tsConfig).toEqual({
         compilerOptions: {
@@ -56,6 +65,39 @@ describe("package generator", () => {
           types: ["node"],
         },
       });
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
+  });
+
+  it("writes build.mjs for generated outputs above the chunking threshold", async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
+    const schemasDir = join(outputDir, "schemas");
+
+    try {
+      await mkdir(schemasDir, { recursive: true });
+      await Promise.all(
+        Array.from({ length: 1001 }, (_, index) =>
+          writeFile(
+            join(schemasDir, "Schema" + index + ".ts"),
+            "export const schema" + index + " = " + index + ";\n",
+          ),
+        ),
+      );
+
+      await createPackageFiles(outputDir);
+
+      const packageJson = JSON.parse(
+        await readFile(join(outputDir, "package.json"), "utf8"),
+      );
+      const buildScript = await readFile(join(outputDir, "build.mjs"), "utf8");
+
+      expect(packageJson.scripts.build).toBe("node ./build.mjs");
+      expect(buildScript).toContain("APICAL_TS_BUILD_CHUNK_SIZE");
+      expect(buildScript).toContain("[build] ");
+      expect(buildScript).toContain("chunk ");
+      expect(buildScript).toContain("emitIndexFile");
+      expect(buildScript).toContain('return "../" + file;');
     } finally {
       await rm(outputDir, { recursive: true, force: true });
     }

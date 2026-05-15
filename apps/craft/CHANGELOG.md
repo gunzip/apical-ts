@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.24.1
+
+### Patch Changes
+
+- c853dd9: Preserve defaults on $ref, anyOf, and oneOf generated schema
+
 ## 0.24.0
 
 ### Minor Changes
