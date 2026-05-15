@@ -51,6 +51,7 @@ export function resolveDynamicReferences(openApiDoc: OpenAPIObject): number {
   if (!schemas || Object.keys(schemas).length === 0) return 0;
 
   const schemaMap = schemas as Record<string, JsonObject>;
+  const unresolvedWarnings = new Set<string>();
 
   /* Index which schemas are "templates" (contain $dynamicRef) */
   const templateNames = findTemplateSchemaNames(schemaMap);
@@ -67,7 +68,7 @@ export function resolveDynamicReferences(openApiDoc: OpenAPIObject): number {
    */
   const consumers = identifyConsumers(schemaMap, templateNames);
   for (const consumer of consumers) {
-    resolvedCount += resolveConsumer(consumer, schemaMap);
+    resolvedCount += resolveConsumer(consumer, schemaMap, unresolvedWarnings);
   }
 
   /*
@@ -80,13 +81,17 @@ export function resolveDynamicReferences(openApiDoc: OpenAPIObject): number {
       resolvedCount += resolveStandaloneDynamicRefs(
         templateName,
         schema,
-        schemaMap,
+        unresolvedWarnings,
       );
     }
   }
 
   /* Phase 3: Strip residual dynamic keywords from all schemas */
   cleanupAllDynamicKeywords(schemaMap);
+
+  for (const warning of unresolvedWarnings) {
+    console.warn(warning);
+  }
 
   return resolvedCount;
 }
@@ -225,12 +230,21 @@ function findTemplateReference(
 function resolveConsumer(
   consumer: ConsumerInfo,
   schemas: Record<string, JsonObject>,
+  unresolvedWarnings: Set<string>,
 ): number {
   const template = schemas[consumer.templateName];
   if (!template) return 0;
 
   const clonedContent = deepCloneSchemaContent(template);
-  const resolved = resolveDynamicRefsInTree(clonedContent, consumer.bindings);
+  const resolved = resolveDynamicRefsInTree(
+    clonedContent,
+    consumer.bindings,
+    (dynamicRef) => {
+      unresolvedWarnings.add(
+        `⚠️ Could not resolve $dynamicRef "${dynamicRef}" in schema "${consumer.consumerName}" while applying template "${consumer.templateName}"`,
+      );
+    },
+  );
   if (resolved === 0) return 0;
 
   if (consumer.referenceLocation.kind === "topLevel") {
@@ -251,7 +265,7 @@ function resolveConsumer(
 function resolveStandaloneDynamicRefs(
   schemaName: string,
   schema: JsonObject,
-  _schemas: Record<string, JsonObject>,
+  unresolvedWarnings: Set<string>,
 ): number {
   const defaultBindings = new Map<string, AnchorBinding>();
 
@@ -285,8 +299,11 @@ function resolveStandaloneDynamicRefs(
     }
   }
 
-  if (defaultBindings.size === 0) return 0;
-  return resolveDynamicRefsInTree(schema, defaultBindings);
+  return resolveDynamicRefsInTree(schema, defaultBindings, (dynamicRef) => {
+    unresolvedWarnings.add(
+      `⚠️ Could not resolve $dynamicRef "${dynamicRef}" in schema "${schemaName}"`,
+    );
+  });
 }
 
 /*
@@ -334,12 +351,13 @@ function deepCloneValue(value: unknown): JsonValue | undefined {
 function resolveDynamicRefsInTree(
   value: unknown,
   bindings: Map<string, AnchorBinding>,
+  onUnresolvedDynamicRef?: (dynamicRef: string) => void,
 ): number {
   if (!value || typeof value !== "object") return 0;
   if (Array.isArray(value)) {
     let count = 0;
     for (const item of value) {
-      count += resolveDynamicRefsInTree(item, bindings);
+      count += resolveDynamicRefsInTree(item, bindings, onUnresolvedDynamicRef);
     }
     return count;
   }
@@ -349,27 +367,27 @@ function resolveDynamicRefsInTree(
 
   if (typeof record[DYNAMIC_REF_KEY] === "string") {
     const anchorName = parseDynamicRefAnchor(record[DYNAMIC_REF_KEY]);
-    if (anchorName) {
-      const binding = bindings.get(anchorName);
-      if (binding) {
-        delete record[DYNAMIC_REF_KEY];
+    const binding = anchorName ? bindings.get(anchorName) : undefined;
 
-        if (binding.kind === "self") {
-          record[REF_KEY] =
-            `${COMPONENT_SCHEMAS_PREFIX}${binding.consumerName}`;
-        } else {
-          for (const [k, v] of Object.entries(binding.schema)) {
-            record[k] = deepCloneValue(v);
-          }
+    if (binding) {
+      delete record[DYNAMIC_REF_KEY];
+
+      if (binding.kind === "self") {
+        record[REF_KEY] = `${COMPONENT_SCHEMAS_PREFIX}${binding.consumerName}`;
+      } else {
+        for (const [k, v] of Object.entries(binding.schema)) {
+          record[k] = deepCloneValue(v);
         }
-
-        count++;
       }
+
+      count++;
+    } else {
+      onUnresolvedDynamicRef?.(record[DYNAMIC_REF_KEY]);
     }
   }
 
   for (const v of Object.values(record)) {
-    count += resolveDynamicRefsInTree(v, bindings);
+    count += resolveDynamicRefsInTree(v, bindings, onUnresolvedDynamicRef);
   }
 
   return count;

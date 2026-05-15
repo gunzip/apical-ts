@@ -341,8 +341,8 @@ async function parseAndPreprocessOpenAPI(
    * Pre-process: resolve $dynamicRef / $dynamicAnchor (JSON Schema 2020-12)
    * into regular $ref pointers. Consumer schemas that override dynamic anchors
    * get the template inlined with bindings resolved. Standalone templates
-   * resolve to their own default anchors. Unresolvable refs fall through to
-   * z.unknown() via the normal schema converter path.
+   * resolve to their own default anchors. Unresolvable refs emit a warning and
+   * then fall through to z.unknown() via the normal schema converter path.
    */
   profiler?.start("preprocess:resolve-dynamic-refs");
   const resolvedDynamicRefCount = resolveDynamicReferences(openApiDoc);

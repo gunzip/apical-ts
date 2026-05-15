@@ -1,6 +1,6 @@
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { resolveDynamicReferences } from "../../src/core-generator/dynamic-ref-resolver.js";
 
@@ -478,6 +478,30 @@ describe("resolveDynamicReferences", () => {
         "data",
       );
       expect(bData.$ref).toBe("#/components/schemas/TypeB");
+    });
+
+    it("warns explicitly when a $dynamicRef cannot be resolved", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      try {
+        const doc = createOpenAPIDoc({
+          Template: {
+            properties: {
+              data: { $dynamicRef: "#missingAnchor" },
+            },
+            type: "object",
+          },
+        });
+
+        const count = resolveDynamicReferences(doc);
+
+        expect(count).toBe(0);
+        expect(warnSpy).toHaveBeenCalledWith(
+          '⚠️ Could not resolve $dynamicRef "#missingAnchor" in schema "Template"',
+        );
+      } finally {
+        warnSpy.mockRestore();
+      }
     });
   });
 });
