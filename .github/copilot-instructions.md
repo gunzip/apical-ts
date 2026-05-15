@@ -125,6 +125,7 @@ await generate({
 4. **CLI validation**: Test generation with `test.yaml` or `definitions.yaml`
 5. **File Formatting**: `pnpm format:check`must pass
 6. **Linting**: `pnpm lint:check`must pass
+7. **Type Checking**: `pnpm run typecheck`must pass without errors
 
 ### Known Issues and Workarounds
 

@@ -368,7 +368,7 @@ describe("resolveDynamicReferences", () => {
       resolveDynamicReferences(doc);
 
       /* BaseFolder standalone: $dynamicRef resolved to self */
-      const baseChildren = getNestedProp(
+      const baseChildren = getNestedProp<Record<string, unknown>[]>(
         doc.components!.schemas!.BaseFolder,
         "properties",
         "children",
@@ -383,7 +383,7 @@ describe("resolveDynamicReferences", () => {
         unknown
       >;
       const allOf = wsFolder.allOf as Record<string, unknown>[];
-      const wsChildren = getNestedProp(
+      const wsChildren = getNestedProp<Record<string, unknown>[]>(
         allOf[0],
         "properties",
         "children",
@@ -507,13 +507,13 @@ describe("resolveDynamicReferences", () => {
 });
 
 /* Helper to traverse nested schema properties */
-function getNestedProp(
+function getNestedProp<T = Record<string, unknown>>(
   obj: unknown,
   ...keys: string[]
-): Record<string, unknown> {
-  let current = obj as Record<string, unknown>;
+): T {
+  let current: unknown = obj;
   for (const key of keys) {
-    current = current[key] as Record<string, unknown>;
+    current = (current as Record<string, unknown>)[key];
   }
-  return current;
+  return current as T;
 }
