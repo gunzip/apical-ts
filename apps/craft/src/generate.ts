@@ -17,6 +17,7 @@ import {
   Profiler,
   renameConflictingSchemas,
   renameSanitizationConflictingSchemas,
+  resolveDynamicReferences,
   resolveRequestBodies,
 } from "@apical-ts/core-utils";
 import { generateRoutes as generateRouteMetadata } from "@apical-ts/route-generator";
@@ -333,6 +334,22 @@ async function parseAndPreprocessOpenAPI(
   if (resolvedRequestBodiesCount > 0) {
     console.log(
       `✅ Resolved ${resolvedRequestBodiesCount} requestBody references`,
+    );
+  }
+
+  /*
+   * Pre-process: resolve $dynamicRef / $dynamicAnchor (JSON Schema 2020-12)
+   * into regular $ref pointers. Consumer schemas that override dynamic anchors
+   * get the template inlined with bindings resolved. Standalone templates
+   * resolve to their own default anchors. Unresolvable refs emit a warning and
+   * then fall through to z.unknown() via the normal schema converter path.
+   */
+  profiler?.start("preprocess:resolve-dynamic-refs");
+  const resolvedDynamicRefCount = resolveDynamicReferences(openApiDoc);
+  profiler?.end("preprocess:resolve-dynamic-refs");
+  if (resolvedDynamicRefCount > 0) {
+    console.log(
+      `✅ Resolved ${resolvedDynamicRefCount} $dynamicRef references`,
     );
   }
 

@@ -21,6 +21,7 @@ export {
   parseOpenAPIDocument,
 } from "./core-generator/parser.js";
 export { Profiler } from "./core-generator/profiler.js";
+export { resolveDynamicReferences } from "./core-generator/dynamic-ref-resolver.js";
 export { resolveRequestBodies } from "./core-generator/request-body-resolver.js";
 
 export {
