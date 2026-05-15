@@ -137,7 +137,7 @@ function isDiscriminatedUnionMemberCompatible(
     );
   }
 
-  if (!isObjectLikeDiscriminatedUnionMember(schema, resolvedSchemas)) {
+  if (!isObjectLikeDiscriminatedUnionMember(schema, resolvedSchemas, seenRefs)) {
     return false;
   }
 
@@ -145,6 +145,7 @@ function isDiscriminatedUnionMemberCompatible(
     schema,
     discriminatorProperty,
     resolvedSchemas,
+    seenRefs,
   );
   if (!discriminatorSchema) {
     return false;
@@ -197,6 +198,7 @@ function resolveReferencedSchema(
 function isObjectLikeDiscriminatedUnionMember(
   schema: SchemaObject,
   resolvedSchemas?: ResolvedSchemas,
+  seenRefs = new Set<string>(),
 ): boolean {
   if (schema.anyOf || schema.oneOf) {
     return false;
@@ -217,11 +219,20 @@ function isObjectLikeDiscriminatedUnionMember(
         if (!resolvedSchemas) return true;
         const refName = parseSchemaReference(member.$ref);
         if (!refName) return true;
+        if (seenRefs.has(refName.originalName)) return true;
         const resolved = resolvedSchemas[refName.originalName];
         if (!resolved || !isSchemaObject(resolved)) return true;
-        return isObjectLikeDiscriminatedUnionMember(resolved, resolvedSchemas);
+        return isObjectLikeDiscriminatedUnionMember(
+          resolved,
+          resolvedSchemas,
+          new Set(seenRefs).add(refName.originalName),
+        );
       }
-      return isObjectLikeDiscriminatedUnionMember(member, resolvedSchemas);
+      return isObjectLikeDiscriminatedUnionMember(
+        member,
+        resolvedSchemas,
+        seenRefs,
+      );
     });
   }
 
@@ -268,6 +279,7 @@ function findDiscriminatorProperty(
   schema: SchemaObject,
   propertyName: string,
   resolvedSchemas?: ResolvedSchemas,
+  seenRefs = new Set<string>(),
 ): ReferenceObject | SchemaObject | undefined {
   if (schema.properties?.[propertyName]) {
     return schema.properties[propertyName];
@@ -289,9 +301,18 @@ function findDiscriminatorProperty(
       if (!resolvedSchemas) continue;
       const refName = parseSchemaReference(member.$ref);
       if (!refName) continue;
+      if (seenRefs.has(refName.originalName)) continue;
       const resolved = resolvedSchemas[refName.originalName];
       if (!resolved || !isSchemaObject(resolved)) continue;
       resolvedMember = resolved;
+      const found = findDiscriminatorProperty(
+        resolvedMember,
+        propertyName,
+        resolvedSchemas,
+        new Set(seenRefs).add(refName.originalName),
+      );
+      if (found) return found;
+      continue;
     } else {
       resolvedMember = member;
     }
@@ -300,6 +321,7 @@ function findDiscriminatorProperty(
       resolvedMember,
       propertyName,
       resolvedSchemas,
+      seenRefs,
     );
     if (found) return found;
   }

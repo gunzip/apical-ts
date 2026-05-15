@@ -1785,6 +1785,45 @@ describe("zodSchemaToCode", () => {
       expect(result.code).toBe('z.discriminatedUnion("petType", [Dog, Cat])');
     });
 
+    it("should avoid infinite recursion for circular allOf refs", () => {
+      const schema: SchemaObject = {
+        discriminator: {
+          propertyName: "type",
+        },
+        oneOf: [
+          { $ref: "#/components/schemas/Circle" },
+          { $ref: "#/components/schemas/Square" },
+        ],
+      };
+
+      const resolvedSchemas = {
+        Circle: {
+          allOf: [
+            {
+              properties: {
+                radius: { type: "number" as const },
+                type: { const: "circle" },
+              },
+              required: ["type", "radius"],
+              type: "object" as const,
+            },
+            { $ref: "#/components/schemas/Circle" },
+          ],
+        } as SchemaObject,
+        Square: {
+          properties: {
+            side: { type: "number" as const },
+            type: { const: "square" },
+          },
+          required: ["type", "side"],
+          type: "object" as const,
+        },
+      };
+
+      const result = zodSchemaToCode(schema, { resolvedSchemas });
+      expect(result.code).toBe('z.discriminatedUnion("type", [Circle, Square])');
+    });
+
     it("should fall back to z.union when allOf member is not object-like", () => {
       const schema: SchemaObject = {
         discriminator: {
