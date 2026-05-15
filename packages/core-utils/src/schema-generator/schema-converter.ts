@@ -134,7 +134,9 @@ export function zodSchemaToCode(
     formatOverrides,
   );
   if (composition) {
-    if (schema.default !== undefined) {
+    /* Apply default only to anyOf/oneOf — allOf produces objects where a
+       primitive default (e.g. "off") would generate invalid Zod code. */
+    if (schema.default !== undefined && !schema.allOf) {
       composition.code = addDefaultValue(
         composition.code,
         schema.default,
