@@ -10,6 +10,7 @@ import {
   createSanitizedOperationEntries,
   writeOperationModuleFile,
 } from "@apical-ts/core-utils/shared";
+import { promises as fs } from "fs";
 import path from "path";
 
 import { generateConfigTypes } from "./config-generator.js";
@@ -24,7 +25,7 @@ export async function createOperationsDirectory(
 }
 
 /**
- * Writes the configuration file
+ * Writes the client runtime file
  */
 export async function writeConfigFile(
   authHeaders: string[],
@@ -32,8 +33,9 @@ export async function writeConfigFile(
   operationsDir: string,
 ): Promise<void> {
   const configContent = generateConfigTypes(authHeaders, serverUrls);
-  const configPath = path.join(operationsDir, "config.ts");
-  await writeTypeScriptFile(configPath, configContent);
+  const runtimePath = path.join(operationsDir, "runtime.ts");
+  await writeTypeScriptFile(runtimePath, configContent);
+  await fs.rm(path.join(operationsDir, "config.ts"), { force: true });
 }
 
 /**

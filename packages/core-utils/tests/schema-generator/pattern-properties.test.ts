@@ -149,7 +149,11 @@ describe("pattern-properties", () => {
         patternProperties: { "^S_": { type: "string" } },
       } as SchemaObject;
 
-      const result: ZodSchemaResult = { code: "", imports: new Set() };
+      const result: ZodSchemaResult = {
+        code: "",
+        helpers: new Set(),
+        imports: new Set(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toBe("z.record(z.string().regex(/^S_/), z.string())");
@@ -164,7 +168,11 @@ describe("pattern-properties", () => {
         },
       } as SchemaObject;
 
-      const result: ZodSchemaResult = { code: "", imports: new Set() };
+      const result: ZodSchemaResult = {
+        code: "",
+        helpers: new Set(),
+        imports: new Set(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toContain(
@@ -181,7 +189,11 @@ describe("pattern-properties", () => {
         propertyNames: { enum: ["alpha", "beta"] },
       };
 
-      const result: ZodSchemaResult = { code: "", imports: new Set() };
+      const result: ZodSchemaResult = {
+        code: "",
+        helpers: new Set(),
+        imports: new Set(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toBe(
@@ -196,7 +208,11 @@ describe("pattern-properties", () => {
         propertyNames: { pattern: "^x-" },
       } as SchemaObject;
 
-      const result: ZodSchemaResult = { code: "", imports: new Set() };
+      const result: ZodSchemaResult = {
+        code: "",
+        helpers: new Set(),
+        imports: new Set(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toBe("z.record(z.string().regex(/^x-/), z.string())");
@@ -209,7 +225,11 @@ describe("pattern-properties", () => {
         patternProperties: { "^x-": { type: "number" } },
       } as SchemaObject;
 
-      const result: ZodSchemaResult = { code: "", imports: new Set() };
+      const result: ZodSchemaResult = {
+        code: "",
+        helpers: new Set(),
+        imports: new Set(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toBe(
@@ -225,7 +245,11 @@ describe("pattern-properties", () => {
         patternProperties: { "^x-": { type: "number" } },
       } as SchemaObject;
 
-      const result: ZodSchemaResult = { code: "", imports: new Set() };
+      const result: ZodSchemaResult = {
+        code: "",
+        helpers: new Set(),
+        imports: new Set(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toBe(
@@ -241,7 +265,11 @@ describe("pattern-properties", () => {
         patternProperties: { "^x-": { type: "number" } },
       } as SchemaObject;
 
-      const result: ZodSchemaResult = { code: "", imports: new Set() };
+      const result: ZodSchemaResult = {
+        code: "",
+        helpers: new Set(),
+        imports: new Set(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toBe(
@@ -256,7 +284,11 @@ describe("pattern-properties", () => {
         additionalProperties: { type: "number" },
       };
 
-      const result: ZodSchemaResult = { code: "", imports: new Set() };
+      const result: ZodSchemaResult = {
+        code: "",
+        helpers: new Set(),
+        imports: new Set(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toBe('z.record(z.enum(["a", "b", "c"]), z.number())');
@@ -269,7 +301,11 @@ describe("pattern-properties", () => {
         required: ["id"],
       };
 
-      const result: ZodSchemaResult = { code: "", imports: new Set() };
+      const result: ZodSchemaResult = {
+        code: "",
+        helpers: new Set(),
+        imports: new Set(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toBe('z.object({"id": z.string()})');
@@ -283,7 +319,11 @@ describe("pattern-properties", () => {
         patternProperties: { "^meta_": { type: "string" } },
       } as SchemaObject;
 
-      const result: ZodSchemaResult = { code: "", imports: new Set() };
+      const result: ZodSchemaResult = {
+        code: "",
+        helpers: new Set(),
+        imports: new Set(),
+      };
       handleObjectType(schema, result, zodSchemaToCode);
 
       expect(result.code).toBe(

@@ -11,6 +11,8 @@ export type ResolvedSchemas = NonNullable<
   OpenAPIObject["components"]
 >["schemas"];
 
+export type GeneratedSchemaHelper = "exclusiveUnion";
+
 /**
  * Options for zodSchemaToCode function
  *
@@ -33,6 +35,10 @@ export interface ZodSchemaCodeOptions {
    * Set of schema names that need to be imported
    */
   imports?: Set<string>;
+  /**
+   * Set of generated helper utilities required by the emitted schema code.
+   */
+  helpers?: Set<GeneratedSchemaHelper>;
   /**
    * Whether this is a top-level schema (affects naming and export generation)
    */
@@ -81,4 +87,8 @@ export interface ZodSchemaResult {
    * overrides.
    */
   imports: Set<string>;
+  /**
+   * Set of generated helper utilities required by the emitted schema code.
+   */
+  helpers: Set<GeneratedSchemaHelper>;
 }

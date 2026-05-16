@@ -942,6 +942,7 @@ describe("zodSchemaToCode", () => {
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toBe("exclusiveUnion([z.string(), z.number()])");
+    expect(result.helpers.has("exclusiveUnion")).toBe(true);
     expect(result.code).not.toContain("discriminatedUnion");
   });
 
@@ -980,6 +981,7 @@ describe("zodSchemaToCode", () => {
     };
     const oneOfResult = zodSchemaToCode(oneOfSchema);
     expect(oneOfResult.code).toContain("exclusiveUnion([");
+    expect(oneOfResult.helpers.has("exclusiveUnion")).toBe(true);
     expect(oneOfResult.code).not.toContain("superRefine");
   });
 
@@ -1062,6 +1064,7 @@ describe("zodSchemaToCode", () => {
     };
     const result = zodSchemaToCode(schema);
     expect(result.code).toContain('z.discriminatedUnion("action"');
+    expect(result.helpers.has("exclusiveUnion")).toBe(false);
     expect(result.code).not.toContain("exclusiveUnion");
     expect(result.code).not.toContain("superRefine");
   });

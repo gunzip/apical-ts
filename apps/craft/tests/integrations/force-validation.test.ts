@@ -11,7 +11,7 @@ describe("Dynamic Force Validation Integration Test", () => {
   const generatedDir = "tests/integrations/generated";
 
   it("should contain both ApiResponseWithParse and ApiResponseWithForcedParse types in single generated client", async () => {
-    const configPath = join(generatedDir, "client/config.ts");
+    const configPath = join(generatedDir, "client/runtime.ts");
     const content = await readFile(configPath, "utf-8");
     expect(content).toContain("export type ApiResponseWithParse<");
     expect(content).toContain("export type ApiResponseWithForcedParse<");

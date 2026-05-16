@@ -1,6 +1,6 @@
 import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 import { Result, err, ok } from "neverthrow";
-import { globalConfig } from "../generated/client/config.js";
+import { globalConfig } from "../generated/client/runtime.js";
 
 type ApiError<T> = Exclude<
   T,

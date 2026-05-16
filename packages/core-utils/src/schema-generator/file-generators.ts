@@ -4,7 +4,7 @@ import path from "node:path";
 import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
 import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
-import type { ResolvedSchemas } from "./types.js";
+import type { GeneratedSchemaHelper, ResolvedSchemas } from "./types.js";
 
 import { analyzeReadWriteProperties } from "../shared/types.js";
 import {
@@ -38,6 +38,7 @@ interface RecursiveSchemaFileOptions {
 interface SchemaFileResult {
   content: string;
   fileName: string;
+  helpers?: Set<GeneratedSchemaHelper>;
   /** Additional schema variant files (complete schema files, not re-exports) */
   variantFiles?: SchemaFileResult[];
 }
@@ -93,7 +94,7 @@ export async function generateRecursiveSchemaFile(
   }
 
   const commentSection = generateCommentSection(description);
-  const { imports, shape } = buildRecursiveShape({
+  const { helpers, imports, shape } = buildRecursiveShape({
     extraProps,
     formatOverrides,
     name,
@@ -115,6 +116,7 @@ export async function generateRecursiveSchemaFile(
       extraProps,
       formatShape: true,
       formatOverrides,
+      helpers,
       imports,
       recursiveContext,
       resolvedSchemas,
@@ -140,11 +142,13 @@ export async function generateRecursiveSchemaFile(
     commentSection,
     importsSection,
     schemaCode,
+    objectCodeResult.helpers,
   );
 
   return {
     content,
     fileName: `${name}.ts`,
+    helpers: objectCodeResult.helpers,
   };
 }
 
@@ -218,6 +222,7 @@ export async function generateSchemaFile(
     commentSection,
     importsSection,
     schemaResult.code,
+    schemaResult.helpers,
     schemaResult.extensibleEnumValues,
     recursiveTypeAlias,
   );
@@ -238,6 +243,7 @@ export async function generateSchemaFile(
   return {
     content,
     fileName: `${name}.ts`,
+    helpers: schemaResult.helpers,
     variantFiles,
   };
 }
@@ -263,12 +269,11 @@ function assembleFileContent(
   commentSection: string,
   importsSection: string,
   schemaCode: string,
+  helpers: Set<GeneratedSchemaHelper>,
   extensibleEnumValues?: unknown[],
   recursiveTypeAlias?: string,
 ): string {
-  const helpersImport = schemaCode.includes("exclusiveUnion(")
-    ? `import { exclusiveUnion } from "./_helpers.js";\n`
-    : "";
+  const helpersImport = buildHelpersImportSection(helpers);
 
   if (extensibleEnumValues) {
     const enumValues = extensibleEnumValues
@@ -286,6 +291,25 @@ function assembleFileContent(
       : `export type ${name} = z.infer<typeof ${name}>;`;
     return `import * as z from 'zod';\n${helpersImport}${importsSection}\n${typeContent}\n${schemaContent}`;
   }
+}
+
+function buildHelpersImportSection(
+  helpers: Set<GeneratedSchemaHelper>,
+): string {
+  if (helpers.size === 0) {
+    return "";
+  }
+
+  const helperImports: string[] = [];
+  if (helpers.has("exclusiveUnion")) {
+    helperImports.push("exclusiveUnion");
+  }
+
+  if (helperImports.length === 0) {
+    return "";
+  }
+
+  return `import { ${helperImports.join(", ")} } from "./runtime.js";\n`;
 }
 
 /* Helper function to generate comment section from description */

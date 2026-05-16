@@ -3,7 +3,7 @@ import {
   serializeQueryParam,
   serializePathParam,
   serializeHeaderParam,
-} from "./generated/client/config.js";
+} from "./generated/client/runtime.js";
 
 describe("Parameter Serialization Utilities", () => {
   describe("serializeQueryParam", () => {

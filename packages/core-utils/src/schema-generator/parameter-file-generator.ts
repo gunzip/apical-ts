@@ -136,12 +136,11 @@ async function generateParameterSchemaFile(
 
   /* Build the file imports */
   const imports = [`import * as z from "zod";`];
-  const usesExclusiveUnion =
-    result.schemaCode.includes("exclusiveUnion(") ||
-    serverSchemaCode.includes("exclusiveUnion(");
-
-  if (usesExclusiveUnion) {
-    imports.push(`import { exclusiveUnion } from "./_helpers.js";`);
+  if (
+    result.helpers.has("exclusiveUnion") ||
+    serverResult.helpers.has("exclusiveUnion")
+  ) {
+    imports.push(`import { exclusiveUnion } from "./runtime.js";`);
   }
 
   /* Add other type imports */

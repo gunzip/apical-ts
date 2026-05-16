@@ -1,7 +1,7 @@
 import {
   configureOperations,
   globalConfig,
-} from "../generated/client/config.js";
+} from "../generated/client/runtime.js";
 import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 import { getInventory } from "../generated/client/getInventory.js";
 import { getPetById } from "../generated/client/getPetById.js";

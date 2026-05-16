@@ -316,7 +316,7 @@ pnpx @apical-ts/craft generate -i <spec> -o <output> --client
 ├── package.json                  # Generated package metadata
 ├── operations/                   # Client operations (if --client)
 │   ├── index.ts                  # Operation exports and configuration
-│   ├── config.ts                 # Global configuration types
+│   ├── runtime.ts                 # Global configuration types
 │   └── <operationId>.ts          # Individual operation functions
 └── schemas/                      # Zod schemas
   ├── <SchemaName>.ts           # Individual schema files

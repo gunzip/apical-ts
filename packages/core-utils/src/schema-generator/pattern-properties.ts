@@ -2,7 +2,11 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 
 import { isSchemaObject } from "openapi3-ts/oas31";
 
-import type { ZodSchemaCodeOptions, ZodSchemaResult } from "./types.js";
+import type {
+  GeneratedSchemaHelper,
+  ZodSchemaCodeOptions,
+  ZodSchemaResult,
+} from "./types.js";
 
 /*
  * patternProperties is a valid JSON Schema keyword preserved at runtime in
@@ -17,6 +21,7 @@ interface SchemaWithPatternProperties extends SchemaObject {
  * Result of analyzing pattern properties for code generation
  */
 export interface PatternPropertiesResult {
+  helpers: Set<GeneratedSchemaHelper>;
   keyCode: string;
   refinement?: string;
   valueCode: string;
@@ -61,12 +66,14 @@ export function generatePatternPropertiesValueCode(
   ) => ZodSchemaResult,
   options: ZodSchemaCodeOptions = {},
 ): PatternPropertiesResult {
+  const helpers = options.helpers || new Set<GeneratedSchemaHelper>();
   const imports = options.imports || new Set<string>();
   const entries = Object.entries(patternProperties);
   const valueResults = entries.map(([, valueSchema]) =>
     zodSchemaToCode(valueSchema, {
       currentSchemaName: options.currentSchemaName,
       formatOverrides: options.formatOverrides,
+      helpers,
       imports,
       recursiveContext: options.recursiveContext,
       resolvedSchemas: options.resolvedSchemas,
@@ -78,6 +85,9 @@ export function generatePatternPropertiesValueCode(
     for (const imp of r.imports) {
       imports.add(imp);
     }
+    for (const helper of r.helpers) {
+      helpers.add(helper);
+    }
   }
 
   /*
@@ -86,7 +96,7 @@ export function generatePatternPropertiesValueCode(
   if (entries.length === 1) {
     const [pattern] = entries;
     const keyCode = `z.string().regex(/${escapeRegexForLiteral(pattern[0])}/)`;
-    return { imports, keyCode, valueCode: valueResults[0].code };
+    return { helpers, imports, keyCode, valueCode: valueResults[0].code };
   }
 
   /*
@@ -96,7 +106,7 @@ export function generatePatternPropertiesValueCode(
   const valueCode = `z.union([${valueResults.map((r) => r.code).join(", ")}])`;
   const refinement = generateSuperRefine(entries, valueResults);
 
-  return { imports, keyCode: "z.string()", refinement, valueCode };
+  return { helpers, imports, keyCode: "z.string()", refinement, valueCode };
 }
 
 /*
@@ -112,13 +122,19 @@ export function generatePropertyNamesKeyCode(
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
   options: ZodSchemaCodeOptions = {},
-): { code: string; imports: Set<string> } {
+): {
+  code: string;
+  helpers: Set<GeneratedSchemaHelper>;
+  imports: Set<string>;
+} {
+  const helpers = options.helpers || new Set<GeneratedSchemaHelper>();
   const imports = options.imports || new Set<string>();
 
   if (!isSchemaObject(propertyNames)) {
     /* Reference — delegate to zodSchemaToCode */
     const refResult = zodSchemaToCode(propertyNames, {
       currentSchemaName: options.currentSchemaName,
+      helpers,
       imports,
       recursiveContext: options.recursiveContext,
       resolvedSchemas: options.resolvedSchemas,
@@ -127,7 +143,10 @@ export function generatePropertyNamesKeyCode(
     for (const imp of refResult.imports) {
       imports.add(imp);
     }
-    return { code: refResult.code, imports };
+    for (const helper of refResult.helpers) {
+      helpers.add(helper);
+    }
+    return { code: refResult.code, helpers, imports };
   }
 
   /* Enumerable keys */
@@ -137,17 +156,17 @@ export function generatePropertyNamesKeyCode(
       .map((v) => JSON.stringify(v));
 
     if (literals.length > 0) {
-      return { code: `z.enum([${literals.join(", ")}])`, imports };
+      return { code: `z.enum([${literals.join(", ")}])`, helpers, imports };
     }
   }
 
   /* Pattern-constrained keys */
   if (propertyNames.pattern) {
     const escapedPattern = escapeRegexForLiteral(propertyNames.pattern);
-    return { code: `z.string().regex(/${escapedPattern}/)`, imports };
+    return { code: `z.string().regex(/${escapedPattern}/)`, helpers, imports };
   }
 
-  return { code: "z.string()", imports };
+  return { code: "z.string()", helpers, imports };
 }
 
 /*

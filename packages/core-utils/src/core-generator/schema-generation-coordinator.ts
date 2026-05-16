@@ -89,11 +89,12 @@ export async function generateSchemas(
   const schemasDir = path.join(output, "schemas");
   await fs.mkdir(schemasDir, { recursive: true });
 
-  /* Emit the _helpers.ts utility file (exclusiveUnion for oneOf semantics) */
+  /* Emit the schema runtime.ts utility file (exclusiveUnion for oneOf semantics) */
   await fs.writeFile(
     path.join(schemasDir, HELPERS_FILE_NAME),
     getHelpersFileContent(),
   );
+  await fs.rm(path.join(schemasDir, "_helpers.ts"), { force: true });
 
   const limit = pLimit(concurrency);
   const context: SchemaGenerationContext = {

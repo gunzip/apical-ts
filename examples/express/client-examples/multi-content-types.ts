@@ -1,4 +1,4 @@
-import { globalConfig } from "../generated/client/config.js";
+import { globalConfig } from "../generated/client/runtime.js";
 import { updatePet } from "../generated/client/updatePet.js";
 
 const parseXml = () => {

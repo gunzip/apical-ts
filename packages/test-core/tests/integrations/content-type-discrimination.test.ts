@@ -24,7 +24,7 @@ describe("Content Type Discrimination Integration Test", () => {
   });
 
   it("should have correct TypeScript type for ApiResponseWithForcedParse", async () => {
-    const configPath = join(generatedDir, "client/config.ts");
+    const configPath = join(generatedDir, "client/runtime.ts");
     const content = await readFile(configPath, "utf-8");
 
     // Verify the type definition includes the new structure

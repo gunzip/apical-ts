@@ -3,13 +3,14 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 import type { ExtraPropsMode } from "../shared/types.js";
 import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
-import type { ResolvedSchemas } from "./types.js";
+import type { GeneratedSchemaHelper, ResolvedSchemas } from "./types.js";
 
 /**
  * Result of object code generation
  */
 interface ObjectCodeResult {
   code: string;
+  helpers: Set<GeneratedSchemaHelper>;
   imports: Set<string>;
 }
 
@@ -21,6 +22,7 @@ export interface ObjectPropertyOptions {
   extraProps?: ExtraPropsMode;
   formatShape?: boolean;
   formatOverrides?: StringFormatOverrideRegistry;
+  helpers?: Set<GeneratedSchemaHelper>;
   imports?: Set<string>;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
@@ -61,6 +63,7 @@ export function generateObjectCode(
   },
   options: ObjectPropertyOptions = {},
 ): ObjectCodeResult {
+  const helpers = options.helpers || new Set<GeneratedSchemaHelper>();
   const imports = options.imports || new Set<string>();
   const extraProps = options.extraProps || "strip";
 
@@ -75,6 +78,7 @@ export function generateObjectCode(
   ) {
     return {
       code: "z.object({}).catchall(z.unknown())",
+      helpers,
       imports,
     };
   }
@@ -103,6 +107,7 @@ export function generateObjectCode(
     /* Schema object - validate additional properties against the schema */
     const additionalResult = zodSchemaToCode(additionalProperties, {
       currentSchemaName: options.currentSchemaName,
+      helpers,
       imports,
       formatOverrides: options.formatOverrides,
       recursiveContext: options.recursiveContext,
@@ -114,6 +119,7 @@ export function generateObjectCode(
 
     return {
       code,
+      helpers,
       imports: mergedImports,
     };
   }
@@ -139,6 +145,7 @@ export function generateObjectCode(
 
   return {
     code,
+    helpers,
     imports,
   };
 }

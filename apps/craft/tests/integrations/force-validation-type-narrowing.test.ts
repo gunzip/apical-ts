@@ -4,7 +4,7 @@ import {
   createDocument,
   CreateDocumentResponseMap,
 } from "./generated/client/createDocument.js";
-import type { GlobalConfig } from "./generated/client/config.js";
+import type { GlobalConfig } from "./generated/client/runtime.js";
 
 /**
  * Integration test for compile-time type narrowing with forceValidation.

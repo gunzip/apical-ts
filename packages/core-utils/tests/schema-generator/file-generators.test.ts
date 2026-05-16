@@ -222,6 +222,7 @@ describe("schema-generator file-generators", () => {
       vi.mocked(zodSchemaToCode).mockReturnValue(
         mockSchemaResult({
           code: "exclusiveUnion([z.string(), z.number()])",
+          helpers: new Set<"exclusiveUnion">(["exclusiveUnion"]),
           imports: new Set(),
         }),
       );
@@ -229,7 +230,7 @@ describe("schema-generator file-generators", () => {
       const result = await generateSchemaFile("SearchHit", schema);
 
       expect(result.content).toContain(
-        'import { exclusiveUnion } from "./_helpers.js";',
+        'import { exclusiveUnion } from "./runtime.js";',
       );
       expect(result.content).toContain("export const SearchHit =");
     });
@@ -243,6 +244,24 @@ describe("schema-generator file-generators", () => {
       vi.mocked(zodSchemaToCode).mockReturnValue(
         mockSchemaResult({
           code: "z.object({ name: z.string() })",
+          imports: new Set(),
+        }),
+      );
+
+      const result = await generateSchemaFile("User", schema);
+
+      expect(result.content).not.toContain("_helpers");
+    });
+
+    it("should not include _helpers import when only the description contains exclusiveUnion(", async () => {
+      const schema: SchemaObject = {
+        type: "string",
+      };
+
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: 'z.string().describe("mentions exclusiveUnion(")',
+          helpers: new Set(),
           imports: new Set(),
         }),
       );
@@ -534,6 +553,7 @@ function mockSchemaResult(
   overrides: Partial<{
     code: string;
     extensibleEnumValues: string[];
+    helpers: Set<"exclusiveUnion">;
     imports: Set<string>;
   }>,
 ) {
@@ -546,6 +566,7 @@ function mockSchemaResult(
 function createMockSchemaResult() {
   return {
     code: "z.unknown()",
+    helpers: new Set<"exclusiveUnion">(),
     imports: new Set<string>(),
   };
 }
