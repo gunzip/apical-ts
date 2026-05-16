@@ -6,7 +6,7 @@
 export function renderApiResponseParsingUtilities(): string {
   return `/* Overload without deserializers */
 export function parseApiResponseUnknownData<
-  TSchemaMap extends Record<string, { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }>
+  TSchemaMap extends Record<string, z.ZodType>
 >(
   response: MinimalResponse,
   data: unknown,
@@ -20,7 +20,7 @@ export function parseApiResponseUnknownData<
 
 /* Overload with deserializers */
 export function parseApiResponseUnknownData<
-  TSchemaMap extends Record<string, { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }>
+  TSchemaMap extends Record<string, z.ZodType>
 >(
   response: MinimalResponse,
   data: unknown,
@@ -35,10 +35,7 @@ export function parseApiResponseUnknownData<
 
 /* Implementation */
 export function parseApiResponseUnknownData<
-  TSchemaMap extends Record<
-    string,
-    { safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }
-  >
+  TSchemaMap extends Record<string, z.ZodType>
 >(
   response: MinimalResponse,
   data: unknown,

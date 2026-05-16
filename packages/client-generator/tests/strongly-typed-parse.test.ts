@@ -87,11 +87,21 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
     it("should have correct constraint on TSchemaMap", () => {
       const utilityCode = renderUtilityFunctions();
 
-      /* Should have proper constraint on schema map */
+      /* Should use z.ZodType as the constraint (cheaper for the checker than structural safeParse) */
       expect(utilityCode).toContain(
-        "TSchemaMap extends Record<string, { safeParse:",
+        "TSchemaMap extends Record<string, z.ZodType>",
       );
-      expect(utilityCode).toContain("z.ZodSafeParseResult<unknown>");
+    });
+
+    it("should not use structural safeParse constraint (regression guard for #167)", () => {
+      const utilityCode = renderUtilityFunctions();
+
+      /* The old structural { safeParse: ... } constraint caused expensive
+       * deep structural comparison for every Zod schema at each call site.
+       * Ensure it is not reintroduced. */
+      expect(utilityCode).not.toContain(
+        "{ safeParse: (value: unknown) => z.ZodSafeParseResult<unknown> }",
+      );
     });
   });
 });
