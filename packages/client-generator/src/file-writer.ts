@@ -35,7 +35,6 @@ export async function writeConfigFile(
   const configContent = generateConfigTypes(authHeaders, serverUrls);
   const runtimePath = path.join(operationsDir, "runtime.ts");
   await writeTypeScriptFile(runtimePath, configContent);
-  await fs.rm(path.join(operationsDir, "config.ts"), { force: true });
 }
 
 /**

@@ -94,7 +94,6 @@ export async function generateSchemas(
     path.join(schemasDir, HELPERS_FILE_NAME),
     getHelpersFileContent(),
   );
-  await fs.rm(path.join(schemasDir, "_helpers.ts"), { force: true });
 
   const limit = pLimit(concurrency);
   const context: SchemaGenerationContext = {
