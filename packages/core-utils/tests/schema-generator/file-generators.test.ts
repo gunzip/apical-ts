@@ -214,6 +214,43 @@ describe("schema-generator file-generators", () => {
       expect(result.content).toMatch(/import \{ Role \} from "\.\/Role\.js";/);
       expect(result.content).toMatch(/import \{ User \} from "\.\/User\.js";/);
     });
+    it("should include _helpers import when schema uses exclusiveUnion", async () => {
+      const schema: SchemaObject = {
+        oneOf: [{ type: "string" }, { type: "number" }],
+      };
+
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "exclusiveUnion([z.string(), z.number()])",
+          imports: new Set(),
+        }),
+      );
+
+      const result = await generateSchemaFile("SearchHit", schema);
+
+      expect(result.content).toContain(
+        'import { exclusiveUnion } from "./_helpers.js";',
+      );
+      expect(result.content).toContain("export const SearchHit =");
+    });
+
+    it("should not include _helpers import when schema does not use exclusiveUnion", async () => {
+      const schema: SchemaObject = {
+        type: "object",
+        properties: { name: { type: "string" } },
+      };
+
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ name: z.string() })",
+          imports: new Set(),
+        }),
+      );
+
+      const result = await generateSchemaFile("User", schema);
+
+      expect(result.content).not.toContain("_helpers");
+    });
   });
 
   describe("generateRequestSchemaFile", () => {

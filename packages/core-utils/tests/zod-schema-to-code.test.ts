@@ -936,18 +936,13 @@ describe("zodSchemaToCode", () => {
     expect(result.code).toBe("z.union([Dog, Cat])");
   });
 
-  it("should use superRefine for oneOf when no discriminator is present", () => {
+  it("should use exclusiveUnion helper for oneOf when no discriminator is present", () => {
     const schema: SchemaObject = {
       oneOf: [{ type: "string" }, { type: "number" }],
     };
     const result = zodSchemaToCode(schema);
-    expect(result.code).toContain(
-      "z.union([z.string(), z.number()]).superRefine(",
-    );
-    expect(result.code).toContain("Should pass exactly one schema");
+    expect(result.code).toBe("exclusiveUnion([z.string(), z.number()])");
     expect(result.code).not.toContain("discriminatedUnion");
-    // Note: Skip evalZod for complex superRefine code as it contains TypeScript types
-    // The functionality is tested in integration tests
   });
 
   it("should handle anyOf vs oneOf differently for overlapping schemas", () => {
@@ -979,14 +974,96 @@ describe("zodSchemaToCode", () => {
     const anyOfResult = zodSchemaToCode(anyOfSchema);
     expect(anyOfResult.code).toContain("z.union([");
 
-    // Test oneOf: should use superRefine for strict validation
+    // Test oneOf: should use exclusiveUnion helper for strict validation
     const oneOfSchema: SchemaObject = {
       oneOf: [normalUserSchema, adminUserSchema],
     };
     const oneOfResult = zodSchemaToCode(oneOfSchema);
-    expect(oneOfResult.code).toContain("z.union([");
-    expect(oneOfResult.code).toContain("]).superRefine(");
-    expect(oneOfResult.code).toContain("Should pass exactly one schema");
+    expect(oneOfResult.code).toContain("exclusiveUnion([");
+    expect(oneOfResult.code).not.toContain("superRefine");
+  });
+
+  it("should not duplicate variant expressions in oneOf output", () => {
+    const schema: SchemaObject = {
+      oneOf: [
+        {
+          properties: {
+            action: { enum: ["cache"], type: "string" },
+            directive: { type: "string" },
+            qualifiers: {
+              items: { type: "string" },
+              type: "array",
+            },
+          },
+          required: ["action", "directive"],
+          type: "object",
+        },
+        {
+          properties: {
+            action: { enum: ["rewrite"], type: "string" },
+            headers: {
+              items: { type: "string" },
+              type: "array",
+            },
+          },
+          required: ["action"],
+          type: "object",
+        },
+      ],
+    };
+    const result = zodSchemaToCode(schema);
+
+    /* Variant schemas appear exactly once as arguments to exclusiveUnion */
+    expect(result.code).toMatch(/^exclusiveUnion\(\[/);
+    expect(result.code).not.toContain("superRefine");
+    expect(result.code).not.toContain("safeParse");
+
+    /* Each variant object expression appears only once */
+    const objectMatches = result.code.match(/z\.object\(/g);
+    expect(objectMatches).toHaveLength(2);
+  });
+
+  it("should use exclusiveUnion for oneOf with $ref members", () => {
+    const schema: SchemaObject = {
+      oneOf: [
+        { $ref: "#/components/schemas/PlacementInfoNoStatus" },
+        { $ref: "#/components/schemas/PlacementInfo" },
+      ],
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe(
+      "exclusiveUnion([PlacementInfoNoStatus, PlacementInfo])",
+    );
+    expect(result.imports.has("PlacementInfoNoStatus")).toBe(true);
+    expect(result.imports.has("PlacementInfo")).toBe(true);
+  });
+
+  it("should still use z.discriminatedUnion when a discriminator is declared and valid", () => {
+    const schema: SchemaObject = {
+      discriminator: { propertyName: "action" },
+      oneOf: [
+        {
+          properties: {
+            action: { const: "cache", type: "string" },
+            directive: { type: "string" },
+          },
+          required: ["action"],
+          type: "object",
+        },
+        {
+          properties: {
+            action: { const: "rewrite", type: "string" },
+            headers: { items: { type: "string" }, type: "array" },
+          },
+          required: ["action"],
+          type: "object",
+        },
+      ],
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toContain('z.discriminatedUnion("action"');
+    expect(result.code).not.toContain("exclusiveUnion");
+    expect(result.code).not.toContain("superRefine");
   });
 
   it("should handle x-extensible-enum for strings", () => {
@@ -1993,7 +2070,7 @@ describe("zodSchemaToCode", () => {
       };
       const result = zodSchemaToCode(schema);
       expect(result.code).toContain(".default(42)");
-      expect(result.code).toContain("z.union([z.string(), z.number()])");
+      expect(result.code).toContain("exclusiveUnion([z.string(), z.number()])");
     });
 
     it("should preserve a null default on an anyOf schema", () => {

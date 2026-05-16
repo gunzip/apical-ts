@@ -264,24 +264,8 @@ export function handleUnionSchema(
     // anyOf: accepts values that match any of the schemas
     result.code = `z.union([${schemasCodes.join(", ")}])`;
   } else {
-    // oneOf: must match exactly one schema - use union with superRefine for validation
-    result.code = `z.union([${schemasCodes.join(", ")}]).superRefine((x, ctx) => {
-  const schemas = [${schemasCodes.join(", ")}];
-  const errors = schemas.reduce<z.ZodError[]>(
-    (errors, schema) =>
-      ((result) => (result.error ? [...errors, result.error] : errors))(
-        schema.safeParse(x),
-      ),
-    [],
-  );
-  if (schemas.length - errors.length !== 1) {
-    ctx.addIssue({
-      code: "invalid_union",
-      errors: errors.map(error => error.issues),
-      message: "Invalid input: Should pass exactly one schema",
-    });
-  }
-})`;
+    // oneOf: must match exactly one schema - delegate to exclusiveUnion helper
+    result.code = `exclusiveUnion([${schemasCodes.join(", ")}])`;
   }
   return result;
 }

@@ -266,13 +266,17 @@ function assembleFileContent(
   extensibleEnumValues?: unknown[],
   recursiveTypeAlias?: string,
 ): string {
+  const helpersImport = schemaCode.includes("exclusiveUnion(")
+    ? `import { exclusiveUnion } from "./_helpers.js";\n`
+    : "";
+
   if (extensibleEnumValues) {
     const enumValues = extensibleEnumValues
       .map((e: unknown) => JSON.stringify(e))
       .join(" | ");
     const typeContent = `export type ${name} = ${enumValues} | (string & {});`;
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
-    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
+    return `import * as z from 'zod';\n${helpersImport}${importsSection}\n${schemaContent}\n${typeContent}`;
   } else {
     const schemaContent = recursiveTypeAlias
       ? `${commentSection}export const ${name}: z.ZodType<${name}> = ${schemaCode};`
@@ -280,7 +284,7 @@ function assembleFileContent(
     const typeContent = recursiveTypeAlias
       ? `export type ${name} = ${recursiveTypeAlias};`
       : `export type ${name} = z.infer<typeof ${name}>;`;
-    return `import * as z from 'zod';\n${importsSection}\n${typeContent}\n${schemaContent}`;
+    return `import * as z from 'zod';\n${helpersImport}${importsSection}\n${typeContent}\n${schemaContent}`;
   }
 }
 
