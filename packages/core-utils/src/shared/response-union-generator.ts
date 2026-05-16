@@ -134,6 +134,70 @@ export function renderUnionType(
   return unionTypes.length > 0 ? unionTypes.join(" | ") : defaultType;
 }
 
+/* Valid HTTP 4xx client error status codes (IANA-registered + common non-standard) */
+const VALID_4XX_STATUS_CODES = [
+  "400",
+  "401",
+  "402",
+  "403",
+  "404",
+  "405",
+  "406",
+  "407",
+  "408",
+  "409",
+  "410",
+  "411",
+  "412",
+  "413",
+  "414",
+  "415",
+  "416",
+  "417",
+  "418",
+  "421",
+  "422",
+  "423",
+  "424",
+  "425",
+  "426",
+  "428",
+  "429",
+  "431",
+  "444",
+  "449",
+  "450",
+  "451",
+  "499",
+];
+
+/* Valid HTTP 5xx server error status codes (IANA-registered + common non-standard) */
+const VALID_5XX_STATUS_CODES = [
+  "500",
+  "501",
+  "502",
+  "503",
+  "504",
+  "505",
+  "506",
+  "507",
+  "508",
+  "509",
+  "510",
+  "511",
+  "520",
+  "521",
+  "522",
+  "523",
+  "524",
+  "525",
+  "526",
+  "527",
+  "530",
+  "598",
+  "599",
+];
+
 /**
  * Expands wildcard status codes (e.g., "4XX", "4xx", "5XX", "5xx") into arrays of concrete status codes.
  * Returns the original code if it's not a wildcard pattern.
@@ -145,12 +209,10 @@ function expandWildcardStatusCode(statusCode: string): string[] {
   const normalizedStatusCode = statusCode.toUpperCase();
 
   if (normalizedStatusCode === "4XX") {
-    // Expand to all 4xx codes (400-451 covers all IANA-registered client error codes)
-    return Array.from({ length: 52 }, (_, i) => String(400 + i));
+    return VALID_4XX_STATUS_CODES;
   }
   if (normalizedStatusCode === "5XX") {
-    // Expand to all 5xx codes (500-511 covers all IANA-registered server error codes)
-    return Array.from({ length: 12 }, (_, i) => String(500 + i));
+    return VALID_5XX_STATUS_CODES;
   }
   // Not a wildcard, return as-is
   return [statusCode];

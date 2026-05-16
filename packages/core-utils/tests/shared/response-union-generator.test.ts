@@ -21,12 +21,19 @@ describe("response union generator", () => {
         { statusCode: "200" },
         { statusCode: "400" },
         { statusCode: "451" },
+        { statusCode: "499" },
         { statusCode: "500" },
         { statusCode: "511" },
+        { statusCode: "599" },
       ]),
     );
+    // Wildcard codes should not appear in expanded output
     expect(result.unionMembers).not.toEqual(
       expect.arrayContaining([{ statusCode: "4xx" }, { statusCode: "5xx" }]),
+    );
+    // Non-standard codes that are not real HTTP statuses should not be included
+    expect(result.unionMembers).not.toEqual(
+      expect.arrayContaining([{ statusCode: "452" }, { statusCode: "512" }]),
     );
   });
 });
