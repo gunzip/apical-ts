@@ -1,11 +1,11 @@
 /*
- * Generates the content of the runtime.ts file emitted into the schemas directory.
- * The exclusiveUnion helper validates oneOf (exclusive union) semantics at runtime
- * without duplicating variant schema expressions in the generated output.
+ * Central registry for generated schema helpers. The helper key is what schema
+ * generation tracks in result.helpers; the importName and implementation are
+ * then derived from this single source of truth.
  */
-
-const EXCLUSIVE_UNION_HELPER = `import * as z from 'zod';
-
+const GENERATED_SCHEMA_HELPERS = {
+  exclusiveUnion: {
+    implementation: `
 /*
  * Validates that exactly one schema in the union matches the input.
  * Provides oneOf (exclusive union) semantics on top of z.union.
@@ -28,10 +28,33 @@ export function exclusiveUnion<T extends [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTy
     }
   });
 }
-`;
+`,
+    importName: "exclusiveUnion",
+  },
+} as const;
+
+export type GeneratedSchemaHelper = keyof typeof GENERATED_SCHEMA_HELPERS;
+
+export function buildGeneratedSchemaHelpersImport(
+  helpers: Iterable<GeneratedSchemaHelper>,
+): string {
+  const helperImports = Array.from(new Set(helpers))
+    .map((helper) => GENERATED_SCHEMA_HELPERS[helper].importName)
+    .sort();
+
+  if (helperImports.length === 0) {
+    return "";
+  }
+
+  return `import { ${helperImports.join(", ")} } from "./runtime.js";\n`;
+}
 
 export function getHelpersFileContent(): string {
-  return EXCLUSIVE_UNION_HELPER;
+  const helperImplementations = Object.values(GENERATED_SCHEMA_HELPERS)
+    .map(({ implementation }) => implementation.trim())
+    .join("\n\n");
+
+  return `import * as z from 'zod';\n\n${helperImplementations}\n`;
 }
 
 export const HELPERS_FILE_NAME = "runtime.ts";

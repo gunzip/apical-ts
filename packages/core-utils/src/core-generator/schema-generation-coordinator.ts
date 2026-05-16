@@ -89,7 +89,7 @@ export async function generateSchemas(
   const schemasDir = path.join(output, "schemas");
   await fs.mkdir(schemasDir, { recursive: true });
 
-  /* Emit the schema runtime.ts utility file (exclusiveUnion for oneOf semantics) */
+  /* Emit the schema runtime.ts utility file for generated schema helpers. */
   await fs.writeFile(
     path.join(schemasDir, HELPERS_FILE_NAME),
     getHelpersFileContent(),

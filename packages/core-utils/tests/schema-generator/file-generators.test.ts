@@ -249,6 +249,10 @@ describe("schema-generator file-generators", () => {
       );
 
       const result = await generateSchemaFile("User", schema);
+
+      expect(result.content).not.toContain(
+        'import { exclusiveUnion } from "./runtime.js";',
+      );
     });
 
     it("should not include helpers import when only the description contains exclusiveUnion(", async () => {
@@ -265,6 +269,10 @@ describe("schema-generator file-generators", () => {
       );
 
       const result = await generateSchemaFile("User", schema);
+
+      expect(result.content).not.toContain(
+        'import { exclusiveUnion } from "./runtime.js";',
+      );
     });
   });
 

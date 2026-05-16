@@ -1,8 +1,11 @@
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
+import type { GeneratedSchemaHelper } from "./helpers-content.js";
 import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
+
+export type { GeneratedSchemaHelper } from "./helpers-content.js";
 
 /**
  * Type for resolved schemas from OpenAPI components
@@ -10,8 +13,6 @@ import type { RecursiveContext } from "./recursive-handlers.js";
 export type ResolvedSchemas = NonNullable<
   OpenAPIObject["components"]
 >["schemas"];
-
-export type GeneratedSchemaHelper = "exclusiveUnion";
 
 /**
  * Options for zodSchemaToCode function

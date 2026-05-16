@@ -8,6 +8,7 @@ import {
   findStringFormatOverrideByReferenceName,
   renderStringFormatOverrideImports,
 } from "./format-overrides.js";
+import { buildGeneratedSchemaHelpersImport } from "./helpers-content.js";
 import { generateParameterSchemas } from "../shared/parameter-schemas.js";
 import { sanitizeIdentifier } from "./utils.js";
 
@@ -136,11 +137,11 @@ async function generateParameterSchemaFile(
 
   /* Build the file imports */
   const imports = [`import * as z from "zod";`];
-  if (
-    result.helpers.has("exclusiveUnion") ||
-    serverResult.helpers.has("exclusiveUnion")
-  ) {
-    imports.push(`import { exclusiveUnion } from "./runtime.js";`);
+  const helpersImport = buildGeneratedSchemaHelpersImport(
+    new Set([...result.helpers, ...serverResult.helpers]),
+  ).trimEnd();
+  if (helpersImport) {
+    imports.push(helpersImport);
   }
 
   /* Add other type imports */

@@ -11,6 +11,7 @@ import {
   findStringFormatOverrideByReferenceName,
   renderStringFormatOverrideImports,
 } from "./format-overrides.js";
+import { buildGeneratedSchemaHelpersImport } from "./helpers-content.js";
 import { generateObjectCode } from "./object-properties.js";
 import { buildRecursiveShape } from "./recursive-schema-properties.js";
 import { createRecursiveContext } from "./recursive-handlers.js";
@@ -273,7 +274,7 @@ function assembleFileContent(
   extensibleEnumValues?: unknown[],
   recursiveTypeAlias?: string,
 ): string {
-  const helpersImport = buildHelpersImportSection(helpers);
+  const helpersImport = buildGeneratedSchemaHelpersImport(helpers);
 
   if (extensibleEnumValues) {
     const enumValues = extensibleEnumValues
@@ -291,25 +292,6 @@ function assembleFileContent(
       : `export type ${name} = z.infer<typeof ${name}>;`;
     return `import * as z from 'zod';\n${helpersImport}${importsSection}\n${typeContent}\n${schemaContent}`;
   }
-}
-
-function buildHelpersImportSection(
-  helpers: Set<GeneratedSchemaHelper>,
-): string {
-  if (helpers.size === 0) {
-    return "";
-  }
-
-  const helperImports: string[] = [];
-  if (helpers.has("exclusiveUnion")) {
-    helperImports.push("exclusiveUnion");
-  }
-
-  if (helperImports.length === 0) {
-    return "";
-  }
-
-  return `import { ${helperImports.join(", ")} } from "./runtime.js";\n`;
 }
 
 /* Helper function to generate comment section from description */
