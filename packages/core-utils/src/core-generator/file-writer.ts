@@ -70,7 +70,20 @@ function buildImportStatements(
     );
   }
 
-  /* Parameter imports removed: parameters are available through clientRoute.params from routes */
+  /* Add type-only imports for pre-computed parsed params types */
+  const parsedParamsTypeImportsByFile = new Map<string, Set<string>>();
+  for (const imp of importManager.getParsedParamsTypeImports()) {
+    if (!imp.filePath) continue;
+    if (!parsedParamsTypeImportsByFile.has(imp.filePath)) {
+      parsedParamsTypeImportsByFile.set(imp.filePath, new Set());
+    }
+    parsedParamsTypeImportsByFile.get(imp.filePath)?.add(imp.name);
+  }
+  for (const [filePath, names] of parsedParamsTypeImportsByFile.entries()) {
+    imports.push(
+      `import type { ${Array.from(names).join(", ")} } from "${filePath}";`,
+    );
+  }
 
   return imports;
 }

@@ -53,6 +53,13 @@ export function renderServerOperationWrapper(
     ? `import { ${responseMapTypeName} } from "../routes/${sanitizedId}.js";`
     : "";
 
+  /* Import pre-computed server parsed params type to avoid expensive z.infer inference */
+  const hasAnyParams = hasQuery || hasPath || hasHeaders;
+  const serverParsedParamsTypeName = `${sanitizedId}ServerParsedParamsType`;
+  const parsedParamsTypeImport = hasAnyParams
+    ? `import type { ${serverParsedParamsTypeName} } from "../schemas/${sanitizedId}Parameters.js";`
+    : "";
+
   const validationLogic = renderValidationLogic(
     operationId,
     requestMapTypeName,
@@ -77,10 +84,12 @@ export function renderServerOperationWrapper(
   | { kind: "body-error"; error: z.ZodError; isValid: false };`;
 
   /*
-   * Use parsed params type directly from route (which correctly imports from schema),
-   * extending it only with the body type.
+   * Use pre-computed parsed params type imported from the parameter schema file,
+   * extending it only with the body type. When no params exist, use body-only shape.
    */
-  const parsedParamsType = `type ${sanitizedId}ParsedParams = z.infer<typeof ${sanitizedId}RouteMetadata.params> & { body?: ${bodyType} };`;
+  const parsedParamsType = hasAnyParams
+    ? `type ${sanitizedId}ParsedParams = ${serverParsedParamsTypeName} & { body?: ${bodyType} };`
+    : `type ${sanitizedId}ParsedParams = { body?: ${bodyType} };`;
 
   const handlerType = `export type ${sanitizedId}Handler = (
   params: { isValid: true; value: ${sanitizedId}ParsedParams } | ${sanitizedId}ValidationError,
@@ -115,6 +124,7 @@ ${validationLogic}
     responseTypeImport,
     requestMapImport,
     responseMapImport,
+    parsedParamsTypeImport,
     validationErrorType,
     parsedParamsType,
     handlerType,
