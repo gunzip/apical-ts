@@ -10,7 +10,6 @@ import {
   createSanitizedOperationEntries,
   writeOperationModuleFile,
 } from "@apical-ts/core-utils/shared";
-import { promises as fs } from "fs";
 import path from "path";
 
 import { generateConfigTypes } from "./config-generator.js";
