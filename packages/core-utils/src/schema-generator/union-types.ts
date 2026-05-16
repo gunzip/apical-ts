@@ -93,22 +93,36 @@ export function handleAllOfSchema(
   }
 
   /*
-   * Use .shape spread optimization only when ALL allOf members are plain
-   * objects. When non-object schemas are present (mixed case), fall through
+   * Use .extend() optimization when ALL allOf members are plain objects.
+   * When the first member is a $ref, chain .extend() from it to avoid
+   * constructing an intermediate z.object({...spread}) literal that forces
+   * the TS checker to resolve every $ZodObjectInternals mapped type.
+   * When non-object schemas are present (mixed case), fall through
    * to the full intersection approach which preserves object-level behaviors
    * like .catchall(), strict mode, etc.
    */
   if (objectSchemas.length > 0 && nonObjectSchemas.length === 0) {
-    const shapeExpressions: string[] = [];
     const allImports = new Set<string>();
     const allRequiredFields = collectRequiredFields(schemas);
+
+    /*
+     * Collect each member as either a $ref identifier or an inline shape
+     * expression. Refs become `refName` (for .extend base) or
+     * `...refName.shape` (for extend argument); inlines become
+     * `...z.object({...}).shape`.
+     */
+    const members: { inline: boolean; name?: string; shape: string }[] = [];
 
     for (const schema of objectSchemas) {
       if (isReferenceObject(schema)) {
         const refName = parseSchemaReference(schema.$ref);
         if (refName) {
           allImports.add(refName.identifierName);
-          shapeExpressions.push(`...${refName.identifierName}.shape`);
+          members.push({
+            inline: false,
+            name: refName.identifierName,
+            shape: `...${refName.identifierName}.shape`,
+          });
         }
       } else if (
         (!schema.type || schema.type === "object") &&
@@ -129,13 +143,42 @@ export function handleAllOfSchema(
         });
         subResult.imports.forEach((imp) => allImports.add(imp));
         mergeSets(result.helpers, subResult.helpers);
-        shapeExpressions.push(`...${subResult.code}.shape`);
+        members.push({
+          inline: true,
+          shape: `...${subResult.code}.shape`,
+        });
       }
     }
 
-    if (shapeExpressions.length > 0) {
-      result.code = `z.object({${shapeExpressions.join(", ")}})`;
+    if (members.length > 0) {
       allImports.forEach((imp) => result.imports.add(imp));
+
+      /*
+       * When the first member is a $ref, chain .extend() calls from it.
+       * Pure-ref sequences use .extend(ref.shape) directly (no spread);
+       * inline members still use spread inside a single .extend({...}).
+       */
+      if (members.length === 1 && !members[0].inline && members[0].name) {
+        result.code = members[0].name;
+      } else if (!members[0].inline && members[0].name) {
+        const rest = members.slice(1);
+        const allRefs = rest.every((m) => !m.inline);
+
+        if (allRefs) {
+          /* Chain .extend(ref.shape) for each remaining $ref */
+          result.code = rest.reduce(
+            (acc, m) => `${acc}.extend(${m.name}.shape)`,
+            members[0].name!,
+          );
+        } else {
+          /* Mix of refs and inlines: single .extend({...spreads}) */
+          const shapes = rest.map((m) => m.shape);
+          result.code = `${members[0].name}.extend({${shapes.join(", ")}})`;
+        }
+      } else {
+        const allShapes = members.map((m) => m.shape);
+        result.code = `z.object({${allShapes.join(", ")}})`;
+      }
       return result;
     }
   }

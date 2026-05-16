@@ -218,5 +218,30 @@ describe("AllOf Schema Composition Integration", () => {
       // Verify it does NOT use .shape spread (would cause infinite recursion)
       expect(content).not.toContain("NotificationEvent.shape");
     });
+
+    it("should use .extend() when first allOf member is a $ref", async () => {
+      const fs = await import("fs/promises");
+      const path =
+        "./tests/integrations/generated/schemas/AllOfWithRecursiveSchema.ts";
+      const content = await fs.readFile(path, "utf-8");
+
+      // Verify it chains .extend(ref.shape) without wrapping spread
+      expect(content).toContain(
+        "PaginationResponse.extend(Category.shape).extend(NewModel.shape)",
+      );
+      expect(content).not.toContain("z.object({...PaginationResponse.shape");
+      expect(content).not.toContain("z.intersection");
+    });
+
+    it("should use .extend() for $ref + inline allOf composition", async () => {
+      const fs = await import("fs/promises");
+      const path =
+        "./tests/integrations/generated/schemas/AllOfWithXExtensibleEnum.ts";
+      const content = await fs.readFile(path, "utf-8");
+
+      // Verify it uses .extend() from the $ref base
+      expect(content).toContain("Profile.extend(");
+      expect(content).not.toContain("z.object({...Profile.shape");
+    });
   });
 });
