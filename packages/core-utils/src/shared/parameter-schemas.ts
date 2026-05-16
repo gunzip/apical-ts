@@ -11,6 +11,7 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 import type { ParameterGroups } from "./models/parameter-models.js";
 import type { SecurityHeader } from "./models/security-models.js";
 import type { StringFormatOverrideRegistry } from "../schema-generator/format-overrides.js";
+import type { GeneratedSchemaHelper } from "../schema-generator/types.js";
 
 import { zodSchemaToCode } from "../schema-generator/index.js";
 import {
@@ -50,6 +51,7 @@ export interface ParameterSchemaResult {
     hasQuery: boolean;
   };
   /* Generated Zod schemas and TypeScript types */
+  helpers: Set<GeneratedSchemaHelper>;
   schemaCode: string;
   /* Schema names for external reference */
   schemaNames: {
@@ -83,6 +85,7 @@ export function generateParameterSchemas(
     securityHeaders = [],
   } = options;
   const sanitizedId = sanitizeIdentifier(operationId);
+  const helpers = new Set<GeneratedSchemaHelper>();
   const typeImports = new Set<string>();
   const schemas: string[] = [];
 
@@ -114,6 +117,7 @@ export function generateParameterSchemas(
     if (schema) {
       const result = zodSchemaToCode(schema, {
         formatOverrides,
+        helpers,
         imports: typeImports,
       });
       zodCode = result.code;
@@ -226,6 +230,7 @@ export function generateParameterSchemas(
       hasPath,
       hasQuery,
     },
+    helpers,
     schemaCode: schemas.join("\n"),
     schemaNames: {
       headersSchema: headersSchemaName,

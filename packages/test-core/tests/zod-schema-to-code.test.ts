@@ -373,18 +373,13 @@ describe("zodSchemaToCode", () => {
     expect(result.imports.has("Square")).toBe(true);
   });
 
-  it("should use superRefine for oneOf when no discriminator is present", () => {
+  it("should use exclusiveUnion helper for oneOf when no discriminator is present", () => {
     const schema: SchemaObject = {
       oneOf: [{ type: "string" }, { type: "number" }],
     };
     const result = zodSchemaToCode(schema);
-    expect(result.code).toContain(
-      "z.union([z.string(), z.number()]).superRefine(",
-    );
-    expect(result.code).toContain("Should pass exactly one schema");
+    expect(result.code).toBe("exclusiveUnion([z.string(), z.number()])");
     expect(result.code).not.toContain("discriminatedUnion");
-    // Note: Skip evalZod for complex superRefine code as it contains TypeScript types
-    // The functionality is tested in integration tests
   });
 
   it("should handle anyOf vs oneOf differently for overlapping schemas", () => {
@@ -416,14 +411,13 @@ describe("zodSchemaToCode", () => {
     const anyOfResult = zodSchemaToCode(anyOfSchema);
     expect(anyOfResult.code).toContain("z.union([");
 
-    // Test oneOf: should use superRefine for strict validation
+    // Test oneOf: should use exclusiveUnion helper for strict validation
     const oneOfSchema: SchemaObject = {
       oneOf: [normalUserSchema, adminUserSchema],
     };
     const oneOfResult = zodSchemaToCode(oneOfSchema);
-    expect(oneOfResult.code).toContain("z.union([");
-    expect(oneOfResult.code).toContain("]).superRefine(");
-    expect(oneOfResult.code).toContain("Should pass exactly one schema");
+    expect(oneOfResult.code).toContain("exclusiveUnion([");
+    expect(oneOfResult.code).not.toContain("superRefine");
   });
 
   it("should handle x-extensible-enum for strings", () => {

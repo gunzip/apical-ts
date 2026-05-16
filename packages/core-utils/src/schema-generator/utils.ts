@@ -322,6 +322,14 @@ export function isNullable(schema: SchemaObject): boolean {
   return "nullable" in schema && schema.nullable === true;
 }
 
+export function mergeSets<T>(target: Set<T>, ...sources: Set<T>[]): void {
+  for (const source of sources) {
+    for (const item of source) {
+      target.add(item);
+    }
+  }
+}
+
 /**
  * Merge import sets
  */
@@ -329,11 +337,7 @@ export function mergeImports(
   target: Set<string>,
   ...sources: Set<string>[]
 ): void {
-  for (const source of sources) {
-    for (const item of source) {
-      target.add(item);
-    }
-  }
+  mergeSets(target, ...sources);
 }
 
 /**

@@ -2,7 +2,11 @@ import type { ReferenceObject, SchemaObject } from "openapi3-ts/oas31";
 import { isSchemaObject } from "openapi3-ts/oas31";
 
 import { shouldIncludeProperty } from "../shared/types.js";
-import type { ZodSchemaCodeOptions, ZodSchemaResult } from "./types.js";
+import type {
+  GeneratedSchemaHelper,
+  ZodSchemaCodeOptions,
+  ZodSchemaResult,
+} from "./types.js";
 import { generateObjectCode } from "./object-properties.js";
 import {
   generatePatternPropertiesValueCode,
@@ -43,6 +47,7 @@ export function handleObjectType(
 
       const propResult = zodSchemaToCode(propSchema, {
         currentSchemaName,
+        helpers: result.helpers,
         imports: result.imports,
         formatOverrides: options.formatOverrides,
         recursiveContext,
@@ -90,6 +95,7 @@ export function handleObjectType(
       zodSchemaToCode,
       codeOptions,
     );
+    result.helpers = recordResult.helpers;
     result.imports = recordResult.imports;
     let code = recordResult.code;
     code = addDefaultValue(code, schema.default, { schemaType: "object" });
@@ -114,12 +120,14 @@ export function handleObjectType(
       currentSchemaName,
       extraProps,
       formatOverrides: options.formatOverrides,
+      helpers: result.helpers,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
     },
   );
 
+  result.helpers = objectCodeResult.helpers;
   result.imports = objectCodeResult.imports;
   let code = objectCodeResult.code;
 
@@ -141,7 +149,12 @@ function generateRecordFromPatterns(
     options?: ZodSchemaCodeOptions,
   ) => ZodSchemaResult,
   options: ZodSchemaCodeOptions,
-): { code: string; imports: Set<string> } {
+): {
+  code: string;
+  helpers: Set<GeneratedSchemaHelper>;
+  imports: Set<string>;
+} {
+  const helpers = options.helpers || new Set<GeneratedSchemaHelper>();
   const imports = options.imports || new Set<string>();
 
   let valueCode = "z.unknown()";
@@ -153,11 +166,14 @@ function generateRecordFromPatterns(
     const ppResult = generatePatternPropertiesValueCode(
       patternProperties,
       zodSchemaToCode,
-      { ...options, imports },
+      { ...options, helpers, imports },
     );
     valueCode = ppResult.valueCode;
     keyCode = ppResult.keyCode;
     refinement = ppResult.refinement;
+    for (const helper of ppResult.helpers) {
+      helpers.add(helper);
+    }
     for (const imp of ppResult.imports) {
       imports.add(imp);
     }
@@ -168,9 +184,12 @@ function generateRecordFromPatterns(
     const keyResult = generatePropertyNamesKeyCode(
       schema.propertyNames,
       zodSchemaToCode,
-      { ...options, imports },
+      { ...options, helpers, imports },
     );
     keyCode = keyResult.code;
+    for (const helper of keyResult.helpers) {
+      helpers.add(helper);
+    }
     for (const imp of keyResult.imports) {
       imports.add(imp);
     }
@@ -184,12 +203,16 @@ function generateRecordFromPatterns(
     const addResult = zodSchemaToCode(schema.additionalProperties, {
       currentSchemaName: options.currentSchemaName,
       formatOverrides: options.formatOverrides,
+      helpers,
       imports,
       recursiveContext: options.recursiveContext,
       resolvedSchemas: options.resolvedSchemas,
       skipDescription: true,
     });
     valueCode = addResult.code;
+    for (const helper of addResult.helpers) {
+      helpers.add(helper);
+    }
     for (const imp of addResult.imports) {
       imports.add(imp);
     }
@@ -197,6 +220,7 @@ function generateRecordFromPatterns(
 
   return {
     code: generateRecordCode({ keyCode, refinement, valueCode }),
+    helpers,
     imports,
   };
 }

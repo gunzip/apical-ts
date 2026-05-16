@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formUrlEncode } from "./generated/client/config.js";
+import { formUrlEncode } from "./generated/client/runtime.js";
 
 describe("formUrlEncode", () => {
   it("encodes arrays with repeat format by default", () => {

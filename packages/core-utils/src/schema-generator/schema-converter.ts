@@ -31,6 +31,7 @@ import {
   inferEffectiveType,
   isNullable,
   mergeImports,
+  mergeSets,
   toLiteralCode,
 } from "./utils.js";
 import type { DefaultValueOptions } from "./utils.js";
@@ -46,13 +47,14 @@ export function zodSchemaToCode(
     currentSchemaName,
     extraProps,
     formatOverrides,
+    helpers,
     imports,
     recursiveContext,
     resolvedSchemas,
     schemaContext,
     skipDescription,
   } = options;
-  const result = createResult(imports);
+  const result = createResult(imports, helpers);
 
   const applyDesc = (res: ZodSchemaResult) => {
     if (!skipDescription) {
@@ -166,9 +168,13 @@ export function zodSchemaToCode(
 }
 
 /* Internal helper: creates an empty ZodSchemaResult reusing provided imports set when present */
-function createResult(imports?: Set<string>): ZodSchemaResult {
+function createResult(
+  imports?: Set<string>,
+  helpers?: ZodSchemaCodeOptions["helpers"],
+): ZodSchemaResult {
   return {
     code: "",
+    helpers: helpers || new Set(),
     imports: imports || new Set<string>(),
   };
 }
@@ -197,6 +203,7 @@ function handleMultiTypeArray(
       currentSchemaName,
       extraProps,
       formatOverrides,
+      helpers: result.helpers,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
@@ -210,6 +217,7 @@ function handleMultiTypeArray(
       getDefaultValueOptions(clone),
     );
     mergeImports(result.imports, subResult.imports);
+    mergeSets(result.helpers, subResult.helpers);
     return result;
   }
   const subResults = effectiveType.map((t: string) =>
@@ -217,6 +225,7 @@ function handleMultiTypeArray(
       currentSchemaName,
       extraProps,
       formatOverrides,
+      helpers: result.helpers,
       imports: result.imports,
       recursiveContext,
       resolvedSchemas,
@@ -224,7 +233,10 @@ function handleMultiTypeArray(
     }),
   );
   const schemas = subResults.map((r) => r.code);
-  subResults.forEach((r) => mergeImports(result.imports, r.imports));
+  subResults.forEach((r) => {
+    mergeImports(result.imports, r.imports);
+    mergeSets(result.helpers, r.helpers);
+  });
   result.code = `z.union([${schemas.join(", ")}])`;
   return result;
 }
@@ -246,6 +258,7 @@ function handleNullableSchema(
     currentSchemaName,
     extraProps,
     formatOverrides,
+    helpers: result.helpers,
     imports: result.imports,
     recursiveContext,
     resolvedSchemas,
@@ -257,6 +270,7 @@ function handleNullableSchema(
     getDefaultValueOptions(clone),
   );
   mergeImports(result.imports, subResult.imports);
+  mergeSets(result.helpers, subResult.helpers);
   return result;
 }
 

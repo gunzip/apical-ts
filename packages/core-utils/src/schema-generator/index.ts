@@ -8,6 +8,7 @@ export {
   createStringFormatOverrideRegistry,
   type StringFormatOverride,
 } from "./format-overrides.js";
+export { getHelpersFileContent, HELPERS_FILE_NAME } from "./helpers-content.js";
 export { writeParameterSchemaFile } from "./parameter-file-generator.js";
 export {
   analyzeSchemaForRecursion,

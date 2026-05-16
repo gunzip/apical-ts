@@ -8,6 +8,7 @@ import {
   findStringFormatOverrideByReferenceName,
   renderStringFormatOverrideImports,
 } from "./format-overrides.js";
+import { buildGeneratedSchemaHelpersImport } from "./helpers-content.js";
 import { generateParameterSchemas } from "../shared/parameter-schemas.js";
 import { sanitizeIdentifier } from "./utils.js";
 
@@ -73,39 +74,6 @@ async function generateParameterSchemaFile(
   /* Track which parameter types actually exist */
   const { hasHeaders, hasPath, hasQuery } = result.hasParameters;
 
-  /* Build the file content */
-  const imports: string[] = [];
-
-  /* Always include Zod import */
-  imports.push(`import * as z from "zod";`);
-
-  /* Add other type imports */
-  if (result.typeImports.size > 0) {
-    const typeImportsList = Array.from(result.typeImports)
-      .filter(
-        (typeImport) =>
-          typeImport !== "z" &&
-          !findStringFormatOverrideByReferenceName(
-            typeImport,
-            options.formatOverrides,
-          ),
-      )
-      .sort();
-    for (const typeImport of typeImportsList) {
-      imports.push(`import { ${typeImport} } from "./${typeImport}.js";`);
-    }
-  }
-
-  const filePath = path.join(schemasDir, fileName);
-  const externalImportLines = renderStringFormatOverrideImports(
-    new Set([...result.typeImports, ...serverResult.typeImports]),
-    options.formatOverrides,
-    filePath,
-  );
-  if (externalImportLines.length > 0) {
-    imports.push(...externalImportLines);
-  }
-
   /* Calculate optionality for parameters */
   const queryParams = parameterMetadata.parameterGroups.queryParams || [];
   const headerParams = parameterMetadata.parameterGroups.headerParams || [];
@@ -166,6 +134,42 @@ async function generateParameterSchemaFile(
       new RegExp(`const ${result.schemaNames.headersSchema} =`, "g"),
       `const ${serverSchemaNames.headersSchema} =`,
     );
+
+  /* Build the file imports */
+  const imports = [`import * as z from "zod";`];
+  const helpersImport = buildGeneratedSchemaHelpersImport(
+    new Set([...result.helpers, ...serverResult.helpers]),
+  ).trimEnd();
+  if (helpersImport) {
+    imports.push(helpersImport);
+  }
+
+  /* Add other type imports */
+  if (result.typeImports.size > 0) {
+    const typeImportsList = Array.from(result.typeImports)
+      .filter(
+        (typeImport) =>
+          typeImport !== "z" &&
+          !findStringFormatOverrideByReferenceName(
+            typeImport,
+            options.formatOverrides,
+          ),
+      )
+      .sort();
+    for (const typeImport of typeImportsList) {
+      imports.push(`import { ${typeImport} } from "./${typeImport}.js";`);
+    }
+  }
+
+  const filePath = path.join(schemasDir, fileName);
+  const externalImportLines = renderStringFormatOverrideImports(
+    new Set([...result.typeImports, ...serverResult.typeImports]),
+    options.formatOverrides,
+    filePath,
+  );
+  if (externalImportLines.length > 0) {
+    imports.push(...externalImportLines);
+  }
 
   /* Build exports dynamically based on which schemas exist */
   const clientSchemaExports = buildSchemaExports(result.schemaNames, {
@@ -230,10 +234,8 @@ async function generateParameterSchemaFile(
     "",
   );
 
-  const content = contentParts.join("\n");
-
   return {
-    content,
+    content: contentParts.join("\n"),
     fileName,
   };
 }

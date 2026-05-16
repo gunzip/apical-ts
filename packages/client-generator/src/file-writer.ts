@@ -24,7 +24,7 @@ export async function createOperationsDirectory(
 }
 
 /**
- * Writes the configuration file
+ * Writes the client runtime file
  */
 export async function writeConfigFile(
   authHeaders: string[],
@@ -32,8 +32,8 @@ export async function writeConfigFile(
   operationsDir: string,
 ): Promise<void> {
   const configContent = generateConfigTypes(authHeaders, serverUrls);
-  const configPath = path.join(operationsDir, "config.ts");
-  await writeTypeScriptFile(configPath, configContent);
+  const runtimePath = path.join(operationsDir, "runtime.ts");
+  await writeTypeScriptFile(runtimePath, configContent);
 }
 
 /**

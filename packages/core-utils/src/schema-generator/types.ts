@@ -1,8 +1,11 @@
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
+import type { GeneratedSchemaHelper } from "./helpers-content.js";
 import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
+
+export type { GeneratedSchemaHelper } from "./helpers-content.js";
 
 /**
  * Type for resolved schemas from OpenAPI components
@@ -33,6 +36,10 @@ export interface ZodSchemaCodeOptions {
    * Set of schema names that need to be imported
    */
   imports?: Set<string>;
+  /**
+   * Set of generated helper utilities required by the emitted schema code.
+   */
+  helpers?: Set<GeneratedSchemaHelper>;
   /**
    * Whether this is a top-level schema (affects naming and export generation)
    */
@@ -81,4 +88,8 @@ export interface ZodSchemaResult {
    * overrides.
    */
   imports: Set<string>;
+  /**
+   * Set of generated helper utilities required by the emitted schema code.
+   */
+  helpers: Set<GeneratedSchemaHelper>;
 }

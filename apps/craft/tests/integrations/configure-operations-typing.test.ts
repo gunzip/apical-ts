@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   configureOperations,
   globalConfig,
-} from "./generated/client/config.js";
+} from "./generated/client/runtime.js";
 import { testMultiContentTypes } from "./generated/client/testMultiContentTypes.js";
 
 // These tests rely on TypeScript compile-time; runtime just sanity checks functions exist.

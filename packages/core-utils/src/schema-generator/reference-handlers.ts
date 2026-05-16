@@ -1,6 +1,7 @@
 import type { ReferenceObject } from "openapi3-ts/oas31";
 
 import type { RecursiveContext } from "./recursive-handlers.js";
+import type { GeneratedSchemaHelper } from "./types.js";
 
 import { analyzeRecursiveReference } from "./recursive-handlers.js";
 import { parseSchemaReference } from "./schema-references.js";
@@ -18,6 +19,7 @@ interface ReferenceHandlerOptions {
 interface ZodSchemaResult {
   code: string;
   extensibleEnumValues?: unknown[];
+  helpers: Set<GeneratedSchemaHelper>;
   imports: Set<string>;
 }
 

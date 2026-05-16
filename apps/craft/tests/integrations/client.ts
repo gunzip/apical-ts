@@ -1,7 +1,7 @@
 import {
   configureOperations,
   type GlobalConfig,
-} from "./generated/client/config.js";
+} from "./generated/client/runtime.js";
 import * as operations from "./generated/client/index.js";
 
 /**

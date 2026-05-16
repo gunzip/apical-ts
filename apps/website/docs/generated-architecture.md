@@ -28,7 +28,7 @@ and purpose of the generated files and directories.
 ├── package.json                  # Generated package metadata (if enabled)
 ├── client/                       # Type-safe API client operations (if --client)
 │   ├── index.ts                  # Exports all operation functions and config
-│   ├── config.ts                 # Global configuration types and helpers
+│   ├── runtime.ts                 # Global configuration types and helpers
 │   └── <operationId>.ts          # Individual operation function for each endpoint
 └── schemas/                      # Zod v4 schemas for all models
     ├── <SchemaName>.ts           # Individual schema files (one per model)
@@ -43,7 +43,7 @@ and purpose of the generated files and directories.
 - **Operation Functions**: Each API operation (endpoint) is generated as a
   standalone, fully-typed function in `operations/`. These functions handle
   request construction, parameter validation, and response parsing.
-- **Configuration**: The `operations/config.ts` file defines global
+- **Configuration**: The `operations/runtime.ts` file defines global
   configuration types (e.g., base URL, fetch implementation, interceptors) used
   by all operation functions.
 - **Exports**: The `operations/index.ts` and `schemas/index.ts` files provide

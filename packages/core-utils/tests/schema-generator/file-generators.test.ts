@@ -214,6 +214,66 @@ describe("schema-generator file-generators", () => {
       expect(result.content).toMatch(/import \{ Role \} from "\.\/Role\.js";/);
       expect(result.content).toMatch(/import \{ User \} from "\.\/User\.js";/);
     });
+    it("should include helpers import when schema uses exclusiveUnion", async () => {
+      const schema: SchemaObject = {
+        oneOf: [{ type: "string" }, { type: "number" }],
+      };
+
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "exclusiveUnion([z.string(), z.number()])",
+          helpers: new Set<"exclusiveUnion">(["exclusiveUnion"]),
+          imports: new Set(),
+        }),
+      );
+
+      const result = await generateSchemaFile("SearchHit", schema);
+
+      expect(result.content).toContain(
+        'import { exclusiveUnion } from "./runtime.js";',
+      );
+      expect(result.content).toContain("export const SearchHit =");
+    });
+
+    it("should not include helpers import when schema does not use exclusiveUnion", async () => {
+      const schema: SchemaObject = {
+        type: "object",
+        properties: { name: { type: "string" } },
+      };
+
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ name: z.string() })",
+          imports: new Set(),
+        }),
+      );
+
+      const result = await generateSchemaFile("User", schema);
+
+      expect(result.content).not.toContain(
+        'import { exclusiveUnion } from "./runtime.js";',
+      );
+    });
+
+    it("should not include helpers import when only the description contains exclusiveUnion(", async () => {
+      const schema: SchemaObject = {
+        type: "string",
+      };
+
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: 'z.string().describe("mentions exclusiveUnion(")',
+          helpers: new Set(),
+          imports: new Set(),
+        }),
+      );
+
+      const result = await generateSchemaFile("User", schema);
+
+      expect(result.content).not.toContain(
+        'import { exclusiveUnion } from "./runtime.js";',
+      );
+    });
   });
 
   describe("generateRequestSchemaFile", () => {
@@ -497,6 +557,7 @@ function mockSchemaResult(
   overrides: Partial<{
     code: string;
     extensibleEnumValues: string[];
+    helpers: Set<"exclusiveUnion">;
     imports: Set<string>;
   }>,
 ) {
@@ -509,6 +570,7 @@ function mockSchemaResult(
 function createMockSchemaResult() {
   return {
     code: "z.unknown()",
+    helpers: new Set<"exclusiveUnion">(),
     imports: new Set<string>(),
   };
 }

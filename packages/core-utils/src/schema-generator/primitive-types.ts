@@ -51,6 +51,7 @@ export function handleArrayType(
     currentSchemaName,
     extraProps,
     formatOverrides,
+    helpers: result.helpers,
     imports: result.imports,
     recursiveContext,
     resolvedSchemas,

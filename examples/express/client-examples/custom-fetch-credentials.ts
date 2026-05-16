@@ -1,4 +1,4 @@
-import { globalConfig } from "../generated/client/config.js";
+import { globalConfig } from "../generated/client/runtime.js";
 import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 
 // Custom fetch function that includes credentials by default

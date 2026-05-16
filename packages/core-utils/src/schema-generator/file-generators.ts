@@ -4,13 +4,14 @@ import path from "node:path";
 import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
 import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
-import type { ResolvedSchemas } from "./types.js";
+import type { GeneratedSchemaHelper, ResolvedSchemas } from "./types.js";
 
 import { analyzeReadWriteProperties } from "../shared/types.js";
 import {
   findStringFormatOverrideByReferenceName,
   renderStringFormatOverrideImports,
 } from "./format-overrides.js";
+import { buildGeneratedSchemaHelpersImport } from "./helpers-content.js";
 import { generateObjectCode } from "./object-properties.js";
 import { buildRecursiveShape } from "./recursive-schema-properties.js";
 import { createRecursiveContext } from "./recursive-handlers.js";
@@ -38,6 +39,7 @@ interface RecursiveSchemaFileOptions {
 interface SchemaFileResult {
   content: string;
   fileName: string;
+  helpers?: Set<GeneratedSchemaHelper>;
   /** Additional schema variant files (complete schema files, not re-exports) */
   variantFiles?: SchemaFileResult[];
 }
@@ -93,7 +95,7 @@ export async function generateRecursiveSchemaFile(
   }
 
   const commentSection = generateCommentSection(description);
-  const { imports, shape } = buildRecursiveShape({
+  const { helpers, imports, shape } = buildRecursiveShape({
     extraProps,
     formatOverrides,
     name,
@@ -115,6 +117,7 @@ export async function generateRecursiveSchemaFile(
       extraProps,
       formatShape: true,
       formatOverrides,
+      helpers,
       imports,
       recursiveContext,
       resolvedSchemas,
@@ -140,11 +143,13 @@ export async function generateRecursiveSchemaFile(
     commentSection,
     importsSection,
     schemaCode,
+    objectCodeResult.helpers,
   );
 
   return {
     content,
     fileName: `${name}.ts`,
+    helpers: objectCodeResult.helpers,
   };
 }
 
@@ -218,6 +223,7 @@ export async function generateSchemaFile(
     commentSection,
     importsSection,
     schemaResult.code,
+    schemaResult.helpers,
     schemaResult.extensibleEnumValues,
     recursiveTypeAlias,
   );
@@ -238,6 +244,7 @@ export async function generateSchemaFile(
   return {
     content,
     fileName: `${name}.ts`,
+    helpers: schemaResult.helpers,
     variantFiles,
   };
 }
@@ -263,16 +270,19 @@ function assembleFileContent(
   commentSection: string,
   importsSection: string,
   schemaCode: string,
+  helpers: Set<GeneratedSchemaHelper>,
   extensibleEnumValues?: unknown[],
   recursiveTypeAlias?: string,
 ): string {
+  const helpersImport = buildGeneratedSchemaHelpersImport(helpers);
+
   if (extensibleEnumValues) {
     const enumValues = extensibleEnumValues
       .map((e: unknown) => JSON.stringify(e))
       .join(" | ");
     const typeContent = `export type ${name} = ${enumValues} | (string & {});`;
     const schemaContent = `${commentSection}export const ${name} = ${schemaCode};`;
-    return `import * as z from 'zod';\n${importsSection}\n${schemaContent}\n${typeContent}`;
+    return `import * as z from 'zod';\n${helpersImport}${importsSection}\n${schemaContent}\n${typeContent}`;
   } else {
     const schemaContent = recursiveTypeAlias
       ? `${commentSection}export const ${name}: z.ZodType<${name}> = ${schemaCode};`
@@ -280,7 +290,7 @@ function assembleFileContent(
     const typeContent = recursiveTypeAlias
       ? `export type ${name} = ${recursiveTypeAlias};`
       : `export type ${name} = z.infer<typeof ${name}>;`;
-    return `import * as z from 'zod';\n${importsSection}\n${typeContent}\n${schemaContent}`;
+    return `import * as z from 'zod';\n${helpersImport}${importsSection}\n${typeContent}\n${schemaContent}`;
   }
 }
 

@@ -1,4 +1,4 @@
-import { globalConfig, isParsed } from "../generated/client/config.js";
+import { globalConfig, isParsed } from "../generated/client/runtime.js";
 import { updatePet } from "../generated/client/updatePet.js";
 import z from "zod";
 

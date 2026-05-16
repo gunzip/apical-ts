@@ -5,7 +5,7 @@ import { isReferenceObject } from "openapi3-ts/oas31";
 import type { ExtraPropsMode } from "../shared/types.js";
 import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
-import type { ResolvedSchemas } from "./types.js";
+import type { GeneratedSchemaHelper, ResolvedSchemas } from "./types.js";
 
 import { findReferencesInSchema } from "./recursive-handlers.js";
 import { getSchemaNameFromReference } from "./schema-references.js";
@@ -25,6 +25,7 @@ interface RecursivePropertyCodeOptions extends Omit<
   BuildRecursiveShapeOptions,
   "schema"
 > {
+  helpers: Set<GeneratedSchemaHelper>;
   imports: Set<string>;
   isRequired: boolean;
   key: string;
@@ -32,11 +33,13 @@ interface RecursivePropertyCodeOptions extends Omit<
 }
 
 export function buildRecursiveShape(options: BuildRecursiveShapeOptions): {
+  helpers: Set<GeneratedSchemaHelper>;
   imports: Set<string>;
   shape: string[];
 } {
   const { schema } = options;
   const shape: string[] = [];
+  const helpers = new Set<GeneratedSchemaHelper>();
   const imports = new Set<string>();
   const requiredFields = new Set(schema.required ?? []);
 
@@ -44,6 +47,7 @@ export function buildRecursiveShape(options: BuildRecursiveShapeOptions): {
     shape.push(
       generateRecursivePropertyCode({
         ...options,
+        helpers,
         imports,
         isRequired: requiredFields.has(key),
         key,
@@ -52,7 +56,7 @@ export function buildRecursiveShape(options: BuildRecursiveShapeOptions): {
     );
   }
 
-  return { imports, shape };
+  return { helpers, imports, shape };
 }
 
 /* Exported for targeted getter tests. */
@@ -95,7 +99,7 @@ export function generateGetterCode(
 function generateRecursivePropertyCode(
   options: RecursivePropertyCodeOptions,
 ): string {
-  const { imports, isRequired, key, name, propSchema } = options;
+  const { helpers, imports, isRequired, key, name, propSchema } = options;
 
   if (
     !isRecursiveProperty(
@@ -117,6 +121,7 @@ function generateRecursivePropertyCode(
     currentSchemaName: name,
     extraProps: options.extraProps,
     formatOverrides: options.formatOverrides,
+    helpers,
     imports: new Set(),
     recursiveContext: options.recursiveContext,
     resolvedSchemas: options.resolvedSchemas,
@@ -139,6 +144,7 @@ function generateRegularPropertyCode(
     currentSchemaName: options.name,
     extraProps: options.extraProps,
     formatOverrides: options.formatOverrides,
+    helpers: options.helpers,
     imports: new Set(),
     recursiveContext: options.recursiveContext,
     resolvedSchemas: options.resolvedSchemas,

@@ -47,7 +47,7 @@ export class ImportManager {
 
   addConfigImport(configName: string): void {
     const importInfo: ImportInfo = {
-      filePath: "./config.js",
+      filePath: "./runtime.js",
       name: configName,
       type: "config",
     };

@@ -3,7 +3,7 @@ import {
   configureOperations,
   globalConfig,
   ApiResponseWithForcedParse,
-} from "./generated/client/config.js";
+} from "./generated/client/runtime.js";
 import { testMultipleSuccess } from "./generated/client/testMultipleSuccess.js";
 
 /* This test asserts that when binding with forceValidation:false the returned operation

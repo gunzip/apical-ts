@@ -18,6 +18,10 @@ import {
   generateSchemaFile,
   writeParameterSchemaFile,
 } from "../schema-generator/index.js";
+import {
+  getHelpersFileContent,
+  HELPERS_FILE_NAME,
+} from "../schema-generator/helpers-content.js";
 import type { ResolvedSchemas } from "../schema-generator/types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 import type { ExtraPropsMode } from "../shared/types.js";
@@ -84,6 +88,12 @@ export async function generateSchemas(
 ): Promise<void> {
   const schemasDir = path.join(output, "schemas");
   await fs.mkdir(schemasDir, { recursive: true });
+
+  /* Emit the schema runtime.ts utility file for generated schema helpers. */
+  await fs.writeFile(
+    path.join(schemasDir, HELPERS_FILE_NAME),
+    getHelpersFileContent(),
+  );
 
   const limit = pLimit(concurrency);
   const context: SchemaGenerationContext = {

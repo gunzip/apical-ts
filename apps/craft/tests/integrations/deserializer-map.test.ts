@@ -12,7 +12,7 @@ describe("DeserializerMap Integration Test", () => {
   const generatedDir = "tests/integrations/generated";
 
   it("should generate GlobalConfig with deserializers property", async () => {
-    const configPath = join(generatedDir, "client/config.ts");
+    const configPath = join(generatedDir, "client/runtime.ts");
     const configContent = await readFile(configPath, "utf-8");
 
     expect(configContent).toContain("export interface GlobalConfig");
@@ -44,7 +44,7 @@ describe("DeserializerMap Integration Test", () => {
 
     /* Find the deserializer map type definition */
     const deserializerMapMatch = operationContent.match(
-      /export type TestAuthBearerHttpResponseDeserializerMap = Partial<\s*Record<\s*([\s\S]*?),\s*import\('\.\/config\.js'\)\.Deserializer\s*>\s*>;/,
+      /export type TestAuthBearerHttpResponseDeserializerMap = Partial<\s*Record<\s*([\s\S]*?),\s*import\('\.\/runtime\.js'\)\.Deserializer\s*>\s*>;/,
     );
 
     expect(deserializerMapMatch).toBeTruthy();

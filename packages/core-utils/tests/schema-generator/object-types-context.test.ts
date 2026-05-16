@@ -19,6 +19,7 @@ describe("object-types with schemaContext", () => {
 
       const result: ZodSchemaResult = {
         code: "",
+        helpers: new Set(),
         imports: new Set<string>(),
       };
       handleObjectType(schema, result, zodSchemaToCode, {
@@ -42,6 +43,7 @@ describe("object-types with schemaContext", () => {
 
       const result: ZodSchemaResult = {
         code: "",
+        helpers: new Set(),
         imports: new Set<string>(),
       };
       handleObjectType(schema, result, zodSchemaToCode, {
@@ -65,6 +67,7 @@ describe("object-types with schemaContext", () => {
 
       const result: ZodSchemaResult = {
         code: "",
+        helpers: new Set(),
         imports: new Set<string>(),
       };
       handleObjectType(schema, result, zodSchemaToCode, {
@@ -87,6 +90,7 @@ describe("object-types with schemaContext", () => {
 
       const result: ZodSchemaResult = {
         code: "",
+        helpers: new Set(),
         imports: new Set<string>(),
       };
       handleObjectType(schema, result, zodSchemaToCode);
@@ -107,6 +111,7 @@ describe("object-types with schemaContext", () => {
 
       const result: ZodSchemaResult = {
         code: "",
+        helpers: new Set(),
         imports: new Set<string>(),
       };
       handleObjectType(schema, result, zodSchemaToCode, {
@@ -129,6 +134,7 @@ describe("object-types with schemaContext", () => {
 
       const result: ZodSchemaResult = {
         code: "",
+        helpers: new Set(),
         imports: new Set<string>(),
       };
       handleObjectType(schema, result, zodSchemaToCode, {
