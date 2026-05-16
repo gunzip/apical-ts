@@ -173,16 +173,23 @@ export function buildTypeAliasesFromRoute(config: {
     requestMapName,
     responseMapName,
   );
-  config.importManager.addClientRouteImport(sanitizedId);
 
   const hasAnyParams =
     config.hasPathParams || config.hasQueryParams || config.hasHeaderParams;
   const hasAdditionalProps =
     config.hasBody || config.hasRequestMap || config.hasResponseMap;
 
+  /* Import pre-computed parsed params type to avoid expensive z.infer inference */
+  const parsedParamsTypeName = `${sanitizedId}ParsedParamsType`;
+  if (hasAnyParams) {
+    config.importManager.addParsedParamsTypeImport(
+      sanitizedId,
+      parsedParamsTypeName,
+    );
+  }
+
   let typeAliases = "";
   const paramsTypeName = `${sanitizedId.charAt(0).toUpperCase()}${sanitizedId.slice(1)}Params`;
-  const clientRouteName = `${sanitizedId}ClientRoute`;
   const genericParams =
     config.hasRequestMap || config.hasResponseMap
       ? buildGenericTypeParams(config)
@@ -191,12 +198,11 @@ export function buildTypeAliasesFromRoute(config: {
   /* Build params type */
   if (hasAnyParams && hasAdditionalProps) {
     /* Params + body/contentType: use intersection */
-    const baseType = `z.infer<NonNullable<typeof ${clientRouteName}.params>>`;
     const additionalProps = buildAdditionalProperties(config);
-    typeAliases += `type ${paramsTypeName}${genericParams} = ${baseType} & {\n  ${additionalProps.join(";\n  ")};\n};\n\n`;
+    typeAliases += `type ${paramsTypeName}${genericParams} = ${parsedParamsTypeName} & {\n  ${additionalProps.join(";\n  ")};\n};\n\n`;
   } else if (hasAnyParams) {
     /* Only params */
-    typeAliases += `type ${paramsTypeName} = z.infer<NonNullable<typeof ${clientRouteName}.params>>;\n\n`;
+    typeAliases += `type ${paramsTypeName} = ${parsedParamsTypeName};\n\n`;
   } else if (hasAdditionalProps) {
     /* Only body/contentType */
     const props = buildAdditionalProperties(config);

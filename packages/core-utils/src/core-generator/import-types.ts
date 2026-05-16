@@ -11,7 +11,13 @@ interface ImportInfo {
   readonly parameterType?: ParameterType; // For parameter imports
   readonly requestMapName?: string; // For route imports
   readonly responseMapName?: string; // For route imports
-  readonly type: "config" | "parameter" | "route" | "schema" | "zod";
+  readonly type:
+    | "config"
+    | "parameter"
+    | "parsed-params-type"
+    | "route"
+    | "schema"
+    | "zod";
 }
 
 interface ParameterImportGroup {
@@ -50,6 +56,25 @@ export class ImportManager {
       filePath: "./runtime.js",
       name: configName,
       type: "config",
+    };
+    const key = this.generateKey(importInfo);
+
+    if (!this.importKeys.has(key)) {
+      this.importKeys.add(key);
+      this.imports.push(importInfo);
+    }
+  }
+
+  /*
+   * Adds a type-only import for ParsedParamsType from the parameter schema file.
+   * Used to avoid expensive z.infer<NonNullable<typeof clientRoute.params>> inference.
+   */
+  addParsedParamsTypeImport(operationId: string, typeName: string): void {
+    const importInfo: ImportInfo = {
+      filePath: `../schemas/${operationId}Parameters.js`,
+      name: typeName,
+      operationId,
+      type: "parsed-params-type",
     };
     const key = this.generateKey(importInfo);
 
@@ -219,6 +244,10 @@ export class ImportManager {
     return this.imports.filter(
       (imp) => imp.type === "parameter" && !imp.isSchema,
     );
+  }
+
+  getParsedParamsTypeImports(): ImportInfo[] {
+    return this.imports.filter((imp) => imp.type === "parsed-params-type");
   }
 
   getRouteImports(): ImportInfo[] {

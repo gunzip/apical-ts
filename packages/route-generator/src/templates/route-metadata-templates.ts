@@ -77,23 +77,22 @@ export function renderRouteMetadata(
   const clientParamsValue = hasAnyParams ? parsedParamsName : "undefined";
   const serverParamsValue = hasAnyParams ? serverParsedParamsName : "undefined";
 
-  const routeObjects = `const baseRoute = {
-  path: "${pathKey}",
+  /* Inline shared properties into both route objects to avoid spread inference cost */
+  const sharedRouteFields = `  path: "${pathKey}",
   method: "${method}",
   operationId: "${sanitizedId}",
   requestMap: ${requestMapFieldValue},
-  responseMap: ${responseMapFieldValue},
-} as const;
+  responseMap: ${responseMapFieldValue},`;
 
-export const clientRoute = {
-  ...baseRoute,
+  const routeObjects = `export const clientRoute = {
+${sharedRouteFields}
   params: ${clientParamsValue},
   isQueryOptional: ${isQueryOptional},
   isHeadersOptional: ${clientIsHeadersOptional},
 } as const;
 
 export const serverRoute = {
-  ...baseRoute,
+${sharedRouteFields}
   params: ${serverParamsValue},
   isQueryOptional: ${isQueryOptional},
   isHeadersOptional: ${serverIsHeadersOptional},

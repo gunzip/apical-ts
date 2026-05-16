@@ -127,12 +127,10 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"headers-error"/);
     expect(result.wrapperCode).toMatch(/\|\s*{\s*kind:\s*"body-error"/);
 
-    /* Should define parsed params type locally with server transformations */
+    /* Should define parsed params type locally using pre-computed server type */
     expect(result.wrapperCode).toContain("testOperationParsedParams");
-    // After refactoring, server uses typeof serverRoute.params instead of separate type
-    expect(result.wrapperCode).toContain(
-      "typeof testOperationRouteMetadata.params",
-    );
+    // Uses pre-computed ServerParsedParamsType imported from parameter schema file
+    expect(result.wrapperCode).toContain("testOperationServerParsedParamsType");
     expect(result.wrapperCode).toContain("body?: undefined");
 
     /* Should include handler type with discriminated union */
