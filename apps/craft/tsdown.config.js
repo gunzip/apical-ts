@@ -12,10 +12,10 @@ export default defineConfig({
   deps: {
     neverBundle: ["swagger2openapi"],
     alwaysBundle: [
-    "@apical-ts/core-utils",
-    "@apical-ts/client-generator",
-    "@apical-ts/server-generator",
-    "@apical-ts/route-generator",
-  ],
+      "@apical-ts/core-utils",
+      "@apical-ts/client-generator",
+      "@apical-ts/server-generator",
+      "@apical-ts/route-generator",
+    ],
   },
 });
