@@ -20,7 +20,7 @@
     "craft": "./bin/craft.js"
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown --config-loader native",
     "typecheck:code": "tsgo --noEmit",
     "typecheck:tests": "tsgo --noEmit -p tsconfig.tests.json",
     "typecheck": "pnpm typecheck:code && pnpm typecheck:tests",
