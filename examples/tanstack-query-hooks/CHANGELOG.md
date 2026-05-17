@@ -1,5 +1,12 @@
 # @apical-ts/tanstack-query-hooks
 
+## 0.2.2
+
+### Patch Changes
+
+- 20dc17e: Generate imports with TypeScript extension
+- de4419f: Migrate from tsup to tsdown
+
 ## 0.2.1
 
 ### Patch Changes

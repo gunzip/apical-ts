@@ -1,5 +1,19 @@
 # @apical-ts/client-generator
 
+## 0.14.9
+
+### Patch Changes
+
+- 0b253b7: Optimize generated types
+- 20dc17e: Generate imports with TypeScript extension
+- e0003c1: Refactor handling of exclusive unions with oneOf
+- 3e8bdf1: Reduce structural type-check cost
+- Updated dependencies [0b253b7]
+- Updated dependencies [20dc17e]
+- Updated dependencies [e0003c1]
+- Updated dependencies [ee305ff]
+  - @apical-ts/core-utils@0.22.3
+
 ## 0.14.8
 
 ### Patch Changes

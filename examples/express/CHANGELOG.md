@@ -1,5 +1,12 @@
 # @apical-ts/examples
 
+## 0.1.2
+
+### Patch Changes
+
+- 20dc17e: Generate imports with TypeScript extension
+- e0003c1: Refactor handling of exclusive unions with oneOf
+
 ## 0.1.1
 
 ### Patch Changes

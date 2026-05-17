@@ -1,5 +1,13 @@
 # @apical-ts/test-core
 
+## 0.12.3
+
+### Patch Changes
+
+- 20dc17e: Generate imports with TypeScript extension
+- de4419f: Migrate from tsup to tsdown
+- e0003c1: Refactor handling of exclusive unions with oneOf
+
 ## 0.12.2
 
 ### Patch Changes

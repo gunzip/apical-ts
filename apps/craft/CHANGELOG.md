@@ -1,5 +1,16 @@
 # @apical-ts/craft
 
+## 0.24.3
+
+### Patch Changes
+
+- 0b253b7: Optimize generated types
+- 20dc17e: Generate imports with TypeScript extension
+- de4419f: Migrate from tsup to tsdown
+- e0003c1: Refactor handling of exclusive unions with oneOf
+- ee305ff: Optimize unions for wildcard statuses
+- 3e8bdf1: Reduce structural type-check cost
+
 ## 0.24.2
 
 ### Patch Changes
@@ -210,6 +221,7 @@
 ### Minor Changes
 
 - 0a04a4e: ## Breaking changes
+
   - The generated `GlobalConfig.headers` now only accepts the declared auth
     header keys. Supplying fewer keys or injecting arbitrary default headers now
     fails type-checking, so update your configuration factories to fill every
@@ -219,6 +231,7 @@
     client calls when the OpenAPI spec actually defined them.
 
   ## Migration guidance
+
   1. Regenerate your client/server and update any helper that builds
      `globalConfig` so it hydrates all generated auth headers (you can store
      credentials elsewhere and spread them in).

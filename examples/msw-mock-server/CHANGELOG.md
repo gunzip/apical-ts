@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4
+
+### Patch Changes
+
+- 20dc17e: Generate imports with TypeScript extension
+
 ## 0.1.3
 
 ### Patch Changes

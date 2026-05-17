@@ -1,5 +1,14 @@
 # @apical-ts/core-utils
 
+## 0.22.3
+
+### Patch Changes
+
+- 0b253b7: Optimize generated types
+- 20dc17e: Generate imports with TypeScript extension
+- e0003c1: Refactor handling of exclusive unions with oneOf
+- ee305ff: Optimize unions for wildcard statuses
+
 ## 0.22.2
 
 ### Patch Changes

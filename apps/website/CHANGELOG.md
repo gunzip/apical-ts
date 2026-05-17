@@ -1,5 +1,11 @@
 # @apical-ts/website
 
+## 0.6.1
+
+### Patch Changes
+
+- e0003c1: Refactor handling of exclusive unions with oneOf
+
 ## 0.6.0
 
 ### Minor Changes
