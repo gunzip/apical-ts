@@ -9,7 +9,9 @@
     // Ensure strictness mirrors project settings
     "strict": true,
     // Generated client code uses fetch and Headers from DOM with iterable methods
-    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
   },
   "include": ["generated/**/*.ts"]
 }

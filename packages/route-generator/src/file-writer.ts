@@ -35,7 +35,7 @@ export async function writeRouteMetadataFile(
   const schemaImports: string[] = [];
 
   categorized.regularImports.forEach((imp) => {
-    schemaImports.push(`import { ${imp} } from "../schemas/${imp}.js";`);
+    schemaImports.push(`import { ${imp} } from "../schemas/${imp}.ts";`);
   });
 
   /* Build imports section */
@@ -62,14 +62,14 @@ export async function writeRoutesIndexFile(
   /* Generate individual route exports for both client and server */
   const exports = sanitizedOperations
     .map(({ sanitizedOperationId }) => {
-      return `export { clientRoute as ${sanitizedOperationId}ClientRoute, serverRoute as ${sanitizedOperationId}ServerRoute } from "./${sanitizedOperationId}.js";`;
+      return `export { clientRoute as ${sanitizedOperationId}ClientRoute, serverRoute as ${sanitizedOperationId}ServerRoute } from "./${sanitizedOperationId}.ts";`;
     })
     .join("\n");
 
   /* Generate route imports for routes object - use server routes by default */
   const routeImports = sanitizedOperations
     .map(({ sanitizedOperationId }) => {
-      return `import { serverRoute as ${sanitizedOperationId}Route } from "./${sanitizedOperationId}.js";`;
+      return `import { serverRoute as ${sanitizedOperationId}Route } from "./${sanitizedOperationId}.ts";`;
     })
     .join("\n");
 

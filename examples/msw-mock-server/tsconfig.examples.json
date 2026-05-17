@@ -4,6 +4,8 @@
     "lib": ["ES2023"],
     "module": "ESNext",
     "target": "ES2022",
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
     "moduleResolution": "Bundler",
     "strict": true,
     "esModuleInterop": true,

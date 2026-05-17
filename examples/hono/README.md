@@ -58,7 +58,7 @@ imports a handler file with the same basename.
 Example `handlers/addPet.ts`:
 
 ```ts
-import type { AddPetHandler } from "../generated/hono/operations/addPet.js";
+import type { AddPetHandler } from "../generated/hono/operations/addPet.ts";
 
 export const addPetHandler: AddPetHandler = async (input, _context) => {
   return {
@@ -82,7 +82,7 @@ Then your server only needs:
 ```ts
 import { Hono } from "hono";
 
-import { registerGeneratedRoutes } from "./generated/hono/register-routes.js";
+import { registerGeneratedRoutes } from "./generated/hono/register-routes.ts";
 
 const app = new Hono();
 registerGeneratedRoutes(app);

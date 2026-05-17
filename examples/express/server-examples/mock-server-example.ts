@@ -3,7 +3,7 @@
 import express from "express";
 import { zocker } from "zocker";
 import { createExpressAdapter } from "./express-adapter.js";
-import { routes } from "../generated/server/index.js";
+import { routes } from "../generated/server/index.ts";
 
 const app = express();
 const PORT = 3001;

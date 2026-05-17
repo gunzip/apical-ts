@@ -177,7 +177,7 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("schema.safeParse(req.body)");
     expect(result.wrapperCode).toContain("testStrictBodyValidationRequestMap");
     expect(result.wrapperCode).toContain(
-      'from "../routes/testStrictBodyValidation.js"',
+      'from "../routes/testStrictBodyValidation.ts"',
     );
     expect(result.wrapperCode).toContain("testStrictBodyValidationWrapper");
     expect(result.wrapperCode).toContain("body-error");

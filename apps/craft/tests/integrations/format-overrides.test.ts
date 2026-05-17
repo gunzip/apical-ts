@@ -80,11 +80,11 @@ describe("format overrides integration", () => {
 
 function createConsumerSource(): string {
   return `import * as z from "zod";
-import { createProfile } from "./client/createProfile.js";
-import { createProfileRequestMap } from "./routes/createProfile.js";
-import { serverRoute as getProfileByTaxCodeServerRoute } from "./routes/getProfileByTaxCode.js";
-import type { Profile } from "./schemas/Profile.js";
-import type { getProfileByTaxCodeHandler } from "./server/getProfileByTaxCode.js";
+import { createProfile } from "./client/createProfile.ts";
+import { createProfileRequestMap } from "./routes/createProfile.ts";
+import { serverRoute as getProfileByTaxCodeServerRoute } from "./routes/getProfileByTaxCode.ts";
+import type { Profile } from "./schemas/Profile.ts";
+import type { getProfileByTaxCodeHandler } from "./server/getProfileByTaxCode.ts";
 
 const validProfile: Profile = { fiscalCode: "TAX-001" };
 // @ts-expect-error invalid tax code should be rejected by the overridden schema type
@@ -148,9 +148,10 @@ async function generateWithFormatOverride(): Promise<void> {
 }
 
 function getExpectedImportSpecifier(filePath: string): string {
-  const relativePath = relative(dirname(filePath), taxCodeSourcePath)
-    .replaceAll("\\", "/")
-    .replace(/\.ts$/, ".js");
+  const relativePath = relative(
+    dirname(filePath),
+    taxCodeSourcePath,
+  ).replaceAll("\\", "/");
 
   return relativePath.startsWith(".") ? relativePath : `./${relativePath}`;
 }

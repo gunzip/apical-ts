@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { Category } from "../integrations/generated/schemas/Category.js";
-import { NotificationEvent } from "../integrations/generated/schemas/NotificationEvent.js";
+import { Category } from "../integrations/generated/schemas/Category.ts";
+import { NotificationEvent } from "../integrations/generated/schemas/NotificationEvent.ts";
 
 describe("Recursive Schema Validation", () => {
   describe("Category (regular recursive schema)", () => {

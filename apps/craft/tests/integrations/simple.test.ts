@@ -5,7 +5,7 @@ import {
   createUnauthenticatedClient,
 } from "./client.js";
 import { getRandomPort, MockServer } from "./setup.js";
-import * as operations from "./generated/client/index.js";
+import * as operations from "./generated/client/index.ts";
 
 describe("Working Integration Test Demo", () => {
   let mockServer: MockServer;

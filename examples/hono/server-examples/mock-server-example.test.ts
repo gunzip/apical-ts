@@ -75,7 +75,7 @@ describe("Hono Mock Server", () => {
       'import { zValidator } from "@hono/zod-validator";',
     );
     expect(operationModule).toContain(
-      'import { addPetHandler } from "../handlers/addPet.js";',
+      'import { addPetHandler } from "../handlers/addPet.ts";',
     );
     expect(operationModule).toContain("type addPetRouteResponse");
     expect(operationModule).toContain("await addPetHandler(input, context);");

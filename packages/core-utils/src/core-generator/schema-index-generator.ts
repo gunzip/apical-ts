@@ -114,12 +114,12 @@ function buildImportLines(entry: SchemaIndexEntry): string[] {
     entry.exportNames.length === 1 &&
     !entry.fileName.includes("Parameters.ts")
   ) {
-    return [`import { ${entry.exportNames[0]} } from "./${fileBaseName}.js";`];
+    return [`import { ${entry.exportNames[0]} } from "./${fileBaseName}.ts";`];
   }
 
   return [
     "import {",
     ...entry.exportNames.map((exportName) => `  ${exportName},`),
-    `} from "./${fileBaseName}.js";`,
+    `} from "./${fileBaseName}.ts";`,
   ];
 }

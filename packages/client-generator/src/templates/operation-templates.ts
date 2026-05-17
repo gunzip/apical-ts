@@ -227,9 +227,9 @@ export function buildTypeAliasesFromRoute(config: {
   if (config.shouldGenerateResponseMap) {
     typeAliases += `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = Partial<Record<{
   [Status in keyof ${config.responseMapTypeName}]: keyof ${config.responseMapTypeName}[Status]
-}[keyof ${config.responseMapTypeName}], import('./runtime.js').Deserializer>>;\n\n`;
+}[keyof ${config.responseMapTypeName}], import('./runtime.ts').Deserializer>>;\n\n`;
   } else {
-    typeAliases += `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = import('./runtime.js').DeserializerMap;\n\n`;
+    typeAliases += `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = import('./runtime.ts').DeserializerMap;\n\n`;
   }
 
   return typeAliases;

@@ -127,7 +127,7 @@ describe("schema-generator file-generators", () => {
 
       const result = await generateSchemaFile("Profile", schema);
 
-      expect(result.content).toContain(`import { User } from "./User.js";`);
+      expect(result.content).toContain(`import { User } from "./User.ts";`);
     });
 
     it("should not import itself", async () => {
@@ -211,8 +211,8 @@ describe("schema-generator file-generators", () => {
 
       const result = await generateSchemaFile("Profile", schema);
 
-      expect(result.content).toMatch(/import \{ Role \} from "\.\/Role\.js";/);
-      expect(result.content).toMatch(/import \{ User \} from "\.\/User\.js";/);
+      expect(result.content).toMatch(/import \{ Role \} from "\.\/Role\.ts";/);
+      expect(result.content).toMatch(/import \{ User \} from "\.\/User\.ts";/);
     });
     it("should include helpers import when schema uses exclusiveUnion", async () => {
       const schema: SchemaObject = {
@@ -230,7 +230,7 @@ describe("schema-generator file-generators", () => {
       const result = await generateSchemaFile("SearchHit", schema);
 
       expect(result.content).toContain(
-        'import { exclusiveUnion } from "./runtime.js";',
+        'import { exclusiveUnion } from "./runtime.ts";',
       );
       expect(result.content).toContain("export const SearchHit =");
     });
@@ -251,7 +251,7 @@ describe("schema-generator file-generators", () => {
       const result = await generateSchemaFile("User", schema);
 
       expect(result.content).not.toContain(
-        'import { exclusiveUnion } from "./runtime.js";',
+        'import { exclusiveUnion } from "./runtime.ts";',
       );
     });
 
@@ -271,7 +271,7 @@ describe("schema-generator file-generators", () => {
       const result = await generateSchemaFile("User", schema);
 
       expect(result.content).not.toContain(
-        'import { exclusiveUnion } from "./runtime.js";',
+        'import { exclusiveUnion } from "./runtime.ts";',
       );
     });
   });

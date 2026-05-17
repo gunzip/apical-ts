@@ -39,10 +39,10 @@ function buildImportStatements(
   /* Add config imports */
   const configImports = getConfigImports(functionCode);
   imports.push(
-    `import type { ${configImports.typeImports.join(", ")} } from "./runtime.js";`,
+    `import type { ${configImports.typeImports.join(", ")} } from "./runtime.ts";`,
   );
   imports.push(
-    `import { ${configImports.valueImports.join(", ")} } from "./runtime.js";`,
+    `import { ${configImports.valueImports.join(", ")} } from "./runtime.ts";`,
   );
 
   /* Add Zod import if needed (either explicit via ImportManager or implicit via z.infer usage) */

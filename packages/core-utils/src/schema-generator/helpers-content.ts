@@ -46,7 +46,7 @@ export function buildGeneratedSchemaHelpersImport(
     return "";
   }
 
-  return `import { ${helperImports.join(", ")} } from "./runtime.js";\n`;
+  return `import { ${helperImports.join(", ")} } from "./runtime.ts";\n`;
 }
 
 export function getHelpersFileContent(): string {

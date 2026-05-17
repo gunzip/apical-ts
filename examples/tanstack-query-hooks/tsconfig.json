@@ -1,14 +1,16 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
     "moduleResolution": "nodenext",
     "module": "nodenext",
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "esModuleInterop": true,
     "allowJs": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noEmit": true
   },
   "include": ["scripts/**/*", "src/**/*", "generated/**/*"]
 }

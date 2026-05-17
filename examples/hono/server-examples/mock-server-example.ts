@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 import {
   registerGeneratedRoutes,
   registeredRoutes,
-} from "../generated/hono/register-routes.js";
+} from "../generated/hono/register-routes.ts";
 
 const PORT = 3002;
 

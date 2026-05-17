@@ -7,7 +7,7 @@ export function buildMockRuntimeModule() {
     "  type GeneratedOperationHandler,",
     "  type GeneratedRouteDefinition,",
     "  type ResponseMap,",
-    '} from "./runtime.js";',
+    '} from "./runtime.ts";',
     "",
     "interface SelectedResponseVariant {",
     "  contentType: string;",

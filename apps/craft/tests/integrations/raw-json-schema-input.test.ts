@@ -44,9 +44,9 @@ describe("raw JSON Schema input", () => {
         "index.ts",
       ]),
     );
-    expect(personContent).toContain('import { Address } from "./Address.js";');
+    expect(personContent).toContain('import { Address } from "./Address.ts";');
     expect(personContent).toContain('"address": Address');
-    expect(indexContent).toContain('import { Person } from "./Person.js";');
+    expect(indexContent).toContain('import { Person } from "./Person.ts";');
     expect(indexContent).toContain("  Person,");
   });
 

@@ -4,8 +4,8 @@ import {
   createUserWithRequestBodies,
   CreateUserWithRequestBodiesRequestMap,
   CreateUserWithRequestBodiesResponseMap,
-} from "./generated/client/createUserWithRequestBodies.js";
-import { Profile } from "./generated/schemas/Profile.js";
+} from "./generated/client/createUserWithRequestBodies.ts";
+import { Profile } from "./generated/schemas/Profile.ts";
 
 describe("Request Bodies Unit Tests", () => {
   describe("CreateUserWithRequestBodies operation", () => {

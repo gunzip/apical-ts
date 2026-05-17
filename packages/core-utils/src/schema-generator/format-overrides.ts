@@ -219,22 +219,21 @@ function getImportSpecifier(
 }
 
 /*
- * Rewrites TypeScript source extensions to the runtime module extension that
- * generated ESM code must import. This keeps path-based overrides compatible
- * with the emitted `.js`/`.mjs`/`.cjs` files.
+ * Preserves TypeScript source extensions so generated code can run directly
+ * under runtimes that execute TypeScript modules natively.
  */
 function rewriteTypeScriptExtension(importPath: string): string {
   if (importPath.endsWith(".d.ts")) {
-    return `${importPath.slice(0, -5)}.js`;
+    return `${importPath.slice(0, -5)}.ts`;
   }
   if (importPath.endsWith(".mts")) {
-    return `${importPath.slice(0, -4)}.mjs`;
+    return importPath;
   }
   if (importPath.endsWith(".cts")) {
-    return `${importPath.slice(0, -4)}.cjs`;
+    return importPath;
   }
   if (importPath.endsWith(".ts") || importPath.endsWith(".tsx")) {
-    return `${importPath.slice(0, importPath.lastIndexOf("."))}.js`;
+    return importPath;
   }
   return importPath;
 }

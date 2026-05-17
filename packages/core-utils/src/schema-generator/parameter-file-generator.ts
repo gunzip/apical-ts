@@ -157,7 +157,7 @@ async function generateParameterSchemaFile(
       )
       .sort();
     for (const typeImport of typeImportsList) {
-      imports.push(`import { ${typeImport} } from "./${typeImport}.js";`);
+      imports.push(`import { ${typeImport} } from "./${typeImport}.ts";`);
     }
   }
 

@@ -16,11 +16,11 @@ import { describe, expect, it } from "vitest";
 import { createPackageFiles } from "../src/core-generator/package-generator.js";
 
 describe("package generator", () => {
-  it("uses plain tsgo for generated outputs at or below the chunking threshold", async () => {
+  it("uses plain tsgo to typecheck at or below the chunking threshold", async () => {
     const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
 
     try {
-      await writeFile(join(outputDir, "build.mjs"), "stale");
+      await writeFile(join(outputDir, "typecheck.mjs"), "stale");
       await createPackageFiles(outputDir);
 
       const packageJson = JSON.parse(
@@ -40,23 +40,24 @@ describe("package generator", () => {
         },
         name: "generated-client",
         scripts: {
-          build: "tsgo",
+          typecheck: "tsgo",
         },
         type: "module",
         version: "0.1.0",
       });
-      await expect(access(join(outputDir, "build.mjs"))).rejects.toThrow();
+      await expect(access(join(outputDir, "typecheck.mjs"))).rejects.toThrow();
 
       expect(tsConfig).toEqual({
         compilerOptions: {
           allowSyntheticDefaultImports: true,
+          allowImportingTsExtensions: true,
+          erasableSyntaxOnly: true,
           esModuleInterop: true,
           forceConsistentCasingInFileNames: true,
           lib: ["es2024"],
           module: "NodeNext",
           moduleResolution: "NodeNext",
-          noEmitOnError: false,
-          outDir: "dist",
+          noEmit: true,
           resolveJsonModule: true,
           rootDir: ".",
           skipLibCheck: true,
@@ -70,7 +71,7 @@ describe("package generator", () => {
     }
   });
 
-  it("writes build.mjs for generated outputs above the chunking threshold", async () => {
+  it("writes typecheck.mjs for generated outputs above the chunking threshold", async () => {
     const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
     const schemasDir = join(outputDir, "schemas");
 
@@ -90,13 +91,16 @@ describe("package generator", () => {
       const packageJson = JSON.parse(
         await readFile(join(outputDir, "package.json"), "utf8"),
       );
-      const buildScript = await readFile(join(outputDir, "build.mjs"), "utf8");
+      const buildScript = await readFile(
+        join(outputDir, "typecheck.mjs"),
+        "utf8",
+      );
 
-      expect(packageJson.scripts.build).toBe("node ./build.mjs");
+      expect(packageJson.scripts.typecheck).toBe("node ./typecheck.mjs");
       expect(buildScript).toContain("APICAL_TS_BUILD_CHUNK_SIZE");
-      expect(buildScript).toContain("[build] ");
+      expect(buildScript).toContain("[typecheck] ");
       expect(buildScript).toContain("chunk ");
-      expect(buildScript).toContain("emitIndexFile");
+      expect(buildScript).toContain("typecheck completed");
       expect(buildScript).toContain('return "../" + file;');
     } finally {
       await rm(outputDir, { recursive: true, force: true });
@@ -126,13 +130,14 @@ describe("package generator", () => {
       expect(tsConfig).toEqual({
         compilerOptions: {
           allowSyntheticDefaultImports: true,
+          allowImportingTsExtensions: true,
+          erasableSyntaxOnly: true,
           esModuleInterop: true,
           forceConsistentCasingInFileNames: true,
           lib: ["es2024"],
           module: "NodeNext",
           moduleResolution: "NodeNext",
-          noEmitOnError: false,
-          outDir: "dist",
+          noEmit: true,
           resolveJsonModule: true,
           skipLibCheck: true,
           strict: true,

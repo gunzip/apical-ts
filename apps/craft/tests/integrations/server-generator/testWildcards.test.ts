@@ -3,7 +3,7 @@ import supertest from "supertest";
 import {
   testWildcardsWrapper,
   testWildcardsHandler,
-} from "../generated/server/testWildcards.js";
+} from "../generated/server/testWildcards.ts";
 import { setupTestRoute } from "./test-helpers.js";
 
 describe("testWildcards operation integration tests", () => {

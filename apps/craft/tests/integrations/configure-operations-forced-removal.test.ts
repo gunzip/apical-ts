@@ -3,8 +3,8 @@ import {
   configureOperations,
   globalConfig,
   ApiResponseWithForcedParse,
-} from "./generated/client/runtime.js";
-import { testMultipleSuccess } from "./generated/client/testMultipleSuccess.js";
+} from "./generated/client/runtime.ts";
+import { testMultipleSuccess } from "./generated/client/testMultipleSuccess.ts";
 
 /* This test asserts that when binding with forceValidation:false the returned operation
    type no longer includes any ApiResponseWithForcedParse variants (DX improvement). */

@@ -27,14 +27,14 @@ export async function writeServerIndexFile(
   const sanitizedOperations = createSanitizedOperationEntries(operations);
   const exports = sanitizedOperations
     .map(({ sanitizedOperationId }) => {
-      return `export { ${sanitizedOperationId}Wrapper } from "./${sanitizedOperationId}.js";`;
+      return `export { ${sanitizedOperationId}Wrapper } from "./${sanitizedOperationId}.ts";`;
     })
     .join("\n");
 
   /* Generate routes object with all route functions properly aliased */
   const routeImports = sanitizedOperations
     .map(({ sanitizedOperationId }) => {
-      return `import { route as ${sanitizedOperationId}Route } from "./${sanitizedOperationId}.js";`;
+      return `import { route as ${sanitizedOperationId}Route } from "./${sanitizedOperationId}.ts";`;
     })
     .join("\n");
 
@@ -55,7 +55,7 @@ ${exports}
 /* Re-export all handlers */
   ${sanitizedOperations
     .map(({ sanitizedOperationId }) => {
-      return `export type { ${sanitizedOperationId}Handler } from "./${sanitizedOperationId}.js";`;
+      return `export type { ${sanitizedOperationId}Handler } from "./${sanitizedOperationId}.ts";`;
     })
     .join("\n")}
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getCatalogParsedParams,
   getCatalogServerParsedParams,
-} from "../generated/schemas/getCatalogParameters.js";
+} from "../generated/schemas/getCatalogParameters.ts";
 
 describe("Generated global security header schemas", () => {
   it("keeps inherited auth headers optional on client params and required on server routes", () => {

@@ -4,15 +4,15 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import {
   route as testParameterWithDashRoute,
   testParameterWithDashWrapper,
-} from "./generated/server/testParameterWithDash.js";
+} from "./generated/server/testParameterWithDash.ts";
 import {
   route as testWithTwoParamsRoute,
   testWithTwoParamsWrapper,
-} from "./generated/server/testWithTwoParams.js";
+} from "./generated/server/testWithTwoParams.ts";
 import {
   route as testCoercionRoute,
   testCoercionWrapper,
-} from "./generated/server/testCoercion.js";
+} from "./generated/server/testCoercion.ts";
 
 /* Minimal local adapter + helpers to decouple test from example implementation. */
 interface LocalServerResponse {

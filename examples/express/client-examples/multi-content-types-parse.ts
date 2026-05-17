@@ -1,5 +1,5 @@
-import { globalConfig, isParsed } from "../generated/client/runtime.js";
-import { updatePet } from "../generated/client/updatePet.js";
+import { globalConfig, isParsed } from "../generated/client/runtime.ts";
+import { updatePet } from "../generated/client/updatePet.ts";
 import z from "zod";
 
 const parseXml = () => {

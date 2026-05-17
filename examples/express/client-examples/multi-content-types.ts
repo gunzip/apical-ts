@@ -1,5 +1,5 @@
-import { globalConfig } from "../generated/client/runtime.js";
-import { updatePet } from "../generated/client/updatePet.js";
+import { globalConfig } from "../generated/client/runtime.ts";
+import { updatePet } from "../generated/client/updatePet.ts";
 
 const parseXml = () => {
   // Implement XML deserialization logic here

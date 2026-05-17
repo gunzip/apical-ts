@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { AllOfTest } from "./generated/schemas/AllOfTest.js";
-import type { AllOfWithEmptyObjectAndRequireTest } from "./generated/schemas/AllOfWithEmptyObjectAndRequireTest.js";
-import type { AllOfWithMixedTest } from "./generated/schemas/AllOfWithMixedTest.js";
+import type { AllOfTest } from "./generated/schemas/AllOfTest.ts";
+import type { AllOfWithEmptyObjectAndRequireTest } from "./generated/schemas/AllOfWithEmptyObjectAndRequireTest.ts";
+import type { AllOfWithMixedTest } from "./generated/schemas/AllOfWithMixedTest.ts";
 
 describe("AllOf Schema Composition Integration", () => {
   describe("Object spread optimization", () => {
@@ -54,7 +54,7 @@ describe("AllOf Schema Composition Integration", () => {
     it("should validate AllOfTest schema correctly", async () => {
       // Import the actual Zod schema
       const { AllOfTest: AllOfTestSchema } =
-        await import("./generated/schemas/AllOfTest.js");
+        await import("./generated/schemas/AllOfTest.ts");
 
       // Test valid data
       const validData = {
@@ -85,7 +85,7 @@ describe("AllOf Schema Composition Integration", () => {
     it("should validate AllOfWithEmptyObjectAndRequireTest with required items", async () => {
       // Import the actual Zod schema
       const { AllOfWithEmptyObjectAndRequireTest: RequireTestSchema } =
-        await import("./generated/schemas/AllOfWithEmptyObjectAndRequireTest.js");
+        await import("./generated/schemas/AllOfWithEmptyObjectAndRequireTest.ts");
 
       // Test that items is required
       const invalidData = {
@@ -135,7 +135,7 @@ describe("AllOf Schema Composition Integration", () => {
     it("should handle optional items in regular AllOfTest", async () => {
       // Import the actual Zod schema
       const { AllOfTest: AllOfTestSchema } =
-        await import("./generated/schemas/AllOfTest.js");
+        await import("./generated/schemas/AllOfTest.ts");
 
       // Test that items is optional in regular AllOfTest
       const dataWithoutItems = {

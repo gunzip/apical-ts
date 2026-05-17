@@ -65,7 +65,7 @@ describe("generateHonoServer", () => {
     const generatedPackageJson = JSON.parse(generatedPackageJsonContent);
 
     expect(operationModule).toContain(
-      'import { addPetHandler } from "../../../handlers/addPet.js";',
+      'import { addPetHandler } from "../../../handlers/addPet.ts";',
     );
     expect(operationModule).toContain("type addPetRouteResponse");
     expect(operationModule).toContain("await addPetHandler(input, context);");
@@ -134,7 +134,7 @@ describe("generateHonoServer", () => {
     const generatedPackageJson = JSON.parse(generatedPackageJsonContent);
 
     expect(operationModule).toContain(
-      'import { addPetHandler } from "../handlers/addPet.js";',
+      'import { addPetHandler } from "../handlers/addPet.ts";',
     );
     expect(mockHandlerModule).toContain(
       "export const addPetHandler = createMockOperationHandler(addPetRoute);",
