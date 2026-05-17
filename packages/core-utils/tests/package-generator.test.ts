@@ -40,7 +40,7 @@ describe("package generator", () => {
         },
         name: "generated-client",
         scripts: {
-          build: "tsgo",
+          typecheck: "tsgo",
         },
         type: "module",
         version: "0.1.0",
@@ -50,13 +50,14 @@ describe("package generator", () => {
       expect(tsConfig).toEqual({
         compilerOptions: {
           allowSyntheticDefaultImports: true,
+          allowImportingTsExtensions: true,
+          erasableSyntaxOnly: true,
           esModuleInterop: true,
           forceConsistentCasingInFileNames: true,
           lib: ["es2024"],
           module: "NodeNext",
           moduleResolution: "NodeNext",
-          noEmitOnError: false,
-          outDir: "dist",
+          noEmit: true,
           resolveJsonModule: true,
           rootDir: ".",
           skipLibCheck: true,
@@ -95,11 +96,11 @@ describe("package generator", () => {
         "utf8",
       );
 
-      expect(packageJson.scripts.build).toBe("node ./typecheck.mjs");
+      expect(packageJson.scripts.typecheck).toBe("node ./typecheck.mjs");
       expect(buildScript).toContain("APICAL_TS_BUILD_CHUNK_SIZE");
-      expect(buildScript).toContain("[build] ");
+      expect(buildScript).toContain("[typecheck] ");
       expect(buildScript).toContain("chunk ");
-      expect(buildScript).toContain("emitIndexFile");
+      expect(buildScript).toContain("typecheck completed");
       expect(buildScript).toContain('return "../" + file;');
     } finally {
       await rm(outputDir, { recursive: true, force: true });
@@ -129,13 +130,14 @@ describe("package generator", () => {
       expect(tsConfig).toEqual({
         compilerOptions: {
           allowSyntheticDefaultImports: true,
+          allowImportingTsExtensions: true,
+          erasableSyntaxOnly: true,
           esModuleInterop: true,
           forceConsistentCasingInFileNames: true,
           lib: ["es2024"],
           module: "NodeNext",
           moduleResolution: "NodeNext",
-          noEmitOnError: false,
-          outDir: "dist",
+          noEmit: true,
           resolveJsonModule: true,
           skipLibCheck: true,
           strict: true,

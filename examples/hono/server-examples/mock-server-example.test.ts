@@ -65,7 +65,7 @@ describe("Hono Mock Server", () => {
           "utf8",
         ),
         readFile(
-          path.join(currentDirectoryPath, "../generated/package.tson"),
+          path.join(currentDirectoryPath, "../generated/package.json"),
           "utf8",
         ),
       ]);

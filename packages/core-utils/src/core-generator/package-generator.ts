@@ -6,6 +6,7 @@ import type { StringFormatOverride } from "../schema-generator/format-overrides.
 import { buildScriptContent } from "./build-script-template.js";
 
 const baseCompilerOptions: Record<string, unknown> = {
+  noEmit: true,
   allowSyntheticDefaultImports: true,
   erasableSyntaxOnly: true,
   allowImportingTsExtensions: true,
@@ -14,8 +15,6 @@ const baseCompilerOptions: Record<string, unknown> = {
   lib: ["es2024"],
   module: "NodeNext",
   moduleResolution: "NodeNext",
-  noEmitOnError: false,
-  outDir: "dist",
   resolveJsonModule: true,
   skipLibCheck: true,
   strict: true,

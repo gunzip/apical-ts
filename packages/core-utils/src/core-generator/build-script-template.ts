@@ -1,7 +1,5 @@
 export const buildScriptContent = String.raw`import { spawnSync } from "node:child_process";
 import {
-  mkdirSync,
-  readFileSync,
   readdirSync,
   rmSync,
   writeFileSync,
@@ -12,7 +10,6 @@ import { fileURLToPath } from "node:url";
 const DEFAULT_CHUNK_SIZE = 100;
 const root = dirname(fileURLToPath(import.meta.url));
 const buildDir = join(root, ".apical-ts-build");
-const distDir = join(root, "dist");
 const forwardedArgs = process.argv.slice(2);
 const tsgoCommand =
   process.platform === "win32"
@@ -20,7 +17,7 @@ const tsgoCommand =
     : "node_modules/.bin/tsgo";
 
 function logBuild(message) {
-  console.log("[build] " + message);
+  console.log("[typecheck] " + message);
 }
 
 function readChunkSize() {
@@ -63,10 +60,14 @@ function listTypeScriptFiles(directory) {
 }
 
 function runTsgo(configPath) {
-  const result = spawnSync(tsgoCommand, ["-p", configPath, ...forwardedArgs], {
-    cwd: root,
-    stdio: "inherit",
-  });
+  const result = spawnSync(
+    tsgoCommand,
+    ["--noEmit", "-p", configPath, ...forwardedArgs],
+    {
+      cwd: root,
+      stdio: "inherit",
+    },
+  );
 
   if (result.error) {
     throw result.error;
@@ -80,30 +81,6 @@ function runTsgo(configPath) {
 
 function toBuildConfigFilePath(file) {
   return "../" + file;
-}
-
-function isIndexFile(file) {
-  return file === "index.ts" || file.endsWith("/index.ts");
-}
-
-function toOutputJavaScriptPath(file) {
-  return join(distDir, file.replace(/\.ts$/, ".js"));
-}
-
-function stripIndexTypeScript(source) {
-  return source
-    .replace(/^\s*export\s+type\s+\{[^;]*\}\s+from\s+["'][^"']+["'];\s*$/gm, "")
-    .replace(/\s+as const/g, "");
-}
-
-function emitIndexFile(file) {
-  const outputPath = toOutputJavaScriptPath(file);
-
-  mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(
-    outputPath,
-    stripIndexTypeScript(readFileSync(join(root, file), "utf8")),
-  );
 }
 
 let configIndex = 0;
@@ -136,7 +113,7 @@ function compileFiles(files, label) {
 
   if (files.length === 1) {
     console.error(
-      "[build] " + label + ": tsgo failed for " + files[0] + signalSuffix,
+      "[typecheck] " + label + ": tsgo failed for " + files[0] + signalSuffix,
     );
     return result.code;
   }
@@ -164,17 +141,14 @@ let exitCode = 0;
 
 try {
   rmSync(buildDir, { force: true, recursive: true });
-  rmSync(distDir, { force: true, recursive: true });
   mkdirSync(buildDir, { recursive: true });
 
   const files = listTypeScriptFiles(root).sort();
-  const indexFiles = files.filter(isIndexFile);
-  const compilationFiles = files.filter((file) => !isIndexFile(file));
-  const totalChunks = Math.ceil(compilationFiles.length / chunkSize);
+  const totalChunks = Math.ceil(files.length / chunkSize);
 
   logBuild(
-    "compiling " +
-      compilationFiles.length +
+    "typechecking " +
+      files.length +
       " TypeScript files in " +
       totalChunks +
       " chunk(s) of up to " +
@@ -182,12 +156,12 @@ try {
       " files",
   );
 
-  for (let start = 0; start < compilationFiles.length; start += chunkSize) {
-    const chunk = compilationFiles.slice(start, start + chunkSize);
+  for (let start = 0; start < files.length; start += chunkSize) {
+    const chunk = files.slice(start, start + chunkSize);
     const chunkNumber = Math.floor(start / chunkSize) + 1;
     const chunkLabel = "chunk " + chunkNumber + "/" + totalChunks;
 
-    logBuild(chunkLabel + ": compiling " + chunk.length + " file(s)");
+    logBuild(chunkLabel + ": typechecking " + chunk.length + " file(s)");
 
     exitCode = compileFiles(chunk, chunkLabel);
     if (exitCode !== 0) {
@@ -196,9 +170,7 @@ try {
   }
 
   if (exitCode === 0) {
-    logBuild("emitting " + indexFiles.length + " index file(s)");
-    indexFiles.forEach(emitIndexFile);
-    logBuild("build completed");
+    logBuild("typecheck completed");
   }
 } finally {
   rmSync(buildDir, { force: true, recursive: true });

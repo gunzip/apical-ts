@@ -505,6 +505,8 @@ async function typecheckGeneratedSchemas(
       path.join(workspaceDir, "tsconfig.json"),
       JSON.stringify({
         compilerOptions: {
+          allowImportingTsExtensions: true,
+          erasableSyntaxOnly: true,
           module: "ESNext",
           moduleResolution: "bundler",
           noEmit: true,
