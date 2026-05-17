@@ -17,5 +17,15 @@ describe("core-generator schema-generation-coordinator", () => {
       expect(result).toContain("export const AllowNothing = z.never();");
       expect(result).not.toContain("z.unknown()");
     });
+
+    it("emits an explicit fallback type alias once the inline threshold is met", () => {
+      const result = generateFallbackSchemaContent("AllowAnything", true, {
+        totalGeneratedSchemaCount: 100,
+      });
+
+      expect(result).toContain("export const AllowAnything = z.unknown();");
+      expect(result).toContain("export type AllowAnything = unknown;");
+      expect(result).not.toContain("z.infer<typeof AllowAnything>");
+    });
   });
 });

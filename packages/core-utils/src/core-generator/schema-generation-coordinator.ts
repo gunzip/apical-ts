@@ -18,6 +18,7 @@ import {
   generateSchemaFile,
   writeParameterSchemaFile,
 } from "../schema-generator/index.js";
+import { tryRenderFallbackTypeAlias } from "../schema-generator/inline-type-renderer.js";
 import {
   getHelpersFileContent,
   HELPERS_FILE_NAME,
@@ -61,6 +62,7 @@ interface SchemaGenerationContext {
   openApiDoc: OpenAPIObject;
   resolvedSchemas: ResolvedSchemas;
   schemasDir: string;
+  totalGeneratedSchemaCount: number;
 }
 
 type SchemaGeneratorFunction<T = SchemaObject> = (
@@ -104,6 +106,7 @@ export async function generateSchemas(
     openApiDoc,
     resolvedSchemas: openApiDoc.components?.schemas ?? {},
     schemasDir,
+    totalGeneratedSchemaCount: 0,
   };
 
   if (profiler) {
@@ -111,6 +114,14 @@ export async function generateSchemas(
   }
   const operationParameters = extractOperationParameters(openApiDoc);
   profiler?.end("schemas:parameter-metadata");
+  const requestSchemas = extractRequestSchemas(openApiDoc);
+  const responseSchemas = extractResponseSchemas(openApiDoc);
+  context.totalGeneratedSchemaCount = countGeneratedSchemas(
+    openApiDoc,
+    operationParameters,
+    requestSchemas,
+    responseSchemas,
+  );
 
   if (!profiler) {
     const schemaGenerationPromises: Promise<SchemaIndexEntry[]>[] = [
@@ -118,7 +129,7 @@ export async function generateSchemas(
       ...generateComponentSchemas(context),
       // Generate request schemas from operations
       ...createSchemaGenerationPromises(
-        extractRequestSchemas(openApiDoc),
+        requestSchemas,
         context,
         (name, schema) =>
           generateRequestSchemaFile(name, schema, {
@@ -126,11 +137,12 @@ export async function generateSchemas(
             formatOverrides: context.formatOverrides,
             resolvedSchemas: context.resolvedSchemas,
             schemaDirectory: context.schemasDir,
+            totalGeneratedSchemaCount: context.totalGeneratedSchemaCount,
           }),
       ),
       // Generate response schemas from operations
       ...createSchemaGenerationPromises(
-        extractResponseSchemas(openApiDoc),
+        responseSchemas,
         context,
         (name, schema) =>
           generateResponseSchemaFile(name, schema, {
@@ -138,6 +150,7 @@ export async function generateSchemas(
             formatOverrides: context.formatOverrides,
             resolvedSchemas: context.resolvedSchemas,
             schemaDirectory: context.schemasDir,
+            totalGeneratedSchemaCount: context.totalGeneratedSchemaCount,
           }),
       ),
       // Generate parameter schemas from operations
@@ -163,7 +176,7 @@ export async function generateSchemas(
       ...(
         await Promise.all(
           createSchemaGenerationPromises(
-            extractRequestSchemas(openApiDoc),
+            requestSchemas,
             context,
             (name, schema) =>
               generateRequestSchemaFile(name, schema, {
@@ -171,6 +184,7 @@ export async function generateSchemas(
                 formatOverrides: context.formatOverrides,
                 resolvedSchemas: context.resolvedSchemas,
                 schemaDirectory: context.schemasDir,
+                totalGeneratedSchemaCount: context.totalGeneratedSchemaCount,
               }),
           ),
         )
@@ -183,7 +197,7 @@ export async function generateSchemas(
       ...(
         await Promise.all(
           createSchemaGenerationPromises(
-            extractResponseSchemas(openApiDoc),
+            responseSchemas,
             context,
             (name, schema) =>
               generateResponseSchemaFile(name, schema, {
@@ -191,6 +205,7 @@ export async function generateSchemas(
                 formatOverrides: context.formatOverrides,
                 resolvedSchemas: context.resolvedSchemas,
                 schemaDirectory: context.schemasDir,
+                totalGeneratedSchemaCount: context.totalGeneratedSchemaCount,
               }),
           ),
         )
@@ -257,6 +272,7 @@ function createComponentSchemaPromise(
             recursiveContext,
             resolvedSchemas: context.resolvedSchemas,
             schemaDirectory: context.schemasDir,
+            totalGeneratedSchemaCount: context.totalGeneratedSchemaCount,
           });
 
     const schemaFile = await generationPromise;
@@ -345,7 +361,9 @@ function generateComponentSchemas(
       );
       const sanitizedName = sanitizeIdentifier(name);
       const promise = context.limit(async () => {
-        const content = generateFallbackSchemaContent(sanitizedName, schema);
+        const content = generateFallbackSchemaContent(sanitizedName, schema, {
+          totalGeneratedSchemaCount: context.totalGeneratedSchemaCount,
+        });
         const fileName = `${sanitizedName}.ts`;
         const filePath = path.join(context.schemasDir, fileName);
         await fs.writeFile(filePath, content);
@@ -395,6 +413,7 @@ function generateParameterSchemas(
           coercePrimitives: false,
           formatOverrides: context.formatOverrides,
           lowercaseHeaderKeys: false,
+          totalGeneratedSchemaCount: context.totalGeneratedSchemaCount,
         },
       );
       return [buildParameterSchemaIndexEntry(parameterMetadata)];
@@ -423,9 +442,31 @@ function buildSchemaIndexEntries(
 export function generateFallbackSchemaContent(
   name: string,
   schema: unknown,
+  options: { totalGeneratedSchemaCount?: number } = {},
 ): string {
   // OpenAPI 3.1 boolean schemas preserve allow-anything vs allow-nothing.
   const fallbackSchema = schema === false ? "z.never()" : "z.unknown()";
+  const inlineTypeAlias = tryRenderFallbackTypeAlias(name, schema, options);
+  const typeContent =
+    inlineTypeAlias ?? `export type ${name} = z.infer<typeof ${name}>;`;
 
-  return `import * as z from 'zod';\n\nexport const ${name} = ${fallbackSchema};\nexport type ${name} = z.infer<typeof ${name}>;\n`;
+  return `import * as z from 'zod';\n\nexport const ${name} = ${fallbackSchema};\n${typeContent}\n`;
+}
+
+function countGeneratedSchemas(
+  openApiDoc: OpenAPIObject,
+  operationParameters: readonly OperationParameterMetadata[],
+  requestSchemas: ReadonlyMap<string, SchemaObject>,
+  responseSchemas: ReadonlyMap<string, SchemaObject>,
+): number {
+  const componentCount = Object.keys(
+    openApiDoc.components?.schemas ?? {},
+  ).length;
+
+  return (
+    componentCount +
+    operationParameters.length +
+    requestSchemas.size +
+    responseSchemas.size
+  );
 }

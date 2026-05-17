@@ -13,6 +13,7 @@ import {
 } from "./format-overrides.js";
 import { buildGeneratedSchemaHelpersImport } from "./helpers-content.js";
 import { generateObjectCode } from "./object-properties.js";
+import { tryRenderInlineTypeAlias } from "./inline-type-renderer.js";
 import { buildRecursiveShape } from "./recursive-schema-properties.js";
 import { createRecursiveContext } from "./recursive-handlers.js";
 import { renderRecursiveTypeAlias } from "./recursive-type-renderer.js";
@@ -55,6 +56,7 @@ interface SchemaGenerationOptions {
   resolvedSchemas?: ResolvedSchemas;
   schemaDirectory?: string;
   schemaContext?: SchemaContext;
+  totalGeneratedSchemaCount?: number;
 }
 
 /**
@@ -217,6 +219,14 @@ export async function generateSchemaFile(
     options.formatOverrides,
   );
   const recursiveTypeAlias = renderRecursiveTypeAlias(schema, name);
+  const inlineTypeAlias = recursiveTypeAlias
+    ? undefined
+    : tryRenderInlineTypeAlias(name, schema, {
+        formatOverrides: options.formatOverrides,
+        helpers: schemaResult.helpers,
+        isRecursive: context.recursiveSchemas.has(name),
+        totalGeneratedSchemaCount: options.totalGeneratedSchemaCount,
+      });
 
   const content = assembleFileContent(
     name,
@@ -226,6 +236,7 @@ export async function generateSchemaFile(
     schemaResult.helpers,
     schemaResult.extensibleEnumValues,
     recursiveTypeAlias,
+    inlineTypeAlias,
   );
 
   /* Generate complete variant schema files if this is a base schema (no schemaContext) */
@@ -238,6 +249,7 @@ export async function generateSchemaFile(
       recursiveContext,
       resolvedSchemas,
       schemaDirectory,
+      totalGeneratedSchemaCount: options.totalGeneratedSchemaCount,
     });
   }
 
@@ -273,6 +285,7 @@ function assembleFileContent(
   helpers: Set<GeneratedSchemaHelper>,
   extensibleEnumValues?: unknown[],
   recursiveTypeAlias?: string,
+  inlineTypeAlias?: string,
 ): string {
   const helpersImport = buildGeneratedSchemaHelpersImport(helpers);
 
@@ -289,7 +302,7 @@ function assembleFileContent(
       : `${commentSection}export const ${name} = ${schemaCode};`;
     const typeContent = recursiveTypeAlias
       ? `export type ${name} = ${recursiveTypeAlias};`
-      : `export type ${name} = z.infer<typeof ${name}>;`;
+      : (inlineTypeAlias ?? `export type ${name} = z.infer<typeof ${name}>;`);
     return `import * as z from 'zod';\n${helpersImport}${importsSection}\n${typeContent}\n${schemaContent}`;
   }
 }

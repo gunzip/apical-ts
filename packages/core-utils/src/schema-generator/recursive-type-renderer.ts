@@ -24,7 +24,9 @@ function hasDirectSelfReference(
   );
 }
 
-function renderSchemaType(schema: ReferenceObject | SchemaObject): string {
+export function renderSchemaType(
+  schema: ReferenceObject | SchemaObject,
+): string {
   if (isReferenceObject(schema)) {
     return getSchemaNameFromReference(schema.$ref) ?? "unknown";
   }

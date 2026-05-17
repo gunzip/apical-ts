@@ -45,6 +45,32 @@ describe("schema-generator file-generators", () => {
       expect(result.content).toContain("import * as z from 'zod';");
     });
 
+    it("should emit an explicit type alias for simple schemas above the inline threshold", async () => {
+      const schema: SchemaObject = {
+        properties: {
+          name: { type: "string" },
+        },
+        required: ["name"],
+        type: "object",
+      };
+
+      vi.mocked(zodSchemaToCode).mockReturnValue(
+        mockSchemaResult({
+          code: "z.object({ name: z.string() })",
+          imports: new Set(),
+        }),
+      );
+
+      const result = await generateSchemaFile("User", schema, undefined, {
+        totalGeneratedSchemaCount: 100,
+      });
+
+      expect(result.content).toContain(
+        'export type User = { "name": string };',
+      );
+      expect(result.content).not.toContain("z.infer<typeof User>");
+    });
+
     it("should generate schema file with description", async () => {
       const schema: SchemaObject = {
         type: "string",
