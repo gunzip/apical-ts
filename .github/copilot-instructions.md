@@ -40,7 +40,7 @@ pnpm run build
 
 ### pnpm Tasks
 
-- `pnpm run build`: Build the project using tsup (compiles TypeScript to dist/
+- `pnpm run build`: Build the project using tsdown (compiles TypeScript to dist/
   without type checking)
 - `pnpm run build:docs`: Generate documentation by embedding code in README.md
 - `pnpm run lint`: Run oxlint with autofix on `src/`
@@ -50,7 +50,7 @@ pnpm run build
 - `pnpm run typecheck`: Run TypeScript type checking only (`tsc --noEmit`)
 - `pnpm run test`: Run all tests with Vitest
 - `pnpm run test:coverage`: Run tests with coverage report
-- `pnpm run start`: Run the CLI from `dist/index.js`
+- `pnpm run start`: Run the CLI from `dist/index.mjs`
 - `pnpm run generate`: Generate client and server from test fixtures
 - `pnpm run prepublishOnly`: Build docs and project before publishing
 - `pnpm run release:patch`: Bump patch version and push

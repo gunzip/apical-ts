@@ -11,7 +11,7 @@
   "scripts": {
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
-    "generate:tests": "node ../../apps/craft/dist/index.js generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --client --server",
+    "generate:tests": "node ../../apps/craft/dist/index.mjs generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --client --server",
     "clean": "rm -rf tests/integrations/generated"
   },
   "author": "gunzip",
