@@ -93,10 +93,10 @@ export function handleAllOfSchema(
   }
 
   /*
-   * Use .extend() optimization when ALL allOf members are plain objects.
-   * When the first member is a $ref, chain .extend() from it to avoid
-   * constructing an intermediate z.object({...spread}) literal that forces
-   * the TS checker to resolve every $ZodObjectInternals mapped type.
+   * Flatten allOf with object-only members into a single z.object({...shape})
+   * when possible. This keeps the generated schema simple and follows Zod's
+   * guidance to prefer spread syntax over chained .extend() calls for better
+   * TypeScript checker performance on large schemas.
    * When non-object schemas are present (mixed case), fall through
    * to the full intersection approach which preserves object-level behaviors
    * like .catchall(), strict mode, etc.
@@ -106,10 +106,8 @@ export function handleAllOfSchema(
     const allRequiredFields = collectRequiredFields(schemas);
 
     /*
-     * Collect each member as either a $ref identifier or an inline shape
-     * expression. Refs become `refName` (for .extend base) or
-     * `...refName.shape` (for extend argument); inlines become
-     * `...z.object({...}).shape`.
+     * Collect each member as either a referenced object shape or an inline
+     * object shape so they can be merged with spread syntax in one place.
      */
     const members: { inline: boolean; name?: string; shape: string }[] = [];
 
@@ -153,28 +151,8 @@ export function handleAllOfSchema(
     if (members.length > 0) {
       allImports.forEach((imp) => result.imports.add(imp));
 
-      /*
-       * When the first member is a $ref, chain .extend() calls from it.
-       * Pure-ref sequences use .extend(ref.shape) directly (no spread);
-       * inline members still use spread inside a single .extend({...}).
-       */
       if (members.length === 1 && !members[0].inline && members[0].name) {
         result.code = members[0].name;
-      } else if (!members[0].inline && members[0].name) {
-        const rest = members.slice(1);
-        const allRefs = rest.every((m) => !m.inline);
-
-        if (allRefs) {
-          /* Chain .extend(ref.shape) for each remaining $ref */
-          result.code = rest.reduce(
-            (acc, m) => `${acc}.extend(${m.name}.shape)`,
-            members[0].name!,
-          );
-        } else {
-          /* Mix of refs and inlines: single .extend({...spreads}) */
-          const shapes = rest.map((m) => m.shape);
-          result.code = `${members[0].name}.extend({${shapes.join(", ")}})`;
-        }
       } else {
         const allShapes = members.map((m) => m.shape);
         result.code = `z.object({${allShapes.join(", ")}})`;

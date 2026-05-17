@@ -135,7 +135,7 @@ describe("zodSchemaToCode", () => {
 
     const result = zodSchemaToCode(schema, { resolvedSchemas });
     expect(result.code).toContain("Profile");
-    expect(result.code).toContain("Profile.extend(");
+    expect(result.code).toContain("z.object({...Profile.shape");
     expect(result.imports.has("Profile")).toBe(true);
   });
 

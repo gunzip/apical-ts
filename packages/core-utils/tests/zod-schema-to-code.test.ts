@@ -236,7 +236,7 @@ describe("zodSchemaToCode", () => {
 
     const result = zodSchemaToCode(schema, { resolvedSchemas });
     expect(result.code).toContain("Profile");
-    expect(result.code).toContain("Profile.extend(");
+    expect(result.code).toContain("z.object({...Profile.shape");
     expect(result.imports.has("Profile")).toBe(true);
   });
 
@@ -263,7 +263,7 @@ describe("zodSchemaToCode", () => {
     };
 
     const result = zodSchemaToCode(schema, { resolvedSchemas });
-    expect(result.code).toContain("dataCenter.extend(");
+    expect(result.code).toContain("z.object({...dataCenter.shape");
     expect(result.imports.has("dataCenter")).toBe(true);
     expect(result.imports.has("data_center")).toBe(false);
   });
@@ -396,7 +396,9 @@ describe("zodSchemaToCode", () => {
     };
 
     const result = zodSchemaToCode(schema, { resolvedSchemas });
-    expect(result.code).toContain("BaseObject.extend(Composed.shape)");
+    expect(result.code).toContain(
+      "z.object({...BaseObject.shape, ...Composed.shape})",
+    );
     expect(result.code).not.toContain("z.intersection(");
     expect(result.imports.has("BaseObject")).toBe(true);
     expect(result.imports.has("Composed")).toBe(true);
