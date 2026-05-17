@@ -319,7 +319,7 @@ function generateImportsSection(
         !findStringFormatOverrideByReferenceName(importName, formatOverrides),
     )
     .sort()
-    .map((importName) => `import { ${importName} } from "./${importName}.js";`)
+    .map((importName) => `import { ${importName} } from "./${importName}.ts";`)
     .join("\n");
   const externalImportStatements = renderStringFormatOverrideImports(
     imports,

@@ -5,8 +5,8 @@ import pLimit from "p-limit";
 /**
  * Assume that the generated client and routes are available.
  */
-import * as importedClient from "../generated/client/index.js";
-import * as importedRoutes from "../generated/routes/index.js";
+import * as importedClient from "../generated/client/index.ts";
+import * as importedRoutes from "../generated/routes/index.ts";
 
 const root = process.cwd();
 const apiDir = path.join(root, "generated");
@@ -51,7 +51,7 @@ async function main() {
       imports.push(
         "import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';",
       );
-      imports.push("import * as ops from '../client/index.js';");
+      imports.push("import * as ops from '../client/index.ts';");
 
       const body: string[] = [];
       body.push(`// Hook for operation ${fnName}`);
@@ -89,9 +89,9 @@ ${body.join("\n\n")}
       await fs.promises.writeFile(filePath, content, "utf8");
       console.log("Wrote", filePath);
 
-      // Export compiled JS files for ESM compatibility in the published output
+      // Re-export the generated TypeScript modules directly.
       indexExports.push(
-        `export * from './${fileName.replace(/\.ts$/, "")}.js';`,
+        `export * from './${fileName.replace(/\.ts$/, "")}.ts';`,
       );
     }),
   );

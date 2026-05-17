@@ -3,7 +3,7 @@
 import { setupServer } from "msw/node";
 import { zocker } from "zocker";
 import { createMswHandler } from "./msw-adapter.js";
-import { routes } from "../generated/server/index.js";
+import { routes } from "../generated/server/index.ts";
 
 /* Helper function to prettify validation errors */
 const prettifyValidationError = (params: any): string => {

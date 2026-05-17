@@ -3,6 +3,8 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "allowJs": false,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,

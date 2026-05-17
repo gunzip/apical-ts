@@ -13,7 +13,7 @@ export function buildHandlerModule(
   const handlerTypeName = `${toPascalCase(operation.moduleBasename)}Handler`;
 
   return [
-    `import type { ${handlerTypeName} } from "${options.operationsImportDirectory}/${operation.moduleBasename}.js";`,
+    `import type { ${handlerTypeName} } from "${options.operationsImportDirectory}/${operation.moduleBasename}.ts";`,
     "",
     `export const ${handlerName}: ${handlerTypeName} = async (_input, _context) => {`,
     `  throw new Error(${JSON.stringify(`Implement ${handlerName} for ${operation.operationId}.`)});`,

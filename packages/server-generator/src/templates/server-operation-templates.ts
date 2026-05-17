@@ -43,21 +43,21 @@ export function renderServerOperationWrapper(
 
   /* Import request/response maps and response type from route metadata */
   const responseTypeImport = responseMapTypeName
-    ? `import type { ${routeResponseType} } from "../routes/${sanitizedId}.js";`
+    ? `import type { ${routeResponseType} } from "../routes/${sanitizedId}.ts";`
     : "";
   /* Import runtime request/response map values; use typeof for types */
   const requestMapImport = requestMapTypeName
-    ? `import { ${requestMapTypeName} } from "../routes/${sanitizedId}.js";`
+    ? `import { ${requestMapTypeName} } from "../routes/${sanitizedId}.ts";`
     : "";
   const responseMapImport = responseMapTypeName
-    ? `import { ${responseMapTypeName} } from "../routes/${sanitizedId}.js";`
+    ? `import { ${responseMapTypeName} } from "../routes/${sanitizedId}.ts";`
     : "";
 
   /* Import pre-computed server parsed params type to avoid expensive z.infer inference */
   const hasAnyParams = hasQuery || hasPath || hasHeaders;
   const serverParsedParamsTypeName = `${sanitizedId}ServerParsedParamsType`;
   const parsedParamsTypeImport = hasAnyParams
-    ? `import type { ${serverParsedParamsTypeName} } from "../schemas/${sanitizedId}Parameters.js";`
+    ? `import type { ${serverParsedParamsTypeName} } from "../schemas/${sanitizedId}Parameters.ts";`
     : "";
 
   const validationLogic = renderValidationLogic(
@@ -120,7 +120,7 @@ ${validationLogic}
   /* Combine all parts */
   const parts = [
     `import * as z from "zod";`,
-    `import { serverRoute as ${sanitizedId}RouteMetadata } from "../routes/${sanitizedId}.js";`,
+    `import { serverRoute as ${sanitizedId}RouteMetadata } from "../routes/${sanitizedId}.ts";`,
     responseTypeImport,
     requestMapImport,
     responseMapImport,

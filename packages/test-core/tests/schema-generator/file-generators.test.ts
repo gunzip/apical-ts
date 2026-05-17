@@ -124,7 +124,7 @@ describe("schema-generator file-generators", () => {
 
       const result = await generateSchemaFile("Profile", schema);
 
-      expect(result.content).toContain(`import { User } from "./User.js";`);
+      expect(result.content).toContain(`import { User } from "./User.ts";`);
     });
 
     it("should not import itself", async () => {
@@ -192,8 +192,8 @@ describe("schema-generator file-generators", () => {
 
       const result = await generateSchemaFile("Profile", schema);
 
-      expect(result.content).toMatch(/import \{ Role \} from "\.\/Role\.js";/);
-      expect(result.content).toMatch(/import \{ User \} from "\.\/User\.js";/);
+      expect(result.content).toMatch(/import \{ Role \} from "\.\/Role\.ts";/);
+      expect(result.content).toMatch(/import \{ User \} from "\.\/User\.ts";/);
     });
   });
 

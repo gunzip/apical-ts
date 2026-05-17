@@ -42,7 +42,7 @@ describe("route-generator file writer", () => {
       "addonPropertiesResource.deleteAddonProperty_delete.ts",
     );
     expect(indexContent).toContain(
-      "./addonPropertiesResourceDeleteAddonPropertyDelete.js",
+      "./addonPropertiesResourceDeleteAddonPropertyDelete.ts",
     );
   });
 

@@ -40,14 +40,14 @@ describe("core-generator schema-index-generator", () => {
       },
     ]);
 
-    expect(content).toContain(`import { Pet } from "./Pet.js";`);
-    expect(content).toContain(`import { PetRequest } from "./PetRequest.js";`);
+    expect(content).toContain(`import { Pet } from "./Pet.ts";`);
+    expect(content).toContain(`import { PetRequest } from "./PetRequest.ts";`);
     expect(content).toContain(
       [
         "import {",
         "  listPetsQuerySchema,",
         "  listPetsHeadersSchema,",
-        '} from "./listPetsParameters.js";',
+        '} from "./listPetsParameters.ts";',
       ].join("\n"),
     );
     expect(content).not.toContain("emptyParameters");
@@ -77,8 +77,8 @@ describe("core-generator schema-index-generator", () => {
       },
     ]);
 
-    expect(content.match(/from "\.\/Pet\.js";/g)).toHaveLength(1);
-    expect(content.match(/from "\.\/listPetsParameters\.js";/g)).toHaveLength(
+    expect(content.match(/from "\.\/Pet\.ts";/g)).toHaveLength(1);
+    expect(content.match(/from "\.\/listPetsParameters\.ts";/g)).toHaveLength(
       1,
     );
     expect(content).toContain("  listPetsHeadersSchema,");

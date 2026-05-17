@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { ProductWithReadOnlyMetaRequest } from "./generated/schemas/ProductWithReadOnlyMetaRequest.js";
-import { ProductWithReadOnlyMetaResponse } from "./generated/schemas/ProductWithReadOnlyMetaResponse.js";
+import { ProductWithReadOnlyMetaRequest } from "./generated/schemas/ProductWithReadOnlyMetaRequest.ts";
+import { ProductWithReadOnlyMetaResponse } from "./generated/schemas/ProductWithReadOnlyMetaResponse.ts";
 import { createUnauthenticatedClient } from "./client.js";
 import { getRandomPort, MockServer } from "./setup.js";
 

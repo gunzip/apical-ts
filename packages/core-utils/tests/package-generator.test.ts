@@ -20,7 +20,7 @@ describe("package generator", () => {
     const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
 
     try {
-      await writeFile(join(outputDir, "build.mjs"), "stale");
+      await writeFile(join(outputDir, "typecheck.mjs"), "stale");
       await createPackageFiles(outputDir);
 
       const packageJson = JSON.parse(
@@ -45,7 +45,7 @@ describe("package generator", () => {
         type: "module",
         version: "0.1.0",
       });
-      await expect(access(join(outputDir, "build.mjs"))).rejects.toThrow();
+      await expect(access(join(outputDir, "typecheck.mjs"))).rejects.toThrow();
 
       expect(tsConfig).toEqual({
         compilerOptions: {
@@ -70,7 +70,7 @@ describe("package generator", () => {
     }
   });
 
-  it("writes build.mjs for generated outputs above the chunking threshold", async () => {
+  it("writes typecheck.mjs for generated outputs above the chunking threshold", async () => {
     const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
     const schemasDir = join(outputDir, "schemas");
 
@@ -90,9 +90,12 @@ describe("package generator", () => {
       const packageJson = JSON.parse(
         await readFile(join(outputDir, "package.json"), "utf8"),
       );
-      const buildScript = await readFile(join(outputDir, "build.mjs"), "utf8");
+      const buildScript = await readFile(
+        join(outputDir, "typecheck.mjs"),
+        "utf8",
+      );
 
-      expect(packageJson.scripts.build).toBe("node ./build.mjs");
+      expect(packageJson.scripts.build).toBe("node ./typecheck.mjs");
       expect(buildScript).toContain("APICAL_TS_BUILD_CHUNK_SIZE");
       expect(buildScript).toContain("[build] ");
       expect(buildScript).toContain("chunk ");

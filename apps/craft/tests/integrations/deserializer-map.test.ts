@@ -44,7 +44,7 @@ describe("DeserializerMap Integration Test", () => {
 
     /* Find the deserializer map type definition */
     const deserializerMapMatch = operationContent.match(
-      /export type TestAuthBearerHttpResponseDeserializerMap = Partial<\s*Record<\s*([\s\S]*?),\s*import\('\.\/runtime\.js'\)\.Deserializer\s*>\s*>;/,
+      /export type TestAuthBearerHttpResponseDeserializerMap = Partial<\s*Record<\s*([\s\S]*?),\s*import\('\.\/runtime\.ts'\)\.Deserializer\s*>\s*>;/,
     );
 
     expect(deserializerMapMatch).toBeTruthy();
@@ -89,7 +89,7 @@ describe("DeserializerMap Integration Test", () => {
 
     /* Check that route is imported */
     expect(operationContent).toContain(
-      'from "../routes/testAuthBearerHttp.js"',
+      'from "../routes/testAuthBearerHttp.ts"',
     );
 
     /* Response map structure should be in route file */

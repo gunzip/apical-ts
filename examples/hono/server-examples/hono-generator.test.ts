@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import * as z from "zod";
 
-import { createMockOperationHandler } from "../generated/hono/mock-runtime.js";
+import { createMockOperationHandler } from "../generated/hono/mock-runtime.ts";
 import {
   sendRouteResponse,
   type GeneratedOperationContext,
   type GeneratedRouteDefinition,
-} from "../generated/hono/runtime.js";
+} from "../generated/hono/runtime.ts";
 import { toHonoPath } from "../scripts/hono-generator/route-utils.js";
 
 function createRoute(

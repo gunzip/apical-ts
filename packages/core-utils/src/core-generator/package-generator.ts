@@ -7,6 +7,8 @@ import { buildScriptContent } from "./build-script-template.js";
 
 const baseCompilerOptions: Record<string, unknown> = {
   allowSyntheticDefaultImports: true,
+  erasableSyntaxOnly: true,
+  allowImportingTsExtensions: true,
   esModuleInterop: true,
   forceConsistentCasingInFileNames: true,
   lib: ["es2024"],
@@ -89,7 +91,7 @@ export async function createPackageFiles(
     },
     name: "generated-client",
     scripts: {
-      build: useChunkedBuild ? "node ./build.mjs" : "tsgo",
+      typecheck: useChunkedBuild ? "node ./typecheck.mjs" : "tsgo",
     },
     type: "module",
     version: "0.1.0",
@@ -108,11 +110,11 @@ export async function createPackageFiles(
 
   if (useChunkedBuild) {
     packageFileWrites.push(
-      fs.writeFile(path.join(output, "build.mjs"), buildScriptContent),
+      fs.writeFile(path.join(output, "typecheck.mjs"), buildScriptContent),
     );
   } else {
     packageFileWrites.push(
-      fs.rm(path.join(output, "build.mjs"), { force: true }),
+      fs.rm(path.join(output, "typecheck.mjs"), { force: true }),
     );
   }
 

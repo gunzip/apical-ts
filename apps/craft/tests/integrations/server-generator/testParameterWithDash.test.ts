@@ -3,7 +3,7 @@ import supertest from "supertest";
 import {
   testParameterWithDashWrapper,
   testParameterWithDashHandler,
-} from "../generated/server/testParameterWithDash.js";
+} from "../generated/server/testParameterWithDash.ts";
 import { setupTestRoute } from "./test-helpers.js";
 
 // express treat hypens literally and does not support

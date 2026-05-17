@@ -356,10 +356,10 @@ describe("file-generators - recursive generated types compile", () => {
         "requestTracerTrace.ts": requestTracerTrace.content,
         "workersKvAny.ts": workersKvAny.content,
         "recursive-types.ts": `
-import type { requestTracerTrace as RequestTracerTrace } from "./requestTracerTrace.js";
-import { requestTracerTrace } from "./requestTracerTrace.js";
-import type { workersKvAny as WorkersKvAny } from "./workersKvAny.js";
-import { workersKvAny } from "./workersKvAny.js";
+import type { requestTracerTrace as RequestTracerTrace } from "./requestTracerTrace.ts";
+import { requestTracerTrace } from "./requestTracerTrace.ts";
+import type { workersKvAny as WorkersKvAny } from "./workersKvAny.ts";
+import { workersKvAny } from "./workersKvAny.ts";
 
 type IsUnknown<T> = unknown extends T ? ([T] extends [unknown] ? true : false) : false;
 
@@ -425,8 +425,8 @@ void invalidKv;
         "Category.ts": category.content,
         "CategoryParent.ts": categoryParent.content,
         "indirect-cycle.ts": `
-import type { Category } from "./Category.js";
-import type { CategoryParent } from "./CategoryParent.js";
+import type { Category } from "./Category.ts";
+import type { CategoryParent } from "./CategoryParent.ts";
 
 const categoryValue: Category = {};
 const parentValue: CategoryParent = { child: categoryValue };
@@ -467,8 +467,8 @@ void parentValue;
       typecheckGeneratedSchemas({
         "NotificationEvent.ts": notificationEvent.content,
         "notification-event.ts": `
-import type { NotificationEvent } from "./NotificationEvent.js";
-import { NotificationEvent as NotificationEventSchema } from "./NotificationEvent.js";
+import type { NotificationEvent } from "./NotificationEvent.ts";
+import { NotificationEvent as NotificationEventSchema } from "./NotificationEvent.ts";
 
 const value: NotificationEvent = {};
 const parsedValue: NotificationEvent = NotificationEventSchema.parse(value);

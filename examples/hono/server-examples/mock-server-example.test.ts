@@ -65,7 +65,7 @@ describe("Hono Mock Server", () => {
           "utf8",
         ),
         readFile(
-          path.join(currentDirectoryPath, "../generated/package.json"),
+          path.join(currentDirectoryPath, "../generated/package.tson"),
           "utf8",
         ),
       ]);
@@ -75,7 +75,7 @@ describe("Hono Mock Server", () => {
       'import { zValidator } from "@hono/zod-validator";',
     );
     expect(operationModule).toContain(
-      'import { addPetHandler } from "../handlers/addPet.js";',
+      'import { addPetHandler } from "../handlers/addPet.ts";',
     );
     expect(operationModule).toContain("type addPetRouteResponse");
     expect(operationModule).toContain("await addPetHandler(input, context);");

@@ -1,6 +1,6 @@
 import React from "react";
-import { useFindPetsByStatus } from "../generated/tanstack-query-hooks/findPetsByStatus.js";
-import { useAddPetMutation } from "../generated/tanstack-query-hooks/addPet.js";
+import { useFindPetsByStatus } from "../generated/tanstack-query-hooks/findPetsByStatus.ts";
+import { useAddPetMutation } from "../generated/tanstack-query-hooks/addPet.ts";
 
 export default function Usage() {
   const { data, error, isLoading } = useFindPetsByStatus({

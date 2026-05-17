@@ -5,7 +5,7 @@ export function buildRegisterRoutesModule(operations: OperationDefinition[]) {
   const importLines = operations.map((operation) => {
     const registerFunctionName = `register${toPascalCase(operation.moduleBasename)}Route`;
 
-    return `import { ${registerFunctionName} } from "./operations/${operation.moduleBasename}.js";`;
+    return `import { ${registerFunctionName} } from "./operations/${operation.moduleBasename}.ts";`;
   });
 
   const registerLines = operations.map((operation) => {

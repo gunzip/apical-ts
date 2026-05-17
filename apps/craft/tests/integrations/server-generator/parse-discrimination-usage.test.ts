@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { ApiResponseWithParse } from "../generated/client/runtime.js";
-import { isParsed } from "../generated/client/runtime.js";
-import type { TestMultiContentTypesResponseMap } from "../generated/client/testMultiContentTypes.js";
+import type { ApiResponseWithParse } from "../generated/client/runtime.ts";
+import { isParsed } from "../generated/client/runtime.ts";
+import type { TestMultiContentTypesResponseMap } from "../generated/client/testMultiContentTypes.ts";
 
 // Type-level narrowing check: if this file type-checks, the discriminated union works.
 describe("parse() discriminated union usage", () => {

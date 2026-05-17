@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   configureOperations,
   globalConfig,
-} from "./generated/client/runtime.js";
-import { testMultiContentTypes } from "./generated/client/testMultiContentTypes.js";
+} from "./generated/client/runtime.ts";
+import { testMultiContentTypes } from "./generated/client/testMultiContentTypes.ts";
 
 // These tests are primarily compile-time assertions. If this file type-checks, overloads work.
 describe("configureOperations overloads", () => {

@@ -38,7 +38,7 @@ export class ImportManager {
     const clientRouteName = `${operationId}ClientRoute`;
     const importInfo: ImportInfo = {
       alias: clientRouteName,
-      filePath: `../routes/${operationId}.js`,
+      filePath: `../routes/${operationId}.ts`,
       name: "clientRoute",
       operationId,
       type: "route",
@@ -53,7 +53,7 @@ export class ImportManager {
 
   addConfigImport(configName: string): void {
     const importInfo: ImportInfo = {
-      filePath: "./runtime.js",
+      filePath: "./runtime.ts",
       name: configName,
       type: "config",
     };
@@ -71,7 +71,7 @@ export class ImportManager {
    */
   addParsedParamsTypeImport(operationId: string, typeName: string): void {
     const importInfo: ImportInfo = {
-      filePath: `../schemas/${operationId}Parameters.js`,
+      filePath: `../schemas/${operationId}Parameters.ts`,
       name: typeName,
       operationId,
       type: "parsed-params-type",
@@ -153,7 +153,7 @@ export class ImportManager {
     // Import request map (both type and value with same name, distinguished by TypeScript automatically)
     const requestMapImportInfo: ImportInfo = {
       alias: requestMapAlias,
-      filePath: `../routes/${operationId}.js`,
+      filePath: `../routes/${operationId}.ts`,
       name: requestMapName,
       operationId,
       requestMapName,
@@ -169,7 +169,7 @@ export class ImportManager {
     // Import response map (both type and value with same name)
     const responseMapImportInfo: ImportInfo = {
       alias: responseMapAlias,
-      filePath: `../routes/${operationId}.js`,
+      filePath: `../routes/${operationId}.ts`,
       name: responseMapName,
       operationId,
       responseMapName,
@@ -185,7 +185,7 @@ export class ImportManager {
 
   addSchemaImport(schemaName: string): void {
     const importInfo: ImportInfo = {
-      filePath: `../schemas/${schemaName}.js`,
+      filePath: `../schemas/${schemaName}.ts`,
       name: schemaName,
       type: "schema",
     };

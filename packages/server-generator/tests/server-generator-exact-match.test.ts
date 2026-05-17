@@ -97,7 +97,7 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify response type is imported from routes */
     expect(result.wrapperCode).toContain(
-      'import type { petFindByStatusRouteResponse } from "../routes/petFindByStatus.js"',
+      'import type { petFindByStatusRouteResponse } from "../routes/petFindByStatus.ts"',
     );
     expect(result.wrapperCode).toContain("petFindByStatusRouteResponse");
 

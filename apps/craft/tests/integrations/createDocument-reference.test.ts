@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createDocument,
   CreateDocumentResponseMap,
-} from "./generated/client/createDocument.js";
+} from "./generated/client/createDocument.ts";
 
 describe("createDocument response reference integration", () => {
   it("should have correctly populated response map", () => {

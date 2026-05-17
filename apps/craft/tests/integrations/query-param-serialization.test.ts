@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { serializeQueryParam } from "./generated/client/runtime.js";
+import { serializeQueryParam } from "./generated/client/runtime.ts";
 
 describe("Query Parameter Serialization", () => {
   describe("serializeQueryParam", () => {

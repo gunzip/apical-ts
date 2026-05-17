@@ -225,10 +225,10 @@ export function buildOperationModule(
       : []),
     'import type { Hono } from "hono";',
     operation.hasBody
-      ? `import {\n  ${requestMapName},\n  serverRoute as ${routeIdentifier},\n  type ${routeResponseTypeName},\n} from "${options.routesImportDirectory}/${operation.moduleBasename}.js";`
-      : `import {\n  serverRoute as ${routeIdentifier},\n  type ${routeResponseTypeName},\n} from "${options.routesImportDirectory}/${operation.moduleBasename}.js";`,
-    `import { ${handlerName} } from "${options.handlersImportDirectory}/${operation.moduleBasename}.js";`,
-    'import * as runtime from "../runtime.js";',
+      ? `import {\n  ${requestMapName},\n  serverRoute as ${routeIdentifier},\n  type ${routeResponseTypeName},\n} from "${options.routesImportDirectory}/${operation.moduleBasename}.ts";`
+      : `import {\n  serverRoute as ${routeIdentifier},\n  type ${routeResponseTypeName},\n} from "${options.routesImportDirectory}/${operation.moduleBasename}.ts";`,
+    `import { ${handlerName} } from "${options.handlersImportDirectory}/${operation.moduleBasename}.ts";`,
+    'import * as runtime from "../runtime.ts";',
     "",
     ...(hasCustomParamNames(operation.paramNameMap)
       ? [

@@ -1,8 +1,8 @@
 import express, { Request } from "express";
-import { Person } from "../generated/schemas/Person.js";
-import { Message } from "../generated/schemas/Message.js";
-import { NewModel } from "../generated/schemas/NewModel.js";
-import { TestDeserUser } from "../generated/schemas/TestDeserUser.js";
+import { Person } from "../generated/schemas/Person.ts";
+import { Message } from "../generated/schemas/Message.ts";
+import { NewModel } from "../generated/schemas/NewModel.ts";
+import { TestDeserUser } from "../generated/schemas/TestDeserUser.ts";
 
 /**
  * Helper function to create a test Express app

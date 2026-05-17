@@ -15,7 +15,7 @@ export function buildMockHandlerModule(
   const routeIdentifier = `${toCamelCase(operation.moduleBasename)}Route`;
 
   return [
-    `import { serverRoute as ${routeIdentifier} } from "${options.routesImportDirectory}/${operation.moduleBasename}.js";`,
+    `import { serverRoute as ${routeIdentifier} } from "${options.routesImportDirectory}/${operation.moduleBasename}.ts";`,
     `import { createMockOperationHandler } from "${options.mockRuntimeImportDirectory}";`,
     "",
     `export const ${handlerName} = createMockOperationHandler(${routeIdentifier});`,

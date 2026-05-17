@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { testQueryParamInlineEnum } from "../integrations/generated/client/testQueryParamInlineEnum.js";
+import { testQueryParamInlineEnum } from "../integrations/generated/client/testQueryParamInlineEnum.ts";
 
 describe("Query Parameter Integration", () => {
   it("should correctly serialize complex query parameters in real operations", async () => {

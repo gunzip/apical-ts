@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   createDocument,
   CreateDocumentResponseMap,
-} from "./generated/client/createDocument.js";
-import type { GlobalConfig } from "./generated/client/runtime.js";
+} from "./generated/client/createDocument.ts";
+import type { GlobalConfig } from "./generated/client/runtime.ts";
 
 /**
  * Integration test for compile-time type narrowing with forceValidation.

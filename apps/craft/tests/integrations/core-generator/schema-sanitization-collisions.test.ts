@@ -3,10 +3,10 @@ import { promises as fs } from "fs";
 import path from "path";
 
 // Import the generated schemas that demonstrate collision detection
-import { Catalog } from "../generated/schemas/Catalog.js";
-import { CatalogMeta } from "../generated/schemas/CatalogMeta.js";
-import { catalog2 } from "../generated/schemas/catalog2.js";
-import { catalogmeta2 } from "../generated/schemas/catalogmeta2.js";
+import { Catalog } from "../generated/schemas/Catalog.ts";
+import { CatalogMeta } from "../generated/schemas/CatalogMeta.ts";
+import { catalog2 } from "../generated/schemas/catalog2.ts";
+import { catalogmeta2 } from "../generated/schemas/catalogmeta2.ts";
 
 describe("schema sanitization collision detection", () => {
   it("should have renamed schemas to avoid case-sensitivity conflicts in the generated client", async () => {

@@ -4,15 +4,15 @@ import express from "express";
 import {
   findPetsByStatusWrapper,
   type findPetsByStatusHandler,
-} from "../generated/server/findPetsByStatus.js";
+} from "../generated/server/findPetsByStatus.ts";
 import {
   type getPetByIdHandler,
   route as getPetByIdRoute,
-} from "../generated/server/getPetById.js";
+} from "../generated/server/getPetById.ts";
 import {
   type getInventoryHandler,
   route as getInventoryRoute,
-} from "../generated/server/getInventory.js";
+} from "../generated/server/getInventory.ts";
 import {
   createExpressAdapter,
   extractRequestParams,

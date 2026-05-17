@@ -97,7 +97,7 @@ export async function generateHonoServer(options: GenerateHonoServerOptions) {
       return writeFileIfChanged(
         handlerFilePath,
         buildMockHandlerModule(operation, {
-          mockRuntimeImportDirectory: "../mock-runtime.js",
+          mockRuntimeImportDirectory: "../mock-runtime.ts",
           operationsImportDirectory: operationsImportDirectoryFromHandlersDir,
           routesImportDirectory: routesImportDirectoryFromHandlersDir,
         }),

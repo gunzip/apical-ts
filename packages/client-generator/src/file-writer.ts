@@ -46,7 +46,7 @@ export async function writeIndexFile(
   const sanitizedOperations = createSanitizedOperationEntries(operations);
   const operationImports = sanitizedOperations.map(
     ({ sanitizedOperationId }) =>
-      `import { ${sanitizedOperationId} } from './${sanitizedOperationId}.js';`,
+      `import { ${sanitizedOperationId} } from './${sanitizedOperationId}.ts';`,
   );
   const operationExports = sanitizedOperations.map(
     ({ sanitizedOperationId }) => sanitizedOperationId,

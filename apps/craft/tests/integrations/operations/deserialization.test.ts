@@ -88,7 +88,7 @@ describe("Deserialization Operation", () => {
 
   it("captures deserialization-error when custom deserializer throws", async () => {
     const { testDeserialization } =
-      await import("../generated/client/testDeserialization.js");
+      await import("../generated/client/testDeserialization.ts");
 
     const res = await testDeserialization(
       {},
@@ -126,7 +126,7 @@ describe("Deserialization Operation", () => {
 
   it("reports validation error when deserializer returns invalid shape", async () => {
     const { testDeserialization } =
-      await import("../generated/client/testDeserialization.js");
+      await import("../generated/client/testDeserialization.ts");
 
     const res = await testDeserialization(
       {},
@@ -164,7 +164,7 @@ describe("Deserialization Operation", () => {
 
   it("parses XML response via custom XML deserializer", async () => {
     const { testDeserialization } =
-      await import("../generated/client/testDeserialization.js");
+      await import("../generated/client/testDeserialization.ts");
 
     const res = await testDeserialization(
       {
@@ -211,7 +211,7 @@ describe("Deserialization Operation", () => {
 
   it("handles vendor JSON content type with custom deserializer on multi-content operation", async () => {
     const { testMultiContentTypes } =
-      await import("../generated/client/testMultiContentTypes.js");
+      await import("../generated/client/testMultiContentTypes.ts");
 
     const res = await testMultiContentTypes(
       {
@@ -258,7 +258,7 @@ describe("Deserialization Operation", () => {
 
   it("deserializes binary download into length summary", async () => {
     const { testBinaryFileDownload } =
-      await import("../generated/client/testBinaryFileDownload.js");
+      await import("../generated/client/testBinaryFileDownload.ts");
 
     const res = await testBinaryFileDownload(
       {},
@@ -301,7 +301,7 @@ describe("Deserialization Operation", () => {
 
   it("parses response when request sent as x-www-form-urlencoded with custom vendor JSON response", async () => {
     const { testMultiContentTypes } =
-      await import("../generated/client/testMultiContentTypes.js");
+      await import("../generated/client/testMultiContentTypes.ts");
 
     const res = await testMultiContentTypes(
       {
