@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 import { createPackageFiles } from "../src/core-generator/package-generator.js";
 
 describe("package generator", () => {
-  it("uses plain tsgo for generated outputs at or below the chunking threshold", async () => {
+  it("uses plain tsgo to typecheck at or below the chunking threshold", async () => {
     const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
 
     try {
