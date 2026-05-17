@@ -3,7 +3,7 @@
   "version": "0.24.2",
   "private": false,
   "description": "CLI tool for generating fully-typed Zod v4 schemas and type-safe TypeScript REST API clients and server from OpenAPI 2.0, 3.0.x, and 3.1.x specifications.",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "type": "module",
   "homepage": "https://gunzip.github.io/apical-ts/",
   "repository": {
@@ -20,15 +20,15 @@
     "craft": "./bin/craft.js"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown --config-loader native",
     "typecheck:code": "tsgo --noEmit",
     "typecheck:tests": "tsgo --noEmit -p tsconfig.tests.json",
     "typecheck": "pnpm typecheck:code && pnpm typecheck:tests",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
-    "generate:tests": "node dist/index.js generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --client --server",
+    "generate:tests": "node dist/index.mjs generate -i tests/integrations/fixtures/test.yaml -o tests/integrations/generated --client --server",
     "clean": "rm -rf tests/integrations/generated",
-    "start": "node dist/index.js",
+    "start": "node dist/index.mjs",
     "prepublishOnly": "pnpm run build"
   },
   "keywords": [
@@ -56,7 +56,7 @@
     "@vitest/coverage-v8": "catalog:",
     "express": "^5.2.1",
     "supertest": "^7.1.4",
-    "tsup": "catalog:",
+    "tsdown": "^0.22.0",
     "vite": "catalog:",
     "vitest": "catalog:",
     "zod": "catalog:"

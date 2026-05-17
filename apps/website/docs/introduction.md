@@ -81,10 +81,6 @@ npx @apical-ts/craft generate \
   --client --server \
   -i https://petstore.swagger.io/v2/swagger.json \
   -o generated
-
-cd generated
-npm install
-npm run build
 ```
 
 This will create:
