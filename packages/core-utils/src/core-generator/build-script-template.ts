@@ -3,6 +3,7 @@ import {
   readdirSync,
   rmSync,
   writeFileSync,
+  mkdirSync,
 } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
