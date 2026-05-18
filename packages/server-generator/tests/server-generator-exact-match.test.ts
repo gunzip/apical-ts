@@ -69,7 +69,7 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify validation sequence: query → path → body (no headers in this operation) */
     const validationPattern =
-      /queryParse = .*safeParse\(req\.query\)[\s\S]*pathParse = .*safeParse\(req\.path\)[\s\S]*bodyParse = .*safeParse/;
+      /queryParse = await validateStandardSchema\(.*req\.query\)[\s\S]*pathParse = await validateStandardSchema\(.*req\.path\)[\s\S]*bodyParse = await validateStandardSchema/;
     expect(result.wrapperCode).toMatch(validationPattern);
 
     /* Verify error handling with correct error types */
@@ -87,7 +87,7 @@ describe("server-generator - problem statement validation", () => {
 
     /* Verify success handler call with query, path, and body (no headers) */
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{\s*isValid: true,\s*value: \{\s*query: queryParse\.data,\s*path: pathParse\.data,\s*body: parsedBody\s*\},?\s*\}\)/,
+      /return handler\(\{\s*isValid: true,\s*value: \{\s*query: queryParse\.value,\s*path: pathParse\.value,\s*body: parsedBody\s*\},?\s*\}\)/,
     );
 
     /* Verify discriminated union types are correctly defined */
@@ -151,13 +151,13 @@ describe("server-generator - problem statement validation", () => {
 
     /* Should NOT perform validation when there are no parameters */
     expect(result.wrapperCode).not.toContain(
-      "queryParse = noParamsRouteMetadata.params.shape.query.safeParse(req.query)",
+      "validateStandardSchema(noParamsRouteMetadata.params.shape.query, req.query)",
     );
     expect(result.wrapperCode).not.toContain(
-      "pathParse = noParamsRouteMetadata.params.shape.path.safeParse(req.path)",
+      "validateStandardSchema(noParamsRouteMetadata.params.shape.path, req.path)",
     );
     expect(result.wrapperCode).not.toContain(
-      "headersParse = noParamsRouteMetadata.params.shape.headers.safeParse(req.headers)",
+      "validateStandardSchema(noParamsRouteMetadata.params.shape.headers, req.headers)",
     );
 
     /* ParsedParams type should not include query, path, or headers fields when not present */
@@ -174,8 +174,8 @@ describe("server-generator - problem statement validation", () => {
     }
 
     /* Return value should not include query, path, or headers when not present */
-    expect(result.wrapperCode).not.toContain("query: queryParse.data");
-    expect(result.wrapperCode).not.toContain("path: pathParse.data");
-    expect(result.wrapperCode).not.toContain("headers: headersParse.data");
+    expect(result.wrapperCode).not.toContain("query: queryParse.value");
+    expect(result.wrapperCode).not.toContain("path: pathParse.value");
+    expect(result.wrapperCode).not.toContain("headers: headersParse.value");
   });
 });

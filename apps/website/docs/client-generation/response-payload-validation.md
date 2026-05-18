@@ -10,14 +10,15 @@ per operation or globally via `configureOperations`). By default,
   Successful responses include a `.parsed` field containing both the validated
   data and the content type:  
   `{ data: T, contentType: string }`  
-  Zod validation runs automatically during the request. If validation fails, the
-  result contains an `error: ZodError` instead of `.parsed`. There is no
-  `.parse()` method in this mode.
+  Validation runs automatically during the request through the generated
+  Standard Schema helper. If validation fails, the result becomes a
+  `kind: "parse-error"` error with `error.issues`. There is no `.parse()` method
+  in this mode.
 
 - **With `forceValidation: false`:**  
   Successful responses provide a `.parse()` method (instead of `.parsed`). After
-  checking the desired `status`, you can call `.parse()` to manually validate
-  the response. Handle any parsing errors yourself.
+  checking the desired `status`, you can call `await response.parse()` to
+  manually validate the response. Handle any parsing errors yourself.
 
 This design lets you choose between automatic validation (for convenience and
 safety) or manual validation (for performance or custom error handling).
@@ -33,7 +34,7 @@ import {
   configureOperations,
   globalConfig,
   isParsed,
-} from "../generated/client/config.js";
+} from "../generated/client/runtime.js";
 import { findPetsByStatus } from "../generated/client/findPetsByStatus.js";
 import { getInventory } from "../generated/client/getInventory.js";
 import { getPetById } from "../generated/client/getPetById.js";
@@ -76,7 +77,10 @@ async function demonstrateClient() {
     { ...globalConfig, forceValidation: false },
   );
   if (lazyPetResponse.status === "200") {
-    lazyPetResponse.parse();
+    const parseResult = await lazyPetResponse.parse();
+    if (isParsed(parseResult)) {
+      console.log(parseResult.parsed[0].name);
+    }
   }
 
   // Manual validation bound client
@@ -89,7 +93,10 @@ async function demonstrateClient() {
     query: { status: "available" },
   });
   if (petsResponse2.status === "200") {
-    petsResponse2.parse();
+    const parseResult = await petsResponse2.parse();
+    if (isParsed(parseResult)) {
+      console.log(parseResult.parsed[0].name);
+    }
   }
 }
 
@@ -136,8 +143,9 @@ support for content type discrimination.
 
 ## Runtime Validation: Enabled or Disabled?
 
-TypeScript client generator uses Zod for payload validation and parsing. By
-default payload parsing is enabled during the request lifecycle.
+Generated clients use the Standard Schema `validate()` contract for payload
+validation and parsing. The generated `schemas/` files are still Zod-based, but
+the public client parsing and error surfaces no longer expose `ZodError`.
 
 This design choice provides some advantages:
 
@@ -185,8 +193,8 @@ Switch to optional validation (set `forceValidation: false`) when:
 1. **Start with automatic validation** (default) for new integrations to ensure
    API compliance
 2. **Disable validation selectively** for performance-critical or untrusted APIs
-3. **Handle validation errors gracefully** - don't let them crash your
-   application
+3. **Handle validation errors gracefully** - inspect `error.issues` and don't
+   let them crash your application
 4. **Log validation failures** for debugging and monitoring
 5. **Consider performance implications** when choosing validation strategies
 6. **Test both validation modes** to ensure your error handling works correctly

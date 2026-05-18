@@ -29,8 +29,9 @@ experience.
 - 🛠️ **Operation-based client generation**: Generates one function per
   operation, with strong typing and per-operation configuration—no need for
   blacklisting operations you don't need!
-- 🛡️ **Zod v4 runtime validation (automatic or manual)**: Get parsed responses
-  automatically or call `response.parse()` as needed
+- 🛡️ **Standard Schema-compatible runtime validation**: Generated
+  route/client/server surfaces validate through `validate()` while keeping Zod
+  schemas available in `schemas/`
 - ⚙️ **Configurable validation modes**: Control how schemas handle additional
   properties with `--extra-props` flag (strip, loose, or strict validation)
 - 🧬 **Custom string format overrides**: Replace specific OpenAPI string formats
@@ -52,8 +53,9 @@ experience.
 - 📁 **File upload/download & binary support**: Handles `multipart/form-data`
   and `application/octet-stream` uploads and downloads
 - 📦 **ESM output**: Generated code is ESM-first
-- 🪶 **Minimal dependencies**: No runtime dependencies except Zod; works in
-  Node.js and browsers
+- 🪶 **Minimal dependencies**: Generated output keeps runtime requirements
+  small, with Zod for emitted schemas and Standard Schema typing for generated
+  route/client/server surfaces
 - 🧪 **Self-contained Zod schemas**: Generated schemas can be used independently
   for validation (e.g., in forms) and server-side logic
 - 🔄 **Automatic OpenAPI normalization**: All input specs are normalized to
@@ -88,7 +90,7 @@ experience.
 
 ### Validation & Error Handling
 
-- Request validation using generated Zod schemas
+- Request validation through Standard Schema-compatible generated maps
 - Response validation (opt-in or automatic)
 - Comprehensive error types with context
 - Validation error details with field-level information

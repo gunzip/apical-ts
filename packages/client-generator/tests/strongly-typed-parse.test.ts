@@ -17,14 +17,18 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
 
       /* Should have overload without deserializers */
       expect(result).toContain("export function parseApiResponseUnknownData<");
+      expect(result).toContain(
+        "export async function parseApiResponseUnknownData<",
+      );
 
       /* Should contain the discriminated union return types */
-      expect(result).toContain("contentType: K; parsed:");
+      expect(result).toContain("contentType: K;");
+      expect(result).toContain("parsed: StandardSchemaV1.InferOutput<");
       expect(result).toContain('kind: "parse-error"; error:');
       expect(result).toContain('kind: "missing-schema"; error:');
 
-      /* Should use z.infer in type definitions */
-      expect(result).toContain("z.infer<TSchemaMap[K]>");
+      /* Should use Standard Schema inference in type definitions */
+      expect(result).toContain("StandardSchemaV1.InferOutput<TSchemaMap[K]>");
     });
 
     it("should include proper overloads for with/without deserializers", () => {
@@ -34,7 +38,10 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
       const overloadMatches = result.match(
         /export function parseApiResponseUnknownData</g,
       );
-      expect(overloadMatches).toHaveLength(3); // 2 overloads + 1 implementation
+      expect(overloadMatches).toHaveLength(2); // 2 overloads
+      expect(result).toContain(
+        "export async function parseApiResponseUnknownData<",
+      );
 
       /* Should handle deserializationError correctly */
       expect(result).toContain('kind: "deserialization-error"');
@@ -47,7 +54,8 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
 
       /* Extract the function implementation */
       expect(utilityCode).toContain("if (result.success)");
-      expect(utilityCode).toContain("parsed: result.data");
+      expect(utilityCode).toContain("return createParsedApiResponse(");
+      expect(utilityCode).toContain("result.value");
     });
 
     it("should handle missing schema correctly", () => {
@@ -80,16 +88,16 @@ describe("strongly-typed parseApiResponseUnknownData", () => {
       /* Should use proper const assertions */
       expect(utilityCode).toContain("as const");
 
-      /* Should use proper zod types */
-      expect(utilityCode).toContain("z.infer");
+      /* Should use Standard Schema types */
+      expect(utilityCode).toContain("StandardSchemaV1.InferOutput");
     });
 
     it("should have correct constraint on TSchemaMap", () => {
       const utilityCode = renderUtilityFunctions();
 
-      /* Should use z.ZodType as the constraint (cheaper for the checker than structural safeParse) */
+      /* Should use StandardSchemaV1 as the constraint */
       expect(utilityCode).toContain(
-        "TSchemaMap extends Record<string, z.ZodType>",
+        "TSchemaMap extends Record<string, StandardSchemaV1>",
       );
     });
 

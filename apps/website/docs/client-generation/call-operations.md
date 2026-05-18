@@ -290,10 +290,10 @@ const response = await getPetById({ path: { petId: "123" } });
 
 if (response.status === "200") {
   // Assume forceValidation=false
-  const parseResult = response.parse();
+  const parseResult = await response.parse();
   if (parseResult.kind === "parse-error") {
-    // Zod validation failed
-    console.error("Validation failed:", z.prettifyError(parseResult.error));
+    // Validation failed
+    console.error("Validation failed:", parseResult.error.issues);
   } else if (isParsed(parseResult)) {
     const pets = parseResult.parsed;
     // Validation succeeded

@@ -48,6 +48,7 @@
     "@apical-ts/route-generator": "workspace:*",
     "@apical-ts/server-generator": "workspace:*",
     "@stoplight/prism-cli": "^5.14.2",
+    "@standard-schema/spec": "catalog:",
     "@tsconfig/node22": "catalog:",
     "@types/express": "^5.0.3",
     "@types/node": "catalog:",

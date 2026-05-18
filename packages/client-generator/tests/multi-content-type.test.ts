@@ -86,9 +86,9 @@ describe("Multi-content-type operation function generation", () => {
       "TResponseContentType extends { [K in keyof PetFindByStatusResponseMap]: keyof PetFindByStatusResponseMap[K]; }[keyof PetFindByStatusResponseMap] =",
     );
 
-    // Check parameter type uses generic with z.infer for runtime schema validation
+    // Check parameter type uses Standard Schema inference for the request map
     expect(result.functionCode).toContain(
-      "body: import('zod').infer<PetFindByStatusRequestMap[TRequestContentType]>",
+      'body: import("@standard-schema/spec").StandardSchemaV1.InferOutput<PetFindByStatusRequestMap[TRequestContentType]>',
     );
     // contentType now supports both request and response overrides
     expect(result.functionCode).toContain(

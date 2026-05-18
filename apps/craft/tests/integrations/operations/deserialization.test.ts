@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { createUnauthenticatedClient } from "../client.js";
 import { getRandomPort, MockServer } from "../setup.js";
 
 /*
@@ -26,9 +25,24 @@ describe("Deserialization Operation", () => {
   });
 
   it("applies custom JSON deserializer and validates parsed output", async () => {
-    const client = createUnauthenticatedClient(baseURL);
+    const { testDeserialization } =
+      await import("../generated/client/testDeserialization.ts");
 
-    const res = await client.testDeserialization({});
+    const res = await testDeserialization(
+      {},
+      {
+        baseURL,
+        headers: { "custom-token": "" },
+        fetch,
+        forceValidation: false,
+        deserializers: {
+          "application/json": (data: any) => ({
+            name: String(data.name).toUpperCase(),
+            age: Number(data.age),
+          }),
+        },
+      },
+    );
     if (res.isValid) {
       expect(res.status).toBe("200");
       expect("data" in res).toBe(true);
@@ -36,12 +50,7 @@ describe("Deserialization Operation", () => {
       // Some response types provide a runtime `parse()` while forced-parse types provide `parsed`.
       let parsedAny: any;
       if ("parse" in res && typeof res.parse === "function") {
-        parsedAny = res.parse({
-          "application/json": (data: any) => ({
-            name: String(data.name).toUpperCase(),
-            age: Number(data.age),
-          }),
-        });
+        parsedAny = await res.parse();
       } else if ("parsed" in res) {
         // Forced-parse variant already has a parsed field
         parsedAny = res.parsed as any;
@@ -59,16 +68,26 @@ describe("Deserialization Operation", () => {
   });
 
   it("returns missing-schema kind for custom content-type via deserializer", async () => {
-    const client = createUnauthenticatedClient(baseURL);
+    const { testDeserialization } =
+      await import("../generated/client/testDeserialization.ts");
 
-    // Force Accept header so Prism emits JSON; we then pretend a custom content type when parsing
-    const res = await client.testDeserialization({});
+    // Force Accept header so Prism emits JSON; schema lookup should fail for the custom key.
+    const res = await testDeserialization(
+      {},
+      {
+        baseURL,
+        headers: { "custom-token": "" },
+        fetch,
+        forceValidation: false,
+        deserializers: {
+          "application/custom+json": (data: any) => data,
+        },
+      },
+    );
     if (res.isValid) {
       let parsedAny: any;
       if ("parse" in res && typeof res.parse === "function") {
-        parsedAny = res.parse({
-          "application/custom+json": (data: any) => data,
-        });
+        parsedAny = await res.parse();
       } else if ("parsed" in res) {
         parsedAny = res.parsed as any;
       } else {
@@ -106,7 +125,7 @@ describe("Deserialization Operation", () => {
     if (res.isValid) {
       let parsedAny: any;
       if ("parse" in res && typeof res.parse === "function") {
-        parsedAny = res.parse();
+        parsedAny = await res.parse();
       } else if ("parsed" in res) {
         // forced-parse variant cannot represent runtime deserialization error via parse(); treat as failure
         expect.fail(
@@ -145,7 +164,7 @@ describe("Deserialization Operation", () => {
       // Return object missing required property 'age'
       let parsedAny: any;
       if ("parse" in res && typeof res.parse === "function") {
-        parsedAny = res.parse();
+        parsedAny = await res.parse();
       } else if ("parsed" in res) {
         // forced-parse validated the response; fail because we expected invalid shape
         expect.fail("Expected parse-error but forced validation succeeded");
@@ -188,7 +207,7 @@ describe("Deserialization Operation", () => {
       // Parse XML string into object expected by schema
       let parsedAny: any;
       if ("parse" in res && typeof res.parse === "function") {
-        parsedAny = res.parse();
+        parsedAny = await res.parse();
       } else if ("parsed" in res) {
         parsedAny = res.parsed as any;
       } else {
@@ -233,7 +252,7 @@ describe("Deserialization Operation", () => {
     if (res.isValid) {
       let parsedAny: any;
       if ("parse" in res && typeof res.parse === "function") {
-        parsedAny = res.parse();
+        parsedAny = await res.parse();
       } else if ("parsed" in res) {
         parsedAny = res.parsed as any;
       } else {
@@ -276,7 +295,7 @@ describe("Deserialization Operation", () => {
     if (res.isValid) {
       let parsedAny: any;
       if ("parse" in res && typeof res.parse === "function") {
-        parsedAny = res.parse();
+        parsedAny = await res.parse();
       } else if ("parsed" in res) {
         parsedAny = res.parsed as any;
       } else {
@@ -326,7 +345,7 @@ describe("Deserialization Operation", () => {
     if (res.isValid) {
       let parsedAny: any;
       if ("parse" in res && typeof res.parse === "function") {
-        parsedAny = res.parse();
+        parsedAny = await res.parse();
       } else if ("parsed" in res) {
         parsedAny = res.parsed as any;
       } else {

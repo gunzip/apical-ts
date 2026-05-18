@@ -64,7 +64,7 @@ describe("server-generator comprehensive validation", () => {
     expect(result.wrapperCode).toContain("petFindByStatusRouteMetadata.params");
     // Parameter schemas are now accessed from serverRoute.params.shape
     expect(result.wrapperCode).toContain(
-      "petFindByStatusRouteMetadata.params.shape.query.safeParse",
+      "validateStandardSchema(petFindByStatusRouteMetadata.params.shape.query, req.query)",
     );
 
     /* Verify validation error types */
@@ -89,10 +89,10 @@ describe("server-generator comprehensive validation", () => {
     /* Verify success handler call */
     expect(result.wrapperCode).toContain("isValid: true");
     expect(result.wrapperCode).toContain("value: {");
-    expect(result.wrapperCode).toContain("query: queryParse.data");
-    expect(result.wrapperCode).toContain("path: pathParse.data");
+    expect(result.wrapperCode).toContain("query: queryParse.value");
+    expect(result.wrapperCode).toContain("path: pathParse.value");
     // No headers in return value since operation has no header parameters
-    expect(result.wrapperCode).not.toContain("headers: headersParse.data");
+    expect(result.wrapperCode).not.toContain("headers: headersParse.value");
     expect(result.wrapperCode).toContain("body: parsedBody");
   });
 

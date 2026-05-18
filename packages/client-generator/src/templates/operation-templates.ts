@@ -302,7 +302,7 @@ function buildAdditionalProperties(config: {
     const bodyOptional = config.isBodyOptional ? "?" : "";
     let bodyType: string;
     if (config.hasRequestMap && config.requestMapTypeName) {
-      bodyType = `import('zod').infer<${config.requestMapTypeName}[TRequestContentType]>`;
+      bodyType = `import("@standard-schema/spec").StandardSchemaV1.InferOutput<${config.requestMapTypeName}[TRequestContentType]>`;
     } else {
       bodyType = config.bodyTypeName || "unknown";
     }

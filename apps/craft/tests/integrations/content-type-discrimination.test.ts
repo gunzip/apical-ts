@@ -29,7 +29,7 @@ describe("Content Type Discrimination Integration Test", () => {
 
     // Verify the type definition includes the new structure
     expect(content).toContain("export type ApiResponseWithForcedParse<");
-    expect(content).toContain("data: z.infer<");
+    expect(content).toContain("data: StandardSchemaV1.InferOutput<");
     expect(content).toContain("contentType: K;");
   });
 

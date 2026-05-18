@@ -11,6 +11,7 @@
     "typecheck:generated": "tsgo --noEmit -p tsconfig.generated.json"
   },
   "dependencies": {
+    "@standard-schema/spec": "catalog:",
     "@tanstack/react-query": "^4.34.0",
     "react": "^18.3.1",
     "tsx": "^4.21.0",

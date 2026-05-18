@@ -79,7 +79,7 @@ describe("format overrides integration", () => {
 });
 
 function createConsumerSource(): string {
-  return `import * as z from "zod";
+  return `import type { StandardSchemaV1 } from "@standard-schema/spec";
 import { createProfile } from "./client/createProfile.ts";
 import { createProfileRequestMap } from "./routes/createProfile.ts";
 import { serverRoute as getProfileByTaxCodeServerRoute } from "./routes/getProfileByTaxCode.ts";
@@ -90,7 +90,7 @@ const validProfile: Profile = { fiscalCode: "TAX-001" };
 // @ts-expect-error invalid tax code should be rejected by the overridden schema type
 const invalidProfile: Profile = { fiscalCode: "INVALID" };
 
-type CreateProfileRequest = z.infer<typeof createProfileRequestMap["application/json"]>;
+type CreateProfileRequest = StandardSchemaV1.InferOutput<typeof createProfileRequestMap["application/json"]>;
 const validRequest: CreateProfileRequest = validProfile;
 // @ts-expect-error invalid tax code should be rejected in route request maps
 const invalidRequest: CreateProfileRequest = { fiscalCode: "INVALID" };
@@ -119,7 +119,7 @@ const validPath: ServerParsedParams["path"] = { taxCode: "TAX-001" };
 // @ts-expect-error invalid tax code should be rejected by generated server params
 const invalidPath: ServerParsedParams["path"] = { taxCode: "INVALID" };
 
-type RoutePath = z.infer<typeof getProfileByTaxCodeServerRoute.params.shape.path>;
+type RoutePath = StandardSchemaV1.InferOutput<typeof getProfileByTaxCodeServerRoute.params.shape.path>;
 const validRoutePath: RoutePath = validPath;
 // @ts-expect-error invalid tax code should be rejected by generated route params
 const invalidRoutePath: RoutePath = { taxCode: "INVALID" };

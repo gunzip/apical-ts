@@ -131,7 +131,7 @@ describe("testAuthBearer operation integration tests", () => {
         cursorValidationFailed = true;
         // Check that cursor validation failed
         const cursorError = params.error.issues.find((issue) =>
-          issue.path.includes("cursor"),
+          issue.path?.includes("cursor"),
         );
         expect(cursorError).toBeDefined();
 

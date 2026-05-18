@@ -12,14 +12,14 @@ describe("precise ApiResponse types", () => {
       /* Should include helper type for extracting models from response maps */
       expect(result).toContain("ResponseModelsForStatus<");
       expect(result).toContain(
-        "Map extends Record<string, Record<string, any>>",
+        "Map extends Record<string, Record<string, StandardSchemaV1>>",
       );
       expect(result).toContain("Status extends keyof Map");
       expect(result).toContain("Map[Status][keyof Map[Status]]");
 
       /* Should include precise ApiResponseWithParse type */
       expect(result).toContain("ApiResponseWithParse<");
-      expect(result).toContain("readonly parse: ()");
+      expect(result).toContain("readonly parse: () => Promise<");
       expect(result).not.toContain(
         "ReturnType<typeof parseApiResponseUnknownData>",
       );

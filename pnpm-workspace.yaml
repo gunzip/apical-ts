@@ -4,6 +4,7 @@ packages:
   - examples/*
 
 catalog:
+  '@standard-schema/spec': ^1.0.0
   '@tsconfig/node22': ^22.0.5
   '@types/node': ^22.16.2
   '@typescript/native-preview': ^7.0.0-dev.20260124.1

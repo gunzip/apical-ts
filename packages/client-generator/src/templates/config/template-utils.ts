@@ -1,9 +1,10 @@
 /* Shared template utilities */
 
 /*
- * Renders Zod import statement
+ * Renders Standard Schema imports for generated client runtime helpers
  */
-export function renderZodImportStatement(): string {
-  return `import type { z } from "zod/v4";
+export function renderStandardSchemaImportStatements(): string {
+  return `import type { StandardSchemaV1 } from "@standard-schema/spec";
+import { type StandardSchemaValidationError, validateStandardSchema } from "../standard-schema.ts";
 `;
 }

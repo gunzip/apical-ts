@@ -42,7 +42,7 @@ When an operation succeeds, the response object includes:
 - **`isValid: true`**: Indicates the operation was successful
 - **`status`**: The HTTP status code returned by the server
 - **`data`**: The raw response payload from the server
-- **`parse()`**: Method to validate and parse the response (when
+- **`parse()`**: Async method to validate and parse the response (when
   `forceValidation: false`)
 - **`parsed`**: Pre-validated data with content type (when
   `forceValidation: true` - default)
@@ -83,18 +83,18 @@ Deferred manual validation is achieved by setting `forceValidation: false` per
 operation or globally using `configureOperations`. See
 [Define Configuration](./define-configuration.md) section for more details.
 
-When `forceValidation: false` is set, responses provide a `parse()` method that
-you can call when needed:
+When `forceValidation: false` is set, responses provide an async `parse()`
+method that you can call when needed:
 
 ```ts
 const result = await getPetById({ path: { petId: "123" } });
 
 if (result.status === "200") {
-  const outcome = result.parse();
+  const outcome = await result.parse();
   if (isParsed(outcome)) {
     console.log("Pet:", outcome.parsed);
-  } else {
-    console.error("Validation failed:", z.prettifyError(outcome.error));
+  } else if (outcome.kind === "parse-error") {
+    console.error("Validation failed:", outcome.error.issues);
   }
 }
 ```

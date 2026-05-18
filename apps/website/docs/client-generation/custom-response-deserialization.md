@@ -3,8 +3,8 @@
 For advanced scenarios (e.g. XML parsing, vendor-specific media types, binary
 post-processing) you can provide custom deserializers through the config object.
 
-In case you're using manual validation (`forceValidation: false`), the `parse()`
-method will apply deserializers and validate the response on demand.
+In case you're using manual validation (`forceValidation: false`), the async
+`parse()` method will apply deserializers and validate the response on demand.
 
 Deserializers are methods that transform the raw response data into a format
 suitable for validation. They can be defined for specific content types and are
@@ -12,7 +12,7 @@ applied automatically during the parsing process.
 
 ## Why use Deserializers?
 
-- Apply transformations (e.g. date reviver, case normalization) prior to Zod
+- Apply transformations (e.g. date reviver, case normalization) prior to schema
   validation
 - Decode non‑JSON types (XML → JS object, CSV → array, binary → metadata)
 - Gracefully handle vendor or unknown content types without modifying generated
@@ -139,38 +139,38 @@ const result = await getDocument(
 Notes:
 
 - If the deserializer throws, validation is skipped (you get
-  `deserializationError`).
-- If no schema exists for the returned content-type, the transformed value is
-  returned under `deserialized` and flagged with `missingSchema: true`.
+  `kind: "deserialization-error"`).
+- If no schema exists for the returned content-type, `parse()` returns
+  `kind: "missing-schema"`.
 - Content type normalization strips any charset parameters (e.g.
   `application/json; charset=utf-8` → `application/json`).
 
 ## Error Handling Summary
 
-| Variant / Field               | Meaning                                           |
-| ----------------------------- | ------------------------------------------------- |
-| `parsed`                      | Successfully deserialized & schema-validated data |
-| `kind: parse-error`           | Validation failed (`error` is a `ZodError`)       |
-| `kind: deserialization-error` | Custom deserializer threw an exception            |
-| `kind: missing-schema`        | No schema found for that content type             |
+| Variant / Field               | Meaning                                             |
+| ----------------------------- | --------------------------------------------------- |
+| `parsed`                      | Successfully deserialized & schema-validated data   |
+| `kind: parse-error`           | Validation failed (`error.issues` contains details) |
+| `kind: deserialization-error` | Custom deserializer threw an exception              |
+| `kind: missing-schema`        | No schema found for that content type               |
 
 ### Error Handling With Manual Validation
 
 When using `forceValidation: false`, the `parse()` method returns a union type.
 The result of `parse()` is a discriminated object you can pattern match on:
 
-| Scenario                              | Shape                                                                       |
-| ------------------------------------- | --------------------------------------------------------------------------- |
-| Schema + validation success           | `{ contentType, parsed }`                                                   |
-| Schema + validation failure           | `{ contentType, parseError }`                                               |
-| Schema present but deserializer threw | `{ contentType, deserializationError }`                                     |
-| No schema for content type            | `{ contentType, missingSchema: true, deserialized, deserializationError? }` |
+| Scenario                              | Shape                                      |
+| ------------------------------------- | ------------------------------------------ |
+| Schema + validation success           | `{ contentType, parsed }`                  |
+| Schema + validation failure           | `{ kind: "parse-error", error }`           |
+| Schema present but deserializer threw | `{ kind: "deserialization-error", error }` |
+| No schema for content type            | `{ kind: "missing-schema", error }`        |
 
 ```ts
 const result = await getDocument({ path: { docId: "123" } });
 
 if (result.status === "200") {
-  const outcome = result.parse();
+  const outcome = await result.parse();
 
   if (isParsed(outcome)) {
     console.log("Success:", outcome.parsed);
@@ -179,10 +179,9 @@ if (result.status === "200") {
     // Fall back to raw data
     console.log("Raw data:", result.data);
   } else if (outcome.kind === "parse-error") {
-    console.error("Schema validation failed:", outcome.error);
+    console.error("Schema validation failed:", outcome.error.issues);
   } else if (outcome.kind === "missing-schema") {
     console.warn("No schema available, using raw data");
-    // outcome.deserialized contains the transformed data
   }
 }
 ```

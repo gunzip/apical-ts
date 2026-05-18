@@ -11,6 +11,8 @@ All operations return a union that includes `ApiResponseError`, which is a
 discriminated union covering all possible error scenarios:
 
 ```ts
+import type { StandardSchemaValidationError } from "../generated/standard-schema.js";
+
 type ApiResponseError = {
   readonly isValid: false;
   readonly status: undefined;
@@ -39,7 +41,7 @@ type ApiResponseError = {
         readonly status: string;
         readonly response: Response;
       };
-      readonly error: z.ZodError;
+      readonly error: StandardSchemaValidationError;
     }
   | {
       readonly kind: "deserialization-error";
@@ -165,16 +167,16 @@ if (!result.isValid && result.kind === "unexpected-response") {
 
 ### parse-error
 
-- **When it occurs**: Zod validation failures when using `parse()` or automatic
-  runtime validation
-- **Available data**: Includes parsing details via `z.ZodError`; HTTP details
+- **When it occurs**: Standard Schema validation failures when using
+  `await parse()` or automatic runtime validation
+- **Available data**: Includes parsing details via `error.issues`; HTTP details
   are under `result`
 - **Use case**: Handle schema validation failures
 
 ```ts
 if (!result.isValid && result.kind === "parse-error") {
   console.error("Response validation failed:");
-  console.error(z.prettifyError(result.error)); // Detailed validation errors
+  console.error(result.error.issues); // Detailed validation errors
   // Show validation error to user or log for debugging
 }
 ```
