@@ -71,13 +71,28 @@ describe("Deserialization Operation", () => {
     const { testDeserialization } =
       await import("../generated/client/testDeserialization.ts");
 
-    // Force Accept header so Prism emits JSON; schema lookup should fail for the custom key.
+    const customContentTypeFetch: typeof fetch = async (
+      input,
+      init,
+    ): Promise<Response> => {
+      const response = await fetch(input, init);
+      const body = await response.text();
+      const headers = new Headers(response.headers);
+      headers.set("content-type", "application/custom+json");
+      return new Response(body, {
+        headers,
+        status: response.status,
+        statusText: response.statusText,
+      });
+    };
+
+    // Override the response header so parse() sees an unsupported content type.
     const res = await testDeserialization(
       {},
       {
         baseURL,
         headers: { "custom-token": "" },
-        fetch,
+        fetch: customContentTypeFetch,
         forceValidation: false,
         deserializers: {
           "application/custom+json": (data: any) => data,
@@ -94,7 +109,6 @@ describe("Deserialization Operation", () => {
         expect.fail("Response did not expose parse() nor parsed");
       }
 
-      // Since response content-type won't match custom+json map key, schema lookup fails
       if (parsedAny && parsedAny.kind === "missing-schema") {
         expect(parsedAny.error).toContain("No schema found");
       } else if (!parsedAny) {
