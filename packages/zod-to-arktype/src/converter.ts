@@ -1,76 +1,107 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { parseZodFile, parseZodFiles } from "./ast-parser.js";
-import type { ParsedFileResult } from "./ast-parser.js";
+import { createZodFileParser } from "./ast-parser.js";
+import type { ParsedFileResult, ZodFileParser } from "./ast-parser.js";
 import { rewriteImports } from "./import-rewriter.js";
-import type { ConvertOptions, FileConversionResult } from "./types.js";
+import type {
+  ConversionSummary,
+  ConvertOptions,
+  FileConversionError,
+} from "./types.js";
 import { convertZodToArktype } from "./zod-to-arktype.js";
+
+export interface ProgressInfo {
+  currentFile: string;
+  current: number;
+  total: number;
+}
+
+export type ProgressCallback = (info: ProgressInfo) => void;
 
 export async function convert(
   options: ConvertOptions,
-): Promise<FileConversionResult[]> {
+  onProgress?: ProgressCallback,
+): Promise<ConversionSummary> {
   const inputPath = path.resolve(options.input);
   const outputPath = path.resolve(options.output);
 
   const stat = fs.statSync(inputPath);
   if (stat.isDirectory()) {
-    return convertDirectory(inputPath, outputPath);
+    return convertDirectory(inputPath, outputPath, onProgress);
   }
   const outputDir = path.dirname(outputPath);
   fs.mkdirSync(outputDir, { recursive: true });
-  const result = convertSingleFile(inputPath, outputPath);
-  return [result];
+  onProgress?.({
+    currentFile: path.basename(inputPath),
+    current: 1,
+    total: 1,
+  });
+  const error = convertSingleFile(inputPath, outputPath, createZodFileParser());
+  return {
+    totalCount: 1,
+    successCount: error ? 0 : 1,
+    errors: error ? [error] : [],
+  };
 }
 
 function convertDirectory(
   inputDir: string,
   outputDir: string,
-): FileConversionResult[] {
+  onProgress?: ProgressCallback,
+): ConversionSummary {
   const files = discoverTypeScriptFiles(inputDir);
-  fs.mkdirSync(outputDir, { recursive: true });
+  const total = files.length;
+  const parser = createZodFileParser();
+  const ensuredDirectories = new Set<string>();
+  let successCount = 0;
+  const errors: FileConversionError[] = [];
 
-  /* Batch-parse all files in a single ts-morph Project for performance */
-  const parsedFiles = parseZodFiles(files);
-
-  const results: FileConversionResult[] = [];
+  ensureDirectoryExists(outputDir, ensuredDirectories);
+  let current = 0;
   for (const file of files) {
+    current++;
     const relativePath = path.relative(inputDir, file);
     const outputFile = path.join(outputDir, relativePath);
-    const outputFileDir = path.dirname(outputFile);
-    fs.mkdirSync(outputFileDir, { recursive: true });
+    ensureDirectoryExists(path.dirname(outputFile), ensuredDirectories);
 
-    const parsed = parsedFiles.get(file);
-    if (!parsed) continue;
+    onProgress?.({ currentFile: relativePath, current, total });
 
-    const result = convertParsedFile(parsed, outputFile);
-    results.push(result);
+    const error = convertSingleFile(file, outputFile, parser);
+    if (error) {
+      errors.push(error);
+      continue;
+    }
+
+    successCount++;
   }
-  return results;
+
+  return { totalCount: total, successCount, errors };
 }
 
 function convertSingleFile(
   inputFile: string,
   outputFile: string,
-): FileConversionResult {
+  parser: ZodFileParser,
+): FileConversionError | undefined {
   const errors: string[] = [];
   try {
-    const parsed = parseZodFile(inputFile);
+    const parsed = parser.parseFile(inputFile);
     return convertParsedFile(parsed, outputFile);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     errors.push(message);
-    return { filePath: outputFile, content: "", errors };
+    return { filePath: outputFile, errors };
   }
 }
 
 function convertParsedFile(
   parsed: ParsedFileResult,
   outputFile: string,
-): FileConversionResult {
+): FileConversionError | undefined {
   const errors: string[] = [];
   try {
-    const { declarations, imports } = parsed;
+    const { declarations, imports, typeAliases } = parsed;
     const allReferencedSchemas = new Set<string>();
     const outputLines: string[] = [];
     let needsTypeImport = false;
@@ -92,6 +123,14 @@ function convertParsedFile(
       }
     }
 
+    /* Emit type aliases with different names (e.g., type FooType = z.infer<typeof Foo>) */
+    for (const alias of typeAliases) {
+      const exportPrefix = alias.isExported ? "export " : "";
+      outputLines.push(
+        `${exportPrefix}type ${alias.name} = typeof ${alias.referencedConst}.infer;`,
+      );
+    }
+
     const importLines = rewriteImports(
       imports,
       allReferencedSchemas,
@@ -101,12 +140,24 @@ function convertParsedFile(
     const content = [...importLines, "", ...outputLines, ""].join("\n");
     fs.writeFileSync(outputFile, content, "utf-8");
 
-    return { filePath: outputFile, content, errors };
+    return undefined;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     errors.push(message);
-    return { filePath: outputFile, content: "", errors };
+    return { filePath: outputFile, errors };
   }
+}
+
+function ensureDirectoryExists(
+  dirPath: string,
+  ensuredDirectories: Set<string>,
+): void {
+  if (ensuredDirectories.has(dirPath)) {
+    return;
+  }
+
+  fs.mkdirSync(dirPath, { recursive: true });
+  ensuredDirectories.add(dirPath);
 }
 
 function discoverTypeScriptFiles(dir: string): string[] {

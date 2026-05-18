@@ -3,7 +3,9 @@ import type { ConversionResult, ZodArg, ZodCallNode } from "./types.js";
 export function convertZodToArktype(node: ZodCallNode): ConversionResult {
   const referencedSchemas = new Set<string>();
   const code = convertNode(node, referencedSchemas);
-  return { code, needsTypeImport: true, referencedSchemas };
+  /* Safety: never produce empty output — fallback to unknown */
+  const safeCode = code || `type("unknown")`;
+  return { code: safeCode, needsTypeImport: true, referencedSchemas };
 }
 
 function convertNode(node: ZodCallNode, refs: Set<string>): string {
@@ -44,6 +46,12 @@ function convertCall(
     return convertCoerceFactory(method, args, refs);
   }
 
+  /* Namespace variants (z.iso.datetime(), etc.) */
+  const ns = getZodNamespace(object);
+  if (ns) {
+    return convertNamespaceFactory(ns, method, args, refs);
+  }
+
   /* Chained refinement methods applied to an existing type */
   if (object) {
     const base = convertNode(object, refs);
@@ -57,7 +65,6 @@ function convertCall(
 function isZodRoot(node: ZodCallNode | undefined): boolean {
   if (!node) return false;
   if (node.kind === "identifier" && node.name === "z") return true;
-  if (node.kind === "property" && node.property === "coerce") return false;
   return false;
 }
 
@@ -66,6 +73,19 @@ function isCoerceRoot(node: ZodCallNode | undefined): boolean {
   if (node.kind === "property" && node.property === "coerce") return true;
   if (node.kind === "identifier" && node.name === "__coerce__") return true;
   return false;
+}
+
+/* Detects z.iso, z.string (when used as namespace), etc. */
+function getZodNamespace(node: ZodCallNode | undefined): string | null {
+  if (!node) return null;
+  if (
+    node.kind === "property" &&
+    node.object.kind === "identifier" &&
+    node.object.name === "z"
+  ) {
+    return node.property;
+  }
+  return null;
 }
 
 function convertZodFactory(
@@ -147,6 +167,27 @@ function convertCoerceFactory(
   }
 }
 
+function convertNamespaceFactory(
+  namespace: string,
+  method: string,
+  _args: ZodArg[],
+  _refs: Set<string>,
+): string {
+  if (namespace === "iso") {
+    switch (method) {
+      case "datetime":
+        return `type("string.date.iso")`;
+      case "date":
+        return `type("string.date")`;
+      case "time":
+        return `type("string")`;
+      default:
+        return `type("string") /* unsupported: z.iso.${method}() */`;
+    }
+  }
+  return `type("unknown") /* unsupported: z.${namespace}.${method}() */`;
+}
+
 function convertLiteral(args: ZodArg[]): string {
   if (args.length === 0) return `type("unknown")`;
   const arg = args[0];
@@ -189,6 +230,16 @@ function convertObject(
 ): string {
   if (args.length === 0) return `type({})`;
   const arg = args[0];
+
+  /* Handle spread pattern: z.object({...Schema.shape}) → reference Schema directly */
+  if (arg.kind === "spread") {
+    if (arg.node.kind === "identifier") {
+      refs.add(arg.node.name);
+      return arg.node.name;
+    }
+    return `type({})`;
+  }
+
   if (arg.kind !== "object") return `type({})`;
 
   const entries = arg.properties.map((prop) => {
@@ -276,6 +327,10 @@ function unwrapModifiers(node: ZodCallNode): {
 
 function convertNodeToInline(node: ZodCallNode, refs: Set<string>): string {
   const full = convertNode(node, refs);
+
+  /* Safety: never produce empty output */
+  if (!full) return `"unknown"`;
+
   /* Extract the inner definition from type("...") if it's a simple type() call */
   const match = full.match(/^type\("(.+)"\)$/);
   if (match) return `"${match[1]}"`;

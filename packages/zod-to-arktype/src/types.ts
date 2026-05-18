@@ -12,6 +12,16 @@ export interface ZodSchemaDeclaration {
   callChain: ZodCallNode;
 }
 
+export interface ZodTypeAlias {
+  name: string;
+  referencedConst: string;
+  isExported: boolean;
+}
+
+export interface ZodExportedName {
+  name: string;
+}
+
 export type ZodCallNode = ZodMethodCall | ZodIdentifierRef | ZodPropertyAccess;
 
 export interface ZodMethodCall {
@@ -55,8 +65,13 @@ export interface ConversionResult {
   referencedSchemas: Set<string>;
 }
 
-export interface FileConversionResult {
+export interface FileConversionError {
   filePath: string;
-  content: string;
   errors: string[];
+}
+
+export interface ConversionSummary {
+  totalCount: number;
+  successCount: number;
+  errors: FileConversionError[];
 }

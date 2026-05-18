@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import {
   CallExpression,
   Node,
@@ -9,29 +11,53 @@ import {
 import type {
   ZodArg,
   ZodCallNode,
+  ZodExportedName,
   ZodObjectProperty,
   ZodSchemaDeclaration,
+  ZodTypeAlias,
 } from "./types.js";
 
 export interface ParsedFileResult {
   declarations: ZodSchemaDeclaration[];
   imports: Array<{ names: string[]; moduleSpecifier: string }>;
+  typeAliases: ZodTypeAlias[];
+  reExports: ZodExportedName[];
+}
+
+export interface ZodFileParser {
+  parseFile(filePath: string): ParsedFileResult;
 }
 
 export function parseZodFile(filePath: string): ParsedFileResult {
+  return createZodFileParser().parseFile(filePath);
+}
+
+export function createZodFileParser(): ZodFileParser {
   const project = new Project({ compilerOptions: { strict: true } });
-  const sourceFile = project.addSourceFileAtPath(filePath);
-  return parseSourceFile(sourceFile);
+
+  return {
+    parseFile(filePath: string): ParsedFileResult {
+      const sourceFile = project.createSourceFile(
+        filePath,
+        readFileSync(filePath, "utf-8"),
+        { overwrite: true },
+      );
+      try {
+        return parseSourceFile(sourceFile);
+      } finally {
+        sourceFile.forget();
+      }
+    },
+  };
 }
 
 export function parseZodFiles(
   filePaths: string[],
 ): Map<string, ParsedFileResult> {
-  const project = new Project({ compilerOptions: { strict: true } });
+  const parser = createZodFileParser();
   const results = new Map<string, ParsedFileResult>();
   for (const filePath of filePaths) {
-    const sourceFile = project.addSourceFileAtPath(filePath);
-    results.set(filePath, parseSourceFile(sourceFile));
+    results.set(filePath, parser.parseFile(filePath));
   }
   return results;
 }
@@ -45,12 +71,11 @@ export function parseZodSource(content: string): ParsedFileResult {
   return parseSourceFile(sourceFile);
 }
 
-function parseSourceFile(sourceFile: SourceFile): {
-  declarations: ZodSchemaDeclaration[];
-  imports: Array<{ names: string[]; moduleSpecifier: string }>;
-} {
+function parseSourceFile(sourceFile: SourceFile): ParsedFileResult {
   const declarations: ZodSchemaDeclaration[] = [];
   const imports: Array<{ names: string[]; moduleSpecifier: string }> = [];
+  const typeAliases: ZodTypeAlias[] = [];
+  const reExports: ZodExportedName[] = [];
 
   for (const importDecl of sourceFile.getImportDeclarations()) {
     const moduleSpecifier = importDecl.getModuleSpecifierValue();
@@ -60,15 +85,39 @@ function parseSourceFile(sourceFile: SourceFile): {
     }
   }
 
+  /* Collect export { X } re-export statements */
+  for (const exportDecl of sourceFile.getExportDeclarations()) {
+    for (const namedExport of exportDecl.getNamedExports()) {
+      reExports.push({ name: namedExport.getName() });
+    }
+  }
+  const reExportedNames = new Set(reExports.map((e) => e.name));
+
+  /* Collect type aliases and determine which reference z.infer<typeof X> */
   const exportedTypeNames = new Set<string>();
   for (const typeAlias of sourceFile.getTypeAliases()) {
-    if (typeAlias.isExported()) {
-      exportedTypeNames.add(typeAlias.getName());
+    const name = typeAlias.getName();
+    const isExported = typeAlias.isExported();
+    if (isExported) {
+      exportedTypeNames.add(name);
+    }
+
+    /* Check if type references z.infer<typeof SomeConst> */
+    const typeText = typeAlias.getTypeNode()?.getText() || "";
+    const inferMatch = typeText.match(/^z\.infer<typeof\s+(\w+)>$/);
+    if (inferMatch) {
+      const referencedConst = inferMatch[1];
+      /* Only track if the type name differs from the const name */
+      if (name !== referencedConst) {
+        typeAliases.push({ name, referencedConst, isExported });
+      }
     }
   }
 
   for (const statement of sourceFile.getVariableStatements()) {
-    const isExported = statement.isExported();
+    const isExported =
+      statement.isExported() ||
+      statement.getDeclarations().some((d) => reExportedNames.has(d.getName()));
     for (const decl of statement.getDeclarations()) {
       const initializer = decl.getInitializer();
       if (!initializer) continue;
@@ -88,20 +137,56 @@ function parseSourceFile(sourceFile: SourceFile): {
     }
   }
 
-  return { declarations, imports };
+  return { declarations, imports, typeAliases, reExports };
 }
 
 function isZodExpression(node: Node): boolean {
-  const text = node.getText();
-  return (
-    text.startsWith("z.") ||
-    text.startsWith("(") ||
-    isKnownSchemaReference(node)
-  );
+  if (Node.isParenthesizedExpression(node)) {
+    return isZodExpression(node.getExpression());
+  }
+
+  if (Node.isIdentifier(node)) {
+    return isKnownSchemaReference(node);
+  }
+
+  if (Node.isCallExpression(node)) {
+    return isZodExpression(node.getExpression());
+  }
+
+  if (Node.isPropertyAccessExpression(node)) {
+    return (
+      isZodNamespaceReference(node.getExpression()) ||
+      isKnownSchemaReference(node.getExpression())
+    );
+  }
+
+  return false;
+}
+
+function isZodNamespaceReference(node: Node): boolean {
+  if (Node.isParenthesizedExpression(node)) {
+    return isZodNamespaceReference(node.getExpression());
+  }
+
+  if (Node.isIdentifier(node)) {
+    return node.getText() === "z";
+  }
+
+  if (Node.isPropertyAccessExpression(node)) {
+    return isZodNamespaceReference(node.getExpression());
+  }
+
+  if (Node.isCallExpression(node)) {
+    return isZodNamespaceReference(node.getExpression());
+  }
+
+  return false;
 }
 
 function isKnownSchemaReference(node: Node): boolean {
-  if (Node.isIdentifier(node)) return true;
+  if (Node.isIdentifier(node)) {
+    return node.getText() !== "z";
+  }
   if (Node.isCallExpression(node)) {
     const expr = node.getExpression();
     return isZodExpression(expr);
@@ -142,21 +227,37 @@ export function parseExpression(node: Node): ZodCallNode | undefined {
 
 function parseCallExpression(node: CallExpression): ZodCallNode | undefined {
   const expression = node.getExpression();
-  const args = node.getArguments().map(parseArg).filter(Boolean) as ZodArg[];
 
   if (Node.isPropertyAccessExpression(expression)) {
     const methodName = expression.getName();
     const obj = parseExpression(expression.getExpression());
     if (!obj) return undefined;
-    return { kind: "call", method: methodName, object: obj, args };
+    return {
+      kind: "call",
+      method: methodName,
+      object: obj,
+      args: shouldParseArgs(methodName)
+        ? (node.getArguments().map(parseArg).filter(Boolean) as ZodArg[])
+        : [],
+    };
   }
 
   if (Node.isIdentifier(expression)) {
     const name = expression.getText();
-    return { kind: "call", method: name, args };
+    return {
+      kind: "call",
+      method: name,
+      args: shouldParseArgs(name)
+        ? (node.getArguments().map(parseArg).filter(Boolean) as ZodArg[])
+        : [],
+    };
   }
 
   return undefined;
+}
+
+function shouldParseArgs(methodName: string): boolean {
+  return methodName !== "describe";
 }
 
 function parseArg(node: Node): ZodArg | undefined {
