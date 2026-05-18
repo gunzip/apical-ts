@@ -55,12 +55,7 @@ async function safeCall<
     config: typeof globalConfig & { forceValidation: true },
   ) => Promise<TResponse>,
   params: TParams,
-): Promise<
-  Result<
-    ParsedSuccess<TResponse>,
-    ApiError<TResponse>
-  >
-> {
+): Promise<Result<ParsedSuccess<TResponse>, ApiError<TResponse>>> {
   const response = await apiMethod(params, {
     ...globalConfig,
     forceValidation: true,
