@@ -6,6 +6,7 @@ import path from "path";
 
 import type { Profiler } from "./profiler.js";
 import type { StringFormatOverride } from "../schema-generator/format-overrides.js";
+import type { ValidatorBackend } from "../shared/types.js";
 
 import {
   createStringFormatOverrideRegistry,
@@ -85,7 +86,22 @@ export async function generateSchemas(
   extraProps: ExtraPropsMode,
   profiler?: Profiler,
   formatOverrides: readonly StringFormatOverride[] = [],
+  validator: ValidatorBackend = "zod",
 ): Promise<void> {
+  /* Dispatch to ATA schema generator when requested */
+  if (validator === "ata") {
+    const { generateAtaSchemas } =
+      await import("../ata-schema-generator/index.js");
+    await generateAtaSchemas(
+      openApiDoc,
+      output,
+      concurrency,
+      extraProps,
+      profiler,
+    );
+    return;
+  }
+
   const schemasDir = path.join(output, "schemas");
   await fs.mkdir(schemasDir, { recursive: true });
 

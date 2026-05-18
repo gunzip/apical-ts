@@ -44,6 +44,7 @@
     "@types/swagger2openapi": "^7.0.4",
     "@typescript/native-preview": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "ata-validator": "^0.15.0",
     "embedme": "catalog:",
     "oxfmt": "catalog:",
     "vite": "catalog:",

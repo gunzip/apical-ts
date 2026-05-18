@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import type { StringFormatOverride } from "../schema-generator/format-overrides.js";
+import type { ValidatorBackend } from "../shared/types.js";
 
 import { buildScriptContent } from "./build-script-template.js";
 import { standardSchemaTemplateContent } from "./standard-schema-template.js";
@@ -71,6 +72,7 @@ async function countGeneratedTypeScriptFiles(
 export async function createPackageFiles(
   output: string,
   formatOverrides: readonly StringFormatOverride[] = [],
+  validator: ValidatorBackend = "zod",
 ): Promise<void> {
   const compilerOptions = { ...baseCompilerOptions };
   const generatedTypeScriptFileCount =
@@ -81,11 +83,19 @@ export async function createPackageFiles(
   if (!formatOverrides.some((override) => override.import.kind === "path")) {
     compilerOptions.rootDir = ".";
   }
+
+  /*
+   * ATA validator output emits compiled validators as .mjs files (plain JS).
+   * Allow importing them from .ts wrappers.
+   */
+  if (validator === "ata") {
+    compilerOptions.allowJs = true;
+  }
   const packageJsonContent = {
-    dependencies: {
-      "@standard-schema/spec": "^1.0.0",
-      zod: "^4.0.0",
-    },
+    dependencies:
+      validator === "ata"
+        ? { "@standard-schema/spec": "^1.0.0" }
+        : { "@standard-schema/spec": "^1.0.0", zod: "^4.0.0" },
     devDependencies: {
       "@types/node": "^24.3.1",
       "@typescript/native-preview": "^7.0.0-dev",

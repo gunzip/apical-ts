@@ -69,4 +69,5 @@ export {
   analyzeReadWriteProperties,
   ExtraPropsMode,
   SchemaContext,
+  ValidatorBackend,
 } from "./shared/types.js";

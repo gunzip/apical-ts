@@ -2,6 +2,7 @@
 import type {
   ExtraPropsMode,
   StringFormatOverride,
+  ValidatorBackend,
 } from "@apical-ts/core-utils";
 import type { OpenAPIObject } from "openapi3-ts/oas31";
 
@@ -73,6 +74,13 @@ export interface GenerationOptions {
   output: string;
   /** Enable timing breakdown of major phases */
   profile?: boolean;
+  /**
+   * Schema validation backend for generated output.
+   * - "zod": Generates Zod v4 schemas (default)
+   * - "ata": Generates AOT-compiled ata-validator standalone modules
+   * @default "zod"
+   */
+  validator?: ValidatorBackend;
 }
 
 /**
@@ -109,6 +117,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
     input,
     output,
     profile = false,
+    validator = "zod",
   } = options;
 
   await fs.mkdir(output, { recursive: true });
@@ -136,6 +145,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
     extraProps,
     profiler,
     formatOverrides,
+    validator,
   );
   profiler?.end("schemas:all");
 
@@ -150,7 +160,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
   );
 
   profiler?.start("package-json");
-  await createPackageFiles(output, formatOverrides);
+  await createPackageFiles(output, formatOverrides, validator);
   profiler?.end("package-json");
 
   profiler?.printSummary?.("Generation timing (ms)");

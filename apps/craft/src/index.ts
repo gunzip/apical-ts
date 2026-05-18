@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
-import type { ExtraPropsMode } from "@apical-ts/core-utils";
+import type { ExtraPropsMode, ValidatorBackend } from "@apical-ts/core-utils";
 
 import { Command } from "commander";
 
@@ -48,6 +48,11 @@ program
     "Control how additional properties are handled in object schemas. Options: strip (default), loose, strict",
     "strip",
   )
+  .option(
+    "--validator <name>",
+    "Schema validation backend. Options: zod (default), ata",
+    "zod",
+  )
   .action(async (options: Record<string, unknown>) => {
     try {
       const started = process.hrtime.bigint();
@@ -64,6 +69,7 @@ program
         input: String(options.input),
         output: String(options.output),
         profile: Boolean(options.profile),
+        validator: String(options.validator) as ValidatorBackend,
       };
 
       await generate(generationOptions);

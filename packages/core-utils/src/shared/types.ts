@@ -20,6 +20,13 @@ export interface ContentTypeMapping {
  */
 export type ExtraPropsMode = "loose" | "strict" | "strip";
 
+/*
+ * Selects which schema validation backend to use for generated output.
+ * - "zod": Generates Zod v4 schemas (default)
+ * - "ata": Generates AOT-compiled ata-validator standalone modules
+ */
+export type ValidatorBackend = "ata" | "zod";
+
 /**
  * Result of analyzing a schema for readOnly/writeOnly properties
  */
