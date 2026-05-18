@@ -47,9 +47,6 @@ async function demonstrateClient() {
     if (ret.parsed.contentType === "application/json") {
       const parsed = ret.parsed;
       console.log("Parsed JSON:", parsed.data.name);
-      // @ts-expect-error
-      // someXmlProp does not exist on JSON schema!
-      console.log("Parsed JSON:", parsed.data.someXmlProp);
     } else if (ret.parsed.contentType === "application/xml") {
       const parsed = ret.parsed;
       console.log("Parsed XML:", parsed.data.someXmlProp);

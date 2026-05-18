@@ -19,6 +19,7 @@
     "@typescript/native-preview": "catalog:"
   },
   "dependencies": {
+    "@standard-schema/spec": "catalog:",
     "express": "^5.2.1",
     "neverthrow": "^8.2.0",
     "zocker": "^3.0.0",
