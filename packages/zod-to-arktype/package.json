@@ -1,0 +1,48 @@
+{
+  "name": "@apical-ts/zod-to-arktype",
+  "version": "0.1.0",
+  "private": false,
+  "description": "CLI tool to convert Zod v4 schemas to ArkType definitions.",
+  "main": "dist/index.mjs",
+  "type": "module",
+  "bin": {
+    "zod-to-arktype": "./bin/zod-to-arktype.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsdown --config-loader native",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage",
+    "start": "node dist/index.mjs"
+  },
+  "keywords": [
+    "zod",
+    "arktype",
+    "converter",
+    "schema",
+    "typescript",
+    "cli"
+  ],
+  "author": "gunzip",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^14.0.2",
+    "ts-morph": "^25.0.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "arktype": "^2.1.20",
+    "tsdown": "^0.22.0",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
