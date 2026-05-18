@@ -16,7 +16,7 @@ describe("parse() discriminated union usage", () => {
       // We only need to exercise the type-level narrowing. Create a typed helper
       // that accepts the parse() result type and tests narrowed access without
       // invoking parse() at runtime.
-      type ParseResult = ReturnType<R["parse"]>;
+      type ParseResult = Awaited<ReturnType<R["parse"]>>;
       function inspect(result: ParseResult) {
         if (!isParsed(result)) return;
         if (result.contentType === "application/xml") {

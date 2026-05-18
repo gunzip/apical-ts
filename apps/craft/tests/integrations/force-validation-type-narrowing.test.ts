@@ -73,7 +73,7 @@ describe("forceValidation type narrowing", () => {
 
     if (response.status === "200") {
       // The parse() method should be available
-      const parseResult = response.parse();
+      const parseResult = await response.parse();
       expect(parseResult).toBeDefined();
     }
   });
@@ -91,7 +91,7 @@ describe("forceValidation type narrowing", () => {
     if (response.status === "200") {
       // The parse() method should not be available by default
       // @ts-expect-error
-      const parseResult = response.parse();
+      const parseResult = await response.parse();
       expect(parseResult).toBeDefined();
 
       // Verify parse result structure

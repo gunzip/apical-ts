@@ -72,16 +72,16 @@ export function renderServerOperationWrapper(
   /* Build handler and parsed params types */
   const responseType = routeResponseType;
   const bodyType = requestMapTypeName
-    ? `z.infer<(typeof ${requestMapTypeName})[keyof typeof ${requestMapTypeName}]>`
+    ? `StandardSchemaV1.InferOutput<(typeof ${requestMapTypeName})[keyof typeof ${requestMapTypeName}]>`
     : hasBody
       ? "unknown"
       : "undefined";
 
   const validationErrorType = `type ${sanitizedId}ValidationError =
-  | { kind: "query-error"; error: z.ZodError; isValid: false }
-  | { kind: "path-error"; error: z.ZodError; isValid: false }
-  | { kind: "headers-error"; error: z.ZodError; isValid: false }
-  | { kind: "body-error"; error: z.ZodError; isValid: false };`;
+  | { kind: "query-error"; error: StandardSchemaValidationError; isValid: false }
+  | { kind: "path-error"; error: StandardSchemaValidationError; isValid: false }
+  | { kind: "headers-error"; error: StandardSchemaValidationError; isValid: false }
+  | { kind: "body-error"; error: StandardSchemaValidationError; isValid: false };`;
 
   /*
    * Use pre-computed parsed params type imported from the parameter schema file,
@@ -119,7 +119,8 @@ ${validationLogic}
 
   /* Combine all parts */
   const parts = [
-    `import * as z from "zod";`,
+    `import type { StandardSchemaV1 } from "@standard-schema/spec";`,
+    `import { createStandardSchemaValidationError, type StandardSchemaValidationError, validateStandardSchema } from "../standard-schema.ts";`,
     `import { serverRoute as ${sanitizedId}RouteMetadata } from "../routes/${sanitizedId}.ts";`,
     responseTypeImport,
     requestMapImport,
@@ -148,7 +149,7 @@ function renderValidationLogic(
 ): string {
   const sanitizedId = sanitizeIdentifier(operationId);
   const bodyType = requestMapTypeName
-    ? `z.infer<(typeof ${requestMapTypeName})[keyof typeof ${requestMapTypeName}]>`
+    ? `StandardSchemaV1.InferOutput<(typeof ${requestMapTypeName})[keyof typeof ${requestMapTypeName}]>`
     : "undefined";
 
   /* Build parameter validation conditionally */
@@ -156,21 +157,21 @@ function renderValidationLogic(
 
   if (hasQuery) {
     paramValidations.push(
-      `  const queryParse = ${sanitizedId}RouteMetadata.params.shape.query.safeParse(req.query);`,
+      `  const queryParse = await validateStandardSchema(${sanitizedId}RouteMetadata.params.shape.query, req.query);`,
       `  if (!queryParse.success) return handler({ kind: "query-error", error: queryParse.error, isValid: false });`,
     );
   }
 
   if (hasPath) {
     paramValidations.push(
-      `  const pathParse = ${sanitizedId}RouteMetadata.params.shape.path.safeParse(req.path);`,
+      `  const pathParse = await validateStandardSchema(${sanitizedId}RouteMetadata.params.shape.path, req.path);`,
       `  if (!pathParse.success) return handler({ kind: "path-error", error: pathParse.error, isValid: false });`,
     );
   }
 
   if (hasHeaders) {
     paramValidations.push(
-      `  const headersParse = ${sanitizedId}RouteMetadata.params.shape.headers.safeParse(req.headers);`,
+      `  const headersParse = await validateStandardSchema(${sanitizedId}RouteMetadata.params.shape.headers, req.headers);`,
       `  if (!headersParse.success) return handler({ kind: "headers-error", error: headersParse.error, isValid: false });`,
     );
   }
@@ -183,25 +184,23 @@ function renderValidationLogic(
   if (req.body !== undefined) {
     /* Content type must be provided for request body validation */
     if (!req.contentType) {
-      return handler({ kind: "body-error", error: new z.ZodError([{ code: "custom", message: "Content-Type header is required", path: [] }]), isValid: false });
+      return handler({ kind: "body-error", error: createStandardSchemaValidationError("Content-Type header is required"), isValid: false });
     }
     const schema = ${requestMapTypeName}[req.contentType];
     if (schema) {
-      const bodyParse = schema.safeParse(req.body);
+      const bodyParse = await validateStandardSchema(schema, req.body);
       if (!bodyParse.success) return handler({ kind: "body-error", error: bodyParse.error, isValid: false });
-      parsedBody = bodyParse.data as ${bodyType};
+      parsedBody = bodyParse.value as ${bodyType};
     } else {
       /* Unknown content-type: reject */
-      return handler({ kind: "body-error", error: new z.ZodError([{ code: "custom", message: \`Unsupported Content-Type: \${req.contentType}\`, path: [] }]), isValid: false });
+      return handler({ kind: "body-error", error: createStandardSchemaValidationError(\`Unsupported Content-Type: \${req.contentType}\`), isValid: false });
     }
   }`
     : hasBody
       ? `
   let parsedBody: unknown | undefined = undefined;
   if (req.body !== undefined) {
-    const bodyParse = z.any().safeParse(req.body);
-    if (!bodyParse.success) return handler({ kind: "body-error", error: bodyParse.error, isValid: false });
-    parsedBody = bodyParse.data as unknown;
+    parsedBody = req.body as unknown;
   }`
       : `
   let parsedBody: undefined | undefined = undefined;`;
@@ -209,13 +208,13 @@ function renderValidationLogic(
   /* Build return value object dynamically based on which parameters exist */
   const returnValueProps: string[] = [];
   if (hasQuery) {
-    returnValueProps.push(`      query: queryParse.data`);
+    returnValueProps.push(`      query: queryParse.value`);
   }
   if (hasPath) {
-    returnValueProps.push(`      path: pathParse.data`);
+    returnValueProps.push(`      path: pathParse.value`);
   }
   if (hasHeaders) {
-    returnValueProps.push(`      headers: headersParse.data`);
+    returnValueProps.push(`      headers: headersParse.value`);
   }
   returnValueProps.push(`      body: parsedBody`);
 

@@ -62,7 +62,7 @@ const response = await findPetsByStatus({
 // Strict typing over status code and content type
 // using discriminated unions guides agents toward safe code
 if (response.status === "200") {
-  // Zod v4 parsed payload
+  // Automatically validated payload
   console.log(response.parsed.data[0].name);
 }`,
   },
@@ -138,9 +138,9 @@ function HomepageHeader() {
             From OpenAPI to your TypeScript stack.
           </Heading>
           <p className={styles.heroSummary}>
-            <strong>{siteConfig.title}</strong> generates Zod v4 schemas, route
-            metadata, typed clients, and server wrappers from one OpenAPI
-            document.
+            <strong>{siteConfig.title}</strong> generates Zod v4 schemas plus
+            Standard Schema-compatible route metadata, typed clients, and server
+            wrappers from one OpenAPI document.
           </p>
           <div className={styles.heroActions}>
             <HomepageLink

@@ -233,8 +233,8 @@ if needed.
 **Required**: No  
 **Default**: `true`
 
-When `false `, skips validation of response data even when the operation would
-normally validate it. This is useful for:
+When `false`, defers response validation until you call `await response.parse()`
+instead of validating automatically during the request. This is useful for:
 
 - Production environments where performance is critical and you trust the API to
   return correct data
@@ -258,7 +258,7 @@ for more details.
 **Default**: `{}`
 
 Custom deserializers for specific content types. This allows you to transform
-response data before validation occurs.
+response data before Standard Schema validation occurs.
 
 See the [Custom Response Deserialization](custom-response-deserialization)
 documentation for more details.

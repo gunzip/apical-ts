@@ -46,8 +46,8 @@ async function safeCall<
   TParams,
   TResponse extends { isValid: boolean } & Partial<{
     status: string | "default";
-    parsed: any;
-    error: any;
+    parsed: unknown;
+    error: unknown;
   }>,
 >(
   apiMethod: (
@@ -55,18 +55,7 @@ async function safeCall<
     config: typeof globalConfig & { forceValidation: true },
   ) => Promise<TResponse>,
   params: TParams,
-): Promise<
-  Result<
-    TResponse extends {
-      isValid: true;
-      status: "200" | "201" | "202" | "204";
-      parsed: infer P;
-    }
-      ? P
-      : never,
-    ApiError<TResponse>
-  >
-> {
+): Promise<Result<ParsedSuccess<TResponse>, ApiError<TResponse>>> {
   const response = await apiMethod(params, {
     ...globalConfig,
     forceValidation: true,
@@ -80,8 +69,16 @@ async function safeCall<
     response.status.startsWith("2") &&
     "parsed" in response
   ) {
-    return ok((response as any).parsed);
+    return ok(response.parsed as ParsedSuccess<TResponse>);
   }
 
   return err(response as ApiError<TResponse>);
 }
+
+type ParsedSuccess<TResponse> = TResponse extends {
+  isValid: true;
+  status: "200" | "201" | "202" | "204";
+  parsed: infer P;
+}
+  ? P
+  : never;

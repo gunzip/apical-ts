@@ -1,6 +1,5 @@
 import { globalConfig, isParsed } from "../generated/client/runtime.ts";
 import { updatePet } from "../generated/client/updatePet.ts";
-import z from "zod";
 
 const parseXml = () => {
   // Implement XML deserialization logic here
@@ -12,6 +11,7 @@ const parseXml = () => {
       "http://example.com/parsed_photo1.jpg",
       "http://example.com/parsed_photo2.jpg",
     ],
+    someXmlProp: "ACTIVATED",
   };
 };
 
@@ -46,23 +46,17 @@ async function demonstrateClient() {
     console.error("Error:", ret.error);
   } else if (ret.status === "200") {
     console.log("Raw data:", ret.data);
-    const parsed = ret.parse();
+    const parsed = await ret.parse();
     if (!isParsed(parsed)) {
-      if (parsed.kind == "parse-error") {
-        // Here we can handle Zod parsing errors
-        // (if we want to)
-        console.error(
-          "Error: Cannot parse data",
-          z.prettifyError(parsed.error),
-        );
+      if (parsed.kind === "parse-error") {
+        console.error("Error: Cannot parse data", parsed.error.issues);
       } else {
-        // All other error kind...
         console.error("Error:", parsed.error);
       }
-    } else if (parsed.contentType == "application/xml") {
+    } else if (parsed.contentType === "application/xml") {
       // Only here we can access the parsed XML data properties!
       console.log("Parsed XML data (name):", parsed.parsed.someXmlProp);
-    } else if (parsed.contentType == "application/json") {
+    } else if (parsed.contentType === "application/json") {
       // Shouldn't happen since we requested XML, but who knows!
       console.log("Parsed JSON data (name):", parsed.parsed.name);
     }

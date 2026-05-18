@@ -44,14 +44,14 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("testSimpleQueryRouteMetadata");
     // Parameter schemas are now accessed from serverRoute.params.shape
     expect(result.wrapperCode).toContain(
-      "testSimpleQueryRouteMetadata.params.shape.query.safeParse",
+      "validateStandardSchema(testSimpleQueryRouteMetadata.params.shape.query, req.query)",
     );
-    // No path or headers parameters in this operation, so no safeParse for them
+    // No path or headers parameters in this operation, so no validation for them
     expect(result.wrapperCode).not.toContain(
-      "testSimpleQueryRouteMetadata.params.shape.path.safeParse",
+      "validateStandardSchema(testSimpleQueryRouteMetadata.params.shape.path, req.path)",
     );
     expect(result.wrapperCode).not.toContain(
-      "testSimpleQueryRouteMetadata.params.shape.headers.safeParse",
+      "validateStandardSchema(testSimpleQueryRouteMetadata.params.shape.headers, req.headers)",
     );
     expect(result.wrapperCode).toContain('kind: "query-error"');
     expect(result.wrapperCode).toContain('kind: "path-error"');
@@ -122,10 +122,10 @@ describe("server-generator operation wrapper", () => {
 
     /* Schema validation now uses server-specific schemas from serverRoute.params.shape */
     expect(result.wrapperCode).toContain(
-      "testStrictValidationRouteMetadata.params.shape.query.safeParse",
+      "validateStandardSchema(testStrictValidationRouteMetadata.params.shape.query, req.query)",
     );
     expect(result.wrapperCode).toContain(
-      "testStrictValidationRouteMetadata.params.shape.path.safeParse",
+      "validateStandardSchema(testStrictValidationRouteMetadata.params.shape.path, req.path)",
     );
     expect(result.wrapperCode).not.toContain("z.strictObject(");
   });
@@ -174,7 +174,9 @@ describe("server-generator operation wrapper", () => {
     );
 
     /* Verify that request body validation uses schemas from request map imported from routes */
-    expect(result.wrapperCode).toContain("schema.safeParse(req.body)");
+    expect(result.wrapperCode).toContain(
+      "const bodyParse = await validateStandardSchema(schema, req.body);",
+    );
     expect(result.wrapperCode).toContain("testStrictBodyValidationRequestMap");
     expect(result.wrapperCode).toContain(
       'from "../routes/testStrictBodyValidation.ts"',
@@ -213,9 +215,9 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain("testWithPathRouteMetadata");
     // Path parameter schemas are now accessed from serverRoute.params.shape
     expect(result.wrapperCode).toContain(
-      "testWithPathRouteMetadata.params.shape.path.safeParse",
+      "validateStandardSchema(testWithPathRouteMetadata.params.shape.path, req.path)",
     );
-    expect(result.wrapperCode).toContain("pathParse.data");
+    expect(result.wrapperCode).toContain("pathParse.value");
   });
 
   it("should generate wrapper with request body", () => {
@@ -275,7 +277,9 @@ describe("server-generator operation wrapper", () => {
     );
 
     expect(result.wrapperCode).not.toContain("testEmptyRequestBodyRequestMap");
-    expect(result.wrapperCode).not.toContain("schema.safeParse(req.body)");
+    expect(result.wrapperCode).not.toContain(
+      "validateStandardSchema(schema, req.body)",
+    );
     expect(result.wrapperCode).not.toContain("Unsupported Content-Type");
   });
 

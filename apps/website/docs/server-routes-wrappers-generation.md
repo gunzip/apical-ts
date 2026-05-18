@@ -43,9 +43,10 @@ This creates:
 
 ## Runtime Dependencies
 
-The generated server code requires `zod` as a runtime dependency for request and
-response validation. After generation, install dependencies in your project or
-output directory as needed.
+Generated server wrappers validate through the Standard Schema contract. The
+generated package still includes `zod` because emitted files in `schemas/`
+remain Zod-based, and it now also includes `@standard-schema/spec` for the
+shared Standard Schema types used by routes, client, and server surfaces.
 
 ## Using the Wrapped Handler
 
@@ -94,9 +95,13 @@ responses are type checked against the OpenAPI contract.
 The handler you provide to the wrapper receives one of:
 
 - `{ isValid: true, value: { query, path, headers, body, ... } }`
-- `{ isValid: false, kind: "query-error" | "body-error" | ..., error: ZodError }`
+- `{ isValid: false, kind: "query-error" | "body-error" | ..., error: { issues } }`
 
 It must return a typed object shaped like `{ status, contentType, data }`.
+
+Validation can be sync or async depending on the underlying schema
+implementation, but the generated wrapper normalizes both through the shared
+`standard-schema.ts` helper.
 
 ## Why This Is the "Static" Route Style
 

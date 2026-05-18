@@ -4,6 +4,7 @@ import path from "path";
 import type { StringFormatOverride } from "../schema-generator/format-overrides.js";
 
 import { buildScriptContent } from "./build-script-template.js";
+import { standardSchemaTemplateContent } from "./standard-schema-template.js";
 
 const baseCompilerOptions: Record<string, unknown> = {
   noEmit: true,
@@ -82,6 +83,7 @@ export async function createPackageFiles(
   }
   const packageJsonContent = {
     dependencies: {
+      "@standard-schema/spec": "^1.0.0",
       zod: "^4.0.0",
     },
     devDependencies: {
@@ -104,6 +106,10 @@ export async function createPackageFiles(
     fs.writeFile(
       path.join(output, "tsconfig.json"),
       JSON.stringify({ compilerOptions }, null, 2),
+    ),
+    fs.writeFile(
+      path.join(output, "standard-schema.ts"),
+      standardSchemaTemplateContent,
     ),
   ];
 

@@ -25,6 +25,7 @@
     "vitest": "catalog:"
   },
   "dependencies": {
+    "@standard-schema/spec": "catalog:",
     "msw": "^2.6.8",
     "zocker": "^3.0.0",
     "zod": "catalog:"

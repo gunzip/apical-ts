@@ -39,7 +39,7 @@ describe("Response Operations", () => {
         if (response.status === "200") {
           // Use parse() method to get structured data
           if ("parse" in response && typeof response.parse === "function") {
-            const parsed = response.parse();
+            const parsed = await response.parse();
             if ("parsed" in parsed) {
               const data = parsed.parsed as any;
               expect(data).toBeDefined();
@@ -147,7 +147,7 @@ describe("Response Operations", () => {
         if (response.status === "201") {
           // Use parse() method to get structured data
           if ("parse" in response && typeof response.parse === "function") {
-            const parsed = response.parse();
+            const parsed = await response.parse();
             if ("parsed" in parsed) {
               const data = parsed.parsed as any;
               expect(data).toBeDefined();
@@ -210,7 +210,7 @@ describe("Response Operations", () => {
         if (response.status === "201") {
           // Use parse() method to get structured data
           if ("parse" in response && typeof response.parse === "function") {
-            const parsed = response.parse();
+            const parsed = await response.parse();
             if ("parsed" in parsed) {
               const message = parsed.parsed as any;
               expect(message).toHaveProperty("id");
@@ -302,7 +302,7 @@ describe("Response Operations", () => {
 
           // Data should be parsed as JSON object
           if ("parse" in response && typeof response.parse === "function") {
-            const parsed = response.parse();
+            const parsed = await response.parse();
             if ("parsed" in parsed) {
               const data = parsed.parsed;
               expect(typeof data).toBe("object");

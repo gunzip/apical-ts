@@ -21,6 +21,7 @@
   "license": "MIT",
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
+    "@standard-schema/spec": "catalog:",
     "hono": "^4.12.18",
     "zod": "catalog:"
   },

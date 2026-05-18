@@ -24,7 +24,7 @@ describe("DeserializerMap Integration Test", () => {
     const operationContent = await readFile(operationPath, "utf-8");
 
     /* Verify parse method takes no arguments */
-    expect(operationContent).toContain("parse: ()");
+    expect(operationContent).toContain("parse: async ()");
 
     /* Verify parse method uses config.deserializers directly */
     expect(operationContent).toContain("config.deserializers");

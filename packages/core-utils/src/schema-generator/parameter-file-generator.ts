@@ -136,7 +136,10 @@ async function generateParameterSchemaFile(
     );
 
   /* Build the file imports */
-  const imports = [`import * as z from "zod";`];
+  const imports = [
+    `import type { StandardSchemaV1 } from "@standard-schema/spec";`,
+    `import * as z from "zod";`,
+  ];
   const helpersImport = buildGeneratedSchemaHelpersImport(
     new Set([...result.helpers, ...serverResult.helpers]),
   ).trimEnd();
@@ -300,7 +303,7 @@ function buildParsedParamsSchema(
       ? `export const ${name} = z.object({\n${props.join(",\n")}\n});`
       : `export const ${name} = z.object({});`;
 
-  const typeCode = `export type ${name}Type = z.infer<typeof ${name}>;`;
+  const typeCode = `export type ${name}Type = StandardSchemaV1.InferOutput<typeof ${name}>;`;
 
   return { objectCode, typeCode };
 }
@@ -346,17 +349,17 @@ function buildTypeExports(
 
   if (hasParameters.hasQuery) {
     exports.push(
-      `export type ${schemaNames.querySchema} = z.infer<typeof ${schemaNames.querySchema}>;`,
+      `export type ${schemaNames.querySchema} = StandardSchemaV1.InferOutput<typeof ${schemaNames.querySchema}>;`,
     );
   }
   if (hasParameters.hasPath) {
     exports.push(
-      `export type ${schemaNames.pathSchema} = z.infer<typeof ${schemaNames.pathSchema}>;`,
+      `export type ${schemaNames.pathSchema} = StandardSchemaV1.InferOutput<typeof ${schemaNames.pathSchema}>;`,
     );
   }
   if (hasParameters.hasHeaders) {
     exports.push(
-      `export type ${schemaNames.headersSchema} = z.infer<typeof ${schemaNames.headersSchema}>;`,
+      `export type ${schemaNames.headersSchema} = StandardSchemaV1.InferOutput<typeof ${schemaNames.headersSchema}>;`,
     );
   }
 

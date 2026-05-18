@@ -66,7 +66,7 @@ describe("Multi content type integration", () => {
       expect(ct).toContain("application/vnd.custom+json");
       // Data should parse as NewModel schema - use parse() method
       if ((response as any).parse) {
-        const parsed = (response as any).parse();
+        const parsed = await (response as any).parse();
         if ("parsed" in parsed) {
           expect(parsed.parsed).toHaveProperty("id");
         }
