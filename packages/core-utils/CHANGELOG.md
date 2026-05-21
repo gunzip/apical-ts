@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.23.0
+
+### Minor Changes
+
+- 594a604: Add support for typed headers in responses
+
 ## 0.22.3
 
 ### Patch Changes

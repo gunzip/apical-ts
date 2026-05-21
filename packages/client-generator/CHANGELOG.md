@@ -1,5 +1,16 @@
 # @apical-ts/client-generator
 
+## 0.15.0
+
+### Minor Changes
+
+- 594a604: Add support for typed headers in responses
+
+### Patch Changes
+
+- Updated dependencies [594a604]
+  - @apical-ts/core-utils@0.23.0
+
 ## 0.14.9
 
 ### Patch Changes

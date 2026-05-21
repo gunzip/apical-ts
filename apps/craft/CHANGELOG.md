@@ -1,5 +1,11 @@
 # @apical-ts/craft
 
+## 0.26.0
+
+### Minor Changes
+
+- 594a604: Add support for typed headers in responses
+
 ## 0.25.0
 
 ### Minor Changes

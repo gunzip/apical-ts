@@ -1,5 +1,16 @@
 # @apical-ts/route-generator
 
+## 0.16.0
+
+### Minor Changes
+
+- 594a604: Add support for typed headers in responses
+
+### Patch Changes
+
+- Updated dependencies [594a604]
+  - @apical-ts/core-utils@0.23.0
+
 ## 0.15.6
 
 ### Patch Changes
