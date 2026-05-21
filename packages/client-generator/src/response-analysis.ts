@@ -23,6 +23,7 @@ import { getResponseContentType } from "./utils.js";
 // Interfaces (alphabetical keys inside)
 interface BuildUnionTypesParams {
   defaultResponseInfo?: ResponseInfo;
+  responseHeadersMapName?: string;
   responseMapName?: string;
   responses: ResponseInfo[];
 }
@@ -59,6 +60,7 @@ export function analyzeResponseStructure(
     doc,
     hasResponseContentTypeMap = false,
     operation,
+    responseHeadersMapName,
     responseMapName,
     typeImports,
   } = config;
@@ -79,6 +81,7 @@ export function analyzeResponseStructure(
 
   const unionTypes = buildUnionTypes({
     defaultResponseInfo,
+    responseHeadersMapName,
     responseMapName: effectiveResponseMapName,
     responses,
   });
@@ -86,6 +89,7 @@ export function analyzeResponseStructure(
   return {
     defaultResponseInfo,
     defaultReturnType: "ApiResponse<number, unknown>",
+    responseHeadersMapName,
     responseMapName: effectiveResponseMapName,
     responses,
     unionTypes,
@@ -164,16 +168,23 @@ export function determineParsingStrategy(
 // Helpers (ordered alphabetically by name)
 function buildUnionTypes({
   defaultResponseInfo,
+  responseHeadersMapName,
   responseMapName,
   responses,
 }: BuildUnionTypesParams): string[] {
   const unionTypes: string[] = [];
   const mapName = responseMapName;
+  const renderHeadersType = (statusCode: string) =>
+    responseHeadersMapName
+      ? `, ResponseHeadersForStatus<typeof ${responseHeadersMapName}, ${statusCode}>`
+      : "";
   const pushStandard = (info: ResponseInfo) => {
     const dataType = info.contentType ? "unknown" : "void";
     const statusLiteral =
       info.statusCode === "default" ? '"default"' : `"${info.statusCode}"`;
-    unionTypes.push(`ApiResponse<${statusLiteral}, ${dataType}>`);
+    unionTypes.push(
+      `ApiResponse<${statusLiteral}, ${dataType}${renderHeadersType(statusLiteral)}>`,
+    );
   };
   if (mapName) {
     for (const info of responses) {
@@ -181,7 +192,7 @@ function buildUnionTypes({
         const statusLiteral =
           info.statusCode === "default" ? '"default"' : `"${info.statusCode}"`;
         unionTypes.push(
-          `(TForceValidation extends true ? ApiResponseWithForcedParse<${statusLiteral}, typeof ${mapName}> : ApiResponseWithParse<${statusLiteral}, typeof ${mapName}>)`,
+          `(TForceValidation extends true ? ApiResponseWithForcedParse<${statusLiteral}, typeof ${mapName}${responseHeadersMapName ? `, typeof ${responseHeadersMapName}` : ""}> : ApiResponseWithParse<${statusLiteral}, typeof ${mapName}${responseHeadersMapName ? `, typeof ${responseHeadersMapName}` : ""}>)`,
         );
       } else {
         pushStandard(info);
@@ -190,7 +201,7 @@ function buildUnionTypes({
     if (defaultResponseInfo) {
       if (defaultResponseInfo.hasSchema) {
         unionTypes.push(
-          `(TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${mapName}> : ApiResponseWithParse<"default", typeof ${mapName}>)`,
+          `(TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${mapName}${responseHeadersMapName ? `, typeof ${responseHeadersMapName}` : ""}> : ApiResponseWithParse<"default", typeof ${mapName}${responseHeadersMapName ? `, typeof ${responseHeadersMapName}` : ""}>)`,
         );
       } else {
         pushStandard(defaultResponseInfo);
@@ -201,14 +212,18 @@ function buildUnionTypes({
       if (info.hasSchema) {
         const statusLiteral =
           info.statusCode === "default" ? '"default"' : `"${info.statusCode}"`;
-        unionTypes.push(`ApiResponse<${statusLiteral}, unknown>`);
+        unionTypes.push(
+          `ApiResponse<${statusLiteral}, unknown${renderHeadersType(statusLiteral)}>`,
+        );
       } else {
         pushStandard(info);
       }
     }
     if (defaultResponseInfo) {
       if (defaultResponseInfo.hasSchema) {
-        unionTypes.push(`ApiResponse<"default", unknown>`);
+        unionTypes.push(
+          `ApiResponse<"default", unknown${renderHeadersType('"default"')}>`,
+        );
       } else {
         pushStandard(defaultResponseInfo);
       }

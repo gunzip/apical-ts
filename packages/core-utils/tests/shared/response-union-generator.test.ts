@@ -36,4 +36,26 @@ describe("response union generator", () => {
       expect.arrayContaining([{ statusCode: "452" }, { statusCode: "512" }]),
     );
   });
+
+  it("adds typed headers when a response headers map is available", () => {
+    const result = generateResponseUnion(
+      {
+        responses: {
+          "200": {
+            description: "OK",
+          },
+        },
+      },
+      "testOperation",
+      new Set<string>(),
+      undefined,
+      undefined,
+      "TestOperationRouteResponse",
+      "testOperationResponseHeadersMap",
+    );
+
+    expect(result.unionTypeDefinition).toContain(
+      'headers: "200" extends keyof typeof testOperationResponseHeadersMap',
+    );
+  });
 });

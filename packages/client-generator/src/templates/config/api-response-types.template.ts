@@ -49,6 +49,19 @@ function getSchemaEntry<TSchemaMap extends Record<string, StandardSchemaV1>>(
   } as SchemaEntry<TSchemaMap>;
 }
 
+export function getResponseHeaderSchema<
+  THeaderMap extends Record<string, StandardSchemaV1>,
+>(
+  headerMap: THeaderMap,
+  status: string,
+): THeaderMap[keyof THeaderMap] | undefined {
+  if (!Object.prototype.hasOwnProperty.call(headerMap, status)) {
+    return undefined;
+  }
+
+  return headerMap[status as keyof THeaderMap];
+}
+
 function createParsedApiResponse<
   TSchemaMap extends Record<string, StandardSchemaV1>,
   TContentType extends keyof TSchemaMap,
@@ -124,6 +137,32 @@ export async function parseApiResponseUnknownData<
   return { kind: "parse-error", error: result.error } as const;
 }
 
+export async function parseApiResponseHeaders<
+  TSchema extends StandardSchemaV1,
+>(
+  response: Response,
+  schema: TSchema | undefined,
+): Promise<
+  | { success: true; value: StandardSchemaV1.InferOutput<TSchema> | undefined }
+  | { success: false; error: StandardSchemaValidationError }
+> {
+  if (!schema) {
+    return { success: true, value: undefined } as const;
+  }
+
+  const rawHeaders = Object.fromEntries(
+    Array.from(response.headers.entries(), ([name, value]) => [
+      name.toLowerCase(),
+      value,
+    ]),
+  );
+  const result = await validateStandardSchema(schema, rawHeaders);
+  if (result.success) {
+    return { success: true, value: result.value } as const;
+  }
+  return { success: false, error: result.error } as const;
+}
+
 /* Type guard helpers for narrowing parse() results */
 export function isParsed<
   T extends
@@ -138,11 +177,13 @@ export function isParsed<
 /* Type-safe helper function that lets TypeScript infer the correct forced parse result type */
 export function createForcedParseResponse<
   S extends string,
+  THeaders,
   TParseResult extends { contentType: string; parsed: unknown }
 >(
   status: S,
   data: unknown,
   response: Response,
+  headers: THeaders,
   parseResult: TParseResult
 ) {
   return {
@@ -150,6 +191,7 @@ export function createForcedParseResponse<
     status,
     data,
     response,
+    headers,
     parsed: { data: parseResult.parsed, contentType: parseResult.contentType },
   };
 }`;
@@ -163,12 +205,13 @@ export function renderApiResponseTypes(): string {
  * Represents a generic API response for the new discriminated union pattern.
  * @template S The HTTP status code as a string (e.g., "200", "4XX", "default").
  */
-export type ApiResponse<S extends string, T> =
+export type ApiResponse<S extends string, T, THeaders = undefined> =
   | {
       readonly isValid: true;
       readonly status: S;
       readonly data: T;
       readonly response: Response;
+      readonly headers: THeaders;
     };
 
 /**
@@ -224,6 +267,15 @@ type ResponseModelsForStatus<
   Status extends keyof Map
 > = Map[Status][keyof Map[Status]];
 
+export type ResponseHeadersForStatus<
+  TResponseHeaderMap,
+  TStatus extends string,
+> = \`\${TStatus}\` extends keyof TResponseHeaderMap
+  ? TResponseHeaderMap[\`\${TStatus}\`] extends StandardSchemaV1
+    ? StandardSchemaV1.InferOutput<TResponseHeaderMap[\`\${TStatus}\`]>
+    : undefined
+  : undefined;
+
 export type ExtractResponseUnion<
   TResponseMap,
   TStatus extends keyof TResponseMap,
@@ -242,11 +294,13 @@ export type ExtractResponseUnion<
 export type ApiResponseWithParse<
   S extends string,
   Map extends Record<string, Record<string, StandardSchemaV1>>,
+  HeaderMap extends Record<string, StandardSchemaV1> = Record<never, never>,
 > = {
   readonly isValid: true;
   readonly status: S;
   readonly data: unknown;
   readonly response: Response;
+  readonly headers: ResponseHeadersForStatus<HeaderMap, S>;
   readonly parse: () => Promise<${"`${S}`"} extends keyof Map
     ?
         | {
@@ -269,11 +323,13 @@ export type ApiResponseWithParse<
 export type ApiResponseWithForcedParse<
   S extends string,
   Map extends Record<string, Record<string, StandardSchemaV1>>,
+  HeaderMap extends Record<string, StandardSchemaV1> = Record<never, never>,
 > = {
   readonly isValid: true;
   readonly status: S;
   readonly data: unknown;
   readonly response: Response;
+  readonly headers: ResponseHeadersForStatus<HeaderMap, S>;
   readonly parsed: ${"`${S}`"} extends keyof Map
     ? {
         [K in keyof Map[${"`${S}`"}]]: {

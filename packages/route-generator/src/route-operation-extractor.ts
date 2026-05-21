@@ -19,7 +19,9 @@ export interface RouteOperationMetadata {
     contentTypeMaps: ContentTypeMaps;
     hasBody: boolean;
     requestMapTypeName: string;
+    responseHeadersMapTypeName: string;
     responseMapTypeName: string;
+    shouldGenerateResponseHeadersMap: boolean;
     shouldGenerateRequestMap: boolean;
     shouldGenerateResponseMap: boolean;
   };
@@ -63,7 +65,10 @@ export function extractRouteOperationMetadataFromMetadata(
       contentTypeMaps: metadata.bodyInfo.contentTypeMaps,
       hasBody: metadata.bodyInfo.hasRequestBody,
       requestMapTypeName: `${metadata.functionName}RequestMap`,
+      responseHeadersMapTypeName: `${metadata.functionName}ResponseHeadersMap`,
       responseMapTypeName: `${metadata.functionName}ResponseMap`,
+      shouldGenerateResponseHeadersMap:
+        metadata.bodyInfo.shouldGenerateResponseHeaderMap,
       shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
       shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
     },

@@ -36,6 +36,7 @@ export interface ResponseAnalysis {
   defaultResponseInfo?: ResponseInfo;
   /* Default return type if no responses found */
   defaultReturnType: string;
+  responseHeadersMapName?: string;
   /* Response map for parsing */
   responseMapName?: string;
   responses: ResponseInfo[];
@@ -53,6 +54,7 @@ export interface ResponseAnalysisConfig {
   hasResponseContentTypeMap?: boolean;
   /* The operation being analyzed */
   operation: OperationObject;
+  responseHeadersMapName?: string;
   /* Response map name to use for union type generation */
   responseMapName?: string;
   /* Set to collect type imports */

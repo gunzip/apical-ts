@@ -43,6 +43,7 @@ export function generateResponseUnion(
   doc?: OpenAPIObject,
   resolvedSchemas?: Record<string, SchemaObject>,
   responseTypeName = `${sanitizeIdentifier(operationId)}Response`,
+  responseHeadersMapName?: string,
 ): ResponseUnionResult {
   const unionMembers: ResponseUnionMember[] = [];
 
@@ -114,6 +115,7 @@ export function generateResponseUnion(
   const unionTypeDefinition = generateUnionTypeDefinition(
     responseTypeName,
     unionMembers,
+    responseHeadersMapName,
   );
 
   return {
@@ -224,6 +226,7 @@ function expandWildcardStatusCode(statusCode: string): string[] {
 function generateUnionTypeDefinition(
   typeName: string,
   members: ResponseUnionMember[],
+  responseHeadersMapName?: string,
 ): string {
   if (members.length === 0) {
     return `export type ${typeName} = never;`;
@@ -231,7 +234,13 @@ function generateUnionTypeDefinition(
 
   const memberStrings = members.map(
     (member) =>
-      `  | { status: "${member.statusCode}"; ${member.contentType ? `contentType: "${member.contentType}";` : ""} ${member.dataType ? `data: ${member.dataType};` : ""} }`,
+      `  | { status: "${member.statusCode}"; ${
+        member.contentType ? `contentType: "${member.contentType}";` : ""
+      } ${member.dataType ? `data: ${member.dataType};` : ""}${
+        responseHeadersMapName
+          ? ` headers: "${member.statusCode}" extends keyof typeof ${responseHeadersMapName} ? StandardSchemaV1.InferOutput<(typeof ${responseHeadersMapName})["${member.statusCode}"]> : undefined;`
+          : ""
+      } }`,
   );
 
   return `export type ${typeName} =

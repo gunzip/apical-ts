@@ -23,8 +23,8 @@ type ExtractOverloadForForce<TOp, TForce extends boolean> = Extract<
 
 // Distribute over unions and replace ApiResponseWithParse members when forceValidation=true
 type ReplaceWithForcedParse<U> = U extends any
-  ? U extends ApiResponseWithParse<infer S, infer Map>
-    ? ApiResponseWithForcedParse<S, Map>
+  ? U extends ApiResponseWithParse<infer S, infer Map, infer HeaderMap>
+    ? ApiResponseWithForcedParse<S, Map, HeaderMap>
     : U
   : never;
 
@@ -32,7 +32,7 @@ type ReplaceWithForcedParse<U> = U extends any
 // only see the manual parse() shape; this improves DX (parse() becomes available
 // after narrowing success/status without additional guards).
 type RemoveForcedParse<U> = U extends any
-  ? U extends ApiResponseWithForcedParse<any, any>
+  ? U extends ApiResponseWithForcedParse<any, any, any>
     ? never
     : U
   : never;

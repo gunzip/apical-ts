@@ -85,6 +85,9 @@ export function generateOperationFunctionFromMetadata(
     initialReturnType: metadata.responseHandlers.returnType,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+    responseHeadersMapTypeName: metadata.bodyInfo.responseHeadersMapTypeName,
+    shouldGenerateResponseHeadersMap:
+      metadata.bodyInfo.shouldGenerateResponseHeadersMap,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
   });
@@ -108,7 +111,10 @@ export function generateOperationFunctionFromMetadata(
     isQueryOptional: metadata.isQueryOptional,
     operationId: sharedMetadata.operationId,
     requestMapTypeName: metadata.bodyInfo.requestMapTypeName,
+    responseHeadersMapTypeName: metadata.bodyInfo.responseHeadersMapTypeName,
     responseMapTypeName: metadata.bodyInfo.responseMapTypeName,
+    shouldGenerateResponseHeadersMap:
+      metadata.bodyInfo.shouldGenerateResponseHeadersMap,
     shouldGenerateRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
   });
@@ -197,12 +203,16 @@ function createOperationMetadata(
   const responseMapRuntimeName = bodyInfo.shouldExportResponseMap
     ? `${functionName}ResponseMap`
     : undefined;
+  const responseHeadersMapRuntimeName = bodyInfo.shouldExportResponseHeadersMap
+    ? `${functionName}ResponseHeadersMap`
+    : undefined;
   const responseHandlers = generateResponseHandlers(
     operation,
     responseTypeImports,
     bodyInfo.shouldExportResponseMap,
     responseMapRuntimeName,
     doc,
+    responseHeadersMapRuntimeName,
   );
 
   const authHeaders = extractAuthHeaders(doc);
@@ -211,6 +221,9 @@ function createOperationMetadata(
         responseHandlers.defaultResponseInfo,
         bodyInfo.shouldExportResponseMap
           ? bodyInfo.responseMapTypeName
+          : undefined,
+        bodyInfo.shouldExportResponseHeadersMap
+          ? bodyInfo.responseHeadersMapTypeName
           : undefined,
       )
     : undefined;
@@ -382,7 +395,12 @@ function collectBodyAndContentTypes({
     requestContentTypes: sharedBodyInfo.requestContentTypes,
     requestMapTypeName: `${operationName}RequestMap`,
     responseMapTypeName: `${operationName}ResponseMap`,
+    responseHeadersMapTypeName: `${operationName}ResponseHeadersMap`,
+    shouldExportResponseHeadersMap:
+      sharedBodyInfo.shouldGenerateResponseHeaderMap,
     shouldExportResponseMap: sharedBodyInfo.shouldGenerateResponseMap,
+    shouldGenerateResponseHeadersMap:
+      sharedBodyInfo.shouldGenerateResponseHeaderMap,
     shouldGenerateRequestMap: sharedBodyInfo.shouldGenerateRequestMap,
     shouldGenerateResponseMap: sharedBodyInfo.shouldGenerateResponseMap,
   };
