@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  renderDefaultResponseHandler,
   renderResponseHandler,
   renderResponseHandlers,
   renderUnionType,
@@ -117,6 +118,27 @@ describe("response-templates", () => {
     it("should handle empty responses array", () => {
       const result = renderResponseHandlers([]);
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe("renderDefaultResponseHandler", () => {
+    it("defines headers before manual default parsing", () => {
+      const responseInfo: ResponseInfo = {
+        statusCode: "default",
+        typeName: "ErrorResponse",
+        contentType: "application/json",
+        hasSchema: true,
+        parsingStrategy: {
+          useValidation: true,
+          isJsonLike: true,
+          requiresRuntimeContentTypeCheck: false,
+        },
+      };
+
+      const result = renderDefaultResponseHandler(responseInfo, "ResponseMap");
+
+      expect(result).toContain("const headers = undefined");
+      expect(result).toContain("response,\n            headers,");
     });
   });
 

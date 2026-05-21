@@ -25,9 +25,9 @@ export function renderDefaultResponseHandler(
       /* Generate dynamic validation logic for default response */
       return `      if (${responseMapName}["default"]) {
         /* Handle OpenAPI default response with schema validation */
+        ${headersCode}
         if (config.forceValidation) {
           /* Force validation: automatically parse and return result */
-          ${headersCode}
           const parseResult = await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {});
           if ("parsed" in parseResult) {
             const forcedResult = createForcedParseResponse("default", data, response, headers, parseResult);
