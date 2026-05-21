@@ -55,7 +55,7 @@ describe("response union generator", () => {
     );
 
     expect(result.unionTypeDefinition).toContain(
-      'headers: "200" extends keyof typeof testOperationResponseHeadersMap',
+      'headers: TestOperationRouteResponseHeadersForStatus<"200">',
     );
   });
 });

@@ -232,17 +232,29 @@ function generateUnionTypeDefinition(
     return `export type ${typeName} = never;`;
   }
 
+  const responseHeadersTypeName = `${typeName}HeadersForStatus`;
   const memberStrings = members.map(
     (member) =>
       `  | { status: "${member.statusCode}"; ${
         member.contentType ? `contentType: "${member.contentType}";` : ""
       } ${member.dataType ? `data: ${member.dataType};` : ""}${
         responseHeadersMapName
-          ? ` headers: "${member.statusCode}" extends keyof typeof ${responseHeadersMapName} ? StandardSchemaV1.InferOutput<(typeof ${responseHeadersMapName})["${member.statusCode}"]> : undefined;`
+          ? ` headers: ${responseHeadersTypeName}<"${member.statusCode}">;`
           : ""
       } }`,
   );
 
-  return `export type ${typeName} =
+  const responseHeadersTypeDefinition = responseHeadersMapName
+    ? `type ${responseHeadersTypeName}<TStatus extends string> =
+  TStatus extends keyof typeof ${responseHeadersMapName}
+    ? (typeof ${responseHeadersMapName})[TStatus] extends StandardSchemaV1
+      ? StandardSchemaV1.InferOutput<(typeof ${responseHeadersMapName})[TStatus]>
+      : undefined
+    : undefined;
+
+`
+    : "";
+
+  return `${responseHeadersTypeDefinition}export type ${typeName} =
 ${memberStrings.join("\n")};`;
 }

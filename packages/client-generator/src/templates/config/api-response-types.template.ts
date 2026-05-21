@@ -142,17 +142,43 @@ export async function parseApiResponseUnknownData<
   return { kind: "parse-error", error: result.error } as const;
 }
 
+export function parseApiResponseHeaders(
+  response: Response,
+  schema: undefined,
+): Promise<
+  | { success: true; value: undefined }
+  | { success: false; error: StandardSchemaValidationError }
+>;
+
+export function parseApiResponseHeaders<TSchema extends StandardSchemaV1>(
+  response: Response,
+  schema: TSchema,
+): Promise<
+  | { success: true; value: StandardSchemaV1.InferOutput<TSchema> }
+  | { success: false; error: StandardSchemaValidationError }
+>;
+
 export async function parseApiResponseHeaders<
-  TSchema extends StandardSchemaV1,
+  TSchema extends StandardSchemaV1 | undefined,
 >(
   response: Response,
-  schema: TSchema | undefined,
+  schema: TSchema,
 ): Promise<
-  | { success: true; value: StandardSchemaV1.InferOutput<TSchema> | undefined }
+  | {
+      success: true;
+      value: TSchema extends StandardSchemaV1
+        ? StandardSchemaV1.InferOutput<TSchema>
+        : undefined;
+    }
   | { success: false; error: StandardSchemaValidationError }
 > {
   if (!schema) {
-    return { success: true, value: undefined } as const;
+    return {
+      success: true,
+      value: undefined as TSchema extends StandardSchemaV1
+        ? StandardSchemaV1.InferOutput<TSchema>
+        : undefined,
+    } as const;
   }
 
   const rawHeaders = Object.fromEntries(
@@ -163,7 +189,12 @@ export async function parseApiResponseHeaders<
   );
   const result = await validateStandardSchema(schema, rawHeaders);
   if (result.success) {
-    return { success: true, value: result.value } as const;
+    return {
+      success: true,
+      value: result.value as TSchema extends StandardSchemaV1
+        ? StandardSchemaV1.InferOutput<TSchema>
+        : undefined,
+    } as const;
   }
   return { success: false, error: result.error } as const;
 }

@@ -108,7 +108,7 @@ describe("route metadata generator", () => {
       "responseHeadersMap: listPetsResponseHeadersMap",
     );
     expect(result.routeCode).toContain(
-      'headers: "200" extends keyof typeof listPetsResponseHeadersMap ? StandardSchemaV1.InferOutput<(typeof listPetsResponseHeadersMap)["200"]> : undefined;',
+      'headers: listPetsRouteResponseHeadersForStatus<"200">;',
     );
   });
 });
