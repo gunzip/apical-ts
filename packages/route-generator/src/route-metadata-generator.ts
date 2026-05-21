@@ -9,6 +9,7 @@ import { ImportManager } from "@apical-ts/core-utils";
 import {
   extractOperationGenerationMetadata,
   generateResponseUnion,
+  type ResponseHeaderMapResult,
   type OperationGenerationMetadata,
 } from "@apical-ts/core-utils/shared";
 
@@ -31,8 +32,11 @@ export interface RouteOperationMetadata {
     hasBody: boolean;
     requestBodyMap: OperationGenerationMetadata["bodyInfo"]["requestBodyMap"];
     requestMapTypeName: string;
+    responseHeaderMap: OperationGenerationMetadata["bodyInfo"]["responseHeaderMap"];
+    responseHeadersMapTypeName: string;
     responseMap: OperationGenerationMetadata["bodyInfo"]["responseMap"];
     responseMapTypeName: string;
+    shouldGenerateResponseHeadersMap: boolean;
     shouldGenerateRequestMap: boolean;
     shouldGenerateResponseMap: boolean;
   };
@@ -79,6 +83,7 @@ export function buildResponseMap(
 ): string {
   const responseTypeImports = new Set<string>();
   const routeResponseTypeName = `${metadata.functionName}RouteResponse`;
+  const responseHeadersMapName = metadata.bodyInfo.responseHeadersMapTypeName;
   const unionResult = generateResponseUnion(
     metadata.operation,
     metadata.operationId,
@@ -86,8 +91,24 @@ export function buildResponseMap(
     doc,
     undefined,
     routeResponseTypeName,
+    metadata.bodyInfo.shouldGenerateResponseHeadersMap
+      ? responseHeadersMapName
+      : undefined,
   );
 
+  const responseHeadersMapCode = metadata.bodyInfo
+    .shouldGenerateResponseHeadersMap
+    ? buildResponseHeadersMap(
+        responseHeadersMapName,
+        metadata.bodyInfo.responseHeaderMap,
+        importManager,
+      )
+    : `export const ${responseHeadersMapName} = {} as const;
+export type ${responseHeadersMapName} = typeof ${responseHeadersMapName};`;
+
+  for (const typeImport of metadata.bodyInfo.responseHeaderMap.typeImports) {
+    importManager.addSchemaImport(typeImport);
+  }
   for (const typeImport of metadata.bodyInfo.responseMap.typeImports) {
     importManager.addSchemaImport(typeImport);
   }
@@ -102,7 +123,7 @@ export type ${responseMapName} = typeof ${responseMapName};`
     : `export const ${responseMapName} = {} as const;
 export type ${responseMapName} = typeof ${responseMapName};`;
 
-  return `${responseMapCode}\n\n${unionResult.unionTypeDefinition}`;
+  return `${responseHeadersMapCode}\n\n${responseMapCode}\n\n${unionResult.unionTypeDefinition}`;
 }
 
 /**
@@ -151,6 +172,8 @@ export function generateRouteMetadataFromMetadata(
     requestMapCode,
     requestMapTypeName: routeMetadata.bodyInfo.requestMapTypeName,
     responseMapCode,
+    responseHeadersMapTypeName:
+      routeMetadata.bodyInfo.responseHeadersMapTypeName,
     responseMapTypeName: routeMetadata.bodyInfo.responseMapTypeName,
     serverIsHeadersOptional: isServerHeadersOptional,
   });
@@ -173,8 +196,13 @@ function extractCompleteRouteMetadata(
       hasBody: lightweightMeta.bodyInfo.hasBody,
       requestBodyMap: metadata.bodyInfo.requestBodyMap,
       requestMapTypeName: lightweightMeta.bodyInfo.requestMapTypeName,
+      responseHeaderMap: metadata.bodyInfo.responseHeaderMap,
+      responseHeadersMapTypeName:
+        lightweightMeta.bodyInfo.responseHeadersMapTypeName,
       responseMap: metadata.bodyInfo.responseMap,
       responseMapTypeName: lightweightMeta.bodyInfo.responseMapTypeName,
+      shouldGenerateResponseHeadersMap:
+        lightweightMeta.bodyInfo.shouldGenerateResponseHeadersMap,
       shouldGenerateRequestMap:
         lightweightMeta.bodyInfo.shouldGenerateRequestMap,
       shouldGenerateResponseMap:
@@ -185,4 +213,94 @@ function extractCompleteRouteMetadata(
     operationId: metadata.operationId,
     parameterInfo: lightweightMeta.parameterInfo,
   };
+}
+
+function buildResponseHeadersMap(
+  responseHeadersMapName: string,
+  responseHeaderMap: ResponseHeaderMapResult,
+  importManager: ImportManager,
+): string {
+  const schemaDefinitions: string[] = [];
+  const sharedSchemaDefinitions = new Map<string, string>();
+
+  const splitHeaderValuesHelper = `const splitHeaderValues = (value: unknown): unknown => {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+};`;
+
+  for (const status of responseHeaderMap.statuses) {
+    for (const header of status.headers) {
+      if (!header.componentSchemaName) {
+        continue;
+      }
+
+      if (!sharedSchemaDefinitions.has(header.componentSchemaName)) {
+        sharedSchemaDefinitions.set(
+          header.componentSchemaName,
+          `const ${header.componentSchemaName} = ${header.schemaCode};`,
+        );
+      }
+    }
+  }
+
+  if (
+    responseHeaderMap.statuses.some((status) =>
+      status.headers.some((header) =>
+        header.schemaCode.includes("splitHeaderValues"),
+      ),
+    )
+  ) {
+    schemaDefinitions.push(splitHeaderValuesHelper);
+  }
+
+  schemaDefinitions.push(...sharedSchemaDefinitions.values());
+
+  for (const status of responseHeaderMap.statuses) {
+    const schemaName = `${responseHeadersMapName}${status.statusCode === "default" ? "Default" : status.statusCode}Schema`;
+    const headerProps = status.headers
+      .map((header) => {
+        const schemaCode = header.componentSchemaName
+          ? header.componentSchemaName
+          : header.schemaCode;
+        return `${JSON.stringify(header.normalizedName)}: ${
+          header.required ? schemaCode : `${schemaCode}.optional()`
+        }`;
+      })
+      .join(", ");
+
+    schemaDefinitions.push(
+      `const ${schemaName} = z.object({ ${headerProps} });`,
+    );
+  }
+
+  const mapEntries = responseHeaderMap.statuses
+    .map((status) => {
+      const schemaName = `${responseHeadersMapName}${status.statusCode === "default" ? "Default" : status.statusCode}Schema`;
+      return `  "${status.statusCode}": ${schemaName},`;
+    })
+    .join("\n");
+
+  const imports = [
+    `import type { StandardSchemaV1 } from "@standard-schema/spec";`,
+    `import * as z from "zod";`,
+  ];
+
+  if (schemaDefinitions.some((definition) => definition.includes("z.infer"))) {
+    importManager.addZodImport();
+  }
+
+  return `${imports.join("\n")}
+
+${schemaDefinitions.join("\n\n")}
+
+export const ${responseHeadersMapName} = {
+${mapEntries}
+} as const;
+export type ${responseHeadersMapName} = typeof ${responseHeadersMapName};`;
 }

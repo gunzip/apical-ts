@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  renderDefaultResponseHandler,
   renderResponseHandler,
   renderResponseHandlers,
   renderUnionType,
@@ -25,8 +26,9 @@ describe("response-templates", () => {
       const result = renderResponseHandler(responseInfo, "undefined");
 
       expect(result).toContain("if (response.status === 204)");
+      expect(result).toContain("const headers = undefined");
       expect(result).toContain(
-        'return { isValid: true as const, status: "204" as const, data: undefined, response };',
+        'return { isValid: true as const, status: "204" as const, data: undefined, response, headers };',
       );
     });
 
@@ -47,8 +49,9 @@ describe("response-templates", () => {
 
       expect(result).toContain("if (response.status === 200)");
       expect(result).toContain("const data = undefined");
+      expect(result).toContain("const headers = undefined");
       expect(result).toContain(
-        'return { isValid: true as const, status: "200" as const, data, response };',
+        'return { isValid: true as const, status: "200" as const, data, response, headers };',
       );
     });
 
@@ -70,8 +73,9 @@ describe("response-templates", () => {
       expect(result).toContain(
         "if (response.status >= 400 && response.status < 500)",
       );
+      expect(result).toContain("const headers = undefined");
       expect(result).toContain(
-        'return { isValid: true as const, status: "4xx" as const, data: undefined, response };',
+        'return { isValid: true as const, status: "4xx" as const, data: undefined, response, headers };',
       );
     });
   });
@@ -114,6 +118,27 @@ describe("response-templates", () => {
     it("should handle empty responses array", () => {
       const result = renderResponseHandlers([]);
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe("renderDefaultResponseHandler", () => {
+    it("defines headers before manual default parsing", () => {
+      const responseInfo: ResponseInfo = {
+        statusCode: "default",
+        typeName: "ErrorResponse",
+        contentType: "application/json",
+        hasSchema: true,
+        parsingStrategy: {
+          useValidation: true,
+          isJsonLike: true,
+          requiresRuntimeContentTypeCheck: false,
+        },
+      };
+
+      const result = renderDefaultResponseHandler(responseInfo, "ResponseMap");
+
+      expect(result).toContain("const headers = undefined");
+      expect(result).toContain("response,\n            headers,");
     });
   });
 

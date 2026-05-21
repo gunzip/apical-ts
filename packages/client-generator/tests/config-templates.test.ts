@@ -175,9 +175,12 @@ describe("client-generator config-templates", () => {
     it("should render API response types", () => {
       const result = renderApiResponseTypes();
 
-      expect(result).toContain("export type ApiResponse<S extends string, T>");
+      expect(result).toContain(
+        "export type ApiResponse<S extends string, T, THeaders = undefined>",
+      );
       expect(result).toContain("readonly status: S;");
       expect(result).toContain("readonly data: T;");
+      expect(result).toContain("readonly headers: THeaders;");
 
       /* Should also include the new ApiResponseError type */
       expect(result).toContain("export type ApiResponseError");
@@ -187,7 +190,7 @@ describe("client-generator config-templates", () => {
 
       /* The basic ApiResponse type should not contain error fields (they're in ApiResponseError) */
       expect(result).toContain(
-        "export type ApiResponse<S extends string, T> =",
+        "export type ApiResponse<S extends string, T, THeaders = undefined> =",
       );
     });
   });

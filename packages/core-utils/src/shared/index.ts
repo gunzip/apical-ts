@@ -11,6 +11,7 @@ export * from "./parameter-utils.js";
 export * from "./request-body-maps.js";
 export * from "./reserved-keywords.js";
 export * from "./response-maps.js";
+export * from "./response-headers.js";
 export * from "./response-union-generator.js";
 export * from "./schema-type-resolver.js";
 export * from "./security-utils.js";

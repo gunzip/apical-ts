@@ -23,6 +23,10 @@ import {
   type RequestBodyMapResult,
 } from "./request-body-maps.js";
 import {
+  generateResponseHeaderMap,
+  type ResponseHeaderMapResult,
+} from "./response-headers.js";
+import {
   generateResponseMap,
   type ResponseMapResult,
 } from "./response-maps.js";
@@ -36,7 +40,9 @@ export interface OperationBodyGenerationMetadata {
   hasRequestBody: boolean;
   requestBodyMap: RequestBodyMapResult;
   requestContentTypes: string[];
+  responseHeaderMap: ResponseHeaderMapResult;
   responseMap: ResponseMapResult;
+  shouldGenerateResponseHeaderMap: boolean;
   shouldGenerateRequestMap: boolean;
   shouldGenerateResponseMap: boolean;
 }
@@ -111,6 +117,13 @@ export function extractOperationGenerationMetadata({
     {},
     resolvedSchemas,
   );
+  const responseHeaderMap = generateResponseHeaderMap(
+    operation,
+    operationId,
+    new Set<string>(),
+    doc,
+    resolvedSchemas,
+  );
 
   const parameterGroups = extractParameterGroups(
     operation,
@@ -136,7 +149,9 @@ export function extractOperationGenerationMetadata({
       hasRequestBody,
       requestBodyMap,
       requestContentTypes: extractRequestContentTypes(operation),
+      responseHeaderMap,
       responseMap,
+      shouldGenerateResponseHeaderMap: responseHeaderMap.statuses.length > 0,
       shouldGenerateRequestMap:
         hasRequestBody && requestBodyMap.requestMapType !== "{}",
       shouldGenerateResponseMap: responseMap.responseMapType !== "{}",

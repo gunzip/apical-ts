@@ -17,6 +17,7 @@ export interface RouteMetadataTemplateParams {
   pathKey: string;
   requestMapCode: string;
   requestMapTypeName?: string;
+  responseHeadersMapTypeName?: string;
   responseMapCode: string;
   responseMapTypeName?: string;
   serverIsHeadersOptional: boolean;
@@ -39,6 +40,7 @@ export function renderRouteMetadata(
     pathKey,
     requestMapCode,
     requestMapTypeName,
+    responseHeadersMapTypeName,
     responseMapCode,
     responseMapTypeName,
     serverIsHeadersOptional,
@@ -68,6 +70,9 @@ export function renderRouteMetadata(
   const responseMapFieldValue = responseMapTypeName
     ? `${sanitizedId}ResponseMap`
     : "{}";
+  const responseHeadersMapFieldValue = responseHeadersMapTypeName
+    ? `${sanitizedId}ResponseHeadersMap`
+    : "{}";
 
   const requestMapFieldValue = requestMapTypeName
     ? `${sanitizedId}RequestMap`
@@ -82,6 +87,7 @@ export function renderRouteMetadata(
   method: "${method}",
   operationId: "${sanitizedId}",
   requestMap: ${requestMapFieldValue},
+  responseHeadersMap: ${responseHeadersMapFieldValue},
   responseMap: ${responseMapFieldValue},`;
 
   const routeObjects = `export const clientRoute = {

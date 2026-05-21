@@ -43,6 +43,7 @@ export function generateResponseUnion(
   doc?: OpenAPIObject,
   resolvedSchemas?: Record<string, SchemaObject>,
   responseTypeName = `${sanitizeIdentifier(operationId)}Response`,
+  responseHeadersMapName?: string,
 ): ResponseUnionResult {
   const unionMembers: ResponseUnionMember[] = [];
 
@@ -114,6 +115,7 @@ export function generateResponseUnion(
   const unionTypeDefinition = generateUnionTypeDefinition(
     responseTypeName,
     unionMembers,
+    responseHeadersMapName,
   );
 
   return {
@@ -224,16 +226,35 @@ function expandWildcardStatusCode(statusCode: string): string[] {
 function generateUnionTypeDefinition(
   typeName: string,
   members: ResponseUnionMember[],
+  responseHeadersMapName?: string,
 ): string {
   if (members.length === 0) {
     return `export type ${typeName} = never;`;
   }
 
+  const responseHeadersTypeName = `${typeName}HeadersForStatus`;
   const memberStrings = members.map(
     (member) =>
-      `  | { status: "${member.statusCode}"; ${member.contentType ? `contentType: "${member.contentType}";` : ""} ${member.dataType ? `data: ${member.dataType};` : ""} }`,
+      `  | { status: "${member.statusCode}"; ${
+        member.contentType ? `contentType: "${member.contentType}";` : ""
+      } ${member.dataType ? `data: ${member.dataType};` : ""}${
+        responseHeadersMapName
+          ? ` headers: ${responseHeadersTypeName}<"${member.statusCode}">;`
+          : ""
+      } }`,
   );
 
-  return `export type ${typeName} =
+  const responseHeadersTypeDefinition = responseHeadersMapName
+    ? `type ${responseHeadersTypeName}<TStatus extends string> =
+  TStatus extends keyof typeof ${responseHeadersMapName}
+    ? (typeof ${responseHeadersMapName})[TStatus] extends StandardSchemaV1
+      ? StandardSchemaV1.InferOutput<(typeof ${responseHeadersMapName})[TStatus]>
+      : undefined
+    : undefined;
+
+`
+    : "";
+
+  return `${responseHeadersTypeDefinition}export type ${typeName} =
 ${memberStrings.join("\n")};`;
 }

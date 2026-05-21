@@ -11,6 +11,7 @@ interface ImportInfo {
   readonly parameterType?: ParameterType; // For parameter imports
   readonly requestMapName?: string; // For route imports
   readonly responseMapName?: string; // For route imports
+  readonly responseHeadersMapName?: string; // For route imports
   readonly type:
     | "config"
     | "parameter"
@@ -149,6 +150,8 @@ export class ImportManager {
     responseMapName: string,
     requestMapAlias?: string,
     responseMapAlias?: string,
+    responseHeadersMapName?: string,
+    responseHeadersMapAlias?: string,
   ): void {
     // Import request map (both type and value with same name, distinguished by TypeScript automatically)
     const requestMapImportInfo: ImportInfo = {
@@ -180,6 +183,27 @@ export class ImportManager {
     if (!this.importKeys.has(responseMapKey)) {
       this.importKeys.add(responseMapKey);
       this.imports.push(responseMapImportInfo);
+    }
+
+    if (!responseHeadersMapName) {
+      return;
+    }
+
+    const responseHeadersMapImportInfo: ImportInfo = {
+      alias: responseHeadersMapAlias,
+      filePath: `../routes/${operationId}.ts`,
+      name: responseHeadersMapName,
+      operationId,
+      responseHeadersMapName,
+      type: "route",
+    };
+    const responseHeadersMapKey = this.generateKey(
+      responseHeadersMapImportInfo,
+    );
+
+    if (!this.importKeys.has(responseHeadersMapKey)) {
+      this.importKeys.add(responseHeadersMapKey);
+      this.imports.push(responseHeadersMapImportInfo);
     }
   }
 
@@ -272,6 +296,7 @@ export class ImportManager {
       importInfo.isSchema?.toString(),
       importInfo.requestMapName,
       importInfo.responseMapName,
+      importInfo.responseHeadersMapName,
     ];
     return parts.filter(Boolean).join("|");
   }

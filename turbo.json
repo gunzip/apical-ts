@@ -54,11 +54,11 @@
       "dependsOn": ["^start"]
     },
     "generate": {
-      "dependsOn": ["^generate"],
+      "dependsOn": ["^build", "^generate"],
       "outputs": ["generated"]
     },
     "generate:tests": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["build", "^build"],
       "outputs": ["tests/integrations/generated"]
     },
     "prepublishOnly": {

@@ -434,6 +434,56 @@ describe("client-generator responses", () => {
       );
       expect(typeImports.has("Data")).toBe(true);
     });
+
+    it("should thread response headers maps into typed return unions", () => {
+      const operation: OperationObject = {
+        operationId: "listPets",
+        responses: {
+          "200": {
+            description: "Success",
+            headers: {
+              ETag: {
+                schema: { type: "string" },
+              },
+            },
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Pet" },
+              },
+            },
+          },
+          "429": {
+            description: "Too many requests",
+            headers: {
+              "Retry-After": {
+                schema: { format: "int32", type: "integer" },
+              },
+            },
+          },
+        },
+      };
+
+      const typeImports = new Set<string>();
+      const result = generateResponseHandlers(
+        operation,
+        typeImports,
+        true,
+        "ListPetsResponseMap",
+        undefined,
+        "ListPetsResponseHeadersMap",
+      );
+
+      expect(result.returnType).toContain(
+        'ApiResponseWithParse<"200", typeof ListPetsResponseMap, typeof ListPetsResponseHeadersMap>',
+      );
+      expect(result.returnType).toContain(
+        'ApiResponse<"429", void, ResponseHeadersForStatus<typeof ListPetsResponseHeadersMap, "429">>',
+      );
+      expect(result.responseHandlers[0]).toContain("parseApiResponseHeaders");
+      expect(result.responseHandlers[0]).toContain(
+        'getResponseHeaderSchema(ListPetsResponseHeadersMap, "200")',
+      );
+    });
   });
 
   describe("generateContentTypeMaps", () => {

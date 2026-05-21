@@ -11,8 +11,13 @@ export { renderUnionType } from "@apical-ts/core-utils/shared";
 export function renderDefaultResponseHandler(
   defaultResponseInfo: ResponseInfo,
   responseMapName?: string,
+  responseHeadersMapName?: string,
 ): string {
   const { contentType, typeName } = defaultResponseInfo;
+  const headersCode = renderHeadersHandling("default", responseHeadersMapName);
+  const parseTypeHeaders = responseHeadersMapName
+    ? `, typeof ${responseHeadersMapName}`
+    : "";
 
   if (typeName || contentType) {
     /* Use string-literal indexing for the default response */
@@ -20,13 +25,14 @@ export function renderDefaultResponseHandler(
       /* Generate dynamic validation logic for default response */
       return `      if (${responseMapName}["default"]) {
         /* Handle OpenAPI default response with schema validation */
+        ${headersCode}
         if (config.forceValidation) {
           /* Force validation: automatically parse and return result */
           const parseResult = await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {});
           if ("parsed" in parseResult) {
-            const forcedResult = createForcedParseResponse("default", data, response, parseResult);
+            const forcedResult = createForcedParseResponse("default", data, response, headers, parseResult);
             // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
-            return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}> : ApiResponseWithParse<"default", typeof ${responseMapName}>);
+            return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}${parseTypeHeaders}> : ApiResponseWithParse<"default", typeof ${responseMapName}${parseTypeHeaders}>);
           }
           if (parseResult.kind) {
             const errorResult = {
@@ -45,9 +51,10 @@ export function renderDefaultResponseHandler(
             status: "default" as const,
             data,
             response,
+            headers,
             parse: async () => await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {})
-          } satisfies ApiResponseWithParse<"default", typeof ${responseMapName}>;
-          return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}> : ApiResponseWithParse<"default", typeof ${responseMapName}>);
+          } satisfies ApiResponseWithParse<"default", typeof ${responseMapName}${parseTypeHeaders}>;
+          return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}${parseTypeHeaders}> : ApiResponseWithParse<"default", typeof ${responseMapName}${parseTypeHeaders}>);
         }
       } else {
         /* Return error for unexpected status codes when no default response mapping exists */
@@ -66,12 +73,14 @@ export function renderDefaultResponseHandler(
     } else {
       /* No schema or response map: return simple response for default */
       return `      /* Handle OpenAPI default response without schema */
-      return { isValid: true as const, status: "default" as const, data, response };`;
+      ${headersCode}
+      return { isValid: true as const, status: "default" as const, data, response, headers };`;
     }
   }
 
   return `      /* Handle OpenAPI default response without content */
-      return { isValid: true as const, status: "default" as const, data: undefined, response };`;
+      ${headersCode}
+      return { isValid: true as const, status: "default" as const, data: undefined, response, headers };`;
 }
 
 /*
@@ -80,6 +89,7 @@ export function renderDefaultResponseHandler(
 export function renderResponseHandler(
   responseInfo: ResponseInfo,
   responseMapName?: string,
+  responseHeadersMapName?: string,
 ): string {
   const { contentType, statusCode, typeName } = responseInfo;
 
@@ -90,6 +100,10 @@ export function renderResponseHandler(
   }
 
   const condition = generateStatusMatchCondition(statusCode);
+  const headersCode = renderHeadersHandling(statusCode, responseHeadersMapName);
+  const parseTypeHeaders = responseHeadersMapName
+    ? `, typeof ${responseHeadersMapName}`
+    : "";
 
   if (typeName || contentType) {
     /* Use string-literal indexing for HTTP status codes to preserve literal key types */
@@ -97,13 +111,14 @@ export function renderResponseHandler(
       /* Always generate dynamic validation logic (forceValidation flag removed) */
       return `    if (${condition}) {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
+${headersCode}
       if (config.forceValidation) {
         /* Force validation: automatically parse and return result */
         const parseResult = await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {});
         if ("parsed" in parseResult) {
-          const forcedResult = createForcedParseResponse("${statusCode}", data, response, parseResult);
-          // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
-          return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"${statusCode}", typeof ${responseMapName}> : ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}>);
+         const forcedResult = createForcedParseResponse("${statusCode}", data, response, headers, parseResult);
+         // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
+         return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"${statusCode}", typeof ${responseMapName}${parseTypeHeaders}> : ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}${parseTypeHeaders}>);
         }
         if (parseResult.kind) {
           const errorResult = {
@@ -117,27 +132,30 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
         throw new Error("Invalid parse result");
       } else {
         /* Manual validation: provide parse method */
-        const manualResult = {
-          isValid: true as const,
-          status: "${statusCode}" as const,
-          data,
-          response,
-          parse: async () => await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {})
-        } satisfies ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}>;
-        return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"${statusCode}", typeof ${responseMapName}> : ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}>);
+       const manualResult = {
+         isValid: true as const,
+         status: "${statusCode}" as const,
+         data,
+         response,
+         headers,
+         parse: async () => await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {})
+       } satisfies ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}${parseTypeHeaders}>;
+       return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"${statusCode}", typeof ${responseMapName}${parseTypeHeaders}> : ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}${parseTypeHeaders}>);
       }
     }`;
     } else {
       /* No schema or response map: return simple response */
       return `    if (${condition}) {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
-      return { isValid: true as const, status: "${statusCode}" as const, data, response };
+${headersCode}
+      return { isValid: true as const, status: "${statusCode}" as const, data, response, headers };
     }`;
     }
   }
 
   return `    if (${condition}) {
-      return { isValid: true as const, status: "${statusCode}" as const, data: undefined, response };
+${headersCode}
+      return { isValid: true as const, status: "${statusCode}" as const, data: undefined, response, headers };
     }`;
 }
 
@@ -147,11 +165,16 @@ ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
 export function renderResponseHandlers(
   responses: ResponseInfo[],
   responseMapName?: string,
+  responseHeadersMapName?: string,
 ): string[] {
   const handlers: string[] = [];
 
   for (const responseInfo of responses) {
-    const handler = renderResponseHandler(responseInfo, responseMapName);
+    const handler = renderResponseHandler(
+      responseInfo,
+      responseMapName,
+      responseHeadersMapName,
+    );
     handlers.push(handler);
   }
 
@@ -174,4 +197,32 @@ function generateStatusMatchCondition(statusCode: string): string {
 
   // Exact status code match
   return `response.status === ${statusCode}`;
+}
+
+function renderHeadersHandling(
+  statusCode: string,
+  responseHeadersMapName?: string,
+): string {
+  if (!responseHeadersMapName) {
+    return "      const headers = undefined;";
+  }
+
+  return `      const headersResult = await parseApiResponseHeaders(
+        response,
+        getResponseHeaderSchema(${responseHeadersMapName}, "${statusCode}")
+      );
+      if (!headersResult.success) {
+        return {
+          kind: "parse-error",
+          isValid: false,
+          status: undefined,
+          result: {
+            data,
+            status: response.status.toString(),
+            response,
+          },
+          error: headersResult.error,
+        } as const;
+      }
+      const headers = headersResult.value;`;
 }

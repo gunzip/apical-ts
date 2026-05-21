@@ -55,4 +55,60 @@ describe("route metadata generator", () => {
       "export type petFindByStatusResponse =",
     );
   });
+
+  it("emits reusable response header schemas and route metadata maps", () => {
+    const result = generateRouteMetadata(
+      "/pets",
+      "get",
+      {
+        operationId: "listPets",
+        responses: {
+          "200": {
+            description: "Success",
+            headers: {
+              "X-Rate-Limit": {
+                $ref: "#/components/headers/RateLimit",
+              },
+            },
+          },
+          "429": {
+            description: "Too many requests",
+            headers: {
+              "X-Rate-Limit": {
+                $ref: "#/components/headers/RateLimit",
+              },
+            },
+          },
+        },
+      },
+      [],
+      {
+        components: {
+          headers: {
+            RateLimit: {
+              schema: {
+                format: "int32",
+                type: "integer",
+              },
+            },
+          },
+        },
+        openapi: "3.1.0",
+        paths: {},
+      },
+    );
+
+    expect(result.routeCode).toContain(
+      "export const listPetsResponseHeadersMap = {",
+    );
+    expect(
+      result.routeCode.match(/RateLimitResponseHeaderSchema =/gu),
+    ).toHaveLength(1);
+    expect(result.routeCode).toContain(
+      "responseHeadersMap: listPetsResponseHeadersMap",
+    );
+    expect(result.routeCode).toContain(
+      'headers: listPetsRouteResponseHeadersForStatus<"200">;',
+    );
+  });
 });

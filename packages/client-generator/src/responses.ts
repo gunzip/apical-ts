@@ -17,6 +17,7 @@ export { generateContentTypeMaps } from "@apical-ts/core-utils/shared";
  */
 export interface ResponseHandlerResult {
   defaultResponseInfo?: ResponseInfo;
+  responseHeadersMapName?: string;
   responseHandlers: string[];
   responseMapName?: string;
   returnType: string;
@@ -32,12 +33,14 @@ export function generateResponseHandlers(
   hasResponseContentTypeMap = false,
   responseMapName?: string,
   doc?: OpenAPIObject,
+  responseHeadersMapName?: string,
 ): ResponseHandlerResult {
   /* Analyze the response structure */
   const analysis = analyzeResponseStructure({
     doc,
     hasResponseContentTypeMap,
     operation,
+    responseHeadersMapName,
     responseMapName,
     typeImports,
   });
@@ -46,6 +49,7 @@ export function generateResponseHandlers(
   const responseHandlers = renderResponseHandlers(
     analysis.responses,
     responseMapName,
+    responseHeadersMapName,
   );
 
   /* Generate return type using templates */
@@ -56,6 +60,7 @@ export function generateResponseHandlers(
 
   return {
     defaultResponseInfo: analysis.defaultResponseInfo,
+    responseHeadersMapName,
     responseHandlers,
     responseMapName: responseMapName || analysis.responseMapName, // Use parameter or derived value
     returnType,

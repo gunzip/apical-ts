@@ -15,7 +15,9 @@ import type {
 export interface ContentTypeMapsConfig {
   contentTypeMaps: ReturnType<typeof generateContentTypeMaps>;
   requestMapTypeName: string;
+  responseHeadersMapTypeName?: string;
   responseMapTypeName: string;
+  shouldGenerateResponseHeadersMap?: boolean;
   shouldGenerateRequestMap: boolean;
   shouldGenerateResponseMap: boolean;
 }
@@ -155,7 +157,9 @@ export function buildTypeAliasesFromRoute(config: {
   isQueryOptional: boolean;
   operationId: string;
   requestMapTypeName: string;
+  responseHeadersMapTypeName?: string;
   responseMapTypeName: string;
+  shouldGenerateResponseHeadersMap?: boolean;
   shouldGenerateRequestMap: boolean;
   shouldGenerateResponseMap: boolean;
 }): string {
@@ -164,6 +168,10 @@ export function buildTypeAliasesFromRoute(config: {
   const routeResponseMapName = sanitizedId + "ResponseMap";
   const requestMapName = lowerCaseFirstCharacter(routeRequestMapName);
   const responseMapName = lowerCaseFirstCharacter(routeResponseMapName);
+  const routeResponseHeadersMapName = sanitizedId + "ResponseHeadersMap";
+  const responseHeadersMapName = lowerCaseFirstCharacter(
+    routeResponseHeadersMapName,
+  );
 
   /* Import route metadata */
   config.importManager.addRouteImport(
@@ -172,6 +180,12 @@ export function buildTypeAliasesFromRoute(config: {
     routeResponseMapName,
     requestMapName,
     responseMapName,
+    config.shouldGenerateResponseHeadersMap
+      ? routeResponseHeadersMapName
+      : undefined,
+    config.shouldGenerateResponseHeadersMap
+      ? responseHeadersMapName
+      : undefined,
   );
 
   const hasAnyParams =
@@ -221,6 +235,14 @@ export function buildTypeAliasesFromRoute(config: {
   if (config.shouldGenerateResponseMap) {
     typeAliases += `export const ${config.responseMapTypeName} = ${responseMapName};\n`;
     typeAliases += `type ${config.responseMapTypeName} = typeof ${responseMapName};\n\n`;
+  }
+
+  if (
+    config.shouldGenerateResponseHeadersMap &&
+    config.responseHeadersMapTypeName
+  ) {
+    typeAliases += `export const ${config.responseHeadersMapTypeName} = ${responseHeadersMapName};\n`;
+    typeAliases += `type ${config.responseHeadersMapTypeName} = typeof ${responseHeadersMapName};\n\n`;
   }
 
   /* Generate DeserializerMap type */
