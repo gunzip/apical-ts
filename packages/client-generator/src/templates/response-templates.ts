@@ -15,10 +15,6 @@ export function renderDefaultResponseHandler(
 ): string {
   const { contentType, typeName } = defaultResponseInfo;
   const headersCode = renderHeadersHandling("default", responseHeadersMapName);
-  const createForcedParseArgs = responseHeadersMapName ? ", headers" : "";
-  const headersProperty = responseHeadersMapName
-    ? "\n            headers,"
-    : "";
   const parseTypeHeaders = responseHeadersMapName
     ? `, typeof ${responseHeadersMapName}`
     : "";
@@ -31,10 +27,10 @@ export function renderDefaultResponseHandler(
         /* Handle OpenAPI default response with schema validation */
         if (config.forceValidation) {
           /* Force validation: automatically parse and return result */
-          const parseResult = await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {});
           ${headersCode}
+          const parseResult = await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {});
           if ("parsed" in parseResult) {
-            const forcedResult = createForcedParseResponse("default", data, response${createForcedParseArgs}, parseResult);
+            const forcedResult = createForcedParseResponse("default", data, response, headers, parseResult);
             // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
             return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}${parseTypeHeaders}> : ApiResponseWithParse<"default", typeof ${responseMapName}${parseTypeHeaders}>);
           }
@@ -54,7 +50,8 @@ export function renderDefaultResponseHandler(
             isValid: true as const,
             status: "default" as const,
             data,
-            response,${headersProperty}
+            response,
+            headers,
             parse: async () => await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["default"], config.deserializers ?? {})
           } satisfies ApiResponseWithParse<"default", typeof ${responseMapName}${parseTypeHeaders}>;
           return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"default", typeof ${responseMapName}${parseTypeHeaders}> : ApiResponseWithParse<"default", typeof ${responseMapName}${parseTypeHeaders}>);
@@ -77,13 +74,13 @@ export function renderDefaultResponseHandler(
       /* No schema or response map: return simple response for default */
       return `      /* Handle OpenAPI default response without schema */
       ${headersCode}
-      return { isValid: true as const, status: "default" as const, data, response${responseHeadersMapName ? ", headers" : ""} };`;
+      return { isValid: true as const, status: "default" as const, data, response, headers };`;
     }
   }
 
   return `      /* Handle OpenAPI default response without content */
       ${headersCode}
-      return { isValid: true as const, status: "default" as const, data: undefined, response${responseHeadersMapName ? ", headers" : ""} };`;
+      return { isValid: true as const, status: "default" as const, data: undefined, response, headers };`;
 }
 
 /*
@@ -104,8 +101,6 @@ export function renderResponseHandler(
 
   const condition = generateStatusMatchCondition(statusCode);
   const headersCode = renderHeadersHandling(statusCode, responseHeadersMapName);
-  const createForcedParseArgs = responseHeadersMapName ? ", headers" : "";
-  const headersProperty = responseHeadersMapName ? "\n          headers," : "";
   const parseTypeHeaders = responseHeadersMapName
     ? `, typeof ${responseHeadersMapName}`
     : "";
@@ -121,7 +116,7 @@ ${headersCode}
         /* Force validation: automatically parse and return result */
         const parseResult = await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {});
         if ("parsed" in parseResult) {
-         const forcedResult = createForcedParseResponse("${statusCode}", data, response${createForcedParseArgs}, parseResult);
+         const forcedResult = createForcedParseResponse("${statusCode}", data, response, headers, parseResult);
          // Need a bridge assertion to the conditional return type because generic TForceValidation isn't narrowed by runtime branch
          return forcedResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"${statusCode}", typeof ${responseMapName}${parseTypeHeaders}> : ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}${parseTypeHeaders}>);
         }
@@ -141,7 +136,8 @@ ${headersCode}
          isValid: true as const,
          status: "${statusCode}" as const,
          data,
-         response,${headersProperty}
+         response,
+         headers,
          parse: async () => await parseApiResponseUnknownData(minimalResponse, data, ${responseMapName}["${statusCode}"], config.deserializers ?? {})
        } satisfies ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}${parseTypeHeaders}>;
        return manualResult as unknown as (TForceValidation extends true ? ApiResponseWithForcedParse<"${statusCode}", typeof ${responseMapName}${parseTypeHeaders}> : ApiResponseWithParse<"${statusCode}", typeof ${responseMapName}${parseTypeHeaders}>);
@@ -152,14 +148,14 @@ ${headersCode}
       return `    if (${condition}) {
 ${!responseInfo.hasSchema ? "      const data = undefined;" : ""}
 ${headersCode}
-      return { isValid: true as const, status: "${statusCode}" as const, data, response${responseHeadersMapName ? ", headers" : ""} };
+      return { isValid: true as const, status: "${statusCode}" as const, data, response, headers };
     }`;
     }
   }
 
   return `    if (${condition}) {
 ${headersCode}
-      return { isValid: true as const, status: "${statusCode}" as const, data: undefined, response${responseHeadersMapName ? ", headers" : ""} };
+      return { isValid: true as const, status: "${statusCode}" as const, data: undefined, response, headers };
     }`;
 }
 
@@ -208,7 +204,7 @@ function renderHeadersHandling(
   responseHeadersMapName?: string,
 ): string {
   if (!responseHeadersMapName) {
-    return "";
+    return "      const headers = undefined;";
   }
 
   return `      const headersResult = await parseApiResponseHeaders(

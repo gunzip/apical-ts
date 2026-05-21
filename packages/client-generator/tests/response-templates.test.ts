@@ -25,8 +25,9 @@ describe("response-templates", () => {
       const result = renderResponseHandler(responseInfo, "undefined");
 
       expect(result).toContain("if (response.status === 204)");
+      expect(result).toContain("const headers = undefined");
       expect(result).toContain(
-        'return { isValid: true as const, status: "204" as const, data: undefined, response };',
+        'return { isValid: true as const, status: "204" as const, data: undefined, response, headers };',
       );
     });
 
@@ -47,8 +48,9 @@ describe("response-templates", () => {
 
       expect(result).toContain("if (response.status === 200)");
       expect(result).toContain("const data = undefined");
+      expect(result).toContain("const headers = undefined");
       expect(result).toContain(
-        'return { isValid: true as const, status: "200" as const, data, response };',
+        'return { isValid: true as const, status: "200" as const, data, response, headers };',
       );
     });
 
@@ -70,8 +72,9 @@ describe("response-templates", () => {
       expect(result).toContain(
         "if (response.status >= 400 && response.status < 500)",
       );
+      expect(result).toContain("const headers = undefined");
       expect(result).toContain(
-        'return { isValid: true as const, status: "4xx" as const, data: undefined, response };',
+        'return { isValid: true as const, status: "4xx" as const, data: undefined, response, headers };',
       );
     });
   });

@@ -51,15 +51,20 @@ function getSchemaEntry<TSchemaMap extends Record<string, StandardSchemaV1>>(
 
 export function getResponseHeaderSchema<
   THeaderMap extends Record<string, StandardSchemaV1>,
+  TStatus extends string,
 >(
   headerMap: THeaderMap,
-  status: string,
-): THeaderMap[keyof THeaderMap] | undefined {
+  status: TStatus,
+): TStatus extends keyof THeaderMap ? THeaderMap[TStatus] : undefined {
   if (!Object.prototype.hasOwnProperty.call(headerMap, status)) {
-    return undefined;
+    return undefined as TStatus extends keyof THeaderMap
+      ? THeaderMap[TStatus]
+      : undefined;
   }
 
-  return headerMap[status as keyof THeaderMap];
+  return headerMap[status as keyof THeaderMap] as TStatus extends keyof THeaderMap
+    ? THeaderMap[TStatus]
+    : undefined;
 }
 
 function createParsedApiResponse<

@@ -98,8 +98,6 @@ function getConfigImports(functionCode?: string): {
   const configTypeImports = ["GlobalConfig", "ApiResponse", "ApiResponseError"];
   const configValueImports = [
     "globalConfig",
-    "getResponseHeaderSchema",
-    "parseApiResponseHeaders",
     "parseResponseBody",
     "parseApiResponseUnknownData",
   ];
@@ -118,6 +116,14 @@ function getConfigImports(functionCode?: string): {
 
   if (functionCode?.includes("createForcedParseResponse")) {
     configValueImports.push("createForcedParseResponse");
+  }
+
+  if (functionCode?.includes("getResponseHeaderSchema(")) {
+    configValueImports.push("getResponseHeaderSchema");
+  }
+
+  if (functionCode?.includes("parseApiResponseHeaders(")) {
+    configValueImports.push("parseApiResponseHeaders");
   }
 
   if (functionCode?.includes("formUrlEncode(")) {
