@@ -41,9 +41,37 @@ export class MockServer {
   }
 
   /**
-   * Start the Prism mock server
+   * Start the Prism mock server.
+   * Retries with a fresh random port when the chosen port is already in use,
+   * because concurrently running test files pick random ports that can collide.
    */
   async start(): Promise<void> {
+    const maxAttempts = 5;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        await this.startOnce();
+        return;
+      } catch (error) {
+        const isPortInUse =
+          error instanceof Error && error.message.includes("EADDRINUSE");
+
+        if (!isPortInUse || attempt === maxAttempts) {
+          throw error;
+        }
+
+        this.config.port = getRandomPort();
+        console.log(
+          `Mock server port already in use; retrying on port ${this.config.port} (attempt ${attempt + 1}/${maxAttempts})`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Spawn the Prism mock server and resolve once it reports it is listening.
+   */
+  private startOnce(): Promise<void> {
     return new Promise((resolve, reject) => {
       const args = [
         "exec",

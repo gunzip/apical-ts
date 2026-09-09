@@ -24,5 +24,6 @@
     "@types/react": "^18.3.31",
     "typescript": "catalog:",
     "p-limit": "^7.3.2"
-  }
+  },
+  "packageManager": "pnpm@12.3.4"
 }

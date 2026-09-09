@@ -27,5 +27,6 @@
   "dependencies": {
     "openapi3-ts": "^4.6.1",
     "zod": "catalog:"
-  }
+  },
+  "packageManager": "pnpm@12.3.4"
 }
