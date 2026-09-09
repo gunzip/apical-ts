@@ -36,6 +36,7 @@ export {
   generateOperationId,
   generateUniqueOperationIds,
   getOrGenerateOperationId,
+  renameSanitizationConflictingOperationIds,
 } from "./operation-id-generator/index.js";
 
 export {

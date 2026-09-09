@@ -2,6 +2,8 @@ import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 
+export { renameSanitizationConflictingOperationIds } from "./operation-conflict-resolver.js";
+
 /**
  * Apply generated operation IDs to OpenAPI document
  * Modifies the document in-place to add missing operation IDs
