@@ -49,7 +49,7 @@ jobs:
         run: pnpm changeset version
 
       - name: Update npm
-        run: npm install -g npm@latest
+        run: npm install -g npm@11
 
       - name: Publish to NPM
         # working-directory: apps/craft
