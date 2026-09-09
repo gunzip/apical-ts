@@ -135,8 +135,8 @@ catalogs:
       specifier: ^5.0.0
       version: 5.0.0
     zod:
-      specifier: ^4.5.4
-      version: 4.5.4
+      specifier: ^4.6.0
+      version: 4.6.0
 
 overrides:
   lodash@<=4.17.23: '>=4.18.1'
@@ -246,7 +246,7 @@ importers:
         version: 5.0.0(@types/node@22.20.1)(@vitest/coverage-v8@5.0.0)(msw@2.15.0(@types/node@22.20.1)(typescript@7.0.2))(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
       zod:
         specifier: 'catalog:'
-        version: 4.5.4
+        version: 4.6.0
 
   apps/website:
     dependencies:
@@ -307,10 +307,10 @@ importers:
         version: 8.2.0
       zocker:
         specifier: ^3.0.0
-        version: 3.0.0(zod@4.5.4)
+        version: 3.0.0(zod@4.6.0)
       zod:
         specifier: 'catalog:'
-        version: 4.5.4
+        version: 4.6.0
     devDependencies:
       '@apical-ts/craft':
         specifier: workspace:*
@@ -332,7 +332,7 @@ importers:
     dependencies:
       '@hono/zod-validator':
         specifier: ^0.7.6
-        version: 0.7.6(hono@4.13.7)(zod@4.5.4)
+        version: 0.7.6(hono@4.13.7)(zod@4.6.0)
       '@standard-schema/spec':
         specifier: 'catalog:'
         version: 1.1.0
@@ -341,7 +341,7 @@ importers:
         version: 4.13.7
       zod:
         specifier: 'catalog:'
-        version: 4.5.4
+        version: 4.6.0
     devDependencies:
       '@apical-ts/craft':
         specifier: workspace:*
@@ -372,7 +372,7 @@ importers:
         version: 5.0.0(@types/node@22.20.1)(@vitest/coverage-v8@5.0.0)(msw@2.15.0(@types/node@22.20.1)(typescript@7.0.2))(vite@8.2.2(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
       zocker:
         specifier: ^3.0.0
-        version: 3.0.0(zod@4.5.4)
+        version: 3.0.0(zod@4.6.0)
 
   examples/msw-mock-server:
     dependencies:
@@ -384,10 +384,10 @@ importers:
         version: 2.15.0(@types/node@22.20.1)(typescript@7.0.2)
       zocker:
         specifier: ^3.0.0
-        version: 3.0.0(zod@4.5.4)
+        version: 3.0.0(zod@4.6.0)
       zod:
         specifier: 'catalog:'
-        version: 4.5.4
+        version: 4.6.0
     devDependencies:
       '@apical-ts/craft':
         specifier: workspace:*
@@ -430,7 +430,7 @@ importers:
         version: 4.23.13
       zod:
         specifier: 'catalog:'
-        version: 4.5.4
+        version: 4.6.0
     devDependencies:
       '@apical-ts/craft':
         specifier: workspace:*
@@ -498,7 +498,7 @@ importers:
         version: 7.0.8
       zod:
         specifier: 'catalog:'
-        version: 4.5.4
+        version: 4.6.0
     devDependencies:
       '@tsconfig/node22':
         specifier: 'catalog:'
@@ -600,7 +600,7 @@ importers:
         version: 4.6.1
       zod:
         specifier: 'catalog:'
-        version: 4.5.4
+        version: 4.6.0
     devDependencies:
       '@apical-ts/core-utils':
         specifier: workspace:*
@@ -9044,6 +9044,9 @@ packages:
   zod@4.5.4:
     resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
 
+  zod@4.6.0:
+    resolution: {integrity: sha512-iIvwyDnebKYpww2ta0DjaNOL8RnVLmPMhgWyOzlW9y0EIIxv5gl+H6Y0ONpt83HqjGqkk78uWp6xWtpxzZdPbw==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -11620,10 +11623,10 @@ snapshots:
     dependencies:
       hono: 4.13.7
 
-  '@hono/zod-validator@0.7.6(hono@4.13.7)(zod@4.5.4)':
+  '@hono/zod-validator@0.7.6(hono@4.13.7)(zod@4.6.0)':
     dependencies:
       hono: 4.13.7
-      zod: 4.5.4
+      zod: 4.6.0
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -19107,12 +19110,14 @@ snapshots:
       '@yuku-parser/binding-win32-arm64': 0.8.7
       '@yuku-parser/binding-win32-x64': 0.8.7
 
-  zocker@3.0.0(zod@4.5.4):
+  zocker@3.0.0(zod@4.6.0):
     dependencies:
       '@faker-js/faker': 10.6.0
       randexp: 0.5.3
-      zod: 4.5.4
+      zod: 4.6.0
 
   zod@4.5.4: {}
+
+  zod@4.6.0: {}
 
   zwitch@2.0.4: {}
