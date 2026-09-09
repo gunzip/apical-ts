@@ -1,5 +1,13 @@
 # @apical-ts/core-utils
 
+## 0.23.1
+
+### Patch Changes
+
+- Switch generated packages from `@typescript/native-preview` (tsgo) to stable
+  TypeScript (`tsc`) and upgrade the toolchain (pnpm 12, vite 8, vitest 5,
+  TypeScript 7, zod 4.5)
+
 ## 0.23.0
 
 ### Minor Changes
