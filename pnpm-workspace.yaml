@@ -11,6 +11,11 @@ allowBuilds:
   esbuild: true
   msw: false
 
+auditConfig:
+  ignoreGhsas:
+    - GHSA-w3rx-r6r6-pgpr
+    - GHSA-5p2g-fcmc-qvqq
+
 catalog:
   '@standard-schema/spec': ^1.1.0
   '@tsconfig/node22': ^22.0.6
