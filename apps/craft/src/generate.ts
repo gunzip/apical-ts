@@ -16,6 +16,7 @@ import {
   parseOpenAPIDocument,
   Profiler,
   renameConflictingSchemas,
+  renameSanitizationConflictingOperationIds,
   renameSanitizationConflictingSchemas,
   resolveDynamicReferences,
   resolveRequestBodies,
@@ -292,6 +293,22 @@ async function parseAndPreprocessOpenAPI(
   applyGeneratedOperationIds(openApiDoc);
   profiler?.end("preprocess:operation-ids");
   console.log("✅ Applied generated operation IDs where missing");
+
+  /*
+   * Pre-process: rename operation IDs whose sanitized identifiers collide
+   * case-insensitively (e.g. "DeleteWebhook" vs "deleteWebhook"). Such IDs
+   * produce function and file names differing only in casing, which breaks
+   * on case-insensitive filesystems and fails tsc with TS1149.
+   */
+  profiler?.start("preprocess:operation-id-conflicts");
+  const operationIdRenamedCount =
+    renameSanitizationConflictingOperationIds(openApiDoc);
+  profiler?.end("preprocess:operation-id-conflicts");
+  if (operationIdRenamedCount > 0) {
+    console.log(
+      `✅ Renamed ${operationIdRenamedCount} operation ID(s) with case-insensitive sanitization conflicts`,
+    );
+  }
 
   /*
    * Pre-process: rename component schemas whose names would collide with

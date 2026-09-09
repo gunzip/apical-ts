@@ -111,4 +111,50 @@ describe("route metadata generator", () => {
       'headers: listPetsRouteResponseHeadersForStatus<"200">;',
     );
   });
+
+  it("preserves semicolons inside content-type keys of the request map", () => {
+    const result = generateRouteMetadata(
+      "/accounts/{account_id}/one/integrations",
+      "post",
+      {
+        operationId: "createIntegration",
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/createIntegrationRequest",
+              },
+            },
+            "text/plain;charset=UTF-8": {
+              schema: {
+                $ref: "#/components/schemas/createIntegrationRequest",
+              },
+            },
+          },
+          required: true,
+        },
+        responses: {
+          "201": { description: "Created" },
+        },
+      },
+      [],
+      {
+        components: {
+          schemas: {
+            createIntegrationRequest: {
+              properties: {
+                name: { type: "string" },
+              },
+              type: "object",
+            },
+          },
+        },
+        openapi: "3.1.0",
+        paths: {},
+      },
+    );
+
+    expect(result.routeCode).toContain('"text/plain;charset=UTF-8"');
+    expect(result.routeCode).not.toContain('"text/plain,charset=UTF-8"');
+  });
 });

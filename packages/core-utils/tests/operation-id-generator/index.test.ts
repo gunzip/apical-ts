@@ -7,6 +7,7 @@ import {
   generateOperationId,
   generateUniqueOperationIds,
   getOrGenerateOperationId,
+  renameSanitizationConflictingOperationIds,
 } from "../../src/operation-id-generator/index.js";
 
 describe("generateOperationId", () => {
@@ -276,5 +277,88 @@ describe("applyGeneratedOperationIds", () => {
     };
 
     expect(() => applyGeneratedOperationIds(openApiDoc)).not.toThrow();
+  });
+});
+
+describe("renameSanitizationConflictingOperationIds", () => {
+  it("renames operation IDs that collide case-insensitively", () => {
+    const openApiDoc: OpenAPIObject = {
+      info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.1.0",
+      paths: {
+        "/a": {
+          delete: { operationId: "DeleteWebhook" },
+        },
+        "/b": {
+          delete: { operationId: "deleteWebhook" },
+        },
+      },
+    };
+
+    const renamedCount = renameSanitizationConflictingOperationIds(openApiDoc);
+
+    const operationIds = [
+      openApiDoc.paths!["/a"]!.delete!.operationId!,
+      openApiDoc.paths!["/b"]!.delete!.operationId!,
+    ];
+
+    expect(renamedCount).toBe(1);
+    expect(operationIds).toContain("DeleteWebhook");
+    expect(operationIds).toContain("deleteWebhook2");
+  });
+
+  it("leaves non-colliding operation IDs untouched", () => {
+    const openApiDoc: OpenAPIObject = {
+      info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.1.0",
+      paths: {
+        "/a": {
+          delete: { operationId: "DeleteWebhook" },
+        },
+        "/b": {
+          delete: { operationId: "deleteOtherWebhook" },
+        },
+      },
+    };
+
+    const renamedCount = renameSanitizationConflictingOperationIds(openApiDoc);
+
+    expect(renamedCount).toBe(0);
+    expect(openApiDoc.paths!["/a"]!.delete!.operationId).toBe("DeleteWebhook");
+    expect(openApiDoc.paths!["/b"]!.delete!.operationId).toBe(
+      "deleteOtherWebhook",
+    );
+  });
+
+  it("avoids creating a new collision with an existing operation ID", () => {
+    const openApiDoc: OpenAPIObject = {
+      info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.1.0",
+      paths: {
+        "/a": {
+          delete: { operationId: "DeleteWebhook" },
+        },
+        "/b": {
+          delete: { operationId: "deleteWebhook" },
+        },
+        "/c": {
+          delete: { operationId: "deleteWebhook2" },
+        },
+      },
+    };
+
+    const renamedCount = renameSanitizationConflictingOperationIds(openApiDoc);
+
+    const operationIds = [
+      openApiDoc.paths!["/a"]!.delete!.operationId!,
+      openApiDoc.paths!["/b"]!.delete!.operationId!,
+      openApiDoc.paths!["/c"]!.delete!.operationId!,
+    ];
+
+    expect(renamedCount).toBe(1);
+    expect(operationIds).toContain("DeleteWebhook");
+    expect(operationIds).toContain("deleteWebhook2");
+    expect(operationIds).toContain("deleteWebhook3");
+    expect(new Set(operationIds.map((id) => id.toLowerCase())).size).toBe(3);
   });
 });

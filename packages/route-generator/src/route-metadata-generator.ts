@@ -65,9 +65,15 @@ export type ${mapName} = typeof ${mapName};`;
     importManager.addSchemaImport(typeImport);
   }
 
-  /* Convert the type-shape map into an object-literal friendly map */
-  const fixedMapType =
-    metadata.bodyInfo.requestBodyMap.requestMapType.replaceAll(";", ",");
+  /* Convert the type-shape map into an object-literal friendly map.
+   * Only statement-terminating semicolons (end of each line) become commas;
+   * semicolons inside quoted content-type keys (e.g. "text/plain;charset=UTF-8")
+   * must be preserved so the map keys match the client content-type cases.
+   */
+  const fixedMapType = metadata.bodyInfo.requestBodyMap.requestMapType.replace(
+    /;(?=\s*(?:\n|$))/g,
+    ",",
+  );
 
   return `export const ${mapName} = ${fixedMapType} as const;
 export type ${mapName} = typeof ${mapName};`;
