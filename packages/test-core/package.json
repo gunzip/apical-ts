@@ -18,14 +18,14 @@
   "license": "MIT",
   "devDependencies": {
     "@apical-ts/core-utils": "workspace:*",
-    "@stoplight/prism-cli": "^5.14.2",
+    "@stoplight/prism-cli": "^5.16.0",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   },
   "dependencies": {
-    "openapi3-ts": "^4.3.0",
+    "openapi3-ts": "^4.6.1",
     "zod": "catalog:"
   }
 }

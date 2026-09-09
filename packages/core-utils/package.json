@@ -50,14 +50,14 @@
     "vitest": "catalog:"
   },
   "dependencies": {
-    "js-yaml": "^4.1.1",
-    "openapi3-ts": "^4.3.0",
-    "p-limit": "^7.1.0",
+    "js-yaml": "^4.3.2",
+    "openapi3-ts": "^4.6.1",
+    "p-limit": "^7.3.2",
     "swagger2openapi": "^7.0.8",
     "zod": "catalog:"
   },
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
+  "packageManager": "pnpm@12.3.4"
 }

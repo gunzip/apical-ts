@@ -20,14 +20,14 @@
     "release:major": "turbo run release:major"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.31.0",
+    "@changesets/cli": "^2.31.1",
     "@pagopa/eslint-config": "^5.1.2",
-    "knip": "^6.12.2",
+    "knip": "^6.34.0",
     "oxfmt": "catalog:",
-    "oxlint": "^1.64.0",
-    "turbo": "^2.9.14",
+    "oxlint": "^1.81.0",
+    "turbo": "^2.10.12",
     "vite": "catalog:",
     "vitest": "catalog:"
   },
-  "packageManager": "pnpm@10.15.1"
+  "packageManager": "pnpm@12.3.4"
 }
