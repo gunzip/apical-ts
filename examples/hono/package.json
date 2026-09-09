@@ -5,7 +5,7 @@
   "description": "Reusable Hono template generated from Apical TS route metadata.",
   "type": "module",
   "scripts": {
-    "typecheck:code": "pnpm run generate:demo && tsgo -p tsconfig.examples.json",
+    "typecheck:code": "pnpm run generate:demo && tsc -p tsconfig.examples.json",
     "generate:routes": "craft generate --routes -i openapi.yaml -o generated",
     "generate:apical": "pnpm run generate:routes",
     "generate:hono": "tsx scripts/generate-hono-server.ts --routes generated/routes --output generated/hono --handlers handlers",
@@ -22,21 +22,21 @@
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
     "@standard-schema/spec": "catalog:",
-    "hono": "^4.12.18",
+    "hono": "^4.13.7",
     "zod": "catalog:"
   },
   "engines": {
     "node": ">=22.0.0"
   },
-  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748",
+  "packageManager": "pnpm@12.3.4",
   "devDependencies": {
     "@apical-ts/craft": "workspace:*",
-    "@hono/node-server": "^2.0.1",
+    "@hono/node-server": "^2.1.1",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
-    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "tsx": "^4.21.0",
+    "tsx": "^4.23.13",
     "vite": "catalog:",
     "vitest": "catalog:",
     "zocker": "^3.0.0"

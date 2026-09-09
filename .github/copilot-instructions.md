@@ -18,13 +18,13 @@ capabilities, supporting OpenAPI 2.0, 3.0.x, and 3.1.x specifications.
 ### Prerequisites
 
 - **Node.js**: Version 22+ (specified in `.node-version`)
-- **Package Manager**: pnpm 10.14.0+ (ALWAYS use pnpm, not npm)
+- **Package Manager**: pnpm 12.3.4 (ALWAYS use pnpm, not npm)
 
 ### Setup Commands
 
 ```bash
 # Install pnpm if not available
-npm install -g pnpm@10.14.0
+npm install -g pnpm@12.3.4
 
 # Install dependencies (ALWAYS run this first)
 pnpm install

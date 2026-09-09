@@ -12,10 +12,10 @@ const DEFAULT_CHUNK_SIZE = 100;
 const root = dirname(fileURLToPath(import.meta.url));
 const buildDir = join(root, ".apical-ts-build");
 const forwardedArgs = process.argv.slice(2);
-const tsgoCommand =
+const tscCommand =
   process.platform === "win32"
-    ? "node_modules/.bin/tsgo.cmd"
-    : "node_modules/.bin/tsgo";
+    ? "node_modules/.bin/tsc.cmd"
+    : "node_modules/.bin/tsc";
 
 function logBuild(message) {
   console.log("[typecheck] " + message);
@@ -62,7 +62,7 @@ function listTypeScriptFiles(directory) {
 
 function runTsgo(configPath) {
   const result = spawnSync(
-    tsgoCommand,
+    tscCommand,
     ["--noEmit", "-p", configPath, ...forwardedArgs],
     {
       cwd: root,
@@ -114,7 +114,7 @@ function compileFiles(files, label) {
 
   if (files.length === 1) {
     console.error(
-      "[typecheck] " + label + ": tsgo failed for " + files[0] + signalSuffix,
+      "[typecheck] " + label + ": tsc failed for " + files[0] + signalSuffix,
     );
     return result.code;
   }

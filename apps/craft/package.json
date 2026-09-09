@@ -21,8 +21,8 @@
   },
   "scripts": {
     "build": "tsdown --config-loader native",
-    "typecheck:code": "tsgo --noEmit",
-    "typecheck:tests": "tsgo --noEmit -p tsconfig.tests.json",
+    "typecheck:code": "tsc --noEmit",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
     "typecheck": "pnpm typecheck:code && pnpm typecheck:tests",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
@@ -47,31 +47,31 @@
     "@apical-ts/core-utils": "workspace:*",
     "@apical-ts/route-generator": "workspace:*",
     "@apical-ts/server-generator": "workspace:*",
-    "@stoplight/prism-cli": "^5.14.2",
     "@standard-schema/spec": "catalog:",
+    "@stoplight/prism-cli": "^5.16.0",
     "@tsconfig/node22": "catalog:",
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.6",
     "@types/node": "catalog:",
     "@types/supertest": "^6.0.3",
-    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "express": "^5.2.1",
-    "supertest": "^7.1.4",
-    "tsdown": "^0.22.0",
+    "supertest": "^7.2.2",
+    "tsdown": "^0.22.14",
     "vite": "catalog:",
     "vitest": "catalog:",
     "zod": "catalog:"
   },
   "dependencies": {
-    "@apidevtools/json-schema-ref-parser": "^15.2.2",
-    "commander": "^14.0.2",
-    "js-yaml": "^4.1.1",
-    "openapi3-ts": "^4.3.0",
-    "p-limit": "^7.1.1",
+    "@apidevtools/json-schema-ref-parser": "^15.5.2",
+    "commander": "^14.0.3",
+    "js-yaml": "^4.3.2",
+    "openapi3-ts": "^4.6.1",
+    "p-limit": "^7.3.2",
     "swagger2openapi": "^7.0.8"
   },
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
+  "packageManager": "pnpm@12.3.4"
 }

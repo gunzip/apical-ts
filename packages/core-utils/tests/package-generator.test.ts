@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 import { createPackageFiles } from "../src/core-generator/package-generator.js";
 
 describe("package generator", () => {
-  it("uses plain tsgo to typecheck at or below the chunking threshold", async () => {
+  it("uses plain tsc to typecheck at or below the chunking threshold", async () => {
     const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
 
     try {
@@ -36,11 +36,11 @@ describe("package generator", () => {
         },
         devDependencies: {
           "@types/node": "^24.3.1",
-          "@typescript/native-preview": "^7.0.0-dev",
+          typescript: "^7.0.2",
         },
         name: "generated-client",
         scripts: {
-          typecheck: "tsgo",
+          typecheck: "tsc",
         },
         type: "module",
         version: "0.1.0",

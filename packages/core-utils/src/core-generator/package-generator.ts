@@ -88,11 +88,11 @@ export async function createPackageFiles(
     },
     devDependencies: {
       "@types/node": "^24.3.1",
-      "@typescript/native-preview": "^7.0.0-dev",
+      typescript: "^7.0.2",
     },
     name: "generated-client",
     scripts: {
-      typecheck: useChunkedBuild ? "node ./typecheck.mjs" : "tsgo",
+      typecheck: useChunkedBuild ? "node ./typecheck.mjs" : "tsc",
     },
     type: "module",
     version: "0.1.0",

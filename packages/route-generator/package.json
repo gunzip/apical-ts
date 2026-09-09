@@ -15,8 +15,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsgo",
-    "typecheck": "tsgo --noEmit",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest --coverage"
   },
@@ -31,17 +31,18 @@
   "devDependencies": {
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
-    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   },
   "dependencies": {
     "@apical-ts/core-utils": "workspace:*",
-    "openapi3-ts": "^4.3.0",
-    "p-limit": "^7.1.0"
+    "openapi3-ts": "^4.6.1",
+    "p-limit": "^7.3.2"
   },
   "engines": {
     "node": ">=20.0.0"
-  }
+  },
+  "packageManager": "pnpm@12.3.4"
 }
