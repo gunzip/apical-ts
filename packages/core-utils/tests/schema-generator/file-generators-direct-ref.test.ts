@@ -522,7 +522,7 @@ async function typecheckGeneratedSchemas(
       "pnpm",
       [
         "exec",
-        "tsgo",
+        "tsc",
         "--noEmit",
         "-p",
         path.join(workspaceDir, "tsconfig.json"),

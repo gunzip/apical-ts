@@ -23,7 +23,7 @@ describe("generated client + server typecheck", () => {
 
     const result = spawnSync(
       "pnpm",
-      ["exec", "tsgo", "-p", tsconfigPath, "--pretty", "false"],
+      ["exec", "tsc", "-p", tsconfigPath, "--pretty", "false"],
       { encoding: "utf-8" },
     );
 

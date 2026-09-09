@@ -56,7 +56,7 @@ describe("format overrides integration", () => {
       "pnpm",
       [
         "exec",
-        "tsgo",
+        "tsc",
         "-p",
         join(outputDir, "tsconfig.json"),
         "--pretty",

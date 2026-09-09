@@ -20,10 +20,10 @@
     "./shared/*": "./dist/shared/*.js"
   },
   "scripts": {
-    "build": "tsgo",
+    "build": "tsc",
     "build:docs": "embedme README.md && oxfmt README.md",
-    "typecheck:code": "tsgo --noEmit",
-    "typecheck:tests": "tsgo --noEmit -p tsconfig.tests.json",
+    "typecheck:code": "tsc --noEmit",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
     "typecheck": "pnpm typecheck:code && pnpm typecheck:tests",
     "test": "vitest run",
     "test:coverage": "vitest --coverage"
@@ -42,7 +42,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
     "@types/swagger2openapi": "^7.0.4",
-    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "embedme": "catalog:",
     "oxfmt": "catalog:",

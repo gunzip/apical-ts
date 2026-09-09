@@ -7,8 +7,8 @@
     "generate:client": "node ../../apps/craft/dist/index.mjs generate --client -i swagger.json -o generated",
     "generate:hooks": "tsx ./scripts/generate-hooks.ts",
     "generate": "pnpm run generate:client && pnpm run generate:hooks",
-    "build": "tsgo -p tsconfig.json",
-    "typecheck:generated": "tsgo --noEmit -p tsconfig.generated.json"
+    "build": "tsc -p tsconfig.json",
+    "typecheck:generated": "tsc --noEmit -p tsconfig.generated.json"
   },
   "dependencies": {
     "@standard-schema/spec": "catalog:",
@@ -22,7 +22,7 @@
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "^18.3.31",
-    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
     "p-limit": "^7.3.2"
   }
 }

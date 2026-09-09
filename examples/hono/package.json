@@ -5,7 +5,7 @@
   "description": "Reusable Hono template generated from Apical TS route metadata.",
   "type": "module",
   "scripts": {
-    "typecheck:code": "pnpm run generate:demo && tsgo -p tsconfig.examples.json",
+    "typecheck:code": "pnpm run generate:demo && tsc -p tsconfig.examples.json",
     "generate:routes": "craft generate --routes -i openapi.yaml -o generated",
     "generate:apical": "pnpm run generate:routes",
     "generate:hono": "tsx scripts/generate-hono-server.ts --routes generated/routes --output generated/hono --handlers handlers",
@@ -34,7 +34,7 @@
     "@hono/node-server": "^2.1.1",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
-    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "tsx": "^4.23.13",
     "vite": "catalog:",
