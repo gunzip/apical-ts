@@ -1,5 +1,5 @@
-import { toCamelCase } from "./naming.js";
-import type { OperationDefinition } from "./types.js";
+import { toCamelCase } from "./naming.ts";
+import type { OperationDefinition } from "./types.ts";
 
 interface BuildMockHandlerModuleOptions {
   mockRuntimeImportDirectory: string;

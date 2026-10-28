@@ -1,5 +1,5 @@
-import { toPascalCase } from "./naming.js";
-import type { OperationDefinition } from "./types.js";
+import { toPascalCase } from "./naming.ts";
+import type { OperationDefinition } from "./types.ts";
 
 export function buildRegisterRoutesModule(operations: OperationDefinition[]) {
   const importLines = operations.map((operation) => {

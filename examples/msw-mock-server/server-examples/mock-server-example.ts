@@ -2,7 +2,7 @@
 
 import { setupServer } from "msw/node";
 import { zocker } from "zocker";
-import { createMswHandler } from "./msw-adapter.js";
+import { createMswHandler } from "./msw-adapter.ts";
 import { routes } from "../generated/server/index.ts";
 
 /* Helper function to prettify validation errors */

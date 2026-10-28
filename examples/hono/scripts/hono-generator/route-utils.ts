@@ -1,4 +1,4 @@
-import { toCamelCase } from "./naming.js";
+import { toCamelCase } from "./naming.ts";
 
 function sanitizeParamName(value: string) {
   return value.replaceAll(/[^a-zA-Z0-9_]/g, "_");

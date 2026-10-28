@@ -1,7 +1,7 @@
 /* Example of using MSW in a browser environment */
 
 import { setupWorker } from "msw/browser";
-import { handlers } from "./mock-server-example.js";
+import { handlers } from "./mock-server-example.ts";
 
 /* Create worker with all handlers */
 const worker = setupWorker(...handlers);

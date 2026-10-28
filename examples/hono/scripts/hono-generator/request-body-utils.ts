@@ -1,4 +1,4 @@
-import type { BodyValidatorDefinition } from "./types.js";
+import type { BodyValidatorDefinition } from "./types.ts";
 
 function isJsonContentType(contentType: string) {
   return contentType === "application/json" || contentType.endsWith("+json");

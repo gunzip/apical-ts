@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "generate:client": "node ../../apps/craft/dist/index.mjs generate --client -i swagger.json -o generated",
-    "generate:hooks": "tsx ./scripts/generate-hooks.ts",
+    "generate:hooks": "node ./scripts/generate-hooks.ts",
     "generate": "pnpm run generate:client && pnpm run generate:hooks",
     "build": "tsc -p tsconfig.json",
     "typecheck:generated": "tsc --noEmit -p tsconfig.generated.json"
@@ -14,16 +14,18 @@
     "@standard-schema/spec": "catalog:",
     "@tanstack/react-query": "^4.44.0",
     "react": "^18.3.1",
-    "tsx": "^4.23.13",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@apical-ts/craft": "workspace:*",
-    "@tsconfig/node22": "catalog:",
+    "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "^18.3.31",
-    "typescript": "catalog:",
-    "p-limit": "^7.3.2"
+    "p-limit": "^7.3.3",
+    "typescript": "catalog:"
   },
-  "packageManager": "pnpm@12.3.4"
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

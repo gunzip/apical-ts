@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { app } from "./mock-server-example.js";
+import { app } from "./mock-server-example.ts";
 
 const currentDirectoryPath = path.dirname(fileURLToPath(import.meta.url));
 

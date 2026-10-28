@@ -1,16 +1,16 @@
 import { rm } from "node:fs/promises";
 import path from "node:path";
 
-import { buildHandlerModule } from "./build-handler-module.js";
-import { buildMockHandlerModule } from "./build-mock-handler-module.js";
-import { buildMockRuntimeModule } from "./build-mock-runtime-module.js";
-import { buildOperationModule } from "./build-operation-module.js";
-import { buildRegisterRoutesModule } from "./build-register-routes-module.js";
-import { buildRuntimeModule } from "./build-runtime-module.js";
-import { syncGeneratedPackageJson } from "./sync-generated-package-json.js";
-import { writeFileIfAbsent, writeFileIfChanged } from "./file-system.js";
-import { loadOperations } from "./load-operations.js";
-import type { GenerateHonoServerOptions } from "./types.js";
+import { buildHandlerModule } from "./build-handler-module.ts";
+import { buildMockHandlerModule } from "./build-mock-handler-module.ts";
+import { buildMockRuntimeModule } from "./build-mock-runtime-module.ts";
+import { buildOperationModule } from "./build-operation-module.ts";
+import { buildRegisterRoutesModule } from "./build-register-routes-module.ts";
+import { buildRuntimeModule } from "./build-runtime-module.ts";
+import { syncGeneratedPackageJson } from "./sync-generated-package-json.ts";
+import { writeFileIfAbsent, writeFileIfChanged } from "./file-system.ts";
+import { loadOperations } from "./load-operations.ts";
+import type { GenerateHonoServerOptions } from "./types.ts";
 
 function toImportDirectoryPath(
   fromDirectoryPath: string,

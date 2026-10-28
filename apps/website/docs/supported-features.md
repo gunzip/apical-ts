@@ -133,6 +133,6 @@ experience.
 
 ### Node.js
 
-- Full Node.js support (requires Node.js 20+)
+- Full Node.js support (requires Node.js 24+)
 - Works with popular frameworks (Express, Fastify, etc.)
 - Custom fetch implementations supported

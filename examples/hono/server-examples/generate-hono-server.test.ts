@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { generateHonoServer } from "../scripts/hono-generator/generate-hono-server.js";
+import { generateHonoServer } from "../scripts/hono-generator/generate-hono-server.ts";
 
 const currentDirectoryPath = path.dirname(fileURLToPath(import.meta.url));
 const exampleRootPath = path.resolve(currentDirectoryPath, "..");

@@ -1,7 +1,7 @@
 import path from "node:path";
 import { parseArgs } from "node:util";
 
-import { generateHonoServer } from "./hono-generator/generate-hono-server.js";
+import { generateHonoServer } from "./hono-generator/generate-hono-server.ts";
 
 const { values } = parseArgs({
   options: {

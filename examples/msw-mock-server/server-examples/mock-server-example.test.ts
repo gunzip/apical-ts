@@ -1,7 +1,7 @@
 /* Example of using MSW handlers in tests */
 
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { server } from "./mock-server-example.js";
+import { server } from "./mock-server-example.ts";
 
 /* Setup MSW server for tests */
 beforeAll(() => {

@@ -8,7 +8,7 @@
     "typecheck:code": "tsc -p tsconfig.examples.json",
     "generate": "craft generate -i examples.yaml -o generated --server --client",
     "clean": "rm -rf generated",
-    "dev": "tsx server-examples/mock-server-example.ts",
+    "dev": "node server-examples/mock-server-example.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -16,11 +16,10 @@
   "license": "MIT",
   "devDependencies": {
     "@apical-ts/craft": "workspace:*",
-    "@tsconfig/node22": "catalog:",
+    "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
-    "typescript": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "tsx": "^4.23.13",
+    "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   },
@@ -31,7 +30,7 @@
     "zod": "catalog:"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "packageManager": "pnpm@12.3.4"
 }

@@ -2,9 +2,9 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { getBodyValidators } from "./request-body-utils.js";
-import { createFallbackOperationId, toHonoPath } from "./route-utils.js";
-import type { OperationDefinition, RouteDefinition } from "./types.js";
+import { getBodyValidators } from "./request-body-utils.ts";
+import { createFallbackOperationId, toHonoPath } from "./route-utils.ts";
+import type { OperationDefinition, RouteDefinition } from "./types.ts";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;

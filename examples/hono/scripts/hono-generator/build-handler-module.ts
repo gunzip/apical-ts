@@ -1,5 +1,5 @@
-import { toCamelCase, toPascalCase } from "./naming.js";
-import type { OperationDefinition } from "./types.js";
+import { toCamelCase, toPascalCase } from "./naming.ts";
+import type { OperationDefinition } from "./types.ts";
 
 interface BuildHandlerModuleOptions {
   operationsImportDirectory: string;
