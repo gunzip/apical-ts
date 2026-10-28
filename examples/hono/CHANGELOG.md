@@ -1,5 +1,11 @@
 # @apical-ts/examples-hono
 
+## 0.1.4
+
+### Patch Changes
+
+- 33fe1da: Upgrade Zod package to 4.6.0
+
 ## 0.1.3
 
 ### Patch Changes

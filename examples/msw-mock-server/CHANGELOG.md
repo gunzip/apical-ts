@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+### Patch Changes
+
+- 33fe1da: Upgrade Zod package to 4.6.0
+
 ## 0.1.4
 
 ### Patch Changes

@@ -1,5 +1,54 @@
 # @apical-ts/core-utils
 
+## 0.23.2
+
+### Patch Changes
+
+- f5824ac: Fix typecheck failures on specs with parameterized media types or
+  case-colliding operation IDs
+
+  Two generator bugs made the generated client/server fail `tsc` (TS2678 /
+  TS2724 / TS1149):
+
+  - Route request maps corrupted content-type keys containing `;` (e.g.
+    `text/plain;charset=UTF-8` became `text/plain,charset=UTF-8`) when
+    converting the type-shape map into an object literal via
+    `replaceAll(";", ",")`. The request map keys no longer matched the client's
+    content-type switch cases, so `case` expressions were not comparable to
+    `keyof RequestMap`. The conversion now only rewrites statement-terminating
+    semicolons (end of line), preserving semicolons inside quoted keys.
+  - Operation IDs whose sanitized identifiers collide only by casing (e.g.
+    `DeleteWebhook` vs `deleteWebhook`) produced function/file names that clash
+    on case-insensitive filesystems and failed typechecking with TS1149. A new
+    `renameSanitizationConflictingOperationIds` preprocess step renames the
+    colliding operation IDs deterministically with a numeric suffix (mirroring
+    the existing schema conflict handling), so client, server, routes, schemas
+    and index barrels stay consistent. The step is a single linear pass over
+    operations (O(n), plus a tiny per-collision-group sort), so it adds no
+    meaningful cost even for very large specifications.
+
+- 992e2a7: Use `tsrs` for generated typechecking, drop the chunked `tsc`
+  fallback, and move to Node.js 24
+
+  Generated packages now typecheck with
+  [`tsrs`](https://github.com/oxc-project/tsrs) (`scripts.typecheck: "tsrs"`,
+  `devDependencies.tsrs`) instead of invoking the native TypeScript compiler.
+  `tsrs` checks the whole generated project in one pass without the
+  out-of-memory failures that motivated the previous sharding, so the chunked
+  typechecking mechanism (`typecheck.mjs` + `CHUNKED_BUILD_FILE_THRESHOLD`
+  heuristic) is gone; stale `typecheck.mjs` files are removed on regeneration.
+
+  This release also upgrades the toolchain to Node.js 24
+  (`engines.node >= "24.0.0"`, `.node-version`, `@tsconfig/node24`, CI matrix)
+  and drops `tsx` from the examples, which now execute TypeScript directly with
+  `node`. Shared dependencies were refreshed in the workspace catalog (Zod
+  `4.6.7`, `vitest`/`@vitest/coverage-v8` `5.0.5`, `vite` `8.3.5`, `@types/node`
+  `24.19.2`) and `pnpm audit` findings dropped from 51 to 2 (one high, dev-only,
+  pending an upstream `postman-collection` release; one low with no patched
+  version available).
+
+- 33fe1da: Upgrade Zod package to 4.6.0
+
 ## 0.23.1
 
 ### Patch Changes
