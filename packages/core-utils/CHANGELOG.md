@@ -9,7 +9,6 @@
 
   Two generator bugs made the generated client/server fail `tsc` (TS2678 /
   TS2724 / TS1149):
-
   - Route request maps corrupted content-type keys containing `;` (e.g.
     `text/plain;charset=UTF-8` became `text/plain,charset=UTF-8`) when
     converting the type-shape map into an object literal via
