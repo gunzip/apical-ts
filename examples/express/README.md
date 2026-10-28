@@ -45,19 +45,19 @@ logic without re-declaring paths, params, or response types by hand.
 3. Run the Express server:
 
    ```bash
-   pnpx tsx server-examples/express-server-example.ts
+   node server-examples/express-server-example.ts
    ```
 
 4. In another terminal, exercise the generated client:
 
    ```bash
-   pnpx tsx client-examples/client-example.ts
+   node client-examples/client-example.ts
    ```
 
 For the mock-only variant, run:
 
 ```bash
-pnpx tsx server-examples/mock-server-example.ts
+node server-examples/mock-server-example.ts
 ```
 
 ## Project layout

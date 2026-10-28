@@ -38,26 +38,26 @@
   "author": "gunzip",
   "license": "MIT",
   "devDependencies": {
-    "@tsconfig/node22": "catalog:",
+    "@tsconfig/node24": "catalog:",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
     "@types/swagger2openapi": "^7.0.4",
-    "typescript": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "embedme": "catalog:",
     "oxfmt": "catalog:",
+    "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   },
   "dependencies": {
     "js-yaml": "^4.3.2",
-    "openapi3-ts": "^4.6.1",
-    "p-limit": "^7.3.2",
+    "openapi3-ts": "^4.6.2",
+    "p-limit": "^7.3.3",
     "swagger2openapi": "^7.0.8",
     "zod": "catalog:"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.0.0"
   },
   "packageManager": "pnpm@12.3.4"
 }

@@ -1,6 +1,6 @@
-import { toCamelCase, toPascalCase } from "./naming.js";
-import { hasCustomParamNames } from "./route-utils.js";
-import type { BodyValidatorDefinition, OperationDefinition } from "./types.js";
+import { toCamelCase, toPascalCase } from "./naming.ts";
+import { hasCustomParamNames } from "./route-utils.ts";
+import type { BodyValidatorDefinition, OperationDefinition } from "./types.ts";
 
 interface BuildOperationModuleOptions {
   handlersImportDirectory: string;

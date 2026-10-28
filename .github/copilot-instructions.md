@@ -11,13 +11,13 @@ capabilities, supporting OpenAPI 2.0, 3.0.x, and 3.1.x specifications.
 **Project Type**: CLI tool and library for code generation  
 **Languages**: TypeScript (ES2022), Node.js  
 **Frameworks**: Zod v4 for schema validation, Vitest for testing  
-**Target Runtime**: Node.js 22+
+**Target Runtime**: Node.js 24+
 
 ## Build and Validation Instructions
 
 ### Prerequisites
 
-- **Node.js**: Version 22+ (specified in `.node-version`)
+- **Node.js**: Version 24+ (specified in `.node-version`)
 - **Package Manager**: pnpm 12.3.4 (ALWAYS use pnpm, not npm)
 
 ### Setup Commands

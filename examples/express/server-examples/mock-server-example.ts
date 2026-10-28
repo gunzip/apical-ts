@@ -2,7 +2,7 @@
 
 import express from "express";
 import { zocker } from "zocker";
-import { createExpressAdapter } from "./express-adapter.js";
+import { createExpressAdapter } from "./express-adapter.ts";
 import { routes } from "../generated/server/index.ts";
 
 const app = express();

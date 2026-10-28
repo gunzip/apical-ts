@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { readTextFile, writeFileIfChanged } from "./file-system.js";
+import { readTextFile, writeFileIfChanged } from "./file-system.ts";
 
 interface PackageJson {
   dependencies?: Record<string, string>;

@@ -1,11 +1,4 @@
-import {
-  access,
-  mkdir,
-  mkdtemp,
-  readFile,
-  rm,
-  writeFile,
-} from "node:fs/promises";
+import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -16,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { createPackageFiles } from "../src/core-generator/package-generator.js";
 
 describe("package generator", () => {
-  it("uses plain tsc to typecheck at or below the chunking threshold", async () => {
+  it("uses tsrs to typecheck generated output", async () => {
     const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
 
     try {
@@ -36,11 +29,11 @@ describe("package generator", () => {
         },
         devDependencies: {
           "@types/node": "^24.3.1",
-          typescript: "^7.0.2",
+          tsrs: "^0.20.0-ts7.1.0-beta",
         },
         name: "generated-client",
         scripts: {
-          typecheck: "tsc",
+          typecheck: "tsrs",
         },
         type: "module",
         version: "0.1.0",
@@ -66,42 +59,6 @@ describe("package generator", () => {
           types: ["node"],
         },
       });
-    } finally {
-      await rm(outputDir, { recursive: true, force: true });
-    }
-  });
-
-  it("writes typecheck.mjs for generated outputs above the chunking threshold", async () => {
-    const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
-    const schemasDir = join(outputDir, "schemas");
-
-    try {
-      await mkdir(schemasDir, { recursive: true });
-      await Promise.all(
-        Array.from({ length: 1001 }, (_, index) =>
-          writeFile(
-            join(schemasDir, "Schema" + index + ".ts"),
-            "export const schema" + index + " = " + index + ";\n",
-          ),
-        ),
-      );
-
-      await createPackageFiles(outputDir);
-
-      const packageJson = JSON.parse(
-        await readFile(join(outputDir, "package.json"), "utf8"),
-      );
-      const buildScript = await readFile(
-        join(outputDir, "typecheck.mjs"),
-        "utf8",
-      );
-
-      expect(packageJson.scripts.typecheck).toBe("node ./typecheck.mjs");
-      expect(buildScript).toContain("APICAL_TS_BUILD_CHUNK_SIZE");
-      expect(buildScript).toContain("[typecheck] ");
-      expect(buildScript).toContain("chunk ");
-      expect(buildScript).toContain("typecheck completed");
-      expect(buildScript).toContain('return "../" + file;');
     } finally {
       await rm(outputDir, { recursive: true, force: true });
     }

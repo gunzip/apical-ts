@@ -7,7 +7,7 @@ import {
   type GeneratedOperationContext,
   type GeneratedRouteDefinition,
 } from "../generated/hono/runtime.ts";
-import { toHonoPath } from "../scripts/hono-generator/route-utils.js";
+import { toHonoPath } from "../scripts/hono-generator/route-utils.ts";
 
 function createRoute(
   responseMap: GeneratedRouteDefinition["responseMap"],
