@@ -1,5 +1,11 @@
 # @apical-ts/core-utils
 
+## 0.23.3
+
+### Patch Changes
+
+- 7cd7e87: Generate `z.null()` for explicit OpenAPI `type: "null"` schemas.
+
 ## 0.23.2
 
 ### Patch Changes
@@ -9,6 +15,7 @@
 
   Two generator bugs made the generated client/server fail `tsc` (TS2678 /
   TS2724 / TS1149):
+
   - Route request maps corrupted content-type keys containing `;` (e.g.
     `text/plain;charset=UTF-8` became `text/plain,charset=UTF-8`) when
     converting the type-shape map into an object literal via
