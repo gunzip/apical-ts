@@ -1114,9 +1114,7 @@ describe("zodSchemaToCode", () => {
       type: "object",
     };
     const result = zodSchemaToCode(schema);
-    expect(result.code).toContain(
-      '"qux": exclusiveUnion([Qux, z.null()])',
-    );
+    expect(result.code).toContain('"qux": exclusiveUnion([Qux, z.null()])');
 
     const zodSchema = evalZod(result.code, {
       Qux: z.string(),
