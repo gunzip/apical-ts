@@ -18,9 +18,7 @@ function createExclusiveUnionForTests(
   schemas: [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]],
 ): z.ZodTypeAny {
   return z.union(schemas).superRefine((value, context) => {
-    const matches = schemas.filter(
-      (schema) => schema.safeParse(value).success,
-    );
+    const matches = schemas.filter((schema) => schema.safeParse(value).success);
     if (matches.length !== 1) {
       context.addIssue({
         code: "custom",
@@ -1126,9 +1124,9 @@ describe("zodSchemaToCode", () => {
     expect(
       zodSchema.safeParse({ bar: "a", baz: null, qux: null }).success,
     ).toBe(true);
-    expect(
-      zodSchema.safeParse({ bar: "a", baz: null, qux: 42 }).success,
-    ).toBe(false);
+    expect(zodSchema.safeParse({ bar: "a", baz: null, qux: 42 }).success).toBe(
+      false,
+    );
   });
 
   it("should still use z.discriminatedUnion when a discriminator is declared and valid", () => {
