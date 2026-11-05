@@ -1,11 +1,33 @@
 import { SchemaObject } from "openapi3-ts/oas31";
 import { describe, expect, it } from "vitest";
+import * as z from "zod";
 
 import { zodSchemaToCode } from "../src/schema-generator/index.js";
 
 // Helper to eval generated code
-function evalZod(code: string) {
-  return new Function("z", `return ${code}`)(require("zod"));
+function evalZod(code: string, bindings: Record<string, unknown> = {}) {
+  const bindingNames = Object.keys(bindings);
+  const bindingValues = Object.values(bindings);
+  return new Function("z", ...bindingNames, `return ${code}`)(
+    z,
+    ...bindingValues,
+  );
+}
+
+function createExclusiveUnionForTests(
+  schemas: [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]],
+): z.ZodTypeAny {
+  return z.union(schemas).superRefine((value, context) => {
+    const matches = schemas.filter(
+      (schema) => schema.safeParse(value).success,
+    );
+    if (matches.length !== 1) {
+      context.addIssue({
+        code: "custom",
+        message: "Invalid input: Should pass exactly one schema",
+      });
+    }
+  });
 }
 
 describe("zodSchemaToCode", () => {
@@ -93,6 +115,16 @@ describe("zodSchemaToCode", () => {
     expect(zodSchema.safeParse(true).success).toBe(true);
     expect(zodSchema.safeParse(false).success).toBe(true);
     expect(zodSchema.safeParse("true").success).toBe(false);
+  });
+
+  it("should generate z.null() for an explicit null type", () => {
+    const schema: SchemaObject = { type: "null" };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.null()");
+
+    const zodSchema = evalZod(result.code);
+    expect(zodSchema.safeParse(null).success).toBe(true);
+    expect(zodSchema.safeParse("hello").success).toBe(false);
   });
 
   it("should generate code for a simple array", () => {
@@ -1038,6 +1070,67 @@ describe("zodSchemaToCode", () => {
     );
     expect(result.imports.has("PlacementInfoNoStatus")).toBe(true);
     expect(result.imports.has("PlacementInfo")).toBe(true);
+  });
+
+  it("should validate a nullable $ref member in oneOf", () => {
+    const schema: SchemaObject = {
+      oneOf: [{ $ref: "#/components/schemas/Qux" }, { type: "null" }],
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("exclusiveUnion([Qux, z.null()])");
+
+    const zodSchema = evalZod(result.code, {
+      Qux: z.string(),
+      exclusiveUnion: createExclusiveUnionForTests,
+    });
+    expect(zodSchema.safeParse("hello").success).toBe(true);
+    expect(zodSchema.safeParse(null).success).toBe(true);
+    expect(zodSchema.safeParse(42).success).toBe(false);
+  });
+
+  it("should validate a nullable $ref member in anyOf", () => {
+    const schema: SchemaObject = {
+      anyOf: [{ $ref: "#/components/schemas/Qux" }, { type: "null" }],
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toBe("z.union([Qux, z.null()])");
+
+    const zodSchema = evalZod(result.code, { Qux: z.string() });
+    expect(zodSchema.safeParse("hello").success).toBe(true);
+    expect(zodSchema.safeParse(null).success).toBe(true);
+    expect(zodSchema.safeParse(42).success).toBe(false);
+  });
+
+  it("should validate the issue's object with a nullable $ref member", () => {
+    const schema: SchemaObject = {
+      properties: {
+        bar: { type: "string" },
+        baz: { type: ["string", "null"] },
+        qux: {
+          oneOf: [{ $ref: "#/components/schemas/Qux" }, { type: "null" }],
+        },
+      },
+      required: ["bar", "baz", "qux"],
+      type: "object",
+    };
+    const result = zodSchemaToCode(schema);
+    expect(result.code).toContain(
+      '"qux": exclusiveUnion([Qux, z.null()])',
+    );
+
+    const zodSchema = evalZod(result.code, {
+      Qux: z.string(),
+      exclusiveUnion: createExclusiveUnionForTests,
+    });
+    expect(
+      zodSchema.safeParse({ bar: "a", baz: null, qux: "hello" }).success,
+    ).toBe(true);
+    expect(
+      zodSchema.safeParse({ bar: "a", baz: null, qux: null }).success,
+    ).toBe(true);
+    expect(
+      zodSchema.safeParse({ bar: "a", baz: null, qux: 42 }).success,
+    ).toBe(false);
   });
 
   it("should still use z.discriminatedUnion when a discriminator is declared and valid", () => {

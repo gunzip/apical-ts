@@ -286,6 +286,10 @@ function handlePrimitive(
   schemaContext?: SchemaContext,
   formatOverrides?: ZodSchemaCodeOptions["formatOverrides"],
 ): undefined | ZodSchemaResult {
+  if (effectiveType === "null") {
+    result.code = "z.null()";
+    return result;
+  }
   if (effectiveType === "string") {
     return handleStringType(schema, result, formatOverrides);
   }
