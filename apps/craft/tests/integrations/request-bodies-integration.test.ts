@@ -1,29 +1,9 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, inject, it } from "vitest";
 
 import { createUnauthenticatedClient } from "./client.js";
-import { getRandomPort, MockServer } from "./setup.js";
 
 describe("Request Bodies Integration Tests", () => {
-  let mockServer: MockServer;
-  let baseURL: string;
-  const port = getRandomPort();
-
-  beforeAll(async () => {
-    mockServer = new MockServer({
-      port,
-      specPath: "tests/integrations/fixtures/test.yaml",
-    });
-
-    await mockServer.start();
-    baseURL = mockServer.getBaseUrl();
-  });
-
-  afterAll(async () => {
-    if (mockServer) {
-      await mockServer.stop();
-    }
-  });
-
+  const baseURL = inject("mockServerUrl");
   describe("createUserWithRequestBodies operation", () => {
     it("should generate operation that uses requestBodies reference", async () => {
       // Arrange

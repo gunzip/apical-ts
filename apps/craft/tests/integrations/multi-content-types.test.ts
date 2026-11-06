@@ -1,31 +1,12 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, inject, it } from "vitest";
 
 import { createUnauthenticatedClient } from "./client.js";
-import { getRandomPort, MockServer } from "./setup.js";
 
 /**
  * Integration tests for operations that support multiple request/response content types.
  */
 describe("Multi content type integration", () => {
-  let mockServer: MockServer;
-  let baseURL: string;
-  const port = getRandomPort();
-
-  beforeAll(async () => {
-    mockServer = new MockServer({
-      port,
-      specPath: "tests/integrations/fixtures/test.yaml",
-    });
-    await mockServer.start();
-    baseURL = mockServer.getBaseUrl();
-  });
-
-  afterAll(async () => {
-    if (mockServer) {
-      await mockServer.stop();
-    }
-  });
-
+  const baseURL = inject("mockServerUrl");
   it("should use default JSON request/response content types when none specified", async () => {
     const client = createUnauthenticatedClient(baseURL);
 

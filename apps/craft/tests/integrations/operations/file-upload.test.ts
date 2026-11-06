@@ -1,32 +1,12 @@
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, inject, it } from "vitest";
 
 import { createAuthenticatedClient } from "../client.js";
 import { testHelpers } from "../fixtures/test-helpers.js";
-import { getRandomPort, MockServer } from "../setup.js";
 
 describe("File Upload Operations", () => {
-  let mockServer: MockServer;
-  let baseURL: string;
-  const port = getRandomPort();
-
-  beforeAll(async () => {
-    mockServer = new MockServer({
-      port,
-      specPath: "tests/integrations/fixtures/test.yaml",
-    });
-
-    await mockServer.start();
-    baseURL = mockServer.getBaseUrl();
-  });
-
-  afterAll(async () => {
-    if (mockServer) {
-      await mockServer.stop();
-    }
-  });
-
+  const baseURL = inject("mockServerUrl");
   describe("testFileUpload operation", () => {
     it("should upload a text file successfully", async () => {
       // Arrange

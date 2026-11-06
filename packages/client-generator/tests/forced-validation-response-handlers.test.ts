@@ -3,7 +3,7 @@ import type { OperationObject } from "openapi3-ts/oas31";
 
 import { generateResponseHandlers } from "../src/responses.js";
 
-describe("Focused test for forced validation response structure", () => {
+describe("generateResponseHandlers with forced validation", () => {
   it("should generate correct structure with parseResult.parsed for forced validation", () => {
     const operation: OperationObject = {
       operationId: "testOperation",

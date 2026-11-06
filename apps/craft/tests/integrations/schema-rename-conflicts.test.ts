@@ -1,5 +1,4 @@
-import { beforeAll, afterAll, describe, it, expect } from "vitest";
-import { MockServer, getRandomPort } from "./setup.js";
+import { describe, expect, inject, it } from "vitest";
 import { createUnauthenticatedClient } from "./client.js";
 import fs from "fs/promises";
 import path from "path";
@@ -7,27 +6,11 @@ import path from "path";
 /* Integration test ensuring conflicting schema names (ApiResponse, Blob, Buffer) were renamed with Schema suffix. */
 
 describe("schema rename pre-processing (integration)", () => {
-  let mockServer: MockServer;
-  let baseURL: string;
-  const port = getRandomPort();
+  const baseURL = inject("mockServerUrl");
   const generatedSchemasDir = path.join(
     process.cwd(),
     "tests/integrations/generated/schemas",
   );
-
-  beforeAll(async () => {
-    mockServer = new MockServer({
-      port,
-      specPath: "tests/integrations/fixtures/test.yaml",
-    });
-    await mockServer.start();
-    baseURL = mockServer.getBaseUrl();
-  });
-
-  afterAll(async () => {
-    await mockServer.stop();
-  });
-
   it("renames ApiResponse, Blob, Buffer schemas", async () => {
     const files = await fs.readdir(generatedSchemasDir);
     expect(files.some((f) => f.startsWith("ApiResponseSchema."))).toBe(true);

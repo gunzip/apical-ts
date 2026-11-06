@@ -34,16 +34,8 @@ export class MockServer {
   }
 
   /**
-   * Check if the server is running
-   */
-  isRunning(): boolean {
-    return this.process !== null && !this.process.killed;
-  }
-
-  /**
    * Start the Prism mock server.
-   * Retries with a fresh random port when the chosen port is already in use,
-   * because concurrently running test files pick random ports that can collide.
+   * Retries with a fresh random port when the chosen port is already in use.
    */
   async start(): Promise<void> {
     const maxAttempts = 5;
@@ -87,12 +79,16 @@ export class MockServer {
       console.log(`Starting mock server: pnpm ${args.join(" ")}`);
 
       this.process = spawn("pnpm", args, {
-        detached: false,
+        // Own process group so the whole tree (pnpm -> pnpm-native -> prism)
+        // can be signalled at once; without this the real Prism process is
+        // orphaned and keeps the test runner alive.
+        detached: true,
         stdio: ["pipe", "pipe", "pipe"],
       });
 
       let started = false;
       let output = "";
+      let timeout: NodeJS.Timeout | undefined;
 
       // Listen for stdout to detect when server is ready
       this.process.stdout?.on("data", (data: Buffer) => {
@@ -106,6 +102,7 @@ export class MockServer {
         ) {
           if (!started) {
             started = true;
+            clearTimeout(timeout);
             console.log(
               `Mock server started on http://${this.config.host}:${this.config.port}`,
             );
@@ -124,6 +121,7 @@ export class MockServer {
       // Handle process exit
       this.process.on("exit", (code, signal) => {
         if (!started) {
+          clearTimeout(timeout);
           reject(
             new Error(
               `Prism process exited with code ${code}, signal ${signal}. Output: ${output}`,
@@ -135,12 +133,14 @@ export class MockServer {
       // Handle process errors
       this.process.on("error", (error) => {
         if (!started) {
+          clearTimeout(timeout);
           reject(new Error(`Failed to start Prism: ${error.message}`));
         }
       });
 
-      // Timeout after 30 seconds
-      setTimeout(() => {
+      // Timeout after 30 seconds. `unref` keeps this timer from holding the
+      // event loop open once the server is up.
+      timeout = setTimeout(() => {
         if (!started) {
           this.stop();
           reject(
@@ -148,27 +148,61 @@ export class MockServer {
           );
         }
       }, 30000);
+      timeout.unref();
     });
   }
 
   /**
-   * Stop the mock server
+   * Stop the mock server, killing the whole process group and releasing the
+   * stdio pipes so nothing keeps the event loop alive.
    */
   async stop(): Promise<void> {
-    if (this.process) {
-      this.process.kill("SIGTERM");
-
-      // Wait a bit for graceful shutdown
-      await sleep(1000);
-
-      // Force kill if still running
-      if (!this.process.killed) {
-        this.process.kill("SIGKILL");
-      }
-
-      this.process = null;
-      console.log("Mock server stopped");
+    const child = this.process;
+    if (!child) {
+      return;
     }
+    this.process = null;
+
+    const pid = child.pid;
+    const exited = new Promise<void>((resolve) => {
+      if (child.exitCode !== null || child.signalCode !== null) {
+        resolve();
+        return;
+      }
+      child.once("exit", () => resolve());
+    });
+
+    const signalGroup = (signal: NodeJS.Signals): void => {
+      try {
+        if (pid === undefined) {
+          throw new Error("no pid");
+        }
+        process.kill(-pid, signal);
+      } catch {
+        child.kill(signal);
+      }
+    };
+
+    signalGroup("SIGTERM");
+
+    const graceful = await Promise.race([
+      exited.then(() => true),
+      sleep(3000).then(() => false),
+    ]);
+
+    if (!graceful) {
+      signalGroup("SIGKILL");
+      await Promise.race([exited, sleep(2000)]);
+    }
+
+    // The group leader can exit while a grandchild survives, so always sweep.
+    signalGroup("SIGKILL");
+
+    child.stdout?.destroy();
+    child.stderr?.destroy();
+    child.stdin?.destroy();
+
+    console.log("Mock server stopped");
   }
 }
 
