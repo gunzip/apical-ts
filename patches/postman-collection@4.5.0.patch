@@ -1,0 +1,114 @@
+diff --git a/lib/superstring/dynamic-variables.js b/lib/superstring/dynamic-variables.js
+index d026487c70597aa6e5f59023da8c5f4293761bf3..1a13fafb58be348308e929f6a0b59d563f9de01f 100644
+--- a/lib/superstring/dynamic-variables.js
++++ b/lib/superstring/dynamic-variables.js
+@@ -1,4 +1,5 @@
+-var faker = require('@faker-js/faker/locale/en'),
++var modernFaker = require('@faker-js/faker/locale/en').faker,
++    faker = modernFaker,
+     uuid = require('uuid'),
+ 
+     // locale list generated from: https://github.com/chromium/chromium/blob/master/ui/base/l10n/l10n_util.cc
+@@ -73,10 +74,99 @@ var faker = require('@faker-js/faker/locale/en'),
+         '/var/spool',
+         '/var/tmp',
+         '/var/yp'
+-    ],
++    ];
+ 
+-    // generators for $random* variables
+-    dynamicGenerators = {
++// Postman Collection uses the Faker 5 API; keep its dynamic-variable names on Faker 10.
++var legacyNamespace = function (namespace, aliases) {
++    return Object.assign(Object.create(namespace), aliases);
++};
++var bindFakerMethod = function (namespace, method) {
++    return namespace[method].bind(namespace);
++};
++
++Object.defineProperty(faker, 'phone', {
++    value: legacyNamespace(modernFaker.phone, {
++        phoneNumberFormat: bindFakerMethod(modernFaker.phone, 'number')
++    })
++});
++Object.defineProperty(faker, 'random', {
++    value: {
++        arrayElement: bindFakerMethod(modernFaker.helpers, 'arrayElement'),
++        word: bindFakerMethod(modernFaker.word, 'sample'),
++        alphaNumeric: bindFakerMethod(modernFaker.string, 'alphanumeric')
++    }
++});
++Object.defineProperty(faker, 'datatype', {
++    value: legacyNamespace(modernFaker.datatype, {
++        number: function (options) {
++            return modernFaker.number.int(typeof options === 'number' ? { max: options } : options);
++        },
++        uuid: bindFakerMethod(modernFaker.string, 'uuid'),
++        boolean: bindFakerMethod(modernFaker.datatype, 'boolean')
++    })
++});
++Object.defineProperty(faker, 'address', {
++    value: legacyNamespace(modernFaker.location, {
++        streetName: bindFakerMethod(modernFaker.location, 'street')
++    })
++});
++Object.defineProperty(faker, 'commerce', {
++    value: legacyNamespace(modernFaker.commerce, {
++        color: bindFakerMethod(modernFaker.color, 'human')
++    })
++});
++Object.defineProperty(faker, 'company', {
++    value: legacyNamespace(modernFaker.company, {
++        companyName: bindFakerMethod(modernFaker.company, 'name'),
++        companySuffix: function () {
++            return modernFaker.helpers.arrayElement(['Inc.', 'LLC', 'Ltd.', 'Group', 'Corp.']);
++        },
++        bs: bindFakerMethod(modernFaker.company, 'buzzPhrase'),
++        bsAdjective: bindFakerMethod(modernFaker.company, 'buzzAdjective'),
++        bsBuzz: bindFakerMethod(modernFaker.company, 'buzzVerb'),
++        bsNoun: bindFakerMethod(modernFaker.company, 'buzzNoun')
++    })
++});
++Object.defineProperty(faker, 'finance', {
++    value: legacyNamespace(modernFaker.finance, {
++        account: bindFakerMethod(modernFaker.finance, 'accountNumber'),
++        mask: function () {
++            return '************' + modernFaker.finance.creditCardNumber().slice(-4);
++        }
++    })
++});
++var imageUrl = bindFakerMethod(modernFaker.image, 'url');
++Object.defineProperty(faker, 'image', {
++    value: legacyNamespace(modernFaker.image, {
++        imageUrl: imageUrl,
++        abstract: imageUrl,
++        animals: imageUrl,
++        business: imageUrl,
++        cats: imageUrl,
++        city: imageUrl,
++        food: imageUrl,
++        nightlife: imageUrl,
++        fashion: imageUrl,
++        people: imageUrl,
++        nature: imageUrl,
++        sports: imageUrl,
++        transport: imageUrl
++    })
++});
++Object.defineProperty(faker, 'internet', {
++    value: legacyNamespace(modernFaker.internet, {
++        userName: bindFakerMethod(modernFaker.internet, 'username'),
++        color: bindFakerMethod(modernFaker.color, 'rgb')
++    })
++});
++Object.defineProperty(faker, 'name', {
++    value: legacyNamespace(modernFaker.person, {
++        findName: bindFakerMethod(modernFaker.person, 'fullName')
++    })
++});
++
++// generators for $random* variables
++var dynamicGenerators = {
+         $guid: {
+             description: 'A v4 style guid',
+             generator: function () {

@@ -22,7 +22,7 @@
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
     "@standard-schema/spec": "catalog:",
-    "hono": "^4.13.13",
+    "hono": "^4.13.16",
     "zod": "catalog:"
   },
   "engines": {
