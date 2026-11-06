@@ -31,10 +31,6 @@
     },
     "packages/core-utils": {
       "entry": ["tests/**/*.test.ts"]
-    },
-    "packages/test-core": {
-      "entry": ["tests/**/*.test.ts"],
-      "ignoreDependencies": ["@stoplight/prism-cli"]
     }
   }
 }
