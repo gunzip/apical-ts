@@ -8,7 +8,7 @@ import type { OperationObject } from "openapi3-ts/oas31";
  * Verifies that the GlobalConfig includes deserializers and parse methods use config.deserializers as fallback
  */
 
-describe("DeserializerMap Refactoring", () => {
+describe("deserializer map", () => {
   it("should include deserializers in GlobalConfig interface", () => {
     const configStructure = {
       auth: {

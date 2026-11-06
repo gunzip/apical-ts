@@ -4,10 +4,11 @@ import { describe, expect, it } from "vitest";
 import { renderUtilityFunctions } from "../src/templates/config/index.js";
 
 /*
- * Test for enhanced parseApiResponseUnknownData function
- * This tests the strongly-typed overloads and discriminated union return types
+ * Tests for renderUtilityFunctions
+ * Covers the generated parseApiResponseUnknownData overloads and their
+ * discriminated union return types.
  */
-describe("strongly-typed parseApiResponseUnknownData", () => {
+describe("renderUtilityFunctions", () => {
   describe("function generation", () => {
     it("should generate the enhanced parseApiResponseUnknownData function", () => {
       const result = renderUtilityFunctions();

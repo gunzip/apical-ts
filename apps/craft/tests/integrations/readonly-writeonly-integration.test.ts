@@ -1,9 +1,8 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, inject, it } from "vitest";
 
 import { ProductWithReadOnlyMetaRequest } from "./generated/schemas/ProductWithReadOnlyMetaRequest.ts";
 import { ProductWithReadOnlyMetaResponse } from "./generated/schemas/ProductWithReadOnlyMetaResponse.ts";
 import { createUnauthenticatedClient } from "./client.js";
-import { getRandomPort, MockServer } from "./setup.js";
 
 /*
  * Integration tests for OpenAPI 3 readOnly/writeOnly property handling.
@@ -14,26 +13,7 @@ import { getRandomPort, MockServer } from "./setup.js";
  * - Response variants use schema with writeOnly properties omitted
  */
 describe("ReadOnly/WriteOnly Integration Tests", () => {
-  let mockServer: MockServer;
-  let baseURL: string;
-  const port = getRandomPort();
-
-  beforeAll(async () => {
-    mockServer = new MockServer({
-      port,
-      specPath: "tests/integrations/fixtures/test.yaml",
-    });
-
-    await mockServer.start();
-    baseURL = mockServer.getBaseUrl();
-  }, 30000); // Increase timeout for server startup
-
-  afterAll(async () => {
-    if (mockServer) {
-      await mockServer.stop();
-    }
-  });
-
+  const baseURL = inject("mockServerUrl");
   describe("readOnly properties handling", () => {
     it("should generate operation for createUserReadOnly endpoint", async () => {
       /* Arrange */

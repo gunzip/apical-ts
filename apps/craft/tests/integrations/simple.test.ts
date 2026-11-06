@@ -1,33 +1,13 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, inject, it } from "vitest";
 
 import {
   createAuthenticatedClient,
   createUnauthenticatedClient,
 } from "./client.js";
-import { getRandomPort, MockServer } from "./setup.js";
 import * as operations from "./generated/client/index.ts";
 
 describe("Working Integration Test Demo", () => {
-  let mockServer: MockServer;
-  let baseURL: string;
-  const port = getRandomPort();
-
-  beforeAll(async () => {
-    mockServer = new MockServer({
-      port,
-      specPath: "tests/integrations/fixtures/test.yaml",
-    });
-
-    await mockServer.start();
-    baseURL = mockServer.getBaseUrl();
-  });
-
-  afterAll(async () => {
-    if (mockServer) {
-      await mockServer.stop();
-    }
-  });
-
+  const baseURL = inject("mockServerUrl");
   it("should work with operation that has no auth required", async () => {
     // Arrange - testOverriddenSecurityNoAuth has security: [] (no auth required)
     const client = createUnauthenticatedClient(baseURL);

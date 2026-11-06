@@ -1,33 +1,13 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, inject, it } from "vitest";
 
 import {
   createAuthenticatedClient,
   createUnauthenticatedClient,
 } from "../client.js";
 import { sampleData } from "../fixtures/test-helpers.js";
-import { getRandomPort, MockServer } from "../setup.js";
 
 describe("Authentication Operations", () => {
-  let mockServer: MockServer;
-  let baseURL: string;
-  const port = getRandomPort();
-
-  beforeAll(async () => {
-    mockServer = new MockServer({
-      port,
-      specPath: "tests/integrations/fixtures/test.yaml",
-    });
-
-    await mockServer.start();
-    baseURL = mockServer.getBaseUrl();
-  });
-
-  afterAll(async () => {
-    if (mockServer) {
-      await mockServer.stop();
-    }
-  });
-
+  const baseURL = inject("mockServerUrl");
   describe("testAuthBearer operation", () => {
     it("should authenticate successfully with bearer token", async () => {
       // Arrange

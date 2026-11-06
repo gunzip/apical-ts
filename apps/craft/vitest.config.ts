@@ -8,6 +8,7 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
     },
     environment: "node",
+    globalSetup: ["tests/integrations/global-setup.ts"],
     globals: true,
     include: ["tests/**/*.test.ts", "tests/**/*.test.js"],
   },

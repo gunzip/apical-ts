@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { getRandomPort, MockServer } from "../setup.js";
+import { describe, expect, inject, it } from "vitest";
 
 /*
  * Integration test exercising runtime parse() with custom deserializers
@@ -7,23 +6,7 @@ import { getRandomPort, MockServer } from "../setup.js";
  */
 
 describe("Deserialization Operation", () => {
-  let mockServer: MockServer;
-  let baseURL: string;
-  const port = getRandomPort();
-
-  beforeAll(async () => {
-    mockServer = new MockServer({
-      port,
-      specPath: "tests/integrations/fixtures/test.yaml",
-    });
-    await mockServer.start();
-    baseURL = mockServer.getBaseUrl();
-  });
-
-  afterAll(async () => {
-    if (mockServer) await mockServer.stop();
-  });
-
+  const baseURL = inject("mockServerUrl");
   it("applies custom JSON deserializer and validates parsed output", async () => {
     const { testDeserialization } =
       await import("../generated/client/testDeserialization.ts");
