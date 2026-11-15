@@ -444,11 +444,12 @@ describe("zodSchemaToCode refs", () => {
       expect(result.code).not.toContain("z.union([");
     });
 
-    it("should handle discriminator mapping where refs do not have explicit const/enum", () => {
+    it("should narrow discriminator mapping keys when refs do not have explicit const/enum", () => {
       /*
-       * When a mapping is present, the generator should trust the mapping
-       * declaration and keep using z.discriminatedUnion even if the referenced
-       * schemas lack an explicit const/enum for the discriminator property.
+       * When the referenced schemas lack an explicit const/enum for the
+       * discriminator property, z.discriminatedUnion would throw at runtime
+       * (see issue #194). The mapping keys are applied as discriminator
+       * literals so the union stays discriminated.
        */
       const schema: SchemaObject = {
         discriminator: {
@@ -488,8 +489,224 @@ describe("zodSchemaToCode refs", () => {
 
       const result = zodSchemaToCode(schema, { resolvedSchemas });
       expect(result.code).toBe(
-        'z.discriminatedUnion("role", [AdminUser, RegularUser])',
+        'z.discriminatedUnion("role", [AdminUser.extend({ "role": z.literal("admin") }), RegularUser.extend({ "role": z.literal("regular") })])',
       );
+
+      const AdminUser = z.object({
+        permissions: z.array(z.string()),
+        role: z.string(),
+      });
+      const RegularUser = z.object({
+        name: z.string(),
+        role: z.string(),
+      });
+      const union = evalZod(result.code, { AdminUser, RegularUser });
+
+      expect(
+        union.safeParse({ permissions: ["read"], role: "admin" }).success,
+      ).toBe(true);
+      expect(union.safeParse({ name: "Ada", role: "regular" }).success).toBe(
+        true,
+      );
+      expect(union.safeParse({ name: "Ada", role: "admin" }).success).toBe(
+        false,
+      );
+      expect(
+        union.safeParse({ permissions: ["read"], role: "regular" }).success,
+      ).toBe(false);
+    });
+
+    it("should apply every mapping key that targets the same ref", () => {
+      const schema: SchemaObject = {
+        discriminator: {
+          mapping: {
+            cat: "#/components/schemas/CatSchema",
+            feline: "#/components/schemas/CatSchema",
+            dog: "#/components/schemas/DogSchema",
+          },
+          propertyName: "petType",
+        },
+        oneOf: [
+          { $ref: "#/components/schemas/CatSchema" },
+          { $ref: "#/components/schemas/DogSchema" },
+        ],
+      };
+
+      const resolvedSchemas = {
+        CatSchema: {
+          properties: { petType: { type: "string" as const } },
+          required: ["petType"],
+          type: "object" as const,
+        },
+        DogSchema: {
+          properties: { petType: { type: "string" as const } },
+          required: ["petType"],
+          type: "object" as const,
+        },
+      };
+
+      const result = zodSchemaToCode(schema, { resolvedSchemas });
+      expect(result.code).toBe(
+        'z.discriminatedUnion("petType", [CatSchema.extend({ "petType": z.enum(["cat", "feline"]) }), DogSchema.extend({ "petType": z.literal("dog") })])',
+      );
+
+      const CatSchema = z.object({ petType: z.string() });
+      const DogSchema = z.object({ petType: z.string() });
+      const union = evalZod(result.code, { CatSchema, DogSchema });
+
+      expect(union.safeParse({ petType: "cat" }).success).toBe(true);
+      expect(union.safeParse({ petType: "feline" }).success).toBe(true);
+      expect(union.safeParse({ petType: "dog" }).success).toBe(true);
+      expect(union.safeParse({ petType: "bird" }).success).toBe(false);
+    });
+
+    it("should keep explicit const discriminators untouched when narrowing", () => {
+      const schema: SchemaObject = {
+        discriminator: {
+          mapping: {
+            cat: "#/components/schemas/CatSchema",
+            dog: "#/components/schemas/DogSchema",
+          },
+          propertyName: "petType",
+        },
+        oneOf: [
+          { $ref: "#/components/schemas/CatSchema" },
+          { $ref: "#/components/schemas/DogSchema" },
+        ],
+      };
+
+      const resolvedSchemas = {
+        CatSchema: {
+          properties: { petType: { const: "cat" } },
+          required: ["petType"],
+          type: "object" as const,
+        },
+        DogSchema: {
+          properties: { petType: { type: "string" as const } },
+          required: ["petType"],
+          type: "object" as const,
+        },
+      };
+
+      const result = zodSchemaToCode(schema, { resolvedSchemas });
+      expect(result.code).toBe(
+        'z.discriminatedUnion("petType", [CatSchema, DogSchema.extend({ "petType": z.literal("dog") })])',
+      );
+    });
+
+    it("should narrow nullable mapped refs after unwrapping", () => {
+      const schema: SchemaObject = {
+        discriminator: {
+          mapping: {
+            cat: "#/components/schemas/CatSchema",
+            dog: "#/components/schemas/DogSchema",
+          },
+          propertyName: "petType",
+        },
+        oneOf: [
+          { $ref: "#/components/schemas/CatSchema" },
+          { $ref: "#/components/schemas/DogSchema" },
+        ],
+      };
+
+      const resolvedSchemas: Record<string, SchemaObject> = {
+        CatSchema: {
+          properties: { petType: { type: "string" as const } },
+          required: ["petType"],
+          type: ["object", "null"],
+        },
+        DogSchema: {
+          properties: { petType: { type: "string" as const } },
+          required: ["petType"],
+          type: ["object", "null"],
+        },
+      };
+
+      const result = zodSchemaToCode(schema, { resolvedSchemas });
+      expect(result.code).toBe(
+        'z.discriminatedUnion("petType", [CatSchema.unwrap().extend({ "petType": z.literal("cat") }), DogSchema.unwrap().extend({ "petType": z.literal("dog") })]).nullable()',
+      );
+
+      const CatSchema = z.object({ petType: z.string() }).nullable();
+      const DogSchema = z.object({ petType: z.string() }).nullable();
+      const union = evalZod(result.code, { CatSchema, DogSchema });
+      expect(union.safeParse({ petType: "cat" }).success).toBe(true);
+      expect(union.safeParse({ petType: "dog" }).success).toBe(true);
+      expect(union.safeParse({ petType: "bird" }).success).toBe(false);
+      expect(union.safeParse(null).success).toBe(true);
+    });
+
+    it("should fall back to z.union when the discriminator is not string-like", () => {
+      const schema: SchemaObject = {
+        discriminator: {
+          mapping: {
+            "1": "#/components/schemas/OneSchema",
+            "2": "#/components/schemas/TwoSchema",
+          },
+          propertyName: "kind",
+        },
+        oneOf: [
+          { $ref: "#/components/schemas/OneSchema" },
+          { $ref: "#/components/schemas/TwoSchema" },
+        ],
+      };
+
+      const resolvedSchemas = {
+        OneSchema: {
+          properties: { kind: { type: "integer" as const } },
+          required: ["kind"],
+          type: "object" as const,
+        },
+        TwoSchema: {
+          properties: { kind: { type: "integer" as const } },
+          required: ["kind"],
+          type: "object" as const,
+        },
+      };
+
+      const result = zodSchemaToCode(schema, { resolvedSchemas });
+      expect(result.code).toBe("z.union([OneSchema, TwoSchema])");
+    });
+
+    it("should fall back to z.union when a mapped ref emits a z.intersection", () => {
+      const schema: SchemaObject = {
+        discriminator: {
+          mapping: {
+            cat: "#/components/schemas/Node",
+            dog: "#/components/schemas/DogSchema",
+          },
+          propertyName: "petType",
+        },
+        oneOf: [
+          { $ref: "#/components/schemas/Node" },
+          { $ref: "#/components/schemas/DogSchema" },
+        ],
+      };
+
+      /*
+       * Self-referencing allOf compositions are rendered as z.intersection,
+       * which has no .extend, so narrowing would throw at runtime.
+       */
+      const resolvedSchemas: Record<string, SchemaObject> = {
+        DogSchema: {
+          properties: { petType: { type: "string" as const } },
+          required: ["petType"],
+          type: "object",
+        },
+        Node: {
+          allOf: [
+            { $ref: "#/components/schemas/Node" },
+            {
+              properties: { petType: { type: "string" as const } },
+              required: ["petType"],
+              type: "object",
+            },
+          ],
+        },
+      };
+
+      const result = zodSchemaToCode(schema, { resolvedSchemas });
+      expect(result.code).toBe("z.union([Node, DogSchema])");
     });
 
     it("should fall back to z.union when a mapped ref resolves to a non-object schema", () => {
