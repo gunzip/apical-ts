@@ -23,9 +23,26 @@ interface BuildDiscriminatedUnionCodeOptions {
 }
 
 interface ResolvedDiscriminatedUnionMemberCompatibilityOptions {
-  allowNonStaticDiscriminator?: boolean;
+  narrowing?: DiscriminatorNarrowing;
   resolvedSchemas?: ResolvedSchemas;
   seenRefs?: Set<string>;
+}
+
+/*
+ * How a member must be rendered so a non-static discriminator still yields a
+ * valid discriminated union option:
+ * - "none": emit the member code as-is
+ * - "unsupported": narrowing is required but impossible, fall back to z.union
+ * - { literals }: narrow the discriminator property with these mapping keys
+ */
+type DiscriminatorNarrowing = "none" | "unsupported" | { literals: string[] };
+
+const BARE_IDENTIFIER_PATTERN = /^[A-Za-z_$][\w$]*$/;
+
+function isNarrowed(
+  narrowing: DiscriminatorNarrowing,
+): narrowing is { literals: string[] } {
+  return typeof narrowing === "object";
 }
 
 export function buildDiscriminatedUnionCode(
@@ -33,15 +50,27 @@ export function buildDiscriminatedUnionCode(
 ): string {
   const { discriminatorProperty, mapping, members, resolvedSchemas } = options;
   const memberCodes = members.map((member) => member.code);
+  const narrowings = members.map((member) =>
+    planDiscriminatorNarrowing(
+      member,
+      discriminatorProperty,
+      mapping,
+      resolvedSchemas,
+    ),
+  );
+
+  if (narrowings.some((narrowing) => narrowing === "unsupported")) {
+    return renderPlainUnion(memberCodes);
+  }
 
   if (
-    !members.every((member) =>
+    !members.every((member, index) =>
       isDiscriminatedUnionMemberCompatible(
         member.schema,
         discriminatorProperty,
         resolvedSchemas,
         undefined,
-        mapping,
+        narrowings[index],
       ),
     )
   ) {
@@ -53,7 +82,16 @@ export function buildDiscriminatedUnionCode(
   );
 
   if (!nullableFlags.some(Boolean)) {
-    return renderDiscriminatedUnion(discriminatorProperty, memberCodes);
+    return renderDiscriminatedUnion(
+      discriminatorProperty,
+      memberCodes.map((code, index) =>
+        applyDiscriminatorNarrowing(
+          code,
+          discriminatorProperty,
+          narrowings[index],
+        ),
+      ),
+    );
   }
 
   if (!nullableFlags.every(Boolean)) {
@@ -61,7 +99,7 @@ export function buildDiscriminatedUnionCode(
   }
 
   const unwrappedMemberCodes: string[] = [];
-  for (const member of members) {
+  for (const [index, member] of members.entries()) {
     const unwrappedMemberCode = unwrapNullableDiscriminatedUnionMember(
       member,
       resolvedSchemas,
@@ -69,10 +107,156 @@ export function buildDiscriminatedUnionCode(
     if (unwrappedMemberCode === null) {
       return renderPlainUnion(memberCodes);
     }
-    unwrappedMemberCodes.push(unwrappedMemberCode);
+    unwrappedMemberCodes.push(
+      applyDiscriminatorNarrowing(
+        unwrappedMemberCode,
+        discriminatorProperty,
+        narrowings[index],
+      ),
+    );
   }
 
   return `${renderDiscriminatedUnion(discriminatorProperty, unwrappedMemberCodes)}.nullable()`;
+}
+
+/*
+ * Zod v4 rejects non-object options in z.discriminatedUnion, so mapped members
+ * whose discriminator is not a static literal must have that property replaced
+ * by the mapping key. Members that already declare a const/enum discriminator
+ * are left untouched to avoid overriding the authored literal.
+ *
+ * Narrowing always yields a literal, so a discriminator property that the
+ * member leaves optional becomes required, as z.discriminatedUnion needs it.
+ */
+function planDiscriminatorNarrowing(
+  member: DiscriminatedUnionMember,
+  discriminatorProperty: string,
+  mapping: DiscriminatorMapping | undefined,
+  resolvedSchemas: ResolvedSchemas | undefined,
+): DiscriminatorNarrowing {
+  if (!mapping || !isReferenceObject(member.schema)) {
+    return "none";
+  }
+
+  const literals = findMappingKeys(member.schema.$ref, mapping);
+  if (literals.length === 0) {
+    return "none";
+  }
+
+  const resolvedSchema = resolveReferencedSchema(
+    member.schema,
+    resolvedSchemas,
+  );
+  if (!resolvedSchema) {
+    return "none";
+  }
+
+  const refName = parseSchemaReference(member.schema.$ref);
+  const seenRefs = new Set<string>(refName ? [refName.originalName] : []);
+
+  /*
+   * Self-referencing allOf compositions are emitted as z.intersection, which
+   * has no .extend, so they cannot be narrowed.
+   */
+  if (
+    refName &&
+    hasSelfReferencingAllOf(resolvedSchema, refName.originalName)
+  ) {
+    return "unsupported";
+  }
+
+  const discriminatorSchema = findDiscriminatorProperty(
+    resolvedSchema,
+    discriminatorProperty,
+    resolvedSchemas,
+    seenRefs,
+  );
+  if (
+    !discriminatorSchema ||
+    isStaticDiscriminatorSchema(discriminatorSchema, resolvedSchemas, seenRefs)
+  ) {
+    return "none";
+  }
+
+  if (
+    !BARE_IDENTIFIER_PATTERN.test(member.code) ||
+    !isStringLikeDiscriminatorSchema(
+      discriminatorSchema,
+      resolvedSchemas,
+      seenRefs,
+    )
+  ) {
+    return "unsupported";
+  }
+
+  return { literals };
+}
+
+function applyDiscriminatorNarrowing(
+  code: string,
+  discriminatorProperty: string,
+  narrowing: DiscriminatorNarrowing,
+): string {
+  if (!isNarrowed(narrowing)) {
+    return code;
+  }
+
+  const literalCode =
+    narrowing.literals.length === 1
+      ? `z.literal(${JSON.stringify(narrowing.literals[0])})`
+      : `z.enum([${narrowing.literals.map((literal) => JSON.stringify(literal)).join(", ")}])`;
+
+  return `${code}.extend({ ${JSON.stringify(discriminatorProperty)}: ${literalCode} })`;
+}
+
+function hasSelfReferencingAllOf(
+  schema: SchemaObject,
+  originalName: string,
+): boolean {
+  return (schema.allOf ?? []).some((member) => {
+    if (!isReferenceObject(member)) {
+      return false;
+    }
+
+    return parseSchemaReference(member.$ref)?.originalName === originalName;
+  });
+}
+
+/*
+ * Mapping keys are strings, so narrowing is only sound for string-ish
+ * discriminator properties.
+ */
+function isStringLikeDiscriminatorSchema(
+  schema: ReferenceObject | SchemaObject,
+  resolvedSchemas?: ResolvedSchemas,
+  seenRefs = new Set<string>(),
+): boolean {
+  if (isReferenceObject(schema)) {
+    const refName = parseSchemaReference(schema.$ref);
+    if (!refName || seenRefs.has(refName.originalName) || !resolvedSchemas) {
+      return false;
+    }
+
+    const resolvedSchema = resolvedSchemas[refName.originalName];
+    if (!resolvedSchema || !isSchemaObject(resolvedSchema)) {
+      return false;
+    }
+
+    return isStringLikeDiscriminatorSchema(
+      resolvedSchema,
+      resolvedSchemas,
+      new Set(seenRefs).add(refName.originalName),
+    );
+  }
+
+  if (Array.isArray(schema.type)) {
+    const nonNullTypes = schema.type.filter((type) => type !== "null");
+    return (
+      nonNullTypes.length > 0 && nonNullTypes.every((type) => type === "string")
+    );
+  }
+
+  return schema.type === undefined || schema.type === "string";
 }
 
 function renderDiscriminatedUnion(
@@ -113,7 +297,7 @@ function isDiscriminatedUnionMemberCompatible(
   discriminatorProperty: string,
   resolvedSchemas?: ResolvedSchemas,
   seenRefs = new Set<string>(),
-  mapping?: DiscriminatorMapping,
+  narrowing: DiscriminatorNarrowing = "none",
 ): boolean {
   if (isReferenceObject(schema)) {
     const refName = parseSchemaReference(schema.$ref);
@@ -130,8 +314,7 @@ function isDiscriminatedUnionMemberCompatible(
       resolvedSchema,
       discriminatorProperty,
       {
-        allowNonStaticDiscriminator:
-          mapping !== undefined && isMappingTarget(schema.$ref, mapping),
+        narrowing,
         resolvedSchemas,
         seenRefs: new Set(seenRefs).add(refName.originalName),
       },
@@ -142,6 +325,7 @@ function isDiscriminatedUnionMemberCompatible(
     schema,
     discriminatorProperty,
     {
+      narrowing,
       resolvedSchemas,
       seenRefs,
     },
@@ -154,7 +338,7 @@ function isResolvedDiscriminatedUnionMemberCompatible(
   options: ResolvedDiscriminatedUnionMemberCompatibilityOptions = {},
 ): boolean {
   const {
-    allowNonStaticDiscriminator = false,
+    narrowing = "none",
     resolvedSchemas,
     seenRefs = new Set<string>(),
   } = options;
@@ -163,6 +347,14 @@ function isResolvedDiscriminatedUnionMemberCompatible(
     !isObjectLikeDiscriminatedUnionMember(schema, resolvedSchemas, seenRefs)
   ) {
     return false;
+  }
+
+  /*
+   * A narrowing plan already proved the discriminator is present and
+   * non-static, so only object-likeness matters for .extend() to work.
+   */
+  if (isNarrowed(narrowing)) {
+    return true;
   }
 
   const discriminatorSchema = findDiscriminatorProperty(
@@ -175,9 +367,10 @@ function isResolvedDiscriminatedUnionMemberCompatible(
     return false;
   }
 
-  return (
-    allowNonStaticDiscriminator ||
-    isStaticDiscriminatorSchema(discriminatorSchema, resolvedSchemas, seenRefs)
+  return isStaticDiscriminatorSchema(
+    discriminatorSchema,
+    resolvedSchemas,
+    seenRefs,
   );
 }
 
@@ -353,28 +546,43 @@ function findDiscriminatorProperty(
 }
 
 /*
- * Check whether a $ref appears as a target value in the discriminator mapping.
- * Handles both local and multi-file ref formats by comparing schema names.
+ * Collect the mapping keys whose target resolves to the given member ref.
+ * Handles pointer, multi-file, and bare schema-name mapping values by comparing
+ * schema names. Several keys may point at the same schema (e.g. aliases), so
+ * all are returned.
  */
-function isMappingTarget(ref: string, mapping: DiscriminatorMapping): boolean {
+function findMappingKeys(ref: string, mapping: DiscriminatorMapping): string[] {
   const refName = parseSchemaReference(ref, { allowExternal: true });
-  if (!refName) return false;
+  const keys: string[] = [];
 
-  for (const mappingRef of Object.values(mapping)) {
-    const mappingRefName = parseSchemaReference(mappingRef, {
-      allowExternal: true,
-    });
-    if (
-      mappingRefName &&
-      mappingRefName.originalName === refName.originalName
-    ) {
-      return true;
-    }
+  for (const [key, mappingRef] of Object.entries(mapping)) {
     if (mappingRef === ref) {
-      return true;
+      keys.push(key);
+      continue;
+    }
+    if (!refName) continue;
+
+    if (resolveMappingSchemaName(mappingRef) === refName.originalName) {
+      keys.push(key);
     }
   }
-  return false;
+
+  return keys;
+}
+
+/*
+ * OpenAPI allows a mapping value to be either a reference or a bare schema
+ * name, so fall back to the value itself when it is not a reference.
+ */
+function resolveMappingSchemaName(mappingRef: string): string | undefined {
+  const parsed = parseSchemaReference(mappingRef, { allowExternal: true });
+  if (parsed) {
+    return parsed.originalName;
+  }
+
+  return mappingRef.includes("/") || mappingRef.includes("#")
+    ? undefined
+    : mappingRef;
 }
 
 function stripTopLevelNullableWrapper(code: string): null | string {

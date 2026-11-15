@@ -1621,6 +1621,41 @@ components:
         - sku
         - name
 
+    # -------------
+    # Discriminator mapping whose members do not declare const/enum
+    # -------------
+    MappedCat:
+      type: object
+      additionalProperties: false
+      required:
+        - petType
+        - meow
+      properties:
+        petType:
+          type: string
+        meow:
+          type: boolean
+    MappedDog:
+      type: object
+      additionalProperties: false
+      required:
+        - petType
+        - bark
+      properties:
+        petType:
+          type: string
+        bark:
+          type: boolean
+    MappedPet:
+      oneOf:
+        - $ref: "#/components/schemas/MappedCat"
+        - $ref: "#/components/schemas/MappedDog"
+      discriminator:
+        propertyName: petType
+        mapping:
+          cat: "#/components/schemas/MappedCat"
+          dog: "#/components/schemas/MappedDog"
+
   # -------------
   # Parameters
   # -------------
