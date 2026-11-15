@@ -23,7 +23,7 @@ interface BuildDiscriminatedUnionCodeOptions {
 }
 
 interface ResolvedDiscriminatedUnionMemberCompatibilityOptions {
-  allowNonStaticDiscriminator?: boolean;
+  narrowing?: DiscriminatorNarrowing;
   resolvedSchemas?: ResolvedSchemas;
   seenRefs?: Set<string>;
 }
@@ -38,6 +38,12 @@ interface ResolvedDiscriminatedUnionMemberCompatibilityOptions {
 type DiscriminatorNarrowing = "none" | "unsupported" | { literals: string[] };
 
 const BARE_IDENTIFIER_PATTERN = /^[A-Za-z_$][\w$]*$/;
+
+function isNarrowed(
+  narrowing: DiscriminatorNarrowing,
+): narrowing is { literals: string[] } {
+  return typeof narrowing === "object";
+}
 
 export function buildDiscriminatedUnionCode(
   options: BuildDiscriminatedUnionCodeOptions,
@@ -64,7 +70,7 @@ export function buildDiscriminatedUnionCode(
         discriminatorProperty,
         resolvedSchemas,
         undefined,
-        narrowings[index] !== "none",
+        narrowings[index],
       ),
     )
   ) {
@@ -118,6 +124,9 @@ export function buildDiscriminatedUnionCode(
  * whose discriminator is not a static literal must have that property replaced
  * by the mapping key. Members that already declare a const/enum discriminator
  * are left untouched to avoid overriding the authored literal.
+ *
+ * Narrowing always yields a literal, so a discriminator property that the
+ * member leaves optional becomes required, as z.discriminatedUnion needs it.
  */
 function planDiscriminatorNarrowing(
   member: DiscriminatedUnionMember,
@@ -129,7 +138,7 @@ function planDiscriminatorNarrowing(
     return "none";
   }
 
-  const literals = findMappingLiterals(member.schema.$ref, mapping);
+  const literals = findMappingKeys(member.schema.$ref, mapping);
   if (literals.length === 0) {
     return "none";
   }
@@ -188,7 +197,7 @@ function applyDiscriminatorNarrowing(
   discriminatorProperty: string,
   narrowing: DiscriminatorNarrowing,
 ): string {
-  if (narrowing === "none" || narrowing === "unsupported") {
+  if (!isNarrowed(narrowing)) {
     return code;
   }
 
@@ -288,7 +297,7 @@ function isDiscriminatedUnionMemberCompatible(
   discriminatorProperty: string,
   resolvedSchemas?: ResolvedSchemas,
   seenRefs = new Set<string>(),
-  allowNonStaticDiscriminator = false,
+  narrowing: DiscriminatorNarrowing = "none",
 ): boolean {
   if (isReferenceObject(schema)) {
     const refName = parseSchemaReference(schema.$ref);
@@ -305,7 +314,7 @@ function isDiscriminatedUnionMemberCompatible(
       resolvedSchema,
       discriminatorProperty,
       {
-        allowNonStaticDiscriminator,
+        narrowing,
         resolvedSchemas,
         seenRefs: new Set(seenRefs).add(refName.originalName),
       },
@@ -316,6 +325,7 @@ function isDiscriminatedUnionMemberCompatible(
     schema,
     discriminatorProperty,
     {
+      narrowing,
       resolvedSchemas,
       seenRefs,
     },
@@ -328,7 +338,7 @@ function isResolvedDiscriminatedUnionMemberCompatible(
   options: ResolvedDiscriminatedUnionMemberCompatibilityOptions = {},
 ): boolean {
   const {
-    allowNonStaticDiscriminator = false,
+    narrowing = "none",
     resolvedSchemas,
     seenRefs = new Set<string>(),
   } = options;
@@ -337,6 +347,14 @@ function isResolvedDiscriminatedUnionMemberCompatible(
     !isObjectLikeDiscriminatedUnionMember(schema, resolvedSchemas, seenRefs)
   ) {
     return false;
+  }
+
+  /*
+   * A narrowing plan already proved the discriminator is present and
+   * non-static, so only object-likeness matters for .extend() to work.
+   */
+  if (isNarrowed(narrowing)) {
+    return true;
   }
 
   const discriminatorSchema = findDiscriminatorProperty(
@@ -349,9 +367,10 @@ function isResolvedDiscriminatedUnionMemberCompatible(
     return false;
   }
 
-  return (
-    allowNonStaticDiscriminator ||
-    isStaticDiscriminatorSchema(discriminatorSchema, resolvedSchemas, seenRefs)
+  return isStaticDiscriminatorSchema(
+    discriminatorSchema,
+    resolvedSchemas,
+    seenRefs,
   );
 }
 
@@ -527,36 +546,43 @@ function findDiscriminatorProperty(
 }
 
 /*
- * Collect the mapping keys whose $ref resolves to the given member ref.
- * Handles both local and multi-file ref formats by comparing schema names.
- * Several keys may point at the same schema (e.g. aliases), so all are returned.
+ * Collect the mapping keys whose target resolves to the given member ref.
+ * Handles pointer, multi-file, and bare schema-name mapping values by comparing
+ * schema names. Several keys may point at the same schema (e.g. aliases), so
+ * all are returned.
  */
-function findMappingLiterals(
-  ref: string,
-  mapping: DiscriminatorMapping,
-): string[] {
+function findMappingKeys(ref: string, mapping: DiscriminatorMapping): string[] {
   const refName = parseSchemaReference(ref, { allowExternal: true });
-  const literals: string[] = [];
+  const keys: string[] = [];
 
-  for (const [literal, mappingRef] of Object.entries(mapping)) {
+  for (const [key, mappingRef] of Object.entries(mapping)) {
     if (mappingRef === ref) {
-      literals.push(literal);
+      keys.push(key);
       continue;
     }
     if (!refName) continue;
 
-    const mappingRefName = parseSchemaReference(mappingRef, {
-      allowExternal: true,
-    });
-    if (
-      mappingRefName &&
-      mappingRefName.originalName === refName.originalName
-    ) {
-      literals.push(literal);
+    if (resolveMappingSchemaName(mappingRef) === refName.originalName) {
+      keys.push(key);
     }
   }
 
-  return literals;
+  return keys;
+}
+
+/*
+ * OpenAPI allows a mapping value to be either a reference or a bare schema
+ * name, so fall back to the value itself when it is not a reference.
+ */
+function resolveMappingSchemaName(mappingRef: string): string | undefined {
+  const parsed = parseSchemaReference(mappingRef, { allowExternal: true });
+  if (parsed) {
+    return parsed.originalName;
+  }
+
+  return mappingRef.includes("/") || mappingRef.includes("#")
+    ? undefined
+    : mappingRef;
 }
 
 function stripTopLevelNullableWrapper(code: string): null | string {

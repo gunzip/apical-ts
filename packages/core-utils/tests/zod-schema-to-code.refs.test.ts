@@ -516,6 +516,38 @@ describe("zodSchemaToCode refs", () => {
       ).toBe(false);
     });
 
+    it("should narrow mapping keys when mapping values are bare schema names", () => {
+      const schema: SchemaObject = {
+        discriminator: {
+          mapping: { admin: "AdminUser", regular: "RegularUser" },
+          propertyName: "role",
+        },
+        oneOf: [
+          { $ref: "#/components/schemas/AdminUser" },
+          { $ref: "#/components/schemas/RegularUser" },
+        ],
+      };
+
+      const resolvedSchemas = {
+        AdminUser: {
+          properties: { role: { type: "string" as const } },
+          required: ["role"],
+          type: "object" as const,
+        },
+        RegularUser: {
+          properties: { role: { type: "string" as const } },
+          required: ["role"],
+          type: "object" as const,
+        },
+      };
+
+      const result = zodSchemaToCode(schema, { resolvedSchemas });
+
+      expect(result.code).toBe(
+        'z.discriminatedUnion("role", [AdminUser.extend({ "role": z.literal("admin") }), RegularUser.extend({ "role": z.literal("regular") })])',
+      );
+    });
+
     it("should apply every mapping key that targets the same ref", () => {
       const schema: SchemaObject = {
         discriminator: {

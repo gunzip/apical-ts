@@ -3,6 +3,6 @@
 "@apical-ts/craft": patch
 ---
 
-fix: narrow discriminator mapping members without const/enum so generated
-`z.discriminatedUnion` options no longer throw "Invalid discriminated union
-option" at runtime
+Narrow `discriminator.mapping` members that lack an explicit `const`/`enum` on
+the discriminator property, so generated `z.discriminatedUnion` options no
+longer throw "Invalid discriminated union option" at runtime.
