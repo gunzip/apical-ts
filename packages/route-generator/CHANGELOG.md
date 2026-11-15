@@ -1,5 +1,12 @@
 # @apical-ts/route-generator
 
+## 0.16.4
+
+### Patch Changes
+
+- Updated dependencies [591a95a]
+  - @apical-ts/core-utils@0.23.4
+
 ## 0.16.3
 
 ### Patch Changes
@@ -16,6 +23,7 @@
 
   Two generator bugs made the generated client/server fail `tsc` (TS2678 /
   TS2724 / TS1149):
+
   - Route request maps corrupted content-type keys containing `;` (e.g.
     `text/plain;charset=UTF-8` became `text/plain,charset=UTF-8`) when
     converting the type-shape map into an object literal via

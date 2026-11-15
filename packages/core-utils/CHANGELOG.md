@@ -1,5 +1,14 @@
 # @apical-ts/core-utils
 
+## 0.23.4
+
+### Patch Changes
+
+- 591a95a: Narrow `discriminator.mapping` members that lack an explicit
+  `const`/`enum` on the discriminator property, so generated
+  `z.discriminatedUnion` options no longer throw "Invalid discriminated union
+  option" at runtime.
+
 ## 0.23.3
 
 ### Patch Changes
@@ -15,6 +24,7 @@
 
   Two generator bugs made the generated client/server fail `tsc` (TS2678 /
   TS2724 / TS1149):
+
   - Route request maps corrupted content-type keys containing `;` (e.g.
     `text/plain;charset=UTF-8` became `text/plain,charset=UTF-8`) when
     converting the type-shape map into an object literal via
