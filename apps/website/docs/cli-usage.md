@@ -189,3 +189,29 @@ command in the output directory:
 ```bash
 npx oxfmt
 ```
+
+## Programmatic Usage
+
+The `generate` function is also available as a typed entry point, so you can
+drive generation from your own scripts without spawning the CLI:
+
+```ts
+import { generate } from "@apical-ts/craft/generate";
+import type { GenerationOptions } from "@apical-ts/craft/generate";
+
+const options: GenerationOptions = {
+  input: "./openapi.yaml",
+  output: "./generated",
+  generateClient: true,
+  generateServer: false,
+  generateRoutes: false,
+  concurrency: 10,
+  extraProps: "strip",
+};
+
+await generate(options);
+```
+
+`generate` resolves once every requested artifact has been written and rejects
+if the input cannot be parsed or converted. The exported `GenerationOptions`
+type mirrors the CLI flags.

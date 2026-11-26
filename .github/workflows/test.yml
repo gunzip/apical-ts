@@ -65,6 +65,9 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Verify coverage thresholds
+        run: pnpm test:coverage
+
   test:
     if: ${{ always() }}
     needs: [test_matrix]
