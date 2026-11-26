@@ -1,3 +1,5 @@
+import type { OpenAPIObject, OperationObject } from "openapi3-ts/oas31";
+
 import { describe, expect, it } from "vitest";
 
 import { generateServerOperationWrapper } from "../src/index.js";
@@ -175,15 +177,190 @@ describe("server-generator operation wrapper", () => {
 
     /* Verify that request body validation uses schemas from request map imported from routes */
     expect(result.wrapperCode).toContain(
-      "const bodyParse = await validateStandardSchema(schema, req.body);",
+      'const bodyParse = await validateStandardSchema(testStrictBodyValidationRequestMap["application/json"], req.body);',
     );
     expect(result.wrapperCode).toContain("testStrictBodyValidationRequestMap");
     expect(result.wrapperCode).toContain(
       'from "../routes/testStrictBodyValidation.ts"',
     );
+    expect(result.wrapperCode).not.toContain(
+      'import { testStrictBodyValidationResponseMap } from "../routes/testStrictBodyValidation.ts"',
+    );
     expect(result.wrapperCode).toContain("testStrictBodyValidationWrapper");
     expect(result.wrapperCode).toContain("body-error");
-    expect(result.wrapperCode).toContain("parsedBody");
+    expect(result.wrapperCode).toContain("Request body is required");
+    expect(result.wrapperCode).toContain('contentType: "application/json"');
+    expect(result.wrapperCode).toContain("body: bodyParse.value");
+    expect(result.wrapperCode).toContain("Unsupported Content-Type:");
+    expect(result.wrapperCode).not.toContain(
+      "as testStrictBodyValidationParsedParams",
+    );
+    expect(result.wrapperCode).not.toContain(
+      "as testStrictBodyValidationParsedBody",
+    );
+  });
+
+  it("should distinguish optional vs required requestBody in generated types and runtime checks", () => {
+    const emptyDoc: OpenAPIObject = {
+      openapi: "3.1.0",
+      info: { title: "Test", version: "1.0.0" },
+    };
+    const optionalBodyOp: OperationObject = {
+      operationId: "testOptionalBody",
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: { note: { type: "string" } },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: "OK" },
+      },
+    };
+
+    const result = generateServerOperationWrapper(
+      "/optional",
+      "post",
+      optionalBodyOp,
+      [],
+      emptyDoc,
+    );
+
+    expect(result.wrapperCode).not.toContain("Request body is required");
+    expect(result.wrapperCode).toContain("testOptionalBodyOptionalParsedBody");
+    expect(result.wrapperCode).toContain(
+      "{ contentType?: undefined; body?: undefined }",
+    );
+    expect(result.wrapperCode).toContain("contentType: undefined");
+  });
+
+  it("should resolve required and optional $ref requestBodies from components", () => {
+    const doc: OpenAPIObject = {
+      openapi: "3.1.0",
+      info: { title: "Test", version: "1.0.0" },
+      components: {
+        requestBodies: {
+          RequiredUserBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { name: { type: "string" } },
+                },
+              },
+            },
+          },
+          OptionalUserBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { note: { type: "string" } },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const requiredOp: OperationObject = {
+      operationId: "testRefRequiredBody",
+      requestBody: { $ref: "#/components/requestBodies/RequiredUserBody" },
+      responses: { 200: { description: "OK" } },
+    };
+    const optionalOp: OperationObject = {
+      operationId: "testRefOptionalBody",
+      requestBody: { $ref: "#/components/requestBodies/OptionalUserBody" },
+      responses: { 200: { description: "OK" } },
+    };
+
+    const requiredResult = generateServerOperationWrapper(
+      "/ref-required",
+      "post",
+      requiredOp,
+      [],
+      doc,
+    );
+    const optionalResult = generateServerOperationWrapper(
+      "/ref-optional",
+      "post",
+      optionalOp,
+      [],
+      doc,
+    );
+
+    expect(requiredResult.wrapperCode).toContain("Request body is required");
+    expect(requiredResult.wrapperCode).toContain(
+      'testRefRequiredBodyRequestMap["application/json"]',
+    );
+    expect(requiredResult.wrapperCode).toContain(
+      'mediaType === "application/json"',
+    );
+    expect(requiredResult.wrapperCode).toContain("Unsupported Content-Type:");
+    expect(requiredResult.wrapperCode).not.toContain(
+      "as testRefRequiredBodyParsedParams",
+    );
+    expect(requiredResult.wrapperCode).not.toContain(
+      "as testRefRequiredBodyParsedBody",
+    );
+    expect(requiredResult.wrapperCode).not.toContain(
+      "as keyof testRefRequiredBodyRequestMap",
+    );
+
+    expect(optionalResult.wrapperCode).not.toContain(
+      "Request body is required",
+    );
+    expect(optionalResult.wrapperCode).toContain(
+      "testRefOptionalBodyOptionalParsedBody",
+    );
+    expect(optionalResult.wrapperCode).toContain("contentType: undefined");
+  });
+
+  it("should check parameterized media types before base media types", () => {
+    const doc: OpenAPIObject = {
+      openapi: "3.1.0",
+      info: { title: "Test", version: "1.0.0" },
+    };
+    const operation: OperationObject = {
+      operationId: "testParameterizedOrder",
+      requestBody: {
+        required: true,
+        content: {
+          "application/vnd.api+json": {
+            schema: { type: "string" },
+          },
+          "application/vnd.api+json; version=2": {
+            schema: { type: "string" },
+          },
+        },
+      },
+      responses: { 200: { description: "OK" } },
+    };
+
+    const result = generateServerOperationWrapper(
+      "/param-ct",
+      "post",
+      operation,
+      [],
+      doc,
+    );
+
+    const paramIndex = result.wrapperCode.indexOf(
+      'rawContentType === "application/vnd.api+json; version=2"',
+    );
+    const baseIndex = result.wrapperCode.indexOf(
+      'mediaType === "application/vnd.api+json"',
+    );
+    expect(paramIndex).toBeGreaterThan(-1);
+    expect(baseIndex).toBeGreaterThan(paramIndex);
   });
 
   it("should generate wrapper with path parameters", () => {
@@ -251,11 +428,16 @@ describe("server-generator operation wrapper", () => {
       {} as any,
     );
     expect(result.wrapperCode).toContain("body-error");
-    expect(result.wrapperCode).toContain("parsedBody");
+    expect(result.wrapperCode).toContain('contentType: "application/json"');
+    expect(result.wrapperCode).toContain("body: bodyParse.value");
   });
 
   it("should not import or validate a request map when request content types are empty", () => {
-    const operation = {
+    const emptyDoc: OpenAPIObject = {
+      openapi: "3.1.0",
+      info: { title: "Test", version: "1.0.0" },
+    };
+    const operation: OperationObject = {
       operationId: "testEmptyRequestBody",
       requestBody: {
         required: false,
@@ -271,16 +453,15 @@ describe("server-generator operation wrapper", () => {
     const result = generateServerOperationWrapper(
       "/test",
       "post",
-      operation as any,
+      operation,
       [],
-      {} as any,
+      emptyDoc,
     );
 
     expect(result.wrapperCode).not.toContain("testEmptyRequestBodyRequestMap");
-    expect(result.wrapperCode).not.toContain(
-      "validateStandardSchema(schema, req.body)",
-    );
     expect(result.wrapperCode).not.toContain("Unsupported Content-Type");
+    expect(result.wrapperCode).not.toContain("undefined | undefined");
+    expect(result.wrapperCode).toContain("body: undefined");
   });
 
   it("should generate route function with correct path and method", () => {

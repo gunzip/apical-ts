@@ -111,8 +111,10 @@ experience.
 
 ### Server-Side Features
 
-- Request validation for server handlers
-- Response validation before sending
+- Runtime request validation for server handlers (parameters, required/optional
+  request bodies, and content types)
+- Static TypeScript response contract checking (with `responseMap` metadata on
+  `routes/` for opt-in runtime response validation in custom adapters)
 - Type-safe handler context
 - Framework-agnostic handler wrappers
 
