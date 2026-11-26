@@ -1,5 +1,8 @@
 import type { ImportManager } from "@apical-ts/core-utils";
-import type { OperationMetadata } from "@apical-ts/core-utils/shared";
+import type {
+  ImportExtension,
+  OperationMetadata,
+} from "@apical-ts/core-utils/shared";
 
 import {
   buildOperationFileContent,
@@ -8,6 +11,7 @@ import {
 import {
   createOutputSubdirectory,
   createSanitizedOperationEntries,
+  formatImportSpecifier,
   writeOperationModuleFile,
 } from "@apical-ts/core-utils/shared";
 import path from "path";
@@ -30,8 +34,9 @@ export async function writeConfigFile(
   authHeaders: string[],
   serverUrls: string[],
   operationsDir: string,
+  options: { importExtension?: ImportExtension } = {},
 ): Promise<void> {
-  const configContent = generateConfigTypes(authHeaders, serverUrls);
+  const configContent = generateConfigTypes(authHeaders, serverUrls, options);
   const runtimePath = path.join(operationsDir, "runtime.ts");
   await writeTypeScriptFile(runtimePath, configContent);
 }
@@ -42,11 +47,13 @@ export async function writeConfigFile(
 export async function writeIndexFile(
   operations: OperationMetadata[],
   operationsDir: string,
+  options: { importExtension?: ImportExtension } = {},
 ): Promise<void> {
+  const { importExtension = "ts" } = options;
   const sanitizedOperations = createSanitizedOperationEntries(operations);
   const operationImports = sanitizedOperations.map(
     ({ sanitizedOperationId }) =>
-      `import { ${sanitizedOperationId} } from './${sanitizedOperationId}.ts';`,
+      `import { ${sanitizedOperationId} } from '${formatImportSpecifier(`./${sanitizedOperationId}`, importExtension)}';`,
   );
   const operationExports = sanitizedOperations.map(
     ({ sanitizedOperationId }) => sanitizedOperationId,

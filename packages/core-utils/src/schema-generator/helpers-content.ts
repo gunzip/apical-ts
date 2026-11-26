@@ -1,3 +1,8 @@
+import {
+  formatImportSpecifier,
+  type ImportExtension,
+} from "../shared/types.js";
+
 /*
  * Central registry for generated schema helpers. The helper key is what schema
  * generation tracks in result.helpers; the importName and implementation are
@@ -37,6 +42,7 @@ export type GeneratedSchemaHelper = keyof typeof GENERATED_SCHEMA_HELPERS;
 
 export function buildGeneratedSchemaHelpersImport(
   helpers: Iterable<GeneratedSchemaHelper>,
+  importExtension: ImportExtension = "ts",
 ): string {
   const helperImports = Array.from(new Set(helpers))
     .map((helper) => GENERATED_SCHEMA_HELPERS[helper].importName)
@@ -46,7 +52,8 @@ export function buildGeneratedSchemaHelpersImport(
     return "";
   }
 
-  return `import { ${helperImports.join(", ")} } from "./runtime.ts";\n`;
+  const runtimeSpecifier = formatImportSpecifier("./runtime", importExtension);
+  return `import { ${helperImports.join(", ")} } from "${runtimeSpecifier}";\n`;
 }
 
 export function getHelpersFileContent(): string {

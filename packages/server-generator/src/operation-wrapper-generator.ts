@@ -10,6 +10,7 @@ import {
   extractParameterGroups,
   generateContentTypeMaps,
   getOperationSecuritySchemes,
+  type ImportExtension,
 } from "@apical-ts/core-utils/shared";
 import assert from "assert";
 
@@ -49,6 +50,7 @@ export function generateServerOperationWrapper(
   operation: OperationObject,
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
   doc: OpenAPIObject,
+  options: { importExtension?: ImportExtension } = {},
 ): GeneratedServerWrapper {
   const metadata = extractServerWrapperMetadata(
     pathKey,
@@ -64,6 +66,7 @@ export function generateServerOperationWrapper(
     hasHeaders: metadata.hasHeaders,
     hasPath: metadata.hasPath,
     hasQuery: metadata.hasQuery,
+    importExtension: options.importExtension,
     method: metadata.method,
     operationId: metadata.operationId,
     pathKey: metadata.pathKey,

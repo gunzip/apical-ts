@@ -24,7 +24,7 @@ import {
 } from "../schema-generator/helpers-content.js";
 import type { ResolvedSchemas } from "../schema-generator/types.js";
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
-import type { ExtraPropsMode } from "../shared/types.js";
+import type { ExtraPropsMode, ImportExtension } from "../shared/types.js";
 import { isPlainSchemaObject } from "./openapi-utils.js";
 import {
   extractOperationParameters,
@@ -57,6 +57,7 @@ interface SchemaGenerationContext {
   extraProps: ExtraPropsMode;
   formatOverrides: ReturnType<typeof createStringFormatOverrideRegistry>;
   generateServer: boolean;
+  importExtension: ImportExtension;
   limit: ReturnType<typeof pLimit>;
   openApiDoc: OpenAPIObject;
   resolvedSchemas: ResolvedSchemas;
@@ -85,6 +86,7 @@ export async function generateSchemas(
   extraProps: ExtraPropsMode,
   profiler?: Profiler,
   formatOverrides: readonly StringFormatOverride[] = [],
+  importExtension: ImportExtension = "ts",
 ): Promise<void> {
   const schemasDir = path.join(output, "schemas");
   await fs.mkdir(schemasDir, { recursive: true });
@@ -100,6 +102,7 @@ export async function generateSchemas(
     extraProps,
     formatOverrides: createStringFormatOverrideRegistry(formatOverrides),
     generateServer,
+    importExtension,
     limit,
     openApiDoc,
     resolvedSchemas: openApiDoc.components?.schemas ?? {},
@@ -124,6 +127,7 @@ export async function generateSchemas(
           generateRequestSchemaFile(name, schema, {
             extraProps: context.extraProps,
             formatOverrides: context.formatOverrides,
+            importExtension: context.importExtension,
             resolvedSchemas: context.resolvedSchemas,
             schemaDirectory: context.schemasDir,
           }),
@@ -136,6 +140,7 @@ export async function generateSchemas(
           generateResponseSchemaFile(name, schema, {
             extraProps: context.extraProps,
             formatOverrides: context.formatOverrides,
+            importExtension: context.importExtension,
             resolvedSchemas: context.resolvedSchemas,
             schemaDirectory: context.schemasDir,
           }),
@@ -147,7 +152,11 @@ export async function generateSchemas(
     const schemaIndexEntries = (
       await Promise.all(schemaGenerationPromises)
     ).flat();
-    await generateSchemaIndex(context.schemasDir, schemaIndexEntries);
+    await generateSchemaIndex(
+      context.schemasDir,
+      schemaIndexEntries,
+      context.importExtension,
+    );
   } else {
     const schemaIndexEntries: SchemaIndexEntry[] = [];
 
@@ -169,6 +178,7 @@ export async function generateSchemas(
               generateRequestSchemaFile(name, schema, {
                 extraProps: context.extraProps,
                 formatOverrides: context.formatOverrides,
+                importExtension: context.importExtension,
                 resolvedSchemas: context.resolvedSchemas,
                 schemaDirectory: context.schemasDir,
               }),
@@ -189,6 +199,7 @@ export async function generateSchemas(
               generateResponseSchemaFile(name, schema, {
                 extraProps: context.extraProps,
                 formatOverrides: context.formatOverrides,
+                importExtension: context.importExtension,
                 resolvedSchemas: context.resolvedSchemas,
                 schemaDirectory: context.schemasDir,
               }),
@@ -209,7 +220,11 @@ export async function generateSchemas(
     profiler.end("schemas:parameters");
 
     profiler.start("schemas:index");
-    await generateSchemaIndex(context.schemasDir, schemaIndexEntries);
+    await generateSchemaIndex(
+      context.schemasDir,
+      schemaIndexEntries,
+      context.importExtension,
+    );
     profiler.end("schemas:index");
   }
   /* eslint-disable-next-line no-console */
@@ -243,6 +258,7 @@ function createComponentSchemaPromise(
             description,
             extraProps: context.extraProps,
             formatOverrides: context.formatOverrides,
+            importExtension: context.importExtension,
             name: schemaName,
             originalSchemaName: originalSchemaName || schemaName,
             recursiveContext,
@@ -253,6 +269,7 @@ function createComponentSchemaPromise(
         : generateSchemaFile(schemaName, schema, description, {
             extraProps: context.extraProps,
             formatOverrides: context.formatOverrides,
+            importExtension: context.importExtension,
             originalSchemaName,
             recursiveContext,
             resolvedSchemas: context.resolvedSchemas,
@@ -394,6 +411,7 @@ function generateParameterSchemas(
           /* Client defaults - no coercion or special handling */
           coercePrimitives: false,
           formatOverrides: context.formatOverrides,
+          importExtension: context.importExtension,
           lowercaseHeaderKeys: false,
         },
       );

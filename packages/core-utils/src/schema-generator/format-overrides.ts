@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import type { ImportExtension } from "../shared/types.js";
+
 import { sanitizeIdentifier } from "./utils.js";
 
 export type StringFormatOverrideImport =
@@ -146,6 +148,7 @@ export function renderStringFormatOverrideImports(
   imports: Iterable<string>,
   registry: StringFormatOverrideRegistry | undefined,
   filePath: string,
+  importExtension: ImportExtension = "ts",
 ): string[] {
   if (!registry) {
     return [];
@@ -169,7 +172,11 @@ export function renderStringFormatOverrideImports(
       continue;
     }
 
-    const importSpecifier = getImportSpecifier(override.import, filePath);
+    const importSpecifier = getImportSpecifier(
+      override.import,
+      filePath,
+      importExtension,
+    );
     // Keep the generated alias stable even if the user export name is generic.
     const renderedBinding = `${override.importName} as ${importName}`;
     const bindings = groupedImports.get(importSpecifier) ?? new Set<string>();
@@ -203,6 +210,7 @@ export function getStringFormatOverrideReferenceName(format: string): string {
 function getImportSpecifier(
   source: StringFormatOverrideImport,
   filePath: string,
+  importExtension: ImportExtension = "ts",
 ): string {
   if (source.kind === "module") {
     return source.specifier;
@@ -215,25 +223,41 @@ function getImportSpecifier(
     ? normalizedPath
     : `./${normalizedPath}`;
 
-  return rewriteTypeScriptExtension(importPath);
+  return rewriteTypeScriptExtension(importPath, importExtension);
 }
 
 /*
- * Preserves TypeScript source extensions so generated code can run directly
- * under runtimes that execute TypeScript modules natively.
+ * Rewrites TypeScript source extensions according to the configured import
+ * extension mode ("ts", "js", or "none").
  */
-function rewriteTypeScriptExtension(importPath: string): string {
+function rewriteTypeScriptExtension(
+  importPath: string,
+  importExtension: ImportExtension = "ts",
+): string {
+  const rewrite = (basePath: string, tsExt: string, jsExt: string): string => {
+    if (importExtension === "js") {
+      return `${basePath}${jsExt}`;
+    }
+    if (importExtension === "none") {
+      return basePath;
+    }
+    return `${basePath}${tsExt}`;
+  };
+
   if (importPath.endsWith(".d.ts")) {
-    return `${importPath.slice(0, -5)}.ts`;
+    return rewrite(importPath.slice(0, -5), ".ts", ".js");
   }
   if (importPath.endsWith(".mts")) {
-    return importPath;
+    return rewrite(importPath.slice(0, -4), ".mts", ".mjs");
   }
   if (importPath.endsWith(".cts")) {
-    return importPath;
+    return rewrite(importPath.slice(0, -4), ".cts", ".cjs");
   }
-  if (importPath.endsWith(".ts") || importPath.endsWith(".tsx")) {
-    return importPath;
+  if (importPath.endsWith(".tsx")) {
+    return rewrite(importPath.slice(0, -4), ".tsx", ".js");
+  }
+  if (importPath.endsWith(".ts")) {
+    return rewrite(importPath.slice(0, -3), ".ts", ".js");
   }
   return importPath;
 }

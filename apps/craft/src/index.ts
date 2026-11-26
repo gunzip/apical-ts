@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
-import type { ExtraPropsMode } from "@apical-ts/core-utils";
+import { type ExtraPropsMode, isImportExtension } from "@apical-ts/core-utils";
 
 import { Command } from "commander";
 
@@ -48,10 +48,33 @@ program
     "Control how additional properties are handled in object schemas. Options: strip (default), loose, strict",
     "strip",
   )
+  .option(
+    "--import-extension <ext>",
+    "Extension used in generated relative import specifiers: ts (default), js, none",
+    "ts",
+  )
+  .option(
+    "--no-package-files",
+    "Skip generating package.json and tsconfig.json in the output directory.",
+  )
+  .option(
+    "--clean",
+    "Remove previously generated artifacts (schemas/, routes/, client/, server/) before generating.",
+    false,
+  )
   .action(async (options: Record<string, unknown>) => {
     try {
+      const importExtensionValue = String(options.importExtension);
+      if (!isImportExtension(importExtensionValue)) {
+        throw new Error(
+          `Invalid --import-extension value "${importExtensionValue}". Expected one of: ts, js, none.`,
+        );
+      }
+
       const started = process.hrtime.bigint();
       const generationOptions = {
+        clean: Boolean(options.clean),
+        emitPackageFiles: Boolean(options.packageFiles),
         extraProps: String(options.extraProps) as ExtraPropsMode,
         formatOverrides: parseFormatOverrideArguments(
           Array.isArray(options.format)
@@ -61,6 +84,7 @@ program
         generateClient: Boolean(options.client),
         generateRoutes: Boolean(options.routes),
         generateServer: Boolean(options.server),
+        importExtension: importExtensionValue,
         input: String(options.input),
         output: String(options.output),
         profile: Boolean(options.profile),

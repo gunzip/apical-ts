@@ -1,3 +1,8 @@
+import {
+  formatImportSpecifier,
+  type ImportExtension,
+} from "../shared/types.js";
+
 /**
  * Type definitions for structured import management
  */
@@ -32,6 +37,12 @@ export class ImportManager {
   private importKeys = new Set<string>();
   private imports: ImportInfo[] = [];
 
+  constructor(private readonly importExtension: ImportExtension = "ts") {}
+
+  getImportExtension(): ImportExtension {
+    return this.importExtension;
+  }
+
   /**
    * Adds import for clientRoute from route file
    */
@@ -39,7 +50,10 @@ export class ImportManager {
     const clientRouteName = `${operationId}ClientRoute`;
     const importInfo: ImportInfo = {
       alias: clientRouteName,
-      filePath: `../routes/${operationId}.ts`,
+      filePath: formatImportSpecifier(
+        `../routes/${operationId}`,
+        this.importExtension,
+      ),
       name: "clientRoute",
       operationId,
       type: "route",
@@ -54,7 +68,7 @@ export class ImportManager {
 
   addConfigImport(configName: string): void {
     const importInfo: ImportInfo = {
-      filePath: "./runtime.ts",
+      filePath: formatImportSpecifier("./runtime", this.importExtension),
       name: configName,
       type: "config",
     };
@@ -72,7 +86,10 @@ export class ImportManager {
    */
   addParsedParamsTypeImport(operationId: string, typeName: string): void {
     const importInfo: ImportInfo = {
-      filePath: `../schemas/${operationId}Parameters.ts`,
+      filePath: formatImportSpecifier(
+        `../schemas/${operationId}Parameters`,
+        this.importExtension,
+      ),
       name: typeName,
       operationId,
       type: "parsed-params-type",
@@ -156,7 +173,10 @@ export class ImportManager {
     // Import request map (both type and value with same name, distinguished by TypeScript automatically)
     const requestMapImportInfo: ImportInfo = {
       alias: requestMapAlias,
-      filePath: `../routes/${operationId}.ts`,
+      filePath: formatImportSpecifier(
+        `../routes/${operationId}`,
+        this.importExtension,
+      ),
       name: requestMapName,
       operationId,
       requestMapName,
@@ -172,7 +192,10 @@ export class ImportManager {
     // Import response map (both type and value with same name)
     const responseMapImportInfo: ImportInfo = {
       alias: responseMapAlias,
-      filePath: `../routes/${operationId}.ts`,
+      filePath: formatImportSpecifier(
+        `../routes/${operationId}`,
+        this.importExtension,
+      ),
       name: responseMapName,
       operationId,
       responseMapName,
@@ -191,7 +214,10 @@ export class ImportManager {
 
     const responseHeadersMapImportInfo: ImportInfo = {
       alias: responseHeadersMapAlias,
-      filePath: `../routes/${operationId}.ts`,
+      filePath: formatImportSpecifier(
+        `../routes/${operationId}`,
+        this.importExtension,
+      ),
       name: responseHeadersMapName,
       operationId,
       responseHeadersMapName,
@@ -209,7 +235,10 @@ export class ImportManager {
 
   addSchemaImport(schemaName: string): void {
     const importInfo: ImportInfo = {
-      filePath: `../schemas/${schemaName}.ts`,
+      filePath: formatImportSpecifier(
+        `../schemas/${schemaName}`,
+        this.importExtension,
+      ),
       name: schemaName,
       type: "schema",
     };

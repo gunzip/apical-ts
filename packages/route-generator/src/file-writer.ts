@@ -1,11 +1,15 @@
 import type { ImportManager } from "@apical-ts/core-utils";
-import type { OperationMetadata } from "@apical-ts/core-utils/shared";
+import type {
+  ImportExtension,
+  OperationMetadata,
+} from "@apical-ts/core-utils/shared";
 
 import { writeTypeScriptFile } from "@apical-ts/core-utils";
 import {
   categorizeImportsFromManager,
   createOutputSubdirectory,
   createSanitizedOperationEntries,
+  formatImportSpecifier,
   writeOperationModuleFile,
 } from "@apical-ts/core-utils/shared";
 import path from "path";
@@ -33,9 +37,12 @@ export async function writeRouteMetadataFile(
 
   /* Build schema imports from regular imports */
   const schemaImports: string[] = [];
+  const importExtension = importManager.getImportExtension();
 
   categorized.regularImports.forEach((imp) => {
-    schemaImports.push(`import { ${imp} } from "../schemas/${imp}.ts";`);
+    schemaImports.push(
+      `import { ${imp} } from "${formatImportSpecifier(`../schemas/${imp}`, importExtension)}";`,
+    );
   });
 
   /* Build imports section */
@@ -56,20 +63,30 @@ export async function writeRouteMetadataFile(
 export async function writeRoutesIndexFile(
   operations: OperationMetadata[],
   routesDir: string,
+  options: { importExtension?: ImportExtension } = {},
 ): Promise<void> {
+  const { importExtension = "ts" } = options;
   const sanitizedOperations = createSanitizedOperationEntries(operations);
 
   /* Generate individual route exports for both client and server */
   const exports = sanitizedOperations
     .map(({ sanitizedOperationId }) => {
-      return `export { clientRoute as ${sanitizedOperationId}ClientRoute, serverRoute as ${sanitizedOperationId}ServerRoute } from "./${sanitizedOperationId}.ts";`;
+      const specifier = formatImportSpecifier(
+        `./${sanitizedOperationId}`,
+        importExtension,
+      );
+      return `export { clientRoute as ${sanitizedOperationId}ClientRoute, serverRoute as ${sanitizedOperationId}ServerRoute } from "${specifier}";`;
     })
     .join("\n");
 
   /* Generate route imports for routes object - use server routes by default */
   const routeImports = sanitizedOperations
     .map(({ sanitizedOperationId }) => {
-      return `import { serverRoute as ${sanitizedOperationId}Route } from "./${sanitizedOperationId}.ts";`;
+      const specifier = formatImportSpecifier(
+        `./${sanitizedOperationId}`,
+        importExtension,
+      );
+      return `import { serverRoute as ${sanitizedOperationId}Route } from "${specifier}";`;
     })
     .join("\n");
 

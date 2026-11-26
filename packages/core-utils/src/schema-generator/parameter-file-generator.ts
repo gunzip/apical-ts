@@ -2,6 +2,10 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import type { OperationParameterMetadata } from "../core-generator/parameter-extractor.js";
+import {
+  formatImportSpecifier,
+  type ImportExtension,
+} from "../shared/types.js";
 import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 
 import {
@@ -32,6 +36,7 @@ async function generateParameterSchemaFile(
     /* Use client defaults for parameter schema generation */
     coercePrimitives?: boolean;
     formatOverrides?: StringFormatOverrideRegistry;
+    importExtension?: ImportExtension;
     lowercaseHeaderKeys?: boolean;
   } = {},
 ): Promise<ParameterSchemaFileResult> {
@@ -140,8 +145,10 @@ async function generateParameterSchemaFile(
     `import type { StandardSchemaV1 } from "@standard-schema/spec";`,
     `import * as z from "zod";`,
   ];
+  const importExtension = options.importExtension ?? "ts";
   const helpersImport = buildGeneratedSchemaHelpersImport(
     new Set([...result.helpers, ...serverResult.helpers]),
+    importExtension,
   ).trimEnd();
   if (helpersImport) {
     imports.push(helpersImport);
@@ -160,7 +167,9 @@ async function generateParameterSchemaFile(
       )
       .sort();
     for (const typeImport of typeImportsList) {
-      imports.push(`import { ${typeImport} } from "./${typeImport}.ts";`);
+      imports.push(
+        `import { ${typeImport} } from "${formatImportSpecifier(`./${typeImport}`, importExtension)}";`,
+      );
     }
   }
 
@@ -169,6 +178,7 @@ async function generateParameterSchemaFile(
     new Set([...result.typeImports, ...serverResult.typeImports]),
     options.formatOverrides,
     filePath,
+    importExtension,
   );
   if (externalImportLines.length > 0) {
     imports.push(...externalImportLines);
@@ -253,6 +263,7 @@ export async function writeParameterSchemaFile(
   options: {
     coercePrimitives?: boolean;
     formatOverrides?: StringFormatOverrideRegistry;
+    importExtension?: ImportExtension;
     lowercaseHeaderKeys?: boolean;
   } = {},
 ): Promise<void> {

@@ -1,4 +1,8 @@
 import { sanitizeIdentifier } from "@apical-ts/core-utils";
+import {
+  formatImportSpecifier,
+  type ImportExtension,
+} from "@apical-ts/core-utils/shared";
 
 /**
  * Template parameters for server operation wrapper generation
@@ -10,6 +14,7 @@ interface ServerOperationTemplateParams {
   hasHeaders: boolean;
   hasPath: boolean;
   hasQuery: boolean;
+  importExtension?: ImportExtension;
   /** HTTP method in lowercase (e.g., "get", "post") */
   method: string;
   operationId: string;
@@ -32,6 +37,7 @@ export function renderServerOperationWrapper(
     hasHeaders,
     hasPath,
     hasQuery,
+    importExtension = "ts",
     operationId,
     requestMapTypeName,
     responseMapTypeName,
@@ -40,24 +46,36 @@ export function renderServerOperationWrapper(
   const sanitizedId = sanitizeIdentifier(operationId);
   // Must stay aligned with the route generator's collision-avoidance naming.
   const routeResponseType = `${sanitizedId}RouteResponse`;
+  const routeSpecifier = formatImportSpecifier(
+    `../routes/${sanitizedId}`,
+    importExtension,
+  );
+  const paramsSchemaSpecifier = formatImportSpecifier(
+    `../schemas/${sanitizedId}Parameters`,
+    importExtension,
+  );
+  const standardSchemaSpecifier = formatImportSpecifier(
+    "../standard-schema",
+    importExtension,
+  );
 
   /* Import request/response maps and response type from route metadata */
   const responseTypeImport = responseMapTypeName
-    ? `import type { ${routeResponseType} } from "../routes/${sanitizedId}.ts";`
+    ? `import type { ${routeResponseType} } from "${routeSpecifier}";`
     : "";
   /* Import runtime request/response map values; use typeof for types */
   const requestMapImport = requestMapTypeName
-    ? `import { ${requestMapTypeName} } from "../routes/${sanitizedId}.ts";`
+    ? `import { ${requestMapTypeName} } from "${routeSpecifier}";`
     : "";
   const responseMapImport = responseMapTypeName
-    ? `import { ${responseMapTypeName} } from "../routes/${sanitizedId}.ts";`
+    ? `import { ${responseMapTypeName} } from "${routeSpecifier}";`
     : "";
 
   /* Import pre-computed server parsed params type to avoid expensive z.infer inference */
   const hasAnyParams = hasQuery || hasPath || hasHeaders;
   const serverParsedParamsTypeName = `${sanitizedId}ServerParsedParamsType`;
   const parsedParamsTypeImport = hasAnyParams
-    ? `import type { ${serverParsedParamsTypeName} } from "../schemas/${sanitizedId}Parameters.ts";`
+    ? `import type { ${serverParsedParamsTypeName} } from "${paramsSchemaSpecifier}";`
     : "";
 
   const validationLogic = renderValidationLogic(
@@ -120,8 +138,8 @@ ${validationLogic}
   /* Combine all parts */
   const parts = [
     `import type { StandardSchemaV1 } from "@standard-schema/spec";`,
-    `import { createStandardSchemaValidationError, type StandardSchemaValidationError, validateStandardSchema } from "../standard-schema.ts";`,
-    `import { serverRoute as ${sanitizedId}RouteMetadata } from "../routes/${sanitizedId}.ts";`,
+    `import { createStandardSchemaValidationError, type StandardSchemaValidationError, validateStandardSchema } from "${standardSchemaSpecifier}";`,
+    `import { serverRoute as ${sanitizedId}RouteMetadata } from "${routeSpecifier}";`,
     responseTypeImport,
     requestMapImport,
     responseMapImport,

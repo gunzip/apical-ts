@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import type {
   ExtraPropsMode,
+  ImportExtension,
   StringFormatOverride,
 } from "@apical-ts/core-utils";
 import type { OpenAPIObject } from "openapi3-ts/oas31";
@@ -25,6 +26,7 @@ import { generateRoutes as generateRouteMetadata } from "@apical-ts/route-genera
 import { generateServerOperations } from "@apical-ts/server-generator";
 import $RefParser from "@apidevtools/json-schema-ref-parser";
 import { promises as fs } from "fs";
+import path from "path";
 
 import {
   isRawJsonSchemaDocument,
@@ -53,11 +55,19 @@ interface NormalizedParsedInputDocument {
  * ```
  */
 export interface GenerationOptions {
+  /** Remove previously generated artifacts in the output directory before generating */
+  clean?: boolean;
   /**
    * The maximum number of parallel tasks to run during generation.
    * @default 10
    */
   concurrency?: number;
+  /**
+   * Generate standalone package.json and tsconfig.json alongside standard-schema.ts.
+   * Set to false when embedding generated output inside an existing project.
+   * @default true
+   */
+  emitPackageFiles?: boolean;
   /**
    * Control how additional properties are handled in object schemas
    * - strip: standard behavior, validates but strips unknown properties (default)
@@ -70,6 +80,8 @@ export interface GenerationOptions {
   generateClient: boolean;
   generateRoutes?: boolean;
   generateServer?: boolean;
+  /** Extension used in generated relative import specifiers: "ts", "js", or "none" */
+  importExtension?: ImportExtension;
   input: string;
   output: string;
   /** Enable timing breakdown of major phases */
@@ -101,12 +113,15 @@ export interface GenerationOptions {
  */
 export async function generate(options: GenerationOptions): Promise<void> {
   const {
+    clean = false,
     concurrency = DEFAULT_CONCURRENCY,
+    emitPackageFiles = true,
     extraProps = "strip",
     formatOverrides = [],
     generateClient: genClient,
     generateRoutes: genRoutes = false,
     generateServer: genServer = false,
+    importExtension = "ts",
     input,
     output,
     profile = false,
@@ -128,6 +143,12 @@ export async function generate(options: GenerationOptions): Promise<void> {
   );
   profiler?.end("parse+preprocess");
 
+  if (clean) {
+    profiler?.start("clean");
+    await cleanGeneratedOutput(output, emitPackageFiles);
+    profiler?.end("clean");
+  }
+
   profiler?.start("schemas:all");
   await generateSchemas(
     openApiDoc,
@@ -137,6 +158,7 @@ export async function generate(options: GenerationOptions): Promise<void> {
     extraProps,
     profiler,
     formatOverrides,
+    importExtension,
   );
   profiler?.end("schemas:all");
 
@@ -148,13 +170,39 @@ export async function generate(options: GenerationOptions): Promise<void> {
     genRoutes,
     genServer,
     profiler,
+    importExtension,
   );
 
   profiler?.start("package-json");
-  await createPackageFiles(output, formatOverrides);
+  await createPackageFiles(output, formatOverrides, { emitPackageFiles });
   profiler?.end("package-json");
 
   profiler?.printSummary?.("Generation timing (ms)");
+}
+
+/*
+ * Removes only Craft-managed output directories and root support files so
+ * host-project files in the output directory remain untouched.
+ */
+async function cleanGeneratedOutput(
+  output: string,
+  emitPackageFiles: boolean,
+): Promise<void> {
+  const managedDirectories = ["schemas", "routes", "client", "server"];
+  const managedFiles = ["standard-schema.ts", "typecheck.mjs"];
+
+  if (emitPackageFiles) {
+    managedFiles.push("package.json", "tsconfig.json");
+  }
+
+  await Promise.all([
+    ...managedDirectories.map((dir) =>
+      fs.rm(path.join(output, dir), { force: true, recursive: true }),
+    ),
+    ...managedFiles.map((file) =>
+      fs.rm(path.join(output, file), { force: true }),
+    ),
+  ]);
 }
 
 /**
@@ -168,6 +216,7 @@ async function generateAllOperations(
   generateRoutes: boolean,
   generateServer: boolean,
   profiler?: Profiler,
+  importExtension: ImportExtension = "ts",
 ): Promise<void> {
   if (!generateRoutes && !generateClient && !generateServer) {
     return;
@@ -181,12 +230,9 @@ async function generateAllOperations(
   /* Generate routes if explicitly requested or if client/server is enabled */
   profiler?.start("routes");
   operationPromises.push(
-    generateRouteMetadata(
-      openApiDoc,
-      output,
-      concurrency,
-      operationMetadata,
-    ).finally(() => {
+    generateRouteMetadata(openApiDoc, output, concurrency, operationMetadata, {
+      importExtension,
+    }).finally(() => {
       profiler?.end("routes");
     }),
   );
@@ -194,12 +240,9 @@ async function generateAllOperations(
   if (generateClient) {
     profiler?.start("client-operations");
     operationPromises.push(
-      generateOperations(
-        openApiDoc,
-        output,
-        concurrency,
-        operationMetadata,
-      ).finally(() => {
+      generateOperations(openApiDoc, output, concurrency, operationMetadata, {
+        importExtension,
+      }).finally(() => {
         profiler?.end("client-operations");
       }),
     );
@@ -208,7 +251,9 @@ async function generateAllOperations(
   if (generateServer) {
     profiler?.start("server-operations");
     operationPromises.push(
-      generateServerOperations(openApiDoc, output, concurrency)
+      generateServerOperations(openApiDoc, output, concurrency, {
+        importExtension,
+      })
         .then(() => {
           console.log("✅ Server operations generated successfully");
         })

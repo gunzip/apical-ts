@@ -1,12 +1,19 @@
 import type { SchemaObject } from "openapi3-ts/oas31";
 import path from "node:path";
 
-import type { ExtraPropsMode, SchemaContext } from "../shared/types.js";
+import type {
+  ExtraPropsMode,
+  ImportExtension,
+  SchemaContext,
+} from "../shared/types.js";
 import type { StringFormatOverrideRegistry } from "./format-overrides.js";
 import type { RecursiveContext } from "./recursive-handlers.js";
 import type { GeneratedSchemaHelper, ResolvedSchemas } from "./types.js";
 
-import { analyzeReadWriteProperties } from "../shared/types.js";
+import {
+  analyzeReadWriteProperties,
+  formatImportSpecifier,
+} from "../shared/types.js";
 import {
   findStringFormatOverrideByReferenceName,
   renderStringFormatOverrideImports,
@@ -25,6 +32,7 @@ interface RecursiveSchemaFileOptions {
   description?: string;
   extraProps?: ExtraPropsMode;
   formatOverrides?: StringFormatOverrideRegistry;
+  importExtension?: ImportExtension;
   name: string;
   originalSchemaName: string;
   recursiveContext: RecursiveContext;
@@ -50,6 +58,7 @@ interface SchemaFileResult {
 interface SchemaGenerationOptions {
   extraProps?: ExtraPropsMode;
   formatOverrides?: StringFormatOverrideRegistry;
+  importExtension?: ImportExtension;
   originalSchemaName?: string;
   recursiveContext?: RecursiveContext;
   resolvedSchemas?: ResolvedSchemas;
@@ -75,6 +84,7 @@ export async function generateRecursiveSchemaFile(
     description,
     extraProps,
     formatOverrides,
+    importExtension = "ts",
     name,
     originalSchemaName,
     recursiveContext,
@@ -136,6 +146,7 @@ export async function generateRecursiveSchemaFile(
     name,
     path.join(schemaDirectory, `${name}.ts`),
     formatOverrides,
+    importExtension,
   );
 
   const content = assembleFileContent(
@@ -144,6 +155,9 @@ export async function generateRecursiveSchemaFile(
     importsSection,
     schemaCode,
     objectCodeResult.helpers,
+    undefined,
+    undefined,
+    importExtension,
   );
 
   return {
@@ -191,6 +205,7 @@ export async function generateSchemaFile(
 ): Promise<SchemaFileResult> {
   const {
     extraProps,
+    importExtension = "ts",
     recursiveContext,
     resolvedSchemas,
     schemaContext,
@@ -215,6 +230,7 @@ export async function generateSchemaFile(
     name,
     path.join(schemaDirectory || ".", `${name}.ts`),
     options.formatOverrides,
+    importExtension,
   );
   const recursiveTypeAlias = renderRecursiveTypeAlias(schema, name);
 
@@ -226,6 +242,7 @@ export async function generateSchemaFile(
     schemaResult.helpers,
     schemaResult.extensibleEnumValues,
     recursiveTypeAlias,
+    importExtension,
   );
 
   /* Generate complete variant schema files if this is a base schema (no schemaContext) */
@@ -235,6 +252,7 @@ export async function generateSchemaFile(
     variantFiles = await generateVariantSchemaFiles(name, schema, variants, {
       extraProps,
       formatOverrides: options.formatOverrides,
+      importExtension,
       recursiveContext,
       resolvedSchemas,
       schemaDirectory,
@@ -273,8 +291,12 @@ function assembleFileContent(
   helpers: Set<GeneratedSchemaHelper>,
   extensibleEnumValues?: unknown[],
   recursiveTypeAlias?: string,
+  importExtension: ImportExtension = "ts",
 ): string {
-  const helpersImport = buildGeneratedSchemaHelpersImport(helpers);
+  const helpersImport = buildGeneratedSchemaHelpersImport(
+    helpers,
+    importExtension,
+  );
 
   if (extensibleEnumValues) {
     const enumValues = extensibleEnumValues
@@ -311,6 +333,7 @@ function generateImportsSection(
   currentSchemaName: string,
   filePath: string,
   formatOverrides?: StringFormatOverrideRegistry,
+  importExtension: ImportExtension = "ts",
 ): string {
   const localImportStatements = Array.from(imports)
     .filter(
@@ -319,12 +342,16 @@ function generateImportsSection(
         !findStringFormatOverrideByReferenceName(importName, formatOverrides),
     )
     .sort()
-    .map((importName) => `import { ${importName} } from "./${importName}.ts";`)
+    .map(
+      (importName) =>
+        `import { ${importName} } from "${formatImportSpecifier(`./${importName}`, importExtension)}";`,
+    )
     .join("\n");
   const externalImportStatements = renderStringFormatOverrideImports(
     imports,
     formatOverrides,
     filePath,
+    importExtension,
   ).join("\n");
   const importStatements = [externalImportStatements, localImportStatements]
     .filter(Boolean)

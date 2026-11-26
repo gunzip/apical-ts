@@ -9,6 +9,7 @@ import { ImportManager, sanitizeIdentifier } from "@apical-ts/core-utils";
 import {
   extractAuthHeaders,
   extractOperationGenerationMetadata,
+  type ImportExtension,
   type OperationGenerationMetadata,
   type ParameterGroups,
   type SecurityHeader,
@@ -69,8 +70,10 @@ export function extractOperationMetadata(
 export function generateOperationFunctionFromMetadata(
   sharedMetadata: OperationGenerationMetadata,
   doc: OpenAPIObject,
+  options: { importExtension?: ImportExtension } = {},
 ): GeneratedFunction {
-  const metadata = createOperationMetadata(sharedMetadata, doc);
+  const { importExtension = "ts" } = options;
+  const metadata = createOperationMetadata(sharedMetadata, doc, options);
 
   /* Render using template functions */
   const parameterDeclaration = buildParameterDeclaration({
@@ -104,6 +107,7 @@ export function generateOperationFunctionFromMetadata(
     hasQueryParams: metadata.parameterGroups.queryParams.length > 0,
     hasRequestMap: metadata.bodyInfo.shouldGenerateRequestMap,
     hasResponseMap: metadata.bodyInfo.shouldGenerateResponseMap,
+    importExtension,
     importManager: metadata.importManager,
     isBodyOptional:
       !metadata.hasBody || !metadata.bodyInfo.bodyTypeInfo?.isRequired,
@@ -144,6 +148,7 @@ export function generateOperationFunctionFromMetadata(
 function createOperationMetadata(
   sharedMetadata: OperationGenerationMetadata,
   doc: OpenAPIObject,
+  options: { importExtension?: ImportExtension } = {},
 ): OperationMetadata {
   const {
     bodyInfo: sharedBodyInfo,
@@ -160,7 +165,7 @@ function createOperationMetadata(
   } = sharedMetadata;
 
   const summary = operation.summary ? `/** ${operation.summary} */\n` : "";
-  const importManager = new ImportManager();
+  const importManager = new ImportManager(options.importExtension ?? "ts");
   const responseTypeImports = new Set<string>();
 
   const bodyInfo = collectBodyAndContentTypes({

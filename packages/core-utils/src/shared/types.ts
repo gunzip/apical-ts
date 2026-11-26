@@ -20,6 +20,22 @@ export interface ContentTypeMapping {
  */
 export type ExtraPropsMode = "loose" | "strict" | "strip";
 
+export type ImportExtension = "js" | "none" | "ts";
+
+export function isImportExtension(value: string): value is ImportExtension {
+  return value === "ts" || value === "js" || value === "none";
+}
+
+export function formatImportSpecifier(
+  basePath: string,
+  importExtension: ImportExtension = "ts",
+): string {
+  if (importExtension === "none") {
+    return basePath;
+  }
+  return `${basePath}.${importExtension}`;
+}
+
 /**
  * Result of analyzing a schema for readOnly/writeOnly properties
  */

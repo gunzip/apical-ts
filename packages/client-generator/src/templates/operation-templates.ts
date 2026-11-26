@@ -3,6 +3,10 @@ import type { extractParameterGroups } from "@apical-ts/core-utils/shared";
 import type { getOperationSecuritySchemes } from "@apical-ts/core-utils/shared";
 
 import { sanitizeIdentifier } from "@apical-ts/core-utils";
+import {
+  formatImportSpecifier,
+  type ImportExtension,
+} from "@apical-ts/core-utils/shared";
 
 import type { resolveRequestBodyType } from "../request-body.js";
 import type {
@@ -151,6 +155,7 @@ export function buildTypeAliasesFromRoute(config: {
   hasQueryParams: boolean;
   hasRequestMap: boolean;
   hasResponseMap: boolean;
+  importExtension?: ImportExtension;
   importManager: ImportManager;
   isBodyOptional: boolean;
   isHeadersOptional: boolean;
@@ -246,12 +251,16 @@ export function buildTypeAliasesFromRoute(config: {
   }
 
   /* Generate DeserializerMap type */
+  const runtimeImportSpecifier = formatImportSpecifier(
+    "./runtime",
+    config.importExtension,
+  );
   if (config.shouldGenerateResponseMap) {
     typeAliases += `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = Partial<Record<{
   [Status in keyof ${config.responseMapTypeName}]: keyof ${config.responseMapTypeName}[Status]
-}[keyof ${config.responseMapTypeName}], import('./runtime.ts').Deserializer>>;\n\n`;
+}[keyof ${config.responseMapTypeName}], import('${runtimeImportSpecifier}').Deserializer>>;\n\n`;
   } else {
-    typeAliases += `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = import('./runtime.ts').DeserializerMap;\n\n`;
+    typeAliases += `export type ${config.responseMapTypeName.replace(/Map$/u, "DeserializerMap")} = import('${runtimeImportSpecifier}').DeserializerMap;\n\n`;
   }
 
   return typeAliases;

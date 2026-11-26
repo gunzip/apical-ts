@@ -9,8 +9,9 @@ import { ImportManager } from "@apical-ts/core-utils";
 import {
   extractOperationGenerationMetadata,
   generateResponseUnion,
-  type ResponseHeaderMapResult,
+  type ImportExtension,
   type OperationGenerationMetadata,
+  type ResponseHeaderMapResult,
 } from "@apical-ts/core-utils/shared";
 
 import {
@@ -141,6 +142,7 @@ export function generateRouteMetadata(
   operation: OperationObject,
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
   doc: OpenAPIObject,
+  options: { importExtension?: ImportExtension } = {},
 ): GeneratedRouteMetadata {
   const metadata = extractOperationGenerationMetadata({
     doc,
@@ -150,15 +152,17 @@ export function generateRouteMetadata(
     pathLevelParameters,
   });
 
-  return generateRouteMetadataFromMetadata(metadata, doc);
+  return generateRouteMetadataFromMetadata(metadata, doc, options);
 }
 
 export function generateRouteMetadataFromMetadata(
   metadata: OperationGenerationMetadata,
   doc: OpenAPIObject,
+  options: { importExtension?: ImportExtension } = {},
 ): GeneratedRouteMetadata {
+  const { importExtension = "ts" } = options;
   const routeMetadata = extractCompleteRouteMetadata(metadata);
-  const importManager = new ImportManager();
+  const importManager = new ImportManager(importExtension);
 
   const requestMapCode = buildRequestMap(routeMetadata, importManager);
   const responseMapCode = buildResponseMap(routeMetadata, importManager, doc);
@@ -171,6 +175,7 @@ export function generateRouteMetadataFromMetadata(
     hasHeaders: routeMetadata.parameterInfo.hasHeaders,
     hasPath: routeMetadata.parameterInfo.hasPath,
     hasQuery: routeMetadata.parameterInfo.hasQuery,
+    importExtension,
     isQueryOptional: routeMetadata.parameterInfo.isQueryOptional,
     method: metadata.method.toLowerCase(),
     operationId: routeMetadata.operationId,

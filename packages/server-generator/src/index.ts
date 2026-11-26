@@ -2,6 +2,7 @@ import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import {
   extractAllOperations,
+  type ImportExtension,
   type OperationMetadata,
 } from "@apical-ts/core-utils/shared";
 import pLimit from "p-limit";
@@ -20,6 +21,7 @@ export async function generateServerOperations(
   doc: OpenAPIObject,
   outputDir: string,
   concurrency: number,
+  options: { importExtension?: ImportExtension } = {},
 ): Promise<void> {
   const serverOperationsDir = await createServerOperationsDirectory(outputDir);
 
@@ -27,9 +29,10 @@ export async function generateServerOperations(
     doc,
     serverOperationsDir,
     concurrency,
+    options,
   );
 
-  await writeServerIndexFile(operations, serverOperationsDir);
+  await writeServerIndexFile(operations, serverOperationsDir, options);
 }
 
 /**
@@ -39,6 +42,7 @@ async function processServerOperations(
   doc: OpenAPIObject,
   serverOperationsDir: string,
   concurrency: number,
+  options: { importExtension?: ImportExtension } = {},
 ): Promise<OperationMetadata[]> {
   const operations = extractAllOperations(doc);
   const limit = pLimit(concurrency);
@@ -58,6 +62,7 @@ async function processServerOperations(
         operation,
         pathLevelParameters,
         doc,
+        options,
       );
 
       await writeServerOperationFile(

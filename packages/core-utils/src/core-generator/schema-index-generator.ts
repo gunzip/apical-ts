@@ -2,6 +2,10 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import type { OperationParameterMetadata } from "../core-generator/parameter-extractor.js";
+import {
+  formatImportSpecifier,
+  type ImportExtension,
+} from "../shared/types.js";
 
 import { sanitizeIdentifier } from "../schema-generator/utils.js";
 
@@ -45,6 +49,7 @@ export function buildParameterSchemaIndexEntry(
 
 export function buildSchemaIndexContent(
   entries: readonly SchemaIndexEntry[],
+  importExtension: ImportExtension = "ts",
 ): string {
   const imports: string[] = [];
   const exports = new Set<string>();
@@ -52,7 +57,7 @@ export function buildSchemaIndexContent(
   const normalizedEntries = normalizeSchemaIndexEntries(entries);
 
   for (const entry of normalizedEntries) {
-    imports.push(...buildImportLines(entry));
+    imports.push(...buildImportLines(entry, importExtension));
 
     for (const exportName of entry.exportNames) {
       exports.add(exportName);
@@ -74,8 +79,9 @@ export function buildSchemaIndexContent(
 export async function generateSchemaIndex(
   schemasDir: string,
   entries: readonly SchemaIndexEntry[],
+  importExtension: ImportExtension = "ts",
 ): Promise<void> {
-  const content = buildSchemaIndexContent(entries);
+  const content = buildSchemaIndexContent(entries, importExtension);
   const indexPath = path.join(schemasDir, "index.ts");
   await fs.writeFile(indexPath, content, "utf-8");
 }
@@ -107,19 +113,26 @@ function normalizeSchemaIndexEntries(
     .sort((left, right) => left.fileName.localeCompare(right.fileName));
 }
 
-function buildImportLines(entry: SchemaIndexEntry): string[] {
+function buildImportLines(
+  entry: SchemaIndexEntry,
+  importExtension: ImportExtension = "ts",
+): string[] {
   const fileBaseName = path.basename(entry.fileName, ".ts");
+  const importSpecifier = formatImportSpecifier(
+    `./${fileBaseName}`,
+    importExtension,
+  );
 
   if (
     entry.exportNames.length === 1 &&
     !entry.fileName.includes("Parameters.ts")
   ) {
-    return [`import { ${entry.exportNames[0]} } from "./${fileBaseName}.ts";`];
+    return [`import { ${entry.exportNames[0]} } from "${importSpecifier}";`];
   }
 
   return [
     "import {",
     ...entry.exportNames.map((exportName) => `  ${exportName},`),
-    `} from "./${fileBaseName}.ts";`,
+    `} from "${importSpecifier}";`,
   ];
 }

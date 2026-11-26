@@ -1,5 +1,7 @@
 /* Generates the configuration file content and types */
 
+import type { ImportExtension } from "@apical-ts/core-utils/shared";
+
 import type {
   AuthConfiguration,
   ConfigStructure,
@@ -68,11 +70,12 @@ export function determineConfigStructure(
 export function generateConfigTypes(
   authHeaders: string[],
   serverUrls: string[] = [],
+  options: { importExtension?: ImportExtension } = {},
 ): string {
   const config = determineConfigStructure(authHeaders, serverUrls);
 
   const parts = [
-    renderConfigImports(),
+    renderConfigImports(options.importExtension),
     renderConfigInterface(config),
     "",
     renderConfigImplementation(config),

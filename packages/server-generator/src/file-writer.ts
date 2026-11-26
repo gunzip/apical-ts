@@ -1,9 +1,13 @@
-import type { OperationMetadata } from "@apical-ts/core-utils/shared";
+import type {
+  ImportExtension,
+  OperationMetadata,
+} from "@apical-ts/core-utils/shared";
 
 import { writeTypeScriptFile } from "@apical-ts/core-utils";
 import {
   createOutputSubdirectory,
   createSanitizedOperationEntries,
+  formatImportSpecifier,
   writeOperationModuleFile,
 } from "@apical-ts/core-utils/shared";
 import path from "path";
@@ -23,18 +27,28 @@ export async function createServerOperationsDirectory(
 export async function writeServerIndexFile(
   operations: OperationMetadata[],
   serverOperationsDir: string,
+  options: { importExtension?: ImportExtension } = {},
 ): Promise<void> {
+  const { importExtension = "ts" } = options;
   const sanitizedOperations = createSanitizedOperationEntries(operations);
   const exports = sanitizedOperations
     .map(({ sanitizedOperationId }) => {
-      return `export { ${sanitizedOperationId}Wrapper } from "./${sanitizedOperationId}.ts";`;
+      const specifier = formatImportSpecifier(
+        `./${sanitizedOperationId}`,
+        importExtension,
+      );
+      return `export { ${sanitizedOperationId}Wrapper } from "${specifier}";`;
     })
     .join("\n");
 
   /* Generate routes object with all route functions properly aliased */
   const routeImports = sanitizedOperations
     .map(({ sanitizedOperationId }) => {
-      return `import { route as ${sanitizedOperationId}Route } from "./${sanitizedOperationId}.ts";`;
+      const specifier = formatImportSpecifier(
+        `./${sanitizedOperationId}`,
+        importExtension,
+      );
+      return `import { route as ${sanitizedOperationId}Route } from "${specifier}";`;
     })
     .join("\n");
 
@@ -55,7 +69,11 @@ ${exports}
 /* Re-export all handlers */
   ${sanitizedOperations
     .map(({ sanitizedOperationId }) => {
-      return `export type { ${sanitizedOperationId}Handler } from "./${sanitizedOperationId}.ts";`;
+      const specifier = formatImportSpecifier(
+        `./${sanitizedOperationId}`,
+        importExtension,
+      );
+      return `export type { ${sanitizedOperationId}Handler } from "${specifier}";`;
     })
     .join("\n")}
 

@@ -106,4 +106,20 @@ describe("package generator", () => {
       await rm(outputDir, { recursive: true, force: true });
     }
   });
+
+  it("writes only standard-schema.ts when emitPackageFiles is false", async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), "core-utils-package-"));
+
+    try {
+      await createPackageFiles(outputDir, [], { emitPackageFiles: false });
+
+      await expect(
+        access(join(outputDir, "standard-schema.ts")),
+      ).resolves.toBeUndefined();
+      await expect(access(join(outputDir, "package.json"))).rejects.toThrow();
+      await expect(access(join(outputDir, "tsconfig.json"))).rejects.toThrow();
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
+  });
 });

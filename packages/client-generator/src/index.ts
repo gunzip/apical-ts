@@ -1,4 +1,5 @@
 import type {
+  ImportExtension,
   OperationGenerationMetadata,
   OperationMetadata,
 } from "@apical-ts/core-utils/shared";
@@ -25,6 +26,7 @@ export async function generateOperations(
   outputDir: string,
   concurrency: number,
   operationMetadata = extractAllOperationGenerationMetadata(doc),
+  options: { importExtension?: ImportExtension } = {},
 ): Promise<void> {
   const operationsDir = await createOperationsDirectory(outputDir);
 
@@ -38,13 +40,14 @@ export async function generateOperations(
     operationsDir,
     concurrency,
     operationMetadata,
+    options,
   );
 
   // Write configuration file
-  await writeConfigFile(authHeaders, serverUrls, operationsDir);
+  await writeConfigFile(authHeaders, serverUrls, operationsDir, options);
 
   // Write index file that exports all operations
-  await writeIndexFile(operations, operationsDir);
+  await writeIndexFile(operations, operationsDir, options);
 }
 
 /**
@@ -55,6 +58,7 @@ async function processOperations(
   operationsDir: string,
   concurrency: number,
   operationMetadata: OperationGenerationMetadata[],
+  options: { importExtension?: ImportExtension } = {},
 ): Promise<OperationMetadata[]> {
   const limit = pLimit(concurrency);
   const operationPromises: Promise<void>[] = [];
@@ -62,7 +66,7 @@ async function processOperations(
   for (const metadata of operationMetadata) {
     const promise = limit(async () => {
       const { functionCode, importManager } =
-        generateOperationFunctionFromMetadata(metadata, doc);
+        generateOperationFunctionFromMetadata(metadata, doc, options);
 
       await writeOperationFile(
         metadata.operationId,

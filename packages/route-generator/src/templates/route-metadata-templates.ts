@@ -1,4 +1,8 @@
 import { sanitizeIdentifier } from "@apical-ts/core-utils";
+import {
+  formatImportSpecifier,
+  type ImportExtension,
+} from "@apical-ts/core-utils/shared";
 
 /**
  * Template parameters for route metadata generation
@@ -9,6 +13,7 @@ export interface RouteMetadataTemplateParams {
   hasPath: boolean;
   /** Flags indicating which parameter types have actual parameters */
   hasQuery: boolean;
+  importExtension?: ImportExtension;
   isQueryOptional: boolean;
   /** HTTP method in lowercase (e.g., "get", "post") */
   method: string;
@@ -34,6 +39,7 @@ export function renderRouteMetadata(
     hasHeaders,
     hasPath,
     hasQuery,
+    importExtension = "ts",
     isQueryOptional,
     method,
     operationId,
@@ -58,7 +64,7 @@ export function renderRouteMetadata(
     ? `import {
   ${parsedParamsName},
   ${serverParsedParamsName},
-} from "../schemas/${sanitizedId}Parameters.ts";`
+} from "${formatImportSpecifier(`../schemas/${sanitizedId}Parameters`, importExtension)}";`
     : "";
 
   /* Build request/response maps if needed */

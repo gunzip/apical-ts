@@ -2,6 +2,7 @@ import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import {
   extractAllOperationGenerationMetadata,
+  type ImportExtension,
   type OperationGenerationMetadata,
   type OperationMetadata,
 } from "@apical-ts/core-utils/shared";
@@ -22,6 +23,7 @@ export async function generateRoutes(
   outputDir: string,
   concurrency: number,
   operationMetadata = extractAllOperationGenerationMetadata(doc),
+  options: { importExtension?: ImportExtension } = {},
 ): Promise<void> {
   const routesDir = await createRoutesDirectory(outputDir);
 
@@ -30,9 +32,10 @@ export async function generateRoutes(
     routesDir,
     concurrency,
     operationMetadata,
+    options,
   );
 
-  await writeRoutesIndexFile(operations, routesDir);
+  await writeRoutesIndexFile(operations, routesDir, options);
 }
 
 /**
@@ -43,6 +46,7 @@ async function processRoutes(
   routesDir: string,
   concurrency: number,
   operationMetadata: OperationGenerationMetadata[],
+  options: { importExtension?: ImportExtension } = {},
 ): Promise<OperationMetadata[]> {
   const limit = pLimit(concurrency);
   const operationPromises: Promise<void>[] = [];
@@ -52,6 +56,7 @@ async function processRoutes(
       const { importManager, routeCode } = generateRouteMetadataFromMetadata(
         metadata,
         doc,
+        options,
       );
 
       await writeRouteMetadataFile(

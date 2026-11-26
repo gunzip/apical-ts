@@ -69,5 +69,8 @@ export { sanitizeIdentifier } from "./schema-generator/utils.js";
 export {
   analyzeReadWriteProperties,
   ExtraPropsMode,
+  formatImportSpecifier,
+  type ImportExtension,
+  isImportExtension,
   SchemaContext,
 } from "./shared/types.js";

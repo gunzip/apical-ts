@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 
+import { formatImportSpecifier } from "../shared/types.js";
 import { ImportManager } from "./import-types.js";
 
 /**
@@ -38,11 +39,15 @@ function buildImportStatements(
 
   /* Add config imports */
   const configImports = getConfigImports(functionCode);
-  imports.push(
-    `import type { ${configImports.typeImports.join(", ")} } from "./runtime.ts";`,
+  const runtimeSpecifier = formatImportSpecifier(
+    "./runtime",
+    importManager.getImportExtension(),
   );
   imports.push(
-    `import { ${configImports.valueImports.join(", ")} } from "./runtime.ts";`,
+    `import type { ${configImports.typeImports.join(", ")} } from "${runtimeSpecifier}";`,
+  );
+  imports.push(
+    `import { ${configImports.valueImports.join(", ")} } from "${runtimeSpecifier}";`,
   );
 
   /* Add Zod import if needed (either explicit via ImportManager or implicit via z.infer usage) */

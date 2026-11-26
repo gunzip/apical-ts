@@ -95,6 +95,18 @@ specification.
   Options: `strip` (default), `loose`, `strict`. See
   [Schema Validation Modes](./schema-generation/schema-validation-modes.md) for
   details.
+- `--import-extension <ext>`: Control the file extension emitted in generated
+  relative import and export specifiers (`ts` (default), `js`, or `none`). Use
+  `js` for standard TypeScript `NodeNext` compilation without
+  `allowImportingTsExtensions`, or `none` for bundler setups.
+- `--no-package-files`: Skip emitting `package.json` and `tsconfig.json` in the
+  output directory (still writes `standard-schema.ts`). Useful when embedding
+  generated code directly inside an existing application (for example
+  `./src/generated`).
+- `--clean`: Remove previously generated Craft directories (`schemas/`,
+  `routes/`, `client/`, `server/`) and support files before regenerating so
+  deleted or renamed endpoints do not leave stale files behind. Unrelated files
+  in the output directory are preserved.
 
 > **Note**: The long-form flags `--generate-client`, `--generate-server`, and
 > `--generate-routes` are deprecated in favor of the shorter `--client`,
