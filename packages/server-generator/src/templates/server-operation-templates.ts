@@ -1,24 +1,20 @@
 import { sanitizeIdentifier } from "@apical-ts/core-utils";
 
+export type BodyMode = "none" | "optional" | "required";
+
 /*
  * Template parameters for server operation wrapper generation
  */
 interface ServerOperationTemplateParams {
+  bodyMode: BodyMode;
   functionName: string;
-  /* True if the operation defines a request body (even if only one content type) */
-  hasBody: boolean;
   hasHeaders: boolean;
   hasPath: boolean;
   hasQuery: boolean;
-  isBodyRequired?: boolean;
-  /* HTTP method in lowercase (e.g., "get", "post") */
-  method: string;
   operationId: string;
-  /* Original OpenAPI path including path parameters (e.g., "/pets/{petId}") */
-  pathKey: string;
+  requestContentTypes: string[];
   requestMapTypeName?: string;
   responseMapTypeName?: string;
-  summary?: string;
 }
 
 /*
@@ -28,13 +24,13 @@ export function renderServerOperationWrapper(
   params: ServerOperationTemplateParams,
 ): string {
   const {
+    bodyMode,
     functionName,
-    hasBody,
     hasHeaders,
     hasPath,
     hasQuery,
-    isBodyRequired = false,
     operationId,
+    requestContentTypes,
     requestMapTypeName,
     responseMapTypeName,
   } = params;
@@ -42,67 +38,46 @@ export function renderServerOperationWrapper(
   const sanitizedId = sanitizeIdentifier(operationId);
   // Must stay aligned with the route generator's collision-avoidance naming.
   const routeResponseType = `${sanitizedId}RouteResponse`;
+  const effectiveBodyMode: BodyMode =
+    bodyMode !== "none" && requestMapTypeName ? bodyMode : "none";
+  const hasAnyParams = hasQuery || hasPath || hasHeaders;
+  const parsedBodyTypeName = `${sanitizedId}ParsedBody`;
+  const optionalParsedBodyTypeName = `${sanitizedId}OptionalParsedBody`;
 
   /* Import request map and response type from route metadata */
   const responseTypeImport = responseMapTypeName
     ? `import type { ${routeResponseType} } from "../routes/${sanitizedId}.ts";`
     : "";
   /* Import runtime request map value; use typeof for types */
-  const requestMapImport = requestMapTypeName
-    ? `import { ${requestMapTypeName} } from "../routes/${sanitizedId}.ts";`
-    : "";
+  const requestMapImport =
+    effectiveBodyMode !== "none" && requestMapTypeName
+      ? `import { ${requestMapTypeName} } from "../routes/${sanitizedId}.ts";`
+      : "";
 
   /* Import pre-computed server parsed params type to avoid expensive z.infer inference */
-  const hasAnyParams = hasQuery || hasPath || hasHeaders;
   const serverParsedParamsTypeName = `${sanitizedId}ServerParsedParamsType`;
   const parsedParamsTypeImport = hasAnyParams
     ? `import type { ${serverParsedParamsTypeName} } from "../schemas/${sanitizedId}Parameters.ts";`
     : "";
 
   const validationLogic = renderValidationLogic({
-    hasBody,
+    bodyMode: effectiveBodyMode,
     hasHeaders,
     hasPath,
     hasQuery,
-    isBodyRequired,
-    operationId,
+    requestContentTypes,
     requestMapTypeName,
+    sanitizedId,
   });
 
-  /* Build handler and parsed params types */
-  const responseType = routeResponseType;
-  const parsedBodyTypeName = `${sanitizedId}ParsedBody`;
-  const optionalParsedBodyTypeName = `${sanitizedId}OptionalParsedBody`;
-
-  const parsedBodyTypeDefinitions = requestMapTypeName
-    ? isBodyRequired
-      ? `type ${parsedBodyTypeName} = {
-  [K in keyof ${requestMapTypeName}]: {
-    contentType: K;
-    body: StandardSchemaV1.InferOutput<${requestMapTypeName}[K]>;
-  };
-}[keyof ${requestMapTypeName}];`
-      : `type ${parsedBodyTypeName} = {
-  [K in keyof ${requestMapTypeName}]: {
-    contentType: K;
-    body: StandardSchemaV1.InferOutput<${requestMapTypeName}[K]>;
-  };
-}[keyof ${requestMapTypeName}];
-
-type ${optionalParsedBodyTypeName} =
-  | ${parsedBodyTypeName}
-  | { contentType?: undefined; body?: undefined };`
-    : "";
-
-  const bodyShapeType = requestMapTypeName
-    ? isBodyRequired
-      ? parsedBodyTypeName
-      : optionalParsedBodyTypeName
-    : hasBody
-      ? isBodyRequired
-        ? "{ body: unknown }"
-        : "{ body?: unknown }"
-      : "{ body?: undefined }";
+  const { bodyShapeType, parsedBodyTypeDefinitions } = buildBodyTypeDefinitions(
+    {
+      bodyMode: effectiveBodyMode,
+      optionalParsedBodyTypeName,
+      parsedBodyTypeName,
+      requestMapTypeName,
+    },
+  );
 
   const validationErrorType = `type ${sanitizedId}ValidationError =
   | { kind: "query-error"; error: StandardSchemaValidationError; isValid: false }
@@ -120,7 +95,7 @@ type ${optionalParsedBodyTypeName} =
 
   const handlerType = `export type ${sanitizedId}Handler = (
   params: { isValid: true; value: ${sanitizedId}ParsedParams } | ${sanitizedId}ValidationError,
-) => Promise<${responseType}>;`;
+) => Promise<${routeResponseType}>;`;
 
   const wrapperFunction = `export function ${functionName}(
   handler: ${sanitizedId}Handler,
@@ -130,8 +105,8 @@ type ${optionalParsedBodyTypeName} =
     path: unknown;
     headers: unknown;
     body?: unknown;
-    contentType?: ${requestMapTypeName ? `keyof ${requestMapTypeName} | (string & {})` : "string"};
-  }): Promise<${responseType}> => {
+    contentType?: ${effectiveBodyMode !== "none" && requestMapTypeName ? `keyof ${requestMapTypeName} | (string & {})` : "string"};
+  }): Promise<${routeResponseType}> => {
 ${validationLogic}
   };
 }`;
@@ -163,40 +138,98 @@ ${validationLogic}
   return parts.join("\n\n");
 }
 
+function buildBodyTypeDefinitions(options: {
+  bodyMode: BodyMode;
+  optionalParsedBodyTypeName: string;
+  parsedBodyTypeName: string;
+  requestMapTypeName: string | undefined;
+}): { bodyShapeType: string; parsedBodyTypeDefinitions: string } {
+  const {
+    bodyMode,
+    optionalParsedBodyTypeName,
+    parsedBodyTypeName,
+    requestMapTypeName,
+  } = options;
+
+  if (bodyMode === "none" || !requestMapTypeName) {
+    return {
+      bodyShapeType: "{ body?: undefined }",
+      parsedBodyTypeDefinitions: "",
+    };
+  }
+
+  const baseParsedBodyType = `type ${parsedBodyTypeName} = {
+  [K in keyof ${requestMapTypeName}]: {
+    contentType: K;
+    body: StandardSchemaV1.InferOutput<${requestMapTypeName}[K]>;
+  };
+}[keyof ${requestMapTypeName}];`;
+
+  if (bodyMode === "required") {
+    return {
+      bodyShapeType: parsedBodyTypeName,
+      parsedBodyTypeDefinitions: baseParsedBodyType,
+    };
+  }
+
+  return {
+    bodyShapeType: optionalParsedBodyTypeName,
+    parsedBodyTypeDefinitions: `${baseParsedBodyType}
+
+type ${optionalParsedBodyTypeName} =
+  | ${parsedBodyTypeName}
+  | { contentType?: undefined; body?: undefined };`,
+  };
+}
+
+function renderSuccessReturn(
+  paramProps: string[],
+  extraProps: string[],
+  indent = "  ",
+): string {
+  const propIndent = `${indent}    `;
+  const props = [...paramProps, ...extraProps].map(
+    (prop) => `${propIndent}${prop}`,
+  );
+  return `${indent}return handler({
+${indent}  isValid: true,
+${indent}  value: {
+${props.join(",\n")}
+${indent}  },
+${indent}});`;
+}
+
 /*
  * Renders validation logic for server wrapper
  */
 function renderValidationLogic(options: {
-  hasBody: boolean;
+  bodyMode: BodyMode;
   hasHeaders: boolean;
   hasPath: boolean;
   hasQuery: boolean;
-  isBodyRequired: boolean;
-  operationId: string;
+  requestContentTypes: string[];
   requestMapTypeName: string | undefined;
+  sanitizedId: string;
 }): string {
   const {
-    hasBody,
+    bodyMode,
     hasHeaders,
     hasPath,
     hasQuery,
-    isBodyRequired,
-    operationId,
+    requestContentTypes,
     requestMapTypeName,
+    sanitizedId,
   } = options;
-  const sanitizedId = sanitizeIdentifier(operationId);
-  const parsedBodyTypeName = `${sanitizedId}ParsedBody`;
-  const optionalParsedBodyTypeName = `${sanitizedId}OptionalParsedBody`;
-  const hasAnyParams = hasQuery || hasPath || hasHeaders;
 
-  /* Build parameter validation conditionally */
   const paramValidations: string[] = [];
+  const paramProps: string[] = [];
 
   if (hasQuery) {
     paramValidations.push(
       `  const queryParse = await validateStandardSchema(${sanitizedId}RouteMetadata.params.shape.query, req.query);`,
       `  if (!queryParse.success) return handler({ kind: "query-error", error: queryParse.error, isValid: false });`,
     );
+    paramProps.push(`query: queryParse.value`);
   }
 
   if (hasPath) {
@@ -204,6 +237,7 @@ function renderValidationLogic(options: {
       `  const pathParse = await validateStandardSchema(${sanitizedId}RouteMetadata.params.shape.path, req.path);`,
       `  if (!pathParse.success) return handler({ kind: "path-error", error: pathParse.error, isValid: false });`,
     );
+    paramProps.push(`path: pathParse.value`);
   }
 
   if (hasHeaders) {
@@ -211,132 +245,76 @@ function renderValidationLogic(options: {
       `  const headersParse = await validateStandardSchema(${sanitizedId}RouteMetadata.params.shape.headers, req.headers);`,
       `  if (!headersParse.success) return handler({ kind: "headers-error", error: headersParse.error, isValid: false });`,
     );
+    paramProps.push(`headers: headersParse.value`);
   }
 
-  const shared = paramValidations.join("\n");
-
-  const bodyLogic = renderBodyValidationLogic({
-    hasBody,
-    isBodyRequired,
-    optionalParsedBodyTypeName,
-    parsedBodyTypeName,
+  const bodyAndReturnLogic = renderBodyValidationLogic({
+    bodyMode,
+    paramProps,
+    requestContentTypes,
     requestMapTypeName,
   });
 
-  const returnValueProps: string[] = [];
-  if (hasQuery) {
-    returnValueProps.push(`      query: queryParse.value`);
-  }
-  if (hasPath) {
-    returnValueProps.push(`      path: pathParse.value`);
-  }
-  if (hasHeaders) {
-    returnValueProps.push(`      headers: headersParse.value`);
+  if (paramValidations.length === 0) {
+    return bodyAndReturnLogic;
   }
 
-  let valueExpression: string;
-  if (requestMapTypeName) {
-    if (hasAnyParams) {
-      valueExpression = `{
-${returnValueProps.join(",\n")},
-      ...parsedBody,
-    } as ${sanitizedId}ParsedParams`;
-    } else {
-      valueExpression = `parsedBody`;
-    }
-  } else {
-    returnValueProps.push(`      body: parsedBody`);
-    valueExpression = `{
-${returnValueProps.join(",\n")}
-    }`;
-  }
-
-  const tail = `
-  return handler({
-    isValid: true,
-    value: ${valueExpression},
-  });`;
-
-  return shared + bodyLogic + tail;
+  return `${paramValidations.join("\n")}\n${bodyAndReturnLogic}`;
 }
 
 function renderBodyValidationLogic(options: {
-  hasBody: boolean;
-  isBodyRequired: boolean;
-  optionalParsedBodyTypeName: string;
-  parsedBodyTypeName: string;
+  bodyMode: BodyMode;
+  paramProps: string[];
+  requestContentTypes: string[];
   requestMapTypeName: string | undefined;
 }): string {
-  const {
-    hasBody,
-    isBodyRequired,
-    optionalParsedBodyTypeName,
-    parsedBodyTypeName,
-    requestMapTypeName,
-  } = options;
+  const { bodyMode, paramProps, requestContentTypes, requestMapTypeName } =
+    options;
 
-  if (!requestMapTypeName) {
-    if (!hasBody) {
-      return `
-  let parsedBody: undefined | undefined = undefined;`;
-    }
-    if (isBodyRequired) {
-      return `
-  if (req.body === undefined) {
-    return handler({ kind: "body-error", error: createStandardSchemaValidationError("Request body is required"), isValid: false });
-  }
-  const parsedBody: unknown = req.body;`;
-    }
-    return `
-  let parsedBody: unknown | undefined = undefined;
-  if (req.body !== undefined) {
-    parsedBody = req.body;
-  }`;
+  if (bodyMode === "none" || !requestMapTypeName) {
+    return renderSuccessReturn(paramProps, ["body: undefined"]);
   }
 
-  const requiredGuard = isBodyRequired
-    ? `
-  if (req.body === undefined) {
+  const missingBodyBranch =
+    bodyMode === "required"
+      ? `  if (req.body === undefined) {
     return handler({ kind: "body-error", error: createStandardSchemaValidationError("Request body is required"), isValid: false });
   }`
+      : `  if (req.body === undefined) {
+${renderSuccessReturn(paramProps, ["contentType: undefined", "body: undefined"], "    ")}
+  }`;
+
+  const orderedContentTypes = [
+    ...requestContentTypes.filter((ct) => ct.includes(";")),
+    ...requestContentTypes.filter((ct) => !ct.includes(";")),
+  ];
+  const needsMediaType = orderedContentTypes.some((ct) => !ct.includes(";"));
+  const mediaTypeDeclaration = needsMediaType
+    ? `\n  const mediaType = rawContentType.split(";")[0]?.trim();`
     : "";
 
-  const declaration = isBodyRequired
-    ? `
-  let parsedBody: ${parsedBodyTypeName};`
-    : `
-  let parsedBody: ${optionalParsedBodyTypeName} = { contentType: undefined, body: undefined };`;
+  const contentTypeBranches = orderedContentTypes
+    .map((ct) => {
+      const lit = JSON.stringify(ct);
+      const lowerLit = JSON.stringify(ct.toLowerCase());
+      const condition = ct.includes(";")
+        ? `rawContentType === ${lowerLit}`
+        : `mediaType === ${lowerLit}`;
+      return `  if (${condition}) {
+    const bodyParse = await validateStandardSchema(${requestMapTypeName}[${lit}], req.body);
+    if (!bodyParse.success) return handler({ kind: "body-error", error: bodyParse.error, isValid: false });
+${renderSuccessReturn(paramProps, [`contentType: ${lit}`, "body: bodyParse.value"], "    ")}
+  }`;
+    })
+    .join("\n");
 
-  const bodyCheckOpen = isBodyRequired
-    ? ""
-    : "\n  if (req.body !== undefined) {";
-  const bodyCheckClose = isBodyRequired ? "" : "\n  }";
-  const indent = isBodyRequired ? "  " : "    ";
-
-  return `${requiredGuard}${declaration}${bodyCheckOpen}
-${indent}/* Content type must be provided for request body validation */
-${indent}if (!req.contentType) {
-${indent}  return handler({ kind: "body-error", error: createStandardSchemaValidationError("Content-Type header is required"), isValid: false });
-${indent}}
-${indent}const rawContentType = req.contentType;
-${indent}const mediaType = rawContentType.split(";")[0]?.trim();
-${indent}const matchedContentType = (
-${indent}  Object.prototype.hasOwnProperty.call(${requestMapTypeName}, rawContentType)
-${indent}    ? rawContentType
-${indent}    : mediaType && Object.prototype.hasOwnProperty.call(${requestMapTypeName}, mediaType)
-${indent}      ? mediaType
-${indent}      : undefined
-${indent}) as keyof ${requestMapTypeName} | undefined;
-${indent}if (matchedContentType) {
-${indent}  const schema = ${requestMapTypeName}[matchedContentType];
-${indent}  const bodyParse = await validateStandardSchema(schema, req.body);
-${indent}  if (!bodyParse.success) return handler({ kind: "body-error", error: bodyParse.error, isValid: false });
-${indent}  parsedBody = {
-${indent}    contentType: matchedContentType,
-${indent}    body: bodyParse.value,
-${indent}  } as ${parsedBodyTypeName};
-${indent}} else {
-${indent}  /* Unknown content-type: reject */
-${indent}  return handler({ kind: "body-error", error: createStandardSchemaValidationError(\`Unsupported Content-Type: \${req.contentType}\`), isValid: false });
-${indent}}${bodyCheckClose}`;
+  return `${missingBodyBranch}
+  /* Content type must be provided for request body validation */
+  if (!req.contentType) {
+    return handler({ kind: "body-error", error: createStandardSchemaValidationError("Content-Type header is required"), isValid: false });
+  }
+  const rawContentType = req.contentType.trim().toLowerCase();${mediaTypeDeclaration}
+${contentTypeBranches}
+  /* Unknown content-type: reject */
+  return handler({ kind: "body-error", error: createStandardSchemaValidationError(\`Unsupported Content-Type: \${req.contentType}\`), isValid: false });`;
 }

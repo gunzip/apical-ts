@@ -197,8 +197,8 @@ describe("testMultiContentTypes operation integration tests", () => {
     expect(response.body.error).toBe("Body validation failed");
   });
 
-  it("should reject requests with unsupported or unparsed content types when body is required", async () => {
-    let bodyErrorReceived = false;
+  it("should return body-error with Request body is required when unparsed text/plain leaves req.body undefined", async () => {
+    let bodyErrorMessage = "";
     const handler: testMultiContentTypesHandler = async (params) => {
       if (params.isValid) {
         return {
@@ -211,13 +211,13 @@ describe("testMultiContentTypes operation integration tests", () => {
         };
       }
       if (params.kind === "body-error") {
-        bodyErrorReceived = true;
+        bodyErrorMessage = params.error.issues[0]?.message ?? "";
         return {
           status: "200",
           contentType: "application/json",
           data: {
             id: "unknown-error-123",
-            name: "Unknown Content Error Handled",
+            name: bodyErrorMessage,
           },
         };
       }
@@ -230,22 +230,84 @@ describe("testMultiContentTypes operation integration tests", () => {
       "post",
       testMultiContentTypesWrapper,
       handler,
+      (result, res) => {
+        if (bodyErrorMessage) {
+          res.status(400).json({ error: bodyErrorMessage });
+        } else {
+          res.status(result.status).type(result.contentType).send(result.data);
+        }
+      },
     );
 
-    // Act: Send request with unknown content type (not parsed by express.json/urlencoded, so req.body is undefined)
+    // Act: Send request with text/plain (not parsed by express.json/urlencoded, so req.body is undefined)
     const response = await supertest(app)
       .post("/test-multi-content-types")
       .send(JSON.stringify({ id: "unknown-456", name: "Unknown Test" }))
       .set("Content-Type", "text/plain");
 
     // Assert
-    expect(bodyErrorReceived).toBe(true);
-    expect(response.status).toBe(200);
-    expect(response.headers["content-type"]).toContain("application/json");
-    expect(response.body).toMatchObject({
-      id: "unknown-error-123",
-      name: "Unknown Content Error Handled",
+    expect(bodyErrorMessage).toBe("Request body is required");
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: "Request body is required" });
+  });
+
+  it("should reject unsupported Content-Type when body is present", async () => {
+    let errorMessage = "";
+    const handler: testMultiContentTypesHandler = async (params) => {
+      if (!params.isValid && params.kind === "body-error") {
+        errorMessage = params.error.issues[0]?.message ?? "";
+        return {
+          status: "200",
+          contentType: "application/json",
+          data: {
+            id: "unsupported-ct",
+            name: errorMessage,
+          },
+        };
+      }
+
+      throw new Error("Expected body-error for unsupported Content-Type");
+    };
+
+    const result = await testMultiContentTypesWrapper(handler)({
+      query: {},
+      path: {},
+      headers: {},
+      contentType: "text/plain",
+      body: { id: "1", name: "Test" },
     });
+
+    expect(errorMessage).toBe("Unsupported Content-Type: text/plain");
+    expect(result.status).toBe("200");
+  });
+
+  it("should reject missing Content-Type when body is present", async () => {
+    let errorMessage = "";
+    const handler: testMultiContentTypesHandler = async (params) => {
+      if (!params.isValid && params.kind === "body-error") {
+        errorMessage = params.error.issues[0]?.message ?? "";
+        return {
+          status: "200",
+          contentType: "application/json",
+          data: {
+            id: "missing-ct",
+            name: errorMessage,
+          },
+        };
+      }
+
+      throw new Error("Expected body-error for missing Content-Type");
+    };
+
+    const result = await testMultiContentTypesWrapper(handler)({
+      query: {},
+      path: {},
+      headers: {},
+      body: { id: "1", name: "Test" },
+    });
+
+    expect(errorMessage).toBe("Content-Type header is required");
+    expect(result.status).toBe("200");
   });
 
   it("should return body-error when a required request body is missing", async () => {
@@ -276,7 +338,7 @@ describe("testMultiContentTypes operation integration tests", () => {
     expect(result.status).toBe("200");
   });
 
-  it("should expose and narrow contentType with body in the validated handler params", async () => {
+  it("should expose and narrow contentType case-insensitively with body in the validated handler params", async () => {
     let seenContentType: string | undefined;
     const handler: testMultiContentTypesHandler = async (params) => {
       if (!params.isValid) {
@@ -310,7 +372,7 @@ describe("testMultiContentTypes operation integration tests", () => {
       query: {},
       path: {},
       headers: {},
-      contentType: "application/json; charset=utf-8",
+      contentType: "Application/JSON; charset=UTF-8",
       body: { id: "json-1", name: "Typed Json" },
     });
 

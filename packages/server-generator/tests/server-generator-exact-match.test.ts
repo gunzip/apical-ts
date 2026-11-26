@@ -85,10 +85,12 @@ describe("server-generator - problem statement validation", () => {
       /return handler\(\{ kind: "body-error", error: bodyParse\.error, isValid: false \}\)/,
     );
 
-    /* Verify success handler call with query, path, and discriminated body */
+    /* Verify success handler call with query, path, and discriminated body without casts */
     expect(result.wrapperCode).toMatch(
-      /return handler\(\{\s*isValid: true,\s*value: \{\s*query: queryParse\.value,\s*path: pathParse\.value,\s*\.\.\.parsedBody,?\s*\} as petFindByStatusParsedParams,?\s*\}\)/,
+      /return handler\(\{\s*isValid: true,\s*value: \{\s*query: queryParse\.value,\s*path: pathParse\.value,\s*contentType: "application\/json",\s*body: bodyParse\.value,?\s*\},?\s*\}\)/,
     );
+    expect(result.wrapperCode).not.toContain("as petFindByStatusParsedParams");
+    expect(result.wrapperCode).not.toContain("as petFindByStatusParsedBody");
 
     /* Verify required body is enforced at type and runtime level */
     expect(result.wrapperCode).toContain("Request body is required");

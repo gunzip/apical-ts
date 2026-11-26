@@ -87,17 +87,24 @@ createExpressAdapter(getPetByIdRoute(), getPetByIdHandler)(app);
 ```
 
 The wrapper receives a single params object containing runtime-validated query,
-path, headers, `contentType`, and body data (enforcing `requestBody.required`
-when specified in OpenAPI), or structured validation errors when parsing fails.
-Handler return values are statically type-checked against the OpenAPI contract,
-and `routes/<operationId>.ts` exposes `responseMap` if your framework adapter
-wants to perform opt-in runtime response validation before sending.
+path, and headers parameters declared by the OpenAPI operation—plus
+`contentType` and `body` when the operation defines a request body (enforcing
+`requestBody.required` when specified in OpenAPI)—or structured validation
+errors when parsing fails. Handler return values are statically type-checked
+against the OpenAPI contract, and `routes/<operationId>.ts` exposes
+`responseMap` if your framework adapter wants to perform opt-in runtime response
+validation before sending.
 
 ### Handler Function Signature
 
 The handler you provide to the wrapper receives one of:
 
-- `{ isValid: true, value: { query, path, headers, contentType, body } }`
+- `{ isValid: true, value: { ...params, contentType, body } }` for operations
+  with a request body (`...params` includes only the parameter groups—`query`,
+  `path`, `headers`—defined on the operation; optional missing bodies yield
+  `contentType: undefined, body: undefined`)
+- `{ isValid: true, value: { ...params, body?: undefined } }` for operations
+  without a request body (no `contentType` property is present)
 - `{ isValid: false, kind: "query-error" | "body-error" | ..., error: { issues } }`
 
 It must return a typed object shaped like `{ status, contentType, data }`.

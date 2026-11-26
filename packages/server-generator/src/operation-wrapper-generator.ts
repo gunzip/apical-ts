@@ -3,18 +3,22 @@ import type {
   OperationObject,
   ParameterObject,
   ReferenceObject,
+  RequestBodyObject,
 } from "openapi3-ts/oas31";
 
 import { sanitizeIdentifier } from "@apical-ts/core-utils";
 import {
   extractParameterGroups,
-  generateContentTypeMaps,
+  extractRequestContentTypes,
   getOperationSecuritySchemes,
 } from "@apical-ts/core-utils/shared";
 import assert from "assert";
 import { isReferenceObject } from "openapi3-ts/oas31";
 
-import { renderServerOperationWrapper } from "./templates/server-operation-templates.js";
+import {
+  type BodyMode,
+  renderServerOperationWrapper,
+} from "./templates/server-operation-templates.js";
 
 /* Result of generating a server wrapper function */
 interface GeneratedServerWrapper {
@@ -27,18 +31,15 @@ interface GeneratedServerWrapper {
  * this module only needs minimal info to render the wrapper function.
  */
 interface ServerWrapperMetadata {
+  bodyMode: BodyMode;
   functionName: string;
-  hasBody: boolean;
   hasHeaders: boolean;
   hasPath: boolean;
   hasQuery: boolean;
-  isBodyRequired: boolean;
-  method: string;
   operationId: string;
-  pathKey: string;
+  requestContentTypes: string[];
   requestMapTypeName: string | undefined;
   responseMapTypeName: string;
-  summary: string | undefined;
 }
 
 /*
@@ -52,27 +53,25 @@ export function generateServerOperationWrapper(
   pathLevelParameters: (ParameterObject | ReferenceObject)[] = [],
   doc: OpenAPIObject,
 ): GeneratedServerWrapper {
+  void pathKey;
+  void method;
+
   const metadata = extractServerWrapperMetadata(
-    pathKey,
-    method,
     operation,
     pathLevelParameters,
     doc,
   );
 
   const wrapperCode = renderServerOperationWrapper({
+    bodyMode: metadata.bodyMode,
     functionName: metadata.functionName,
-    hasBody: metadata.hasBody,
     hasHeaders: metadata.hasHeaders,
     hasPath: metadata.hasPath,
     hasQuery: metadata.hasQuery,
-    isBodyRequired: metadata.isBodyRequired,
-    method: metadata.method,
     operationId: metadata.operationId,
-    pathKey: metadata.pathKey,
+    requestContentTypes: metadata.requestContentTypes,
     requestMapTypeName: metadata.requestMapTypeName,
     responseMapTypeName: metadata.responseMapTypeName,
-    summary: metadata.summary,
   });
 
   return {
@@ -85,8 +84,6 @@ export function generateServerOperationWrapper(
  * All schema/type generation happens in route-generator.
  */
 function extractServerWrapperMetadata(
-  pathKey: string,
-  method: string,
   operation: OperationObject,
   pathLevelParameters: (ParameterObject | ReferenceObject)[],
   doc: OpenAPIObject,
@@ -94,9 +91,18 @@ function extractServerWrapperMetadata(
   assert(operation.operationId, "Operation ID is required");
   const operationId = operation.operationId;
   const sanitizedId = sanitizeIdentifier(operationId);
-  const contentTypeMaps = generateContentTypeMaps(operation, doc);
-  const hasBody = contentTypeMaps.requestContentTypeCount > 0;
-  const isBodyRequired = resolveIsBodyRequired(operation, doc, hasBody);
+  const resolvedRequestBody = resolveRequestBody(operation, doc);
+  const requestContentTypes = resolvedRequestBody
+    ? extractRequestContentTypes(resolvedRequestBody).contentTypes.map(
+        (mapping) => mapping.contentType,
+      )
+    : [];
+  const bodyMode: BodyMode =
+    requestContentTypes.length === 0
+      ? "none"
+      : resolvedRequestBody?.required === true
+        ? "required"
+        : "optional";
 
   /* Extract parameter groups to determine which parameter types exist */
   const parameterGroups = extractParameterGroups(
@@ -109,41 +115,39 @@ function extractServerWrapperMetadata(
   const securityHeaders = getOperationSecuritySchemes(operation, doc);
 
   return {
+    bodyMode,
     functionName: `${sanitizedId}Wrapper`,
-    hasBody,
     hasHeaders:
       parameterGroups.headerParams.length > 0 || securityHeaders.length > 0,
     hasPath: parameterGroups.pathParams.length > 0,
     hasQuery: parameterGroups.queryParams.length > 0,
-    isBodyRequired,
-    method: method.toLowerCase(),
     operationId,
-    pathKey,
+    requestContentTypes,
     /* Keep wrapper body handling aligned with the generated route request map. */
-    requestMapTypeName: hasBody ? `${sanitizedId}RequestMap` : undefined,
+    requestMapTypeName:
+      bodyMode === "none" ? undefined : `${sanitizedId}RequestMap`,
     responseMapTypeName: `${sanitizedId}ResponseMap`,
-    summary: operation.summary?.trim(),
   };
 }
 
-function resolveIsBodyRequired(
+function resolveRequestBody(
   operation: OperationObject,
   doc: OpenAPIObject,
-  hasBody: boolean,
-): boolean {
-  if (!hasBody || !operation.requestBody) {
-    return false;
+): RequestBodyObject | undefined {
+  if (!operation.requestBody) {
+    return undefined;
   }
   if (!isReferenceObject(operation.requestBody)) {
-    return operation.requestBody.required === true;
+    return operation.requestBody;
   }
   const refPrefix = "#/components/requestBodies/";
-  if (operation.requestBody.$ref.startsWith(refPrefix)) {
-    const key = operation.requestBody.$ref.slice(refPrefix.length);
-    const resolved = doc.components?.requestBodies?.[key];
-    if (resolved && !isReferenceObject(resolved)) {
-      return resolved.required === true;
-    }
+  if (!operation.requestBody.$ref.startsWith(refPrefix)) {
+    return undefined;
   }
-  return false;
+  const key = operation.requestBody.$ref.slice(refPrefix.length);
+  const resolved = doc.components?.requestBodies?.[key];
+  if (resolved && !isReferenceObject(resolved)) {
+    return resolved;
+  }
+  return undefined;
 }
