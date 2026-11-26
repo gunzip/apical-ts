@@ -7,6 +7,12 @@ export function renderOperationUtilities(): string {
   return `/* Utility types for operation binding */
 type Operation = (...args: any[]) => any;
 
+export type OperationConfigOverride = Partial<
+  Omit<GlobalConfig, "forceValidation" | "headers">
+> & {
+  headers?: Partial<GlobalConfig["headers"]>;
+};
+
 /* Extract the specific overload matching the provided forceValidation literal.
  * If an overload exists with that exact config type, we bind to its return type; otherwise
  * we fall back to the generic signature (last overload) and post-process ApiResponseWithParse
@@ -50,7 +56,9 @@ type BoundOperation<TOp, TForce extends boolean> = ForceAdjust<
   TForce
 > extends infer Adjusted
   ? ExtractOverloadForForce<TOp, TForce> extends (params: infer P) => any
-    ? (params: P) => Adjusted
+    ? {} extends P
+      ? (params?: P, overrideConfig?: OperationConfigOverride) => Adjusted
+      : (params: P, overrideConfig?: OperationConfigOverride) => Adjusted
     : never
   : never;
 
@@ -70,13 +78,46 @@ export function configureOperations<TOperations extends Record<string, Operation
   operations: TOperations,
   config: (Omit<GlobalConfig, 'forceValidation'> & { forceValidation: boolean }) | Omit<GlobalConfig, 'forceValidation'>
 ): { [K in keyof TOperations]: BoundOperation<TOperations[K], boolean> } {
-  const bound: Partial<Record<keyof TOperations, (params: unknown) => unknown>> = {};
+  const bound: Partial<
+    Record<
+      keyof TOperations,
+      (params?: unknown, overrideConfig?: OperationConfigOverride) => unknown
+    >
+  > = {};
   for (const key in operations) {
     const op = operations[key];
     /* Preserve runtime guard (test expects the string below to appear) */
     if (typeof operations[key] === 'function') {
-      bound[key] = (params: unknown) => {
-        return (op as (...args: any[]) => unknown)(params, config);
+      bound[key] = (
+        params?: unknown,
+        overrideConfig?: OperationConfigOverride,
+      ) => {
+        if (!overrideConfig) {
+          return (op as (...args: any[]) => unknown)(params, config);
+        }
+        const mergedHeaders = overrideConfig.headers
+          ? {
+              ...config.headers,
+              ...Object.fromEntries(
+                Object.entries(overrideConfig.headers).filter(
+                  ([, value]) => value !== undefined,
+                ),
+              ),
+            }
+          : config.headers;
+        const mergedDeserializers = overrideConfig.deserializers
+          ? { ...config.deserializers, ...overrideConfig.deserializers }
+          : config.deserializers;
+        const effectiveConfig = {
+          ...config,
+          ...overrideConfig,
+          headers: mergedHeaders,
+          deserializers: mergedDeserializers,
+          ...("forceValidation" in config
+            ? { forceValidation: config.forceValidation }
+            : {}),
+        };
+        return (op as (...args: any[]) => unknown)(params, effectiveConfig);
       };
     }
   }
