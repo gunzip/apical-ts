@@ -243,7 +243,9 @@ describe("client-generator config-templates", () => {
       const result = renderOperationUtilities();
 
       expect(result).toContain("type Operation =");
+      expect(result).toContain("export type OperationConfigOverride =");
       expect(result).toContain("export function configureOperations");
+      expect(result).toContain("overrideConfig?: OperationConfigOverride");
       expect(result).toContain("typeof operations[key] === 'function'");
     });
   });
