@@ -97,9 +97,20 @@ const newPet = await client.createPet({
 });
 ```
 
-You can still override the configuration for individual operations, passing it
-as the second argument. Useful, for example, when you have to change the headers
-for a specific request.
+You can still override the configuration for individual operations by passing an
+`overrideConfig` object as the second argument. Bound `headers` and
+`deserializers` are shallow-merged with the per-call overrides without mutating
+the bound client, while `forceValidation` remains locked to the bound client so
+its return type stays consistent.
+
+```typescript
+const pet = await client.getPetById(
+  { path: { petId: "123" } },
+  {
+    headers: { Authorization: "Bearer <request-specific-token>" },
+  },
+);
+```
 
 ## Basic Configuration
 
