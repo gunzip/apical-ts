@@ -1,22 +1,44 @@
-# @apical-ts/craft - Yet Another OpenAPI to TypeScript Generator
+# @apical-ts/craft
 
-✨ Effortlessly turn your OpenAPI specifications into **fully-typed Zod v4
-schemas** ready for runtime (client or server) validation and TypeScript
-development.
+[![npm version](https://img.shields.io/npm/v/@apical-ts/craft)](https://www.npmjs.com/package/@apical-ts/craft)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/gunzip/apical-ts/blob/main/LICENSE)
+[![Tests](https://github.com/gunzip/apical-ts/actions/workflows/test.yml/badge.svg)](https://github.com/gunzip/apical-ts/actions/workflows/test.yml)
 
-Need a **client**? 🚀 Instantly generate a type-safe, low-footprint,
-operation-based REST API client alongside your schemas.
+Generate exact **Zod v4 schemas**, Standard Schema-compatible route metadata,
+operation-based REST clients, and typed server wrappers from OpenAPI 2.0, 3.0.x,
+and 3.1.x specifications.
 
-Need to **validate server requests and return typed responses**? 🛡️ We've got
-you covered with built-in support for request and response validation using Zod
-schemas.
-
-See https://gunzip.github.io/apical-ts/ for more information.
+- **Docs**: https://gunzip.github.io/apical-ts/
+- **Live Demo**:
+  [Try in StackBlitz](https://stackblitz.com/edit/apical-craft-example?file=src%2Fclient.ts)
 
 ## CLI
 
 ```bash
-npx @apical-ts/craft generate -i https://petstore.swagger.io/v2/swagger.json -o ./generated --client --server
+npx @apical-ts/craft generate \
+  -i https://petstore.swagger.io/v2/swagger.json \
+  -o ./generated \
+  --client --server
+```
+
+## Strict types and runtime validation
+
+Each generated client operation is a standalone, tree-shakable function that
+never throws and returns a discriminated union over documented HTTP status codes
+and error kinds:
+
+```ts
+import { getPetById } from "./generated/client/getPetById.ts";
+
+const response = await getPetById({ path: { petId: "123" } });
+
+if (response.status === "200") {
+  // Validated at runtime and narrowed to the 200 payload
+  console.log(response.parsed.data.name);
+} else if (!response.isValid) {
+  // Network, unexpected-response, parse-error, or deserialization-error
+  console.error(response.kind, response.error);
+}
 ```
 
 ## Contract-first integrations
@@ -35,5 +57,6 @@ want to derive later.
 mock handlers, frontend hooks, or custom framework adapters without re-modeling
 paths, params, or responses for each integration.
 
-See the examples in [`examples/`](./examples/), especially `express`, `hono`,
-`msw-mock-server`, and `tanstack-query-hooks`.
+See the examples in
+[`examples/`](https://github.com/gunzip/apical-ts/tree/main/examples),
+especially `express`, `hono`, `msw-mock-server`, and `tanstack-query-hooks`.
