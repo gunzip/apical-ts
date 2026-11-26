@@ -156,8 +156,8 @@ export function getOperationSecuritySchemes(
   }
 
   // No override: use global security
-  // Marked as isRequired: false because they're optional in config.headers (TypeScript ?)
-  // But if the endpoint requires them and you don't provide them, the API will reject the request
+  // Marked as isRequired: false because global headers come from config.headers (resolved via resolveConfigHeaders)
+  // But if the endpoint requires them and they are missing or resolve to undefined, the API will reject the request
   const globalAnalysis = analyzeGlobalSecuritySchemes(doc);
   const globalHeaders: SecurityHeader[] = globalAnalysis.analyzedSchemes
     .filter((s) => s.isHeaderBased && s.headerName)

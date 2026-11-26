@@ -13,6 +13,8 @@ describe("renderUtilityFunctions", () => {
     it("should generate the enhanced parseApiResponseUnknownData function", () => {
       const result = renderUtilityFunctions();
 
+      expect(result).toContain("export async function resolveConfigHeaders(");
+
       /* Should contain the function with proper overloads */
       expect(result).toContain("parseApiResponseUnknownData");
 

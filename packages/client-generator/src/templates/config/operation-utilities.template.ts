@@ -7,10 +7,16 @@ export function renderOperationUtilities(): string {
   return `/* Utility types for operation binding */
 type Operation = (...args: any[]) => any;
 
+export type OperationConfigOverrideHeaders =
+  | Partial<GlobalConfigHeadersRecord>
+  | (() =>
+      | Partial<GlobalConfigHeadersRecord>
+      | Promise<Partial<GlobalConfigHeadersRecord>>);
+
 export type OperationConfigOverride = Partial<
   Omit<GlobalConfig, "forceValidation" | "headers">
 > & {
-  headers?: Partial<GlobalConfig["headers"]>;
+  headers?: OperationConfigOverrideHeaders;
 };
 
 /* Extract the specific overload matching the provided forceValidation literal.
@@ -95,14 +101,16 @@ export function configureOperations<TOperations extends Record<string, Operation
         if (!overrideConfig) {
           return (op as (...args: any[]) => unknown)(params, config);
         }
-        const mergedHeaders = overrideConfig.headers
-          ? {
-              ...config.headers,
-              ...Object.fromEntries(
-                Object.entries(overrideConfig.headers).filter(
-                  ([, value]) => value !== undefined,
-                ),
-              ),
+        const mergedHeaders: GlobalConfig["headers"] = overrideConfig.headers
+          ? async () => {
+              const baseHeaders =
+                typeof config.headers === "function"
+                  ? await config.headers()
+                  : config.headers;
+              return {
+                ...baseHeaders,
+                ...(await resolveConfigHeaders(overrideConfig.headers)),
+              };
             }
           : config.headers;
         const mergedDeserializers = overrideConfig.deserializers

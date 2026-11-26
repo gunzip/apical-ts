@@ -154,7 +154,6 @@ describe("client-generator config-templates", () => {
       expect(result).toContain("baseURL: 'https://api.example.com',");
       expect(result).toContain("fetch: fetch,");
       expect(result).toContain("headers: {}");
-      expect(result).toContain("export async function resolveConfigHeaders(");
     });
 
     it("should render config implementation with empty base URL", () => {
@@ -206,6 +205,7 @@ describe("client-generator config-templates", () => {
     it("should render utility functions", () => {
       const result = renderUtilityFunctions();
 
+      expect(result).toContain("export async function resolveConfigHeaders(");
       expect(result).toContain("export async function parseResponseBody");
       expect(result).toContain("application/json");
     });
@@ -243,9 +243,11 @@ describe("client-generator config-templates", () => {
       const result = renderOperationUtilities();
 
       expect(result).toContain("type Operation =");
+      expect(result).toContain("export type OperationConfigOverrideHeaders =");
       expect(result).toContain("export type OperationConfigOverride =");
       expect(result).toContain("export function configureOperations");
       expect(result).toContain("overrideConfig?: OperationConfigOverride");
+      expect(result).toContain("resolveConfigHeaders(");
       expect(result).toContain("typeof operations[key] === 'function'");
     });
   });

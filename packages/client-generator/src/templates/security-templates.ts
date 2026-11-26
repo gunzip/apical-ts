@@ -6,6 +6,13 @@ import { toValidVariableName } from "../utils.js";
 
 const renderStringLiteral = (value: string): string => JSON.stringify(value);
 
+const renderResolvedHeaderAccess = (
+  source: string,
+  headerName: string,
+  optionalChain: boolean,
+): string =>
+  `${source}${optionalChain ? "?." : ""}[${renderStringLiteral(headerName)}]`;
+
 /**
  * Renders auth header validation code
  */
@@ -66,8 +73,11 @@ export function renderSecurityHeaderHandling(
       ? "params.headers"
       : "resolvedConfigHeaders";
     const useOptionalChaining = !(header.isOverride && header.isRequired);
-    const optionalChain = useOptionalChaining ? "?." : "";
-    const accessExpression = `${source}${optionalChain}[${headerNameLiteral}]`;
+    const accessExpression = renderResolvedHeaderAccess(
+      source,
+      header.headerName,
+      useOptionalChaining,
+    );
 
     if (header.isRequired) {
       return `const ${varName} = ${accessExpression};
@@ -95,7 +105,7 @@ export function renderSecurityParameterExtraction(
     .filter((h) => !h.isOverride) // Only global security
     .map((header) => {
       const varName = toValidVariableName(header.headerName);
-      return `const ${varName} = resolvedConfigHeaders?.[${renderStringLiteral(header.headerName)}];`;
+      return `const ${varName} = ${renderResolvedHeaderAccess("resolvedConfigHeaders", header.headerName, true)};`;
     });
 
   return extractions.join("\n  ");

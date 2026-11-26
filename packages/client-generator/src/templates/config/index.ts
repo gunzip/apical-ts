@@ -15,6 +15,7 @@ import {
   renderFormDataUtilities,
   renderFormUrlEncodeUtilities,
 } from "./form-utilities.template.js";
+import { renderHeaderResolutionUtilities } from "./header-utilities.template.js";
 import { renderOperationUtilities } from "./operation-utilities.template.js";
 export { renderOperationUtilities } from "./operation-utilities.template.js";
 import { renderParameterSerializationUtilities } from "./parameter-serialization.template.js";
@@ -43,6 +44,8 @@ export function renderConfigSupport(): string {
  */
 export function renderUtilityFunctions(): string {
   return [
+    renderHeaderResolutionUtilities(),
+    "",
     renderFormDataUtilities(),
     "",
     renderResponseParsingUtilities(),

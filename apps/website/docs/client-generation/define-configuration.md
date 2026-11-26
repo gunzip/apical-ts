@@ -207,14 +207,16 @@ const config = {
 
 ### headers
 
-**Type**:
-`GlobalConfigHeadersRecord | (() => GlobalConfigHeadersRecord | Promise<GlobalConfigHeadersRecord>)`  
-**Required**:
-No  
+**Type**: `GlobalConfigHeaders`
+(`GlobalConfigHeadersRecord | (() => GlobalConfigHeadersRecord | Promise<GlobalConfigHeadersRecord>)`)
+
+**Required**: No
+
 **Default**: `{}`
 
-Default headers to include with every request, either as a static object or a
-synchronous/asynchronous resolver invoked fresh on each call. Common use cases
+Default headers to include with every request, either as a static
+`GlobalConfigHeadersRecord` object or a synchronous/asynchronous resolver
+function (`GlobalConfigHeaders`) invoked fresh on each call. Common use cases
 include:
 
 - Authentication tokens (including refreshed bearer tokens)
@@ -225,7 +227,9 @@ include:
 Any header whose value is `undefined` is omitted from the outgoing request. If
 the OpenAPI spec defines global header-based security schemes, those header keys
 are required by `GlobalConfigHeadersRecord`, while arbitrary additional headers
-are permitted alongside them.
+are permitted alongside them. If a synchronous or asynchronous `headers`
+resolver throws or rejects, the operation catches the error and resolves to
+`{ isValid: false, kind: "unexpected-error", error }`.
 
 ```typescript
 // Static headers (custom headers allowed alongside required auth headers)

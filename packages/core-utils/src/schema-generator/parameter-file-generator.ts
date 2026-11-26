@@ -87,8 +87,9 @@ async function generateParameterSchemaFile(
    *
    * Notes:
    * - Security override (operation.security): go in params.headers (required if present)
-   * - Global security: stays available through config.headers and is also exposed
-   *   as optional params.headers fields for per-operation overrides
+   * - Global security: comes from config.headers (static or dynamic, resolved
+   *   per request) and is also exposed as optional params.headers fields for
+   *   per-operation overrides
    * - security: [] → empty array, no required headers (disables global security)
    * - security: [{ apiKey: [] }] → requires apiKey header in params.headers
    */
