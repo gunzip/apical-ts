@@ -60,7 +60,6 @@ describe("client-generator config-templates", () => {
         "export type GlobalConfigHeadersRecord = {\n  [K in AuthHeaders]: string;\n} & Record<string, string | undefined>;",
       );
       expect(result).toContain("headers: GlobalConfigHeaders;");
-      expect(result).toContain("signal?: AbortSignal;");
     });
 
     it("should render interface without auth headers", () => {
@@ -86,7 +85,6 @@ describe("client-generator config-templates", () => {
         "export type GlobalConfigHeadersRecord = Record<string, string | undefined>;",
       );
       expect(result).toContain("headers: GlobalConfigHeaders;");
-      expect(result).toContain("signal?: AbortSignal;");
     });
   });
 

@@ -247,9 +247,6 @@ describe("function-body-templates", () => {
       expect(result).toContain('method: "POST",');
       expect(result).toContain("body: bodyContent,");
       expect(result).toContain(
-        "...(config.signal ? { signal: config.signal } : {}),",
-      );
-      expect(result).toContain(
         "/* Handle response status codes using if-else logic to support wildcard patterns */",
       );
       expect(result).toContain(
@@ -278,9 +275,6 @@ describe("function-body-templates", () => {
       expect(result).toContain('method: "GET",');
       expect(result).not.toContain("body: bodyContent,");
       expect(result).toContain("headers: finalHeaders,");
-      expect(result).toContain(
-        "...(config.signal ? { signal: config.signal } : {}),",
-      );
     });
 
     it("should handle optional parameters", () => {

@@ -190,7 +190,6 @@ describe("client-generator config-generator", () => {
         "export type GlobalConfigHeadersRecord = {\n  [K in AuthHeaders]: string;\n} & Record<string, string | undefined>;",
       );
       expect(result).toContain("headers: GlobalConfigHeaders;");
-      expect(result).toContain("signal?: AbortSignal;");
       expect(result).toContain("export async function resolveConfigHeaders(");
     });
 
@@ -205,7 +204,6 @@ describe("client-generator config-generator", () => {
         "export type GlobalConfigHeadersRecord = Record<string, string | undefined>;",
       );
       expect(result).toContain("headers: GlobalConfigHeaders;");
-      expect(result).toContain("signal?: AbortSignal;");
       expect(result).toContain("export async function resolveConfigHeaders(");
     });
 

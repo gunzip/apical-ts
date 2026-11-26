@@ -246,30 +246,6 @@ if needed.
 
 :::
 
-### signal
-
-**Type**: `AbortSignal`  
-**Required**: No  
-**Default**: `undefined`
-
-Optional `AbortSignal` forwarded directly to `config.fetch` for request
-cancellation and timeouts:
-
-```typescript
-const controller = new AbortController();
-
-const result = await getUser(
-  { path: { id: "123" } },
-  {
-    ...globalConfig,
-    signal: AbortSignal.timeout(5000),
-  },
-);
-```
-
-When a request is aborted via `signal`, the operation resolves to a typed error
-result with `isValid: false` and `kind: "fetch-error"`.
-
 ### forceValidation
 
 **Type**: `boolean`  

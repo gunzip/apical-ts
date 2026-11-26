@@ -118,7 +118,6 @@ ${headersContent}
         body: bodyContent,`
             : ""
         }
-        ...(config.signal ? { signal: config.signal } : {}),
       });
 
       /*

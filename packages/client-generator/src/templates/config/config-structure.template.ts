@@ -80,6 +80,5 @@ export interface GlobalConfig {
   headers: GlobalConfigHeaders;
   deserializers?: DeserializerMap;
   forceValidation?: boolean;
-  signal?: AbortSignal;
 }`;
 }

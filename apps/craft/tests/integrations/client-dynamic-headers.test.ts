@@ -5,55 +5,7 @@ import {
 } from "./generated/client/runtime.ts";
 import { testWithEmptyResponse } from "./generated/client/testWithEmptyResponse.ts";
 
-describe("client AbortSignal and dynamic/custom headers", () => {
-  it("forwards AbortSignal to fetch and omits signal when not configured", async () => {
-    // Arrange
-    const capturedInits: Array<RequestInit | undefined> = [];
-    const okFetch: typeof fetch = vi.fn(async (_input, init) => {
-      capturedInits.push(init);
-      if (init?.signal?.aborted) {
-        throw init.signal.reason ?? new Error("Aborted");
-      }
-      return new Response(undefined, { status: 200 });
-    });
-
-    // Act - without signal
-    const okResult = await testWithEmptyResponse(
-      {},
-      {
-        ...globalConfig,
-        baseURL: "https://example.test",
-        fetch: okFetch,
-        headers: { "custom-token": "secret" },
-      },
-    );
-
-    // Act - with aborted signal
-    const controller = new AbortController();
-    controller.abort(new Error("request aborted"));
-    const abortedResult = await testWithEmptyResponse(
-      {},
-      {
-        ...globalConfig,
-        baseURL: "https://example.test",
-        fetch: okFetch,
-        headers: { "custom-token": "secret" },
-        signal: controller.signal,
-      },
-    );
-
-    // Assert
-    expect(okResult.isValid).toBe(true);
-    expect(capturedInits[0]).toBeDefined();
-    expect("signal" in (capturedInits[0] ?? {})).toBe(false);
-
-    expect(capturedInits[1]?.signal).toBe(controller.signal);
-    expect(abortedResult.isValid).toBe(false);
-    if (!abortedResult.isValid) {
-      expect(abortedResult.kind).toBe("fetch-error");
-    }
-  });
-
+describe("client custom and dynamic headers", () => {
   it("forwards arbitrary custom headers alongside required auth headers and skips undefined values", async () => {
     // Arrange
     let capturedHeaders: Record<string, string> = {};
