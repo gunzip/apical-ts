@@ -181,9 +181,47 @@ describe("server-generator operation wrapper", () => {
     expect(result.wrapperCode).toContain(
       'from "../routes/testStrictBodyValidation.ts"',
     );
+    expect(result.wrapperCode).not.toContain(
+      'import { testStrictBodyValidationResponseMap } from "../routes/testStrictBodyValidation.ts"',
+    );
     expect(result.wrapperCode).toContain("testStrictBodyValidationWrapper");
     expect(result.wrapperCode).toContain("body-error");
+    expect(result.wrapperCode).toContain("Request body is required");
     expect(result.wrapperCode).toContain("parsedBody");
+  });
+
+  it("should distinguish optional vs required requestBody in generated types and runtime checks", () => {
+    const optionalBodyOp = {
+      operationId: "testOptionalBody",
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: { note: { type: "string" } },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: "OK" },
+      },
+    };
+
+    const result = generateServerOperationWrapper(
+      "/optional",
+      "post",
+      optionalBodyOp as any,
+      [],
+      {} as any,
+    );
+
+    expect(result.wrapperCode).not.toContain("Request body is required");
+    expect(result.wrapperCode).toContain("testOptionalBodyOptionalParsedBody");
+    expect(result.wrapperCode).toContain(
+      "{ contentType?: undefined; body?: undefined }",
+    );
   });
 
   it("should generate wrapper with path parameters", () => {

@@ -197,13 +197,10 @@ describe("testMultiContentTypes operation integration tests", () => {
     expect(response.body.error).toBe("Body validation failed");
   });
 
-  it("should handle unknown content types gracefully", async () => {
-    // Arrange: Handler that accepts any content type
+  it("should reject requests with unsupported or unparsed content types when body is required", async () => {
+    let bodyErrorReceived = false;
     const handler: testMultiContentTypesHandler = async (params) => {
-      if ("isValid" in params && params.isValid) {
-        // Should still receive the body even with unknown content type
-        // Body might be undefined for unknown content types, which is acceptable
-
+      if (params.isValid) {
         return {
           status: "200",
           contentType: "application/json",
@@ -212,12 +209,9 @@ describe("testMultiContentTypes operation integration tests", () => {
             name: "Unknown Content Type",
           },
         };
-      } else if (
-        "isValid" in params &&
-        !params.isValid &&
-        params.kind === "body-error"
-      ) {
-        // If there's a body validation error with unknown content type, that's also acceptable
+      }
+      if (params.kind === "body-error") {
+        bodyErrorReceived = true;
         return {
           status: "200",
           contentType: "application/json",
@@ -238,18 +232,93 @@ describe("testMultiContentTypes operation integration tests", () => {
       handler,
     );
 
-    // Act: Send request with unknown content type
+    // Act: Send request with unknown content type (not parsed by express.json/urlencoded, so req.body is undefined)
     const response = await supertest(app)
       .post("/test-multi-content-types")
       .send(JSON.stringify({ id: "unknown-456", name: "Unknown Test" }))
       .set("Content-Type", "text/plain");
 
     // Assert
+    expect(bodyErrorReceived).toBe(true);
     expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/json");
     expect(response.body).toMatchObject({
-      id: "unknown-123",
-      name: "Unknown Content Type",
+      id: "unknown-error-123",
+      name: "Unknown Content Error Handled",
+    });
+  });
+
+  it("should return body-error when a required request body is missing", async () => {
+    let errorMessage = "";
+    const handler: testMultiContentTypesHandler = async (params) => {
+      if (!params.isValid && params.kind === "body-error") {
+        errorMessage = params.error.issues[0]?.message ?? "";
+        return {
+          status: "200",
+          contentType: "application/json",
+          data: {
+            id: "missing-body",
+            name: errorMessage,
+          },
+        };
+      }
+
+      throw new Error("Expected body-error for missing required body");
+    };
+
+    const result = await testMultiContentTypesWrapper(handler)({
+      query: {},
+      path: {},
+      headers: {},
+    });
+
+    expect(errorMessage).toBe("Request body is required");
+    expect(result.status).toBe("200");
+  });
+
+  it("should expose and narrow contentType with body in the validated handler params", async () => {
+    let seenContentType: string | undefined;
+    const handler: testMultiContentTypesHandler = async (params) => {
+      if (!params.isValid) {
+        throw new Error("Unexpected validation error");
+      }
+
+      if (params.value.contentType === "application/json") {
+        seenContentType = params.value.contentType;
+        return {
+          status: "200",
+          contentType: "application/json",
+          data: {
+            id: params.value.body.id ?? "fallback",
+            name: params.value.body.name ?? "fallback",
+          },
+        };
+      }
+
+      seenContentType = params.value.contentType;
+      return {
+        status: "200",
+        contentType: "application/json",
+        data: {
+          id: params.value.body.id,
+          name: params.value.body.name,
+        },
+      };
+    };
+
+    const result = await testMultiContentTypesWrapper(handler)({
+      query: {},
+      path: {},
+      headers: {},
+      contentType: "application/json; charset=utf-8",
+      body: { id: "json-1", name: "Typed Json" },
+    });
+
+    expect(seenContentType).toBe("application/json");
+    expect(result).toMatchObject({
+      status: "200",
+      contentType: "application/json",
+      data: { id: "json-1", name: "Typed Json" },
     });
   });
 });

@@ -88,12 +88,13 @@ describe("server-generator comprehensive validation", () => {
 
     /* Verify success handler call */
     expect(result.wrapperCode).toContain("isValid: true");
-    expect(result.wrapperCode).toContain("value: {");
     expect(result.wrapperCode).toContain("query: queryParse.value");
     expect(result.wrapperCode).toContain("path: pathParse.value");
     // No headers in return value since operation has no header parameters
     expect(result.wrapperCode).not.toContain("headers: headersParse.value");
-    expect(result.wrapperCode).toContain("body: parsedBody");
+    expect(result.wrapperCode).toContain("...parsedBody");
+    expect(result.wrapperCode).toContain("contentType: matchedContentType");
+    expect(result.wrapperCode).toContain("body: bodyParse.value");
   });
 
   it("should generate proper TypeScript types for discriminated unions", () => {

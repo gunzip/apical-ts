@@ -12,6 +12,7 @@ import {
   getOperationSecuritySchemes,
 } from "@apical-ts/core-utils/shared";
 import assert from "assert";
+import { isReferenceObject } from "openapi3-ts/oas31";
 
 import { renderServerOperationWrapper } from "./templates/server-operation-templates.js";
 
@@ -31,6 +32,7 @@ interface ServerWrapperMetadata {
   hasHeaders: boolean;
   hasPath: boolean;
   hasQuery: boolean;
+  isBodyRequired: boolean;
   method: string;
   operationId: string;
   pathKey: string;
@@ -64,6 +66,7 @@ export function generateServerOperationWrapper(
     hasHeaders: metadata.hasHeaders,
     hasPath: metadata.hasPath,
     hasQuery: metadata.hasQuery,
+    isBodyRequired: metadata.isBodyRequired,
     method: metadata.method,
     operationId: metadata.operationId,
     pathKey: metadata.pathKey,
@@ -93,6 +96,7 @@ function extractServerWrapperMetadata(
   const sanitizedId = sanitizeIdentifier(operationId);
   const contentTypeMaps = generateContentTypeMaps(operation, doc);
   const hasBody = contentTypeMaps.requestContentTypeCount > 0;
+  const isBodyRequired = resolveIsBodyRequired(operation, doc, hasBody);
 
   /* Extract parameter groups to determine which parameter types exist */
   const parameterGroups = extractParameterGroups(
@@ -111,6 +115,7 @@ function extractServerWrapperMetadata(
       parameterGroups.headerParams.length > 0 || securityHeaders.length > 0,
     hasPath: parameterGroups.pathParams.length > 0,
     hasQuery: parameterGroups.queryParams.length > 0,
+    isBodyRequired,
     method: method.toLowerCase(),
     operationId,
     pathKey,
@@ -119,4 +124,26 @@ function extractServerWrapperMetadata(
     responseMapTypeName: `${sanitizedId}ResponseMap`,
     summary: operation.summary?.trim(),
   };
+}
+
+function resolveIsBodyRequired(
+  operation: OperationObject,
+  doc: OpenAPIObject,
+  hasBody: boolean,
+): boolean {
+  if (!hasBody || !operation.requestBody) {
+    return false;
+  }
+  if (!isReferenceObject(operation.requestBody)) {
+    return operation.requestBody.required === true;
+  }
+  const refPrefix = "#/components/requestBodies/";
+  if (operation.requestBody.$ref.startsWith(refPrefix)) {
+    const key = operation.requestBody.$ref.slice(refPrefix.length);
+    const resolved = doc.components?.requestBodies?.[key];
+    if (resolved && !isReferenceObject(resolved)) {
+      return resolved.required === true;
+    }
+  }
+  return false;
 }
