@@ -20,14 +20,14 @@ keywords:
 
 # Introduction
 
-@apical-ts/craft effortlessly turn your OpenAPI specifications into
+@apical-ts/craft effortlessly turns your OpenAPI specifications into
 **fully-typed Zod v4 schemas** ready for runtime (client or server) validation
 and TypeScript development.
 
-## Why another Typescript OpenAPI generator?
+## Why another TypeScript OpenAPI generator?
 
 With @apical-ts/craft, you get some unique features that set it apart from other
-generators that implements _runtime_ validation:
+generators that implement _runtime_ validation:
 
 - 🧪 **Self-contained reusable route definitions** – Zod schemas are generated
   for independent use. Bring your own client or server generator!
@@ -48,7 +48,7 @@ generators that implements _runtime_ validation:
   gracefully without overflows
 
 We all like the developer experience of [tRPC](https://trpc.io/) or
-[oRPC](https://orpc.io/), but not always we're in control of the backend.
+[oRPC](https://orpc.io/), but we are not always in control of the backend.
 
 OpenAPI specifications provide a powerful way to define your API contracts, and
 with @apical-ts/craft, you can easily generate TypeScript code that strictly
@@ -62,10 +62,10 @@ With **stricter** guardrails, @apical-ts/craft helps developers and coding
 agents catch mistakes early, leading to more robust and reliable
 implementations.
 
-Despite @apical-ts/craft's can generate a fully functional client, it is
-designed to be flexible and modular. You can use the generated routes in your
-own custom client or server implementations without being locked into a specific
-framework or architecture.
+While @apical-ts/craft can generate a fully functional client, it is designed to
+be flexible and modular. You can use the generated routes in your own custom
+client or server implementations without being locked into a specific framework
+or architecture.
 
 Curious why you should choose this generator over others? See our
 [comparison with alternative libraries](./comparison-with-alternative-libraries.md)
@@ -108,10 +108,10 @@ recommended to **pin a specific version** when using the CLI or as a dependency.
 For example, when using `npx`:
 
 ```bash
-npx @apical-ts/craft@0.3.1 generate ...
+npx @apical-ts/craft@0.26.4 generate ...
 ```
 
-Replace `0.3.1` with the desired version. This ensures consistent behavior even
+Replace `0.26.4` with the desired version. This ensures consistent behavior even
 as the project evolves.
 
 ## Live Demo
