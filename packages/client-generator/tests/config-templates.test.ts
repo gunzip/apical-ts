@@ -56,7 +56,11 @@ describe("client-generator config-templates", () => {
       expect(result).toContain(
         "baseURL: 'https://api.example.com' | (string & {});",
       );
-      expect(result).toContain("[K in AuthHeaders]: string;");
+      expect(result).toContain(
+        "export type GlobalConfigHeadersRecord = {\n  [K in AuthHeaders]: string;\n} & Record<string, string | undefined>;",
+      );
+      expect(result).toContain("headers: GlobalConfigHeaders;");
+      expect(result).toContain("signal?: AbortSignal;");
     });
 
     it("should render interface without auth headers", () => {
@@ -78,7 +82,11 @@ describe("client-generator config-templates", () => {
 
       expect(result).toContain("export interface GlobalConfig");
       expect(result).toContain("baseURL: string;");
-      expect(result).toContain("headers: {};");
+      expect(result).toContain(
+        "export type GlobalConfigHeadersRecord = Record<string, string | undefined>;",
+      );
+      expect(result).toContain("headers: GlobalConfigHeaders;");
+      expect(result).toContain("signal?: AbortSignal;");
     });
   });
 
@@ -148,6 +156,7 @@ describe("client-generator config-templates", () => {
       expect(result).toContain("baseURL: 'https://api.example.com',");
       expect(result).toContain("fetch: fetch,");
       expect(result).toContain("headers: {}");
+      expect(result).toContain("export async function resolveConfigHeaders(");
     });
 
     it("should render config implementation with empty base URL", () => {

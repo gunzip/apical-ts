@@ -95,6 +95,7 @@ export function renderFunctionBody(
   return `  try {
 ${contentTypeLogic}${bodyContentCode}
 
+    const resolvedConfigHeaders = await resolveConfigHeaders(config.headers);
     const finalHeaders: Record<string, string> = {
 ${headersContent}
     };
@@ -117,6 +118,7 @@ ${headersContent}
         body: bodyContent,`
             : ""
         }
+        ...(config.signal ? { signal: config.signal } : {}),
       });
 
       /*
@@ -180,11 +182,11 @@ export function renderHeadersObject(config: HeaderConfiguration): string {
       config.authHeaders &&
       config.authHeaders.length > 0
         ? `...Object.fromEntries(
-      Object.entries(config.headers).filter(([key]) =>
+      Object.entries(resolvedConfigHeaders).filter(([key]) =>
         !['${config.authHeaders.join("', '")}'].includes(key)
       )
     ),`
-        : "...config.headers,"
+        : "...resolvedConfigHeaders,"
     }${
       config.shouldGenerateResponseMap
         ? `
@@ -198,11 +200,11 @@ ${config.acceptHeaderLogic}`
       config.authHeaders &&
       config.authHeaders.length > 0
         ? `...Object.fromEntries(
-      Object.entries(config.headers).filter(([key]) =>
+      Object.entries(resolvedConfigHeaders).filter(([key]) =>
         !['${config.authHeaders.join("', '")}'].includes(key)
       )
     ),`
-        : "...config.headers,"
+        : "...resolvedConfigHeaders,"
     }${
       config.shouldGenerateResponseMap
         ? `

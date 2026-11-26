@@ -158,7 +158,7 @@ describe("function-body-templates", () => {
       };
 
       const result = renderHeadersObject(config);
-      expect(result).toContain("...config.headers,");
+      expect(result).toContain("...resolvedConfigHeaders,");
       expect(result).toContain("...contentTypeHeader,");
     });
 
@@ -174,6 +174,7 @@ describe("function-body-templates", () => {
 
       const result = renderHeadersObject(config);
       expect(result).toContain("...Object.fromEntries(");
+      expect(result).toContain("Object.entries(resolvedConfigHeaders)");
       expect(result).toContain("!['Authorization', 'X-API-Key'].includes(key)");
       expect(result).toContain("...contentTypeHeader,");
     });
@@ -187,7 +188,7 @@ describe("function-body-templates", () => {
       };
 
       const result = renderHeadersObject(config);
-      expect(result).toContain("...config.headers,");
+      expect(result).toContain("...resolvedConfigHeaders,");
       expect(result).toContain('"Accept": application/json');
       expect(result).toContain("...contentTypeHeader,");
     });
@@ -201,7 +202,7 @@ describe("function-body-templates", () => {
       };
 
       const result = renderHeadersObject(config);
-      expect(result).toContain("...config.headers,");
+      expect(result).toContain("...resolvedConfigHeaders,");
       expect(result).toContain('"Accept": application/json');
       expect(result).toContain('"Content-Type": application/json');
       expect(result).not.toContain("...contentTypeHeader,");
@@ -213,7 +214,7 @@ describe("function-body-templates", () => {
       const result = renderFunctionBody(
         '  const finalRequestContentType = "application/json";\n',
         "  let bodyContent = JSON.stringify(body);\n",
-        "    ...config.headers,",
+        "    ...resolvedConfigHeaders,",
         "/api/users/${userId}",
         "POST",
         true,
@@ -231,9 +232,12 @@ describe("function-body-templates", () => {
       );
       expect(result).toContain("let bodyContent = JSON.stringify(body);");
       expect(result).toContain(
+        "const resolvedConfigHeaders = await resolveConfigHeaders(config.headers);",
+      );
+      expect(result).toContain(
         "const finalHeaders: Record<string, string> = {",
       );
-      expect(result).toContain("...config.headers,");
+      expect(result).toContain("...resolvedConfigHeaders,");
       expect(result).toContain("finalHeaders['X-Custom'] = customHeader;");
       expect(result).toContain("finalHeaders['Authorization'] = token;");
       expect(result).toContain(
@@ -242,6 +246,9 @@ describe("function-body-templates", () => {
       expect(result).toContain("url.searchParams.append('filter', filter);");
       expect(result).toContain('method: "POST",');
       expect(result).toContain("body: bodyContent,");
+      expect(result).toContain(
+        "...(config.signal ? { signal: config.signal } : {}),",
+      );
       expect(result).toContain(
         "/* Handle response status codes using if-else logic to support wildcard patterns */",
       );
@@ -259,7 +266,7 @@ describe("function-body-templates", () => {
       const result = renderFunctionBody(
         "",
         "",
-        "    ...config.headers,",
+        "    ...resolvedConfigHeaders,",
         "/api/users",
         "GET",
         false,
@@ -271,13 +278,16 @@ describe("function-body-templates", () => {
       expect(result).toContain('method: "GET",');
       expect(result).not.toContain("body: bodyContent,");
       expect(result).toContain("headers: finalHeaders,");
+      expect(result).toContain(
+        "...(config.signal ? { signal: config.signal } : {}),",
+      );
     });
 
     it("should handle optional parameters", () => {
       const result = renderFunctionBody(
         "",
         "",
-        "    ...config.headers,",
+        "    ...resolvedConfigHeaders,",
         "/api/users",
         "GET",
         false,

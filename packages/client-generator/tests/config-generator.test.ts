@@ -186,17 +186,27 @@ describe("client-generator config-generator", () => {
       expect(result).toContain(
         "export type AuthHeaders = 'authorization' | 'x-api-key';",
       );
-      expect(result).toContain("[K in AuthHeaders]: string;");
+      expect(result).toContain(
+        "export type GlobalConfigHeadersRecord = {\n  [K in AuthHeaders]: string;\n} & Record<string, string | undefined>;",
+      );
+      expect(result).toContain("headers: GlobalConfigHeaders;");
+      expect(result).toContain("signal?: AbortSignal;");
+      expect(result).toContain("export async function resolveConfigHeaders(");
     });
 
-    it("should use empty object type for headers when no auth headers", () => {
+    it("should allow arbitrary headers when no auth headers are defined", () => {
       const authHeaders: string[] = [];
       const serverUrls = ["https://api.example.com"];
 
       const result = generateConfigTypes(authHeaders, serverUrls);
 
       expect(result).not.toContain("export type AuthHeaders");
-      expect(result).toContain("headers: {};");
+      expect(result).toContain(
+        "export type GlobalConfigHeadersRecord = Record<string, string | undefined>;",
+      );
+      expect(result).toContain("headers: GlobalConfigHeaders;");
+      expect(result).toContain("signal?: AbortSignal;");
+      expect(result).toContain("export async function resolveConfigHeaders(");
     });
 
     it("should escape special characters in server URLs", () => {

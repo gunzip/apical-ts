@@ -196,27 +196,46 @@ const config = {
 
 ### headers
 
-**Type**: `Record<string, string>`  
-**Required**: No  
+**Type**:
+`GlobalConfigHeadersRecord | (() => GlobalConfigHeadersRecord | Promise<GlobalConfigHeadersRecord>)`  
+**Required**:
+No  
 **Default**: `{}`
 
-Default headers to include with every request. Common use cases include:
+Default headers to include with every request, either as a static object or a
+synchronous/asynchronous resolver invoked fresh on each call. Common use cases
+include:
 
-- Authentication tokens
+- Authentication tokens (including refreshed bearer tokens)
 - Content-Type specifications
-- Custom application headers
+- Custom application headers (such as correlation or tenant IDs)
 - API keys
 
+Any header whose value is `undefined` is omitted from the outgoing request. If
+the OpenAPI spec defines global header-based security schemes, those header keys
+are required by `GlobalConfigHeadersRecord`, while arbitrary additional headers
+are permitted alongside them.
+
 ```typescript
-const config = {
+// Static headers (custom headers allowed alongside required auth headers)
+const staticConfig = {
   headers: {
     Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "Content-Type": "application/json",
     Accept: "application/json",
     "X-API-Key": "your-api-key",
     "User-Agent": "MyApp/1.0.0",
+    "X-Optional-Trace": undefined,
   },
-  // Other options...
+};
+
+// Dynamic async resolver invoked on every request
+const dynamicConfig = {
+  headers: async () => ({
+    "X-API-Key": "your-api-key",
+    Authorization: `Bearer ${await getAccessToken()}`,
+    "X-Request-Id": crypto.randomUUID(),
+  }),
 };
 ```
 
@@ -226,6 +245,30 @@ Headers defined in the configuration can be overridden on a per-operation basis
 if needed.
 
 :::
+
+### signal
+
+**Type**: `AbortSignal`  
+**Required**: No  
+**Default**: `undefined`
+
+Optional `AbortSignal` forwarded directly to `config.fetch` for request
+cancellation and timeouts:
+
+```typescript
+const controller = new AbortController();
+
+const result = await getUser(
+  { path: { id: "123" } },
+  {
+    ...globalConfig,
+    signal: AbortSignal.timeout(5000),
+  },
+);
+```
+
+When a request is aborted via `signal`, the operation resolves to a typed error
+result with `isValid: false` and `kind: "fetch-error"`.
 
 ### forceValidation
 

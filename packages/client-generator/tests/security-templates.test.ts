@@ -252,6 +252,22 @@ describe("client-generator security templates", () => {
         'finalHeaders["X-\\"Quoted\\"\\\\Header\\nName"] = _sec_XQuotedHeaderName;',
       );
     });
+
+    it("should read non-override security headers from resolvedConfigHeaders", () => {
+      const headers: SecurityHeader[] = [
+        {
+          headerName: "Authorization",
+          isOverride: false,
+          isRequired: false,
+          schemeName: "bearerAuth",
+        },
+      ];
+
+      const result = renderSecurityHeaderHandling(headers);
+      expect(result).toBe(
+        'const _sec_Authorization = resolvedConfigHeaders?.["Authorization"];\n    if (_sec_Authorization !== undefined) finalHeaders["Authorization"] = _sec_Authorization;',
+      );
+    });
   });
 
   describe("renderAuthHeaderValidation", () => {
@@ -301,7 +317,9 @@ describe("client-generator security templates", () => {
       ];
 
       const result = renderSecurityParameterExtraction(headers);
-      expect(result).toBe('const XAPIKey = config.headers?.["X-API-Key"];');
+      expect(result).toBe(
+        'const XAPIKey = resolvedConfigHeaders?.["X-API-Key"];',
+      );
     });
 
     it("should render extraction for multiple headers", () => {
@@ -322,8 +340,8 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityParameterExtraction(headers);
       expect(result).toBe(
-        'const XAPIKey = config.headers?.["X-API-Key"];\n' +
-          '  const Authorization = config.headers?.["Authorization"];',
+        'const XAPIKey = resolvedConfigHeaders?.["X-API-Key"];\n' +
+          '  const Authorization = resolvedConfigHeaders?.["Authorization"];',
       );
     });
 
@@ -339,7 +357,7 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityParameterExtraction(headers);
       expect(result).toBe(
-        'const XCustomAuthToken = config.headers?.["X-Custom-Auth-Token"];',
+        'const XCustomAuthToken = resolvedConfigHeaders?.["X-Custom-Auth-Token"];',
       );
     });
 
@@ -360,7 +378,7 @@ describe("client-generator security templates", () => {
 
       const result = renderSecurityParameterExtraction(headers);
       expect(result).toBe(
-        'const XSpecialHeader = config.headers?.["X-Special@Header"];',
+        'const XSpecialHeader = resolvedConfigHeaders?.["X-Special@Header"];',
       );
     });
 
@@ -377,7 +395,7 @@ describe("client-generator security templates", () => {
       const result = renderSecurityParameterExtraction(headers);
 
       expect(result).toBe(
-        'const XQuotedHeaderName = config.headers?.["X-\\"Quoted\\"\\\\Header\\nName"];',
+        'const XQuotedHeaderName = resolvedConfigHeaders?.["X-\\"Quoted\\"\\\\Header\\nName"];',
       );
     });
   });

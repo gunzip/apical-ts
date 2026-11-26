@@ -62,7 +62,9 @@ export function renderSecurityHeaderHandling(
     const missingHeaderMessageLiteral = renderStringLiteral(
       `Missing required security header: ${header.headerName}`,
     );
-    const source = header.isOverride ? "params.headers" : "config.headers";
+    const source = header.isOverride
+      ? "params.headers"
+      : "resolvedConfigHeaders";
     const useOptionalChaining = !(header.isOverride && header.isRequired);
     const optionalChain = useOptionalChaining ? "?." : "";
     const accessExpression = `${source}${optionalChain}[${headerNameLiteral}]`;
@@ -93,7 +95,7 @@ export function renderSecurityParameterExtraction(
     .filter((h) => !h.isOverride) // Only global security
     .map((header) => {
       const varName = toValidVariableName(header.headerName);
-      return `const ${varName} = config.headers?.[${renderStringLiteral(header.headerName)}];`;
+      return `const ${varName} = resolvedConfigHeaders?.[${renderStringLiteral(header.headerName)}];`;
     });
 
   return extractions.join("\n  ");

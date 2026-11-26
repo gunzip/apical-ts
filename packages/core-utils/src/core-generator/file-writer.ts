@@ -154,5 +154,9 @@ function getConfigImports(functionCode?: string): {
     configTypeImports.push("RequestBody");
   }
 
+  if (functionCode?.includes("resolveConfigHeaders(")) {
+    configValueImports.push("resolveConfigHeaders");
+  }
+
   return { typeImports: configTypeImports, valueImports: configValueImports };
 }
