@@ -22,7 +22,7 @@ const outputExamples = {
     path: "schemas/",
     note: "Validate payloads and infer exact runtime-safe types.",
     language: "typescript",
-    code: `import { UserSchema } from "./generated/schemas/User.js";
+    code: `import { UserSchema } from "./generated/schemas/User.ts";
 
 const result = UserSchema.safeParse(apiResponse);
 
@@ -35,15 +35,13 @@ if (result.success) {
     path: "routes/",
     note: "Access methods, paths, and maps for custom adapters and tooling.",
     language: "typescript",
-    code: `import { getPetByIdRoute } from "./generated/routes/getPetById.js";
-
-const route = getPetByIdRoute();
+    code: `import { serverRoute as getPetByIdRoute } from "./generated/routes/getPetById.ts";
 
 console.log({
-  method: route.method,
-  path: route.path,
-  responseMap: route.responseMap,
-  requestMap: route.requestMap,
+  method: getPetByIdRoute.method,
+  path: getPetByIdRoute.path,
+  responseMap: getPetByIdRoute.responseMap,
+  requestMap: getPetByIdRoute.requestMap,
 });`,
   },
   client: {
@@ -51,7 +49,7 @@ console.log({
     path: "client/",
     note: "Call operations with discriminated unions. Zero bloat, only import what you use.",
     language: "typescript",
-    code: `import { findPetsByStatus } from "./generated/client/findPetsByStatus.js";
+    code: `import { findPetsByStatus } from "./generated/client/findPetsByStatus.ts";
 
 // Import just the operations you need
 // without pulling in a huge client bundle.
@@ -71,7 +69,7 @@ if (response.status === "200") {
     path: "server/",
     note: "Implement typed handlers with automatic runtime validation.",
     language: "typescript",
-    code: `import type { getPetByIdHandler } from "./generated/server/getPetById.js";
+    code: `import type { getPetByIdHandler } from "./generated/server/getPetById.ts";
 
 const handler: getPetByIdHandler = async (params) => {
   if (!params.isValid) return { status: "400" };
@@ -154,6 +152,12 @@ function HomepageHeader() {
             </HomepageLink>
             <HomepageLink
               className={styles.secondaryAction}
+              href="https://stackblitz.com/edit/apical-craft-example?file=src%2Fclient.ts"
+            >
+              Live demo
+            </HomepageLink>
+            <HomepageLink
+              className={styles.secondaryAction}
               href="https://github.com/gunzip/apical-ts"
             >
               View on GitHub
@@ -195,8 +199,8 @@ function OutputExamplesSection() {
           </Heading>
           <p className={styles.sectionLead}>
             Generate reusable schemas, route metadata, client operations, and
-            server wrappers as small strong typed building blocks for your stack
-            and agents.
+            server wrappers as small, strongly-typed building blocks for your
+            stack and agents.
           </p>
         </div>
 

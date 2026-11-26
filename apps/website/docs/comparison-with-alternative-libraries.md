@@ -1,7 +1,22 @@
 # Comparison with Alternative Libraries
 
-This document provides a brief comparison between `@apical-ts/craft` and other
-popular TypeScript OpenAPI client generators.
+This document provides a comparison between `@apical-ts/craft` and other popular
+TypeScript OpenAPI toolchains.
+
+## Quick Summary
+
+| Feature                                    | `@apical-ts/craft` | `openapi-typescript` + `openapi-fetch` | `@hey-api/openapi-ts` | `Orval` | `Massimo` | `openapi-zod-client` |
+| ------------------------------------------ | :----------------: | :------------------------------------: | :-------------------: | :-----: | :-------: | :------------------: |
+| Exact Zod v4 runtime schemas               |         ✅         |                   ❌                   |          🟡           |   ❌    |    ❌     |          ❌          |
+| Status-discriminated response unions       |         ✅         |                   🟡                   |          ❌           |   ❌    |    ✅     |          ❌          |
+| Typed errors / no thrown exceptions        |         ✅         |                   ✅                   |          🟡           |   ❌    |    ❌     |          ❌          |
+| Multiple `2xx` & wildcard (`4XX`) statuses |         ✅         |                   🟡                   |          🟡           |   🟡    |    ✅     |          ❌          |
+| Multiple content types per operation       |         ✅         |                   ❌                   |          ❌           |   🟡    |    ❌     |          ❌          |
+| Tree-shakable per-operation output         |         ✅         |                   ✅                   |          🟡           |   ✅    |    ✅     |          ❌          |
+| Server-side validation wrappers / metadata |         ✅         |                   ❌                   |          🟡           |   ✅    |    ✅     |          ❌          |
+| Framework plugins & community ecosystem    |         🟡         |                   ✅                   |          ✅           |   ✅    |    🟡     |          ❌          |
+
+Legend: ✅ Full support · 🟡 Partial support or caveats · ❌ Not supported
 
 ## [@apical-ts/craft](https://gunzip.github.io/apical-ts/)
 
@@ -13,11 +28,39 @@ popular TypeScript OpenAPI client generators.
 - ✅ Multiple success (2xx) responses handling
 - ✅ Multiple content types response handling
 - ✅ Server-side validation support
-- ✅ Integration with popular frameworks (via AI-generated adapters)
+- 🟡 Integration with popular frameworks (inspectable example starters &
+  metadata-driven adapters; no official framework plugin packages yet)
 - ✅ Wildcard status code handling (e.g., 5xx)
 - ✅ Recursive schema support
 - ✅ Maintenance and active development
 - ❌ Strong Community support
+
+## [openapi-typescript](https://openapi-ts.dev/) + [openapi-fetch](https://openapi-ts.dev/openapi-fetch/)
+
+- ❌ Exact typings with Zod v4 (generates compile-time `.d.ts` types with zero
+  runtime validation out of the box)
+- 🟡 Discriminated unions for response payloads based on status codes
+  (`openapi-fetch` returns `{ data, error, response }` rather than per-status
+  discriminated runtime-validated unions)
+- ✅ Typed error handling / no unknown exceptions (`{ data, error }` return
+  style)
+- 🟡 Default response handling (mapped into `error` at the type level without
+  runtime schema parsing)
+- ✅ Modular, tree-shakable output (thin `openapi-fetch` runtime + type-only
+  definitions)
+- 🟡 Multiple success (2xx) responses handling (collapsed in `data` union)
+- ❌ Multiple content types response handling
+- ❌ Server-side validation support
+- ✅ Integration with popular frameworks via adapters (`openapi-react-query`,
+  middleware ecosystem)
+- 🟡 Wildcard status code handling, e.g., 5xx (type-level support)
+- ✅ Recursive schema support (type-level)
+- ✅ Maintenance and active development
+- ✅ Strong Community support
+
+If you do not need runtime validation and want near-zero bundle overhead with a
+mature ecosystem, `openapi-typescript` + `openapi-fetch` is one of the strongest
+options in the TypeScript ecosystem.
 
 ## [@heyapi/openapi-ts](https://github.com/hey-api/openapi-ts)
 

@@ -12,7 +12,6 @@ const siteDescription =
 const siteUrl = "https://gunzip.github.io";
 const siteBaseUrl = "/apical-ts/";
 const siteBasePath = `${siteUrl}${siteBaseUrl}`;
-const socialCard = `${siteBasePath}img/demo.gif`;
 
 const config: Config = {
   title: siteTitle,
@@ -61,87 +60,9 @@ const config: Config = {
     {
       tagName: "meta",
       attributes: {
-        name: "description",
-        content: siteDescription,
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
         name: "keywords",
         content:
           "OpenAPI, TypeScript, Zod, API client generator, type safety, schema validation, REST API, code generation, OpenAPI 3.1, TypeScript generator",
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
-        property: "og:title",
-        content: `${siteTitle} - ${siteTagline}`,
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
-        property: "og:description",
-        content: siteDescription,
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
-        property: "og:type",
-        content: "website",
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
-        property: "og:url",
-        content: siteBasePath,
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
-        property: "og:image",
-        content: socialCard,
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
-        property: "og:image:alt",
-        content:
-          "@apical-ts/craft demo showing OpenAPI to TypeScript generation",
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
-        name: "twitter:card",
-        content: "summary_large_image",
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
-        name: "twitter:title",
-        content: `${siteTitle} - ${siteTagline}`,
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
-        name: "twitter:description",
-        content: siteDescription,
-      },
-    },
-    {
-      tagName: "meta",
-      attributes: {
-        name: "twitter:image",
-        content: socialCard,
       },
     },
     {
@@ -156,13 +77,6 @@ const config: Config = {
       attributes: {
         name: "robots",
         content: "index, follow",
-      },
-    },
-    {
-      tagName: "link",
-      attributes: {
-        rel: "canonical",
-        href: siteBasePath,
       },
     },
     {
@@ -263,7 +177,8 @@ const config: Config = {
       defaultMode: "dark",
     },
     // Replace with your project's social card
-    image: socialCard,
+    image: "img/social-card.png",
+    metadata: [{ name: "twitter:card", content: "summary_large_image" }],
     navbar: {
       title: siteTitle,
       items: [
@@ -313,10 +228,6 @@ const config: Config = {
             {
               label: "GitHub Issues",
               href: "https://github.com/gunzip/apical-ts/issues",
-            },
-            {
-              label: "GitHub Discussions",
-              href: "https://github.com/gunzip/apical-ts/discussions",
             },
           ],
         },
