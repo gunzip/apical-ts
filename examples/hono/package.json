@@ -31,7 +31,7 @@
   "packageManager": "pnpm@12.3.4",
   "devDependencies": {
     "@apical-ts/craft": "workspace:*",
-    "@hono/node-server": "^2.1.5",
+    "@hono/node-server": "^2.1.6",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
