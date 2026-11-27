@@ -18,16 +18,16 @@
       "dependsOn": ["^format:check"]
     },
     "typecheck:code": {
-      "dependsOn": ["^typecheck:code"]
+      "dependsOn": ["^typecheck:code", "generate"]
     },
     "typecheck:tests": {
-      "dependsOn": ["^typecheck:tests"]
+      "dependsOn": ["^typecheck:tests", "generate:tests"]
     },
     "typecheck:generated": {
       "dependsOn": ["^typecheck:generated"]
     },
     "test": {
-      "dependsOn": ["^test", "generate:tests"]
+      "dependsOn": ["^test", "generate:tests", "generate"]
     },
     "@apical-ts/tanstack-query-hooks#generate": {
       "dependsOn": ["^build"],
@@ -37,7 +37,7 @@
       "dependsOn": ["generate"],
       "outputs": ["dist/**"]
     },
-    "//#test:coverage": {
+    "test:coverage": {
       "dependsOn": ["^build"],
       "inputs": [
         "apps/**/src/**/*.ts",

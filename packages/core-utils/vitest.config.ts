@@ -5,7 +5,13 @@ export default defineConfig({
     coverage: {
       exclude: ["tests/**/*"],
       include: ["src/**/*"],
-      reporter: ["text", "json", "html"],
+      reporter: ["text", "json", "json-summary", "html"],
+      thresholds: {
+        branches: 61,
+        functions: 68,
+        lines: 62,
+        statements: 62,
+      },
     },
     environment: "node",
     globals: true,

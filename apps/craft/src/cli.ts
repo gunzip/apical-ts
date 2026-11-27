@@ -1,6 +1,6 @@
 import type { ExtraPropsMode } from "@apical-ts/core-utils";
 
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { readFileSync } from "node:fs";
 
 import { parseFormatOverrideArguments } from "./format-overrides.js";
@@ -67,10 +67,13 @@ export function createCliProgram(): Command {
       collectOption,
       [],
     )
-    .option(
-      "--extra-props <mode>",
-      "Control how additional properties are handled in object schemas. Options: strip (default), loose, strict",
-      "strip",
+    .addOption(
+      new Option(
+        "--extra-props <mode>",
+        "Control how additional properties are handled in object schemas. Options: strip (default), loose, strict",
+      )
+        .choices(["strip", "loose", "strict"])
+        .default("strip"),
     )
     .action(async (options: Record<string, unknown>) => {
       try {

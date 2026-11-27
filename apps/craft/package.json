@@ -4,7 +4,19 @@
   "private": false,
   "description": "CLI tool for generating fully-typed Zod v4 schemas and type-safe TypeScript REST API clients and server from OpenAPI 2.0, 3.0.x, and 3.1.x specifications.",
   "main": "dist/index.mjs",
+  "types": "dist/index.d.mts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./generate": {
+      "types": "./dist/generate.d.mts",
+      "default": "./dist/generate.mjs"
+    },
+    "./package.json": "./package.json"
+  },
   "homepage": "https://gunzip.github.io/apical-ts/",
   "repository": {
     "type": "git",
